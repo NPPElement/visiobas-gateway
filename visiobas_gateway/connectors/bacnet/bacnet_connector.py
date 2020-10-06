@@ -6,14 +6,14 @@ import BAC0
 
 from visiobas_gateway.connectors.bacnet.bacnet_verifier import BACnetVerifier
 from visiobas_gateway.connectors.connector import Connector
-from visiobas_gateway.gateway.visio_gateway import VisioGateway
 
 
 class BACnetConnector(Thread, Connector):
-    def __init__(self, gateway: VisioGateway, config: dict):
+    def __init__(self, gateway, config: dict):
         super().__init__()
 
         self._logger = logging.getLogger('BACnetConnector')
+        self.setName(name='BACnetConnector')
 
         self._gateway = gateway
 
@@ -93,13 +93,15 @@ class BACnetConnector(Thread, Connector):
         ;
         ; Total Devices: 5
         """
-        if address_cache_path is None:
-            address_cache_path = Path.cwd() / 'address_cache'
+        if (address_cache_path is None) or (not address_cache_path.is_file()):
+            # address_cache_path = Path.cwd() / 'address_cache'
+            address_cache_path = Path('connectors/bacnet/address_cache')
 
-        if address_cache_path.exists():
-            text = address_cache_path.read_text()
-        else:
-            raise FileNotFoundError
+        try:
+            text = address_cache_path.read_text(encoding='utf-8')
+        except FileNotFoundError as e:
+            self._logger.error(f"Not found address_cache file: {e}")
+            raise e
 
         for line in text.split('\n'):
             trimmed = line.strip()

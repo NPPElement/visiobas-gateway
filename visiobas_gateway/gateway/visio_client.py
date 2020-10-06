@@ -5,14 +5,13 @@ from threading import Thread
 
 import aiohttp
 
-from visiobas_gateway.gateway.visio_gateway import VisioGateway
-
 
 class VisioClient(Thread):
-    def __init__(self, gateway: VisioGateway, config: dict):
+    def __init__(self, gateway, config: dict):
         super().__init__()
 
         self._logger = logging.getLogger('VisioClient')
+        self.setName(name='VisioClient')
 
         self._gateway = gateway
 
@@ -45,7 +44,8 @@ class VisioClient(Thread):
         self._logger.info('Logging in to the server...')
         while not self._stopped and not self._connected:  # LOGIN
             try:
-                loop = asyncio.get_event_loop()
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
                 loop.run_until_complete(self._rq_login())
                 loop.close()
                 # fixme: How often we should login?
