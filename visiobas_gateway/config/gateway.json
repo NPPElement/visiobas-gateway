@@ -1,0 +1,17 @@
+{
+  "client": {
+    "host": "http://10.21.171.11",
+    "port": 8080,
+    "ssl_verify": false,
+    "auth": {
+      "login": "canio",
+      "pwd": "278D1DE033A395FE9A2AA9E1D07416D8"
+    }
+  },
+  "bacnet_connector": {
+    "local_address": "10.21.80.240",
+    "mask": 24,
+    "port": 47808,
+    "poll_period": 5
+  }
+}
