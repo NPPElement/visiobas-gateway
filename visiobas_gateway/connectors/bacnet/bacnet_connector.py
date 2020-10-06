@@ -20,16 +20,16 @@ class BACnetConnector(Thread, Connector):
         if config is not None:
             self._config = config
 
-        self._connected_to_gateway = False
+        self._connected = False
         self._stopped = False
 
         self._verifier = BACnetVerifier()
 
-        self._devices_id_from_server = set()
+        self._devices_from_server = set()  # contains bacnet devices id
         self._ready_devices_id = set()
-        self._connected_devices_id = []  # set
+        self._connected_devices_id = set()
         self._collected_data = []  # queue
-        self._verified_data = []
+        self._verified_data = []  # queue
 
         # Match device_id with device_address. Example: {200: '10.21.80.12'}
         self._address_cache = {}
@@ -40,11 +40,6 @@ class BACnetConnector(Thread, Connector):
     def __str__(self):
         return 'BACnet connector'
 
-    def open(self):
-        self._connected_to_gateway = True
-        self._stopped = False
-        self.start()
-
     def run(self):
         try:
             self.__network = BAC0.connect(ip=self._config['local_address'],
@@ -53,14 +48,14 @@ class BACnetConnector(Thread, Connector):
         except Exception as e:
             self._logger.error(f'Network initialization error: {e}')
         else:
-            self._connected_to_gateway = True
+            self._connected = True
 
         if self._ready_devices_id:
             self._connect_devices()
         else:
             self._logger.debug('No ready devices for polling.')
 
-        while not self._stopped and self._connected_to_gateway:
+        while not self._stopped and self._connected:
             for device in self.__network.devices:
                 # todo: implement poll period
 
@@ -72,11 +67,14 @@ class BACnetConnector(Thread, Connector):
                 # todo: verify collected data
                 # todo: send data to the gateway then to client
 
-    def close(self) -> None:
-        self._connected_to_gateway = False
+    def open(self):
+        self._connected = True
+        self._stopped = False
+        self.start()
 
-    def stop(self) -> None:
+    def close(self) -> None:
         self._stopped = True
+        self._connected = False
 
     def _parse_address_cache(self, address_cache_path: Path = None) -> None:
         """
@@ -119,11 +117,13 @@ class BACnetConnector(Thread, Connector):
                                    f"address: '{address}' was parsed from address_cache")
                 self._address_cache[device_id] = address
 
-    def update_devices(self, devices_id: set) -> None:
+    def update_devices(self, devices: list) -> None:
+        """
+        :param devices: contains devices id
+        """
+        self._devices_from_server.update(set(devices))
 
-        self._devices_id_from_server.update(devices_id)
-
-        for device_id in devices_id:
+        for device_id in devices:
             if device_id in self._address_cache:
                 self._ready_devices_id.add(device_id)
             else:

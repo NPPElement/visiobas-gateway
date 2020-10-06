@@ -14,3 +14,7 @@ class Connector(ABC):
     @abstractmethod
     def __str__(self):
         pass
+
+    @abstractmethod
+    def update_devices(self, devices: list):
+        pass

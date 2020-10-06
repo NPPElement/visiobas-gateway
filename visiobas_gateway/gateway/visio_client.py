@@ -40,20 +40,52 @@ class VisioClient(Thread):
         self.start()
 
     def run(self) -> None:
-        self._logger.info('VisioClient started. '
-                          'Connecting to server.')
-        while not self._stopped and not self._connected:
+        # todo: Should we use one loop?
+
+        self._logger.info('Logging in to the server...')
+        while not self._stopped and not self._connected:  # LOGIN
             try:
-                await self._rq_login()
+                loop = asyncio.get_event_loop()
+                loop.run_until_complete(self._rq_login())
+                loop.close()
                 # fixme: How often we should login?
             except Exception as e:  # fixme: exceptions
-                self._logger.error(f'Server connection error: {e}')
+                self._logger.error(f'Login error: {e}')
+            else:
+                self._logger.info('Logged in to the server')
 
-        while not self._stopped:
-            # todo: request info about devices
-            # todo: send devices info
-            await asyncio.sleep(1)
-            # todo:
+        while not self._stopped:  # REQUEST INFO FROM SERVER
+            try:
+                loop = asyncio.get_event_loop()
+                # todo: merge received data with current
+                devices_for_connectors = loop.run_until_complete(
+                    self.get_devices_for_connectors())
+                loop.close()
+
+                # todo: What is the delay?
+                # await asyncio.sleep(1)
+
+                if self._gateway:
+                    self._gateway.update_info_from_server(
+                        devices_for_connectors=devices_for_connectors)
+
+                    # self._gateway.put_devices_to_connectors(
+                    #     devices_for_connectors=devices_for_connectors)
+            except Exception as e:  # fixme: exceptions
+                self._logger.error('Error of receiving information from '
+                                   f'the server about devices: {e}')
+
+            try:  # SEND DATA TO SERVER
+                pass
+                # todo:send devices info
+                # if you have collected enough data to send
+                # send verified data to the server
+            except Exception as e:  # fixme: exceptions
+                self._logger.error('Error sending data to the server: {e}')
+            else:
+                self._logger.info('The collected information is sent to the server')
+        else:
+            self._logger.info('VisioClient stopped.')
 
     @property
     def address(self):
@@ -106,24 +138,24 @@ class VisioClient(Thread):
             else:
                 raise ValueError(f"Error on the server when accessing: {url}")
 
-    def get_devices_id_by_protocol(self) -> dict:
-        """
-        :return: Dict that contains a list with devices id for each protocol
-        """
+    async def get_devices_for_connectors(self) -> dict:
+        """Updates device information for each connector"""
         # todo: for other protocols
         try:
             server_response = await self._rq_devices()
 
             data = {
+                # fixme change to bac0 object
                 'bacnet': {device['75'] for device in server_response}
             }
 
             return data
 
-        except LookupError as e1:
+        except LookupError as e:
             self._logger.error('Error extracting information about '
-                               f'devices by protocols: {e1}')
-        except Exception as e2:  # fixme: exceptions
+                               f'devices by protocols: {e}')
+        except Exception as e:  # fixme: exceptions
             self._logger.error('Error getting information about '
-                               f'devices: {e2}')
-
+                               f'devices: {e}')
+        finally:
+            self._logger.info('Information for connectors has been updated.')

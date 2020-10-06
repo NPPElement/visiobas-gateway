@@ -1,3 +1,4 @@
+import asyncio
 import json
 import logging
 from pathlib import Path
@@ -19,6 +20,8 @@ class VisioGateway:
         self._stopped = False
 
         self._client = None  # VisioClient(gateway=self, config=self._config['client'])
+        self._data_from_server = {}
+
         self._notifier = None
         self._statistic = None
 
@@ -26,86 +29,63 @@ class VisioGateway:
             'bacnet': BACnetConnector(
                 gateway=self,
                 config=self._config.get('bacnet_connector', None)),
-            'modbus_tcp': None,
-            'modbus_rtu': None,
-            'knx_ip': None,
-            'mqtt': None
-            # etc
+            # 'modbus_tcp': None,
+            # 'modbus_rtu': None,
+            # 'knx_ip': None,
+            # 'mqtt': None
+            # etc. todo: not implemented
         }
 
+        self._logger.info('Starting VisioGateway.')
         try:
             self._client = VisioClient(gateway=self, config=self._config['client'])
 
             while not self._stopped:
                 if not self._client.is_connected():
+                    pass
                     # todo: What should we do, if we not connected to server?
+                    # todo: Should we call login in gateway?
                     # await self._client._rq_login()
-                    data = self._client.get_devices_id_by_protocol()
-                    for protocol_name, devices in data.items():
-                        connector = self._connectors.get(protocol_name, None)
-                        connector.update_devices()
 
+                    # todo: What is the delay?
 
+                if not self._data_from_server:
+                    loop = asyncio.get_event_loop()
+                    devices_for_connectors = loop.run_until_complete(
+                        self._client.get_devices_for_connectors())
+                    loop.close()
+                    self._data_from_server.update(devices_for_connectors)
+                    # todo: Should we refresh data from server? How often?
+
+                self.put_devices_to_connectors(
+                    devices_for_connectors=self._data_from_server)
+                self._start_connectors()
 
         except Exception as e:  # fixme: exceptions
             self._logger.error(f'Error in VisioGateway: {e}')
 
-
-    def _add_devices_to_connector(self, protocol_name: str, devices_id: list) -> None:
-        """
-        :param protocol_name: to define a connector for adding devices
-        :param devices_id: devices we want to add
-        """
-        protocol_devices_id = self.__devices_id.get(protocol_name, None)
-        if protocol_devices_id:
-            protocol_devices_id.extend(devices_id)
-
-        connector = self._connectors.get(protocol_name, None)
-        if connector:
-            connector.update_devices(devices_id=devices_id)
+    def update_info_from_server(self, devices_for_connectors: dict):
+        """Calls from client to update data from server."""
+        self._data_from_server.update(devices_for_connectors)
 
     def _start_connectors(self) -> None:
-        """
-        Opens connection with all connectors
-        """
+        """Opens connection with all connectors"""
         for connector in self._connectors.values():
-            if connector:
-                try:
-                    connector.open()
-                except Exception as e:
-                    self._logger.error(f'Connector opening error: {e}')
-                else:
-                    self._logger.info(f'Open: {connector}')
+            try:
+                connector.open()
+            except Exception as e:
+                self._logger.error(f'Connector opening error: {e}')
+            else:
+                self._logger.info(f'Open: {connector}')
 
-    def get_devices_id_from_server(self) -> None:
-        """
-        Receives information about devices from the server and transmits it to connectors.
-        """
-        server_response = await self._client._rq_devices()
-        server_devices_id = self._client.get_devices_id_by_protocol(
-            server_response=server_response)
+    def put_devices_to_connectors(self, devices_for_connectors: dict) -> None:
+        """Sends information about devices to connectors"""
 
-        # todo: make for all protocols
-        bacnet_connector = self._connectors.get('bacnet', None)
-        if bacnet_connector:
-            bacnet_connector.update_devices(server_devices_id)
-
-    def start_polling(self) -> None:
-        """
-        Call to start the gateway.
-        """
-        self._logger.info('Starting VisioGateway.')
-
-        await self._client._rq_login()
-        server_bacnet_devices_id = self.get_devices_id_from_server()
-
-        # todo: for all protocols
-        self._add_devices_to_connector(protocol_name='bacnet',
-                                       devices_id=server_bacnet_devices_id)
-        self._start_connectors()
-
-        while not self._stopped:
-            pass
-            # transferring data from the connector to the server
-
-
+        for protocol_name, devices in devices_for_connectors.items():
+            try:
+                self._connectors[protocol_name].update_devices(devices=devices)
+            except LookupError as e:
+                self._logger.error(f'Connector for {protocol_name} not implemented: {e}')
+            except Exception as e:
+                self._logger.error(f'Error updating devices for '
+                                   f'the connector {protocol_name}: {e}')
