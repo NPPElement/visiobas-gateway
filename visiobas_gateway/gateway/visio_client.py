@@ -123,7 +123,7 @@ class VisioClient(Thread):
         Request of all available devices from server
         # todo: Now only bacnet devices.
         # todo: How often we should request info from server?
-        :return:
+        :return: data received from the server
         """
         url = f'{self.address}/vbas/gate/getDevices'
         async with aiohttp.ClientSession() as session:

@@ -59,11 +59,13 @@ class BACnetConnector(Thread, Connector):
             for device in self.__network.devices:
                 # todo: implement poll period
 
-                self._collected_data.append(
-                    {'device_id': None,  # todo: get device_id
-                     'data': device.lastValue,
-                     'statusFlags': device.statusFlags
-                     })
+                # self._collected_data.append(
+                #     {'device_id': None,  # todo: get device_id
+                #      'data': device.lastValue,
+                #      'statusFlags': device.statusFlags
+                #      })
+
+                self._logger.debug(f'lastValue: {device.lastValue} statusFlags{device.statusFlags}')
                 # todo: verify collected data
                 # todo: send data to the gateway then to client
 
