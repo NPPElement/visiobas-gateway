@@ -96,8 +96,8 @@ class BACnetConnector(Thread, Connector):
         ; Total Devices: 5
         """
         if (address_cache_path is None) or (not address_cache_path.is_file()):
-            # address_cache_path = Path.cwd() / 'address_cache'
-            address_cache_path = Path('connectors/bacnet/address_cache')
+            base_dir = Path(__file__).resolve().parent.parent.parent
+            address_cache_path = base_dir / 'connectors/bacnet/address_cache'
 
         try:
             text = address_cache_path.read_text(encoding='utf-8')

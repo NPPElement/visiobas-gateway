@@ -14,7 +14,7 @@ class VisioGateway:
 
         if (config_path is None) or (not config_path.is_file()):
             base_dir = Path(__file__).resolve().parent.parent
-            config_path = base_dir / Path('config') / Path('gateway.json')
+            config_path = base_dir / 'config/gateway.json'
         try:
             with open(config_path, mode='r', encoding='utf-8') as cfg_file:
                 self._config = json.load(fp=cfg_file)
