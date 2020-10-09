@@ -13,8 +13,7 @@ class VisioGateway:
         self._logger = logging.getLogger('VisioGateway')
 
         if (config_path is None) or (not config_path.is_file()):
-            # config_path = Path.cwd().parent / 'config' / 'gateway.json'
-            config_path = Path('./config/gateway.json')
+            config_path = Path.cwd() / Path('config') / Path('gateway.json')
         try:
             with open(config_path, mode='r', encoding='utf-8') as cfg_file:
                 self._config = json.load(fp=cfg_file)
