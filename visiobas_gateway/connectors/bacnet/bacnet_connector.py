@@ -49,9 +49,11 @@ class BACnetConnector(Thread, Connector):
             if not self.__network:
                 self.__logger.info('BACnet network initializing')
                 try:
-                    self.__network = BAC0.lite(  # ip=self.__config['local_address'],
-                        port=self.__config['port'],
-                        mask=self.__config['mask'])
+                    self.__network = BAC0.lite()
+                    # ip=self.__config['local_address'],
+                    # port=self.__config['port'],
+                    # mask=self.__config['mask']
+
                 except InitializationError as e:
                     self.__logger.error(f'Network initialization error: {e}')
                 else:
@@ -65,7 +67,12 @@ class BACnetConnector(Thread, Connector):
                     else:
                         self.__logger.debug('No ready devices for polling.')
 
-                    for device in self.__network.devices:
+                    self.__network.discover()
+                    dd = self.__network.discoveredDevices
+                    self.__logger.info(dd)
+                    self.__logger.info(type(dd))
+
+                    for device in dd:  #self.__network.devices:
                         # todo: implement poll period
 
                         # self._collected_data.append(
