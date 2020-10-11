@@ -49,9 +49,9 @@ class BACnetConnector(Thread, Connector):
             if not self.__network:
                 self.__logger.info('BACnet network initializing')
                 try:
-                    self.__network = BAC0.lite(ip=self.__config['local_address'],
-                                               port=self.__config['port'],
-                                               mask=self.__config['mask'])
+                    self.__network = BAC0.lite(  # ip=self.__config['local_address'],
+                        port=self.__config['port'],
+                        mask=self.__config['mask'])
                 except InitializationError as e:
                     self.__logger.error(f'Network initialization error: {e}')
                 else:
@@ -60,7 +60,8 @@ class BACnetConnector(Thread, Connector):
             else:
                 try:
                     if self.__ready_devices_id:
-                        self.__connect_devices()
+                        # self.__connect_devices()
+                        self.__connect_addr_cache()
                     else:
                         self.__logger.debug('No ready devices for polling.')
 
@@ -74,7 +75,8 @@ class BACnetConnector(Thread, Connector):
                         #      })
 
                         self.__logger.info(
-                            f'lastValue: {device.lastValue} statusFlags{device.statusFlags}')
+                            f'lastValue: {device.lastValue} '
+                            f'statusFlags: {device.statusFlags}')
                         # todo: verify collected data
                         # todo: send data to the gateway then to client
                 except Exception as e:
@@ -84,8 +86,6 @@ class BACnetConnector(Thread, Connector):
             asyncio.set_event_loop(loop)
             loop.run_until_complete(asyncio.sleep(10))
             loop.close()
-
-
 
     def open(self):
         self.__connected = True
@@ -155,6 +155,18 @@ class BACnetConnector(Thread, Connector):
     def __connect_devices(self) -> None:
         """Connects devices to the network"""
         for device_id in self.__ready_devices_id:
+            try:
+                BAC0.device(address=self.__address_cache[device_id],
+                            device_id=device_id,
+                            network=self.__network,
+                            poll=self.__config.get('poll_period', 10))
+            except Exception as e:
+                self.__logger.error(f'Device connection error: {e}')
+            else:
+                self.__logger.debug(f"Device with id '{device_id}' was connected")
+
+    def __connect_addr_cache(self):
+        for device_id in self.__address_cache.keys():
             try:
                 BAC0.device(address=self.__address_cache[device_id],
                             device_id=device_id,
