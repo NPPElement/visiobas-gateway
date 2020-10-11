@@ -50,11 +50,6 @@ class BACnetConnector(Thread, Connector):
                 self.__logger.info('BACnet network initializing')
                 try:
                     self.__network = BAC0.lite()
-                    #     ip=self.__config['local_address'],
-                    #     port=self.__config['port'],
-                    #     mask=self.__config['mask']
-                    # )
-                    self.__network.discover()
 
                 except InitializationError as e:
                     self.__logger.error(f'Network initialization error: {e}')
@@ -63,29 +58,15 @@ class BACnetConnector(Thread, Connector):
 
             else:
                 try:
-                    if self.__ready_devices_id:
-                        self.__connect_devices()
-                        self.__connect_addr_cache()
-                    else:
-                        self.__logger.debug('No ready devices for polling.')
+                    self.__connect_addr_cache()
+                    # if self.__ready_devices_id:
+                    #     # self.__connect_devices()
+                    #
+                    # else:
+                    #     self.__logger.debug('No ready devices for polling.')
 
-
-                    for dev in self.__network.devices:  # self.__network.devices:
-                        device = BAC0.device(dev[2], dev[3], self.__network, history_size=1)
-                        for point in device.points:
-                            self.__logger.info(point)
-
-                        # self._collected_data.append(
-                        #     {'device_id': None,  # todo: get device_id
-                        #      'data': device.lastValue,
-                        #      'statusFlags': device.statusFlags
-                        #      })
-
-                        self.__logger.info(
-                            f'lastValue: {device.lastValue} '
-                            f'statusFlags: {device.statusFlags}')
-                        # todo: verify collected data
-                        # todo: send data to the gateway then to client
+                    # todo: verify collected data
+                    # todo: send data to the gateway then to client
                 except Exception as e:
                     self.__logger.error(f'Error: {e}')
 
@@ -173,13 +154,16 @@ class BACnetConnector(Thread, Connector):
                 self.__logger.debug(f"Device with id '{device_id}' was connected")
 
     def __connect_addr_cache(self):
+        self.__logger.info('Connecting to devices from address_cache')
         for device_id in self.__address_cache.keys():
             try:
-                BAC0.device(address=self.__address_cache[device_id],
-                            device_id=device_id,
-                            network=self.__network,
-                            poll=self.__config.get('poll_period', 10))
+                device = BAC0.device(address=self.__address_cache[device_id],
+                                     device_id=device_id,
+                                     network=self.__network,
+                                     poll=self.__config.get('poll_period', 10))
+
+                self.__logger.info(f'Device points: {device.points}')
             except Exception as e:
-                self.__logger.error(f'Device connection error: {e}')
+                self.__logger.error(f'Device_id: {device_id} connection error: {e}')
             else:
                 self.__logger.debug(f"Device with id '{device_id}' was connected")
