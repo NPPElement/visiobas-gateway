@@ -1,6 +1,7 @@
 {
 	"client": {
 		"host": "http://10.21.171.11",
+		"test_host": "http://nppelement.com",
 		"port": 8080,
 		"ssl_verify": false,
 		"auth": {

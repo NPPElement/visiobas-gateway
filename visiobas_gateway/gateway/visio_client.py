@@ -1,161 +1,158 @@
 import asyncio
-import json
 import logging
 from threading import Thread
 
 import aiohttp
+import requests
+
+from visiobas_gateway.gateway.exceptions import LogInError
 
 
 class VisioClient(Thread):
     def __init__(self, gateway, config: dict):
         super().__init__()
 
-        self._logger = logging.getLogger('VisioClient')
-        self.setName(name='VisioClient')
+        self.__logger = logging.getLogger('VisioClient')
+        self.setName(name='VisioClient-Thread')
 
-        self._gateway = gateway
+        self.__gateway = gateway
 
-        if config is not None:
-            self._config = config
+        if isinstance(config, dict):
+            self.__config = config
         else:
             raise ValueError(f'Config for VisioClient not found.')
 
-        self._host = config['host']
-        self._port = config['port']
+        self.__host = config['test_host']  # FIXME: test/prod
+        self.__port = config['port']
 
-        self._verify = config['ssl_verify']
-        self._login = config['auth']['login']
-        self._md5_pwd = config['auth']['pwd']
+        self.__verify = config['ssl_verify']
+        self.__login = config['auth']['login']
+        self.__md5_pwd = config['auth']['pwd']
 
-        self._session = None
-        self._connected = False
-        self._stopped = False
+        # self.__session = None
+        self.__connected = False
+        self.__stopped = False
 
-        self._data_to_server = []
+        self.__data_to_server = []
 
-        self._user_id = None
-        self._token = None
+        # getting this data after login
+        self.__user_id = None
+        self.__bearer_token = None
+        self.__auth_user_id = None
 
         self.start()
 
     def run(self) -> None:
-        # todo: Should we use one loop?
+        """
+        Keeps the connection to the server. Login if necessary.
+        Periodically requests updates from the server.
+            Sends information received from the server to the gateway.
 
-        self._logger.info('Logging in to the server...')
-        while not self._stopped and not self._connected:  # LOGIN
-            try:
-                loop = asyncio.new_event_loop()
-                asyncio.set_event_loop(loop)
-                loop.run_until_complete(self._rq_login())
-                loop.close()
-                # fixme: How often we should login?
-            except Exception as e:  # fixme: exceptions
-                self._logger.error(f'Login error: {e}')
+        # TODO: Periodically sends the information received from the gateway to the server.
+        """
+        self.__logger.info('Starting VisioClient.')
+        while not self.__stopped:
+            if not self.__connected:
+                try:
+                    self.__rq_login()
+                except ConnectionRefusedError as e:
+                    self.__logger.error(f'Login error: {e}')
+                except LogInError as e:
+                    self.__logger.error(f'Login error: {e}')
+                else:
+                    self.__connected = True
+                    self.__logger.info('Successfully log in to the server.')
+
             else:
-                self._logger.info('Logged in to the server')
+                try:  # todo: What is the period?
+                    loop = asyncio.new_event_loop()
+                    asyncio.set_event_loop(loop)
+                    data = loop.run_until_complete(
+                        self.__rq_devices())
+                    loop.close()
 
-        while not self._stopped:  # REQUEST INFO FROM SERVER
-            try:
-                loop = asyncio.get_event_loop()
-                # todo: merge received data with current
-                devices_for_connectors = loop.run_until_complete(
-                    self.get_devices_for_connectors())
-                loop.close()
+                    self.__gateway.update_from_client(data=data)
 
-                # todo: What is the delay?
-                # await asyncio.sleep(1)
+                except Exception as e:
+                    self.__logger.error('Error retrieving information about '
+                                        f'devices from the server: {e}')
 
-                if self._gateway:
-                    self._gateway.update_info_from_server(
-                        devices_for_connectors=devices_for_connectors)
+                if self.__is_data_for_server():
+                    pass
+                    # TODO: send data to server
 
-                    # self._gateway.put_devices_to_connectors(
-                    #     devices_for_connectors=devices_for_connectors)
-            except Exception as e:  # fixme: exceptions
-                self._logger.error('Error of receiving information from '
-                                   f'the server about devices: {e}')
+            # delay
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            loop.run_until_complete(asyncio.sleep(10))
+            loop.close()
 
-            try:  # SEND DATA TO SERVER
-                pass
-                # todo:send devices info
-                # if you have collected enough data to send
-                # send verified data to the server
-            except Exception as e:  # fixme: exceptions
-                self._logger.error('Error sending data to the server: {e}')
-            else:
-                self._logger.info('The collected information is sent to the server')
         else:
-            self._logger.info('VisioClient stopped.')
+            self.__logger.info('VisioClient stopped.')
 
     @property
-    def address(self):
-        return ':'.join((self._host, str(self._port)))
+    def address(self) -> str:
+        return ':'.join((self.__host, str(self.__port)))
 
-    def is_connected(self):
-        return self._connected
+    def is_connected(self) -> bool:
+        return self.__connected
 
     def stop(self) -> None:
-        self._stopped = True
-        self._logger.info('VisioClient stopped')
+        self.__stopped = True
+        self.__logger.info('VisioClient stopped')
 
-    async def _rq_login(self) -> None:
-        """
-        Request login and keep login token and user_id
-        """
+    def __is_data_for_server(self) -> bool:
+        return False
+        # TODO: implement
+
+    def __rq_login(self) -> None:
+        self.__logger.info('Logging in to the server ...')
         url = f'{self.address}/auth/rest/login'
-        data = json.dumps({
-            'login': self._login,
-            'password': self._md5_pwd
-        })
-        async with aiohttp.ClientSession() as session:
-            async with session.post(url=url, data=data) as response:
-                self._logger.debug(f'POST: login: {self._login}')
-                resp = await response.json()
+        data = {
+            'login': self.__login,
+            'password': self.__md5_pwd
+        }
+        with requests.Session() as session:
+            self.__logger.info(f'POST: {url}')
+            response = session.post(url=url, json=data)
 
-                self._token = resp['token']
-                self._user_id = resp['user_id']
+            if response.status_code == 200:
+                resp = response.json()
+                if resp['success']:
+                    self.__bearer_token = resp['data']['token']
+                    self.__user_id = resp['data']['user_id']
+                    self.__auth_user_id = resp['data']['auth_user_id']
+                else:
+                    self.__logger.info('Server returned failure response.')
+                    raise LogInError
+            else:
+                self.__logger.info(f'Server response status error: {response.status_code}')
+                raise LogInError
 
-                self._connected = True
-                self._logger.info('Client is logged into the server')
-
-    async def _rq_devices(self) -> dict:
+    async def __rq_devices(self) -> dict:
         """
         Request of all available devices from server
         # todo: Now only bacnet devices.
-        # todo: How often we should request info from server?
         :return: data received from the server
         """
+        self.__logger.info('Requesting information about devices from the server ...')
+
         url = f'{self.address}/vbas/gate/getDevices'
-        async with aiohttp.ClientSession() as session:
+        headers = {
+            'Authorization': f'Bearer {self.__bearer_token}'
+        }
+
+        async with aiohttp.ClientSession(headers=headers) as session:
             async with session.get(url=url) as response:
-                self._logger.debug('GET: request devices from server')
-                resp = await response.json()
-            self._logger.debug("Successful response to a request for "
-                               f"information about devices: '{resp['success']}'")
+                self.__logger.debug(f'GET: {url}')
 
-            if resp['success'] is True:
-                return resp['data']
-            else:
-                raise ValueError(f"Error on the server when accessing: {url}")
-
-    async def get_devices_for_connectors(self) -> dict:
-        """Updates device information for each connector"""
-        # todo: for other protocols
-        try:
-            server_response = await self._rq_devices()
-
-            data = {
-                # fixme change to bac0 object
-                'bacnet': {device['75'] for device in server_response}
-            }
-
-            return data
-
-        except LookupError as e:
-            self._logger.error('Error extracting information about '
-                               f'devices by protocols: {e}')
-        except Exception as e:  # fixme: exceptions
-            self._logger.error('Error getting information about '
-                               f'devices: {e}')
-        finally:
-            self._logger.info('Information for connectors has been updated.')
+                if response.status == 200:
+                    resp = await response.json()
+                    if resp['success']:
+                        self.__logger.info('Received information about '
+                                           'devices from the server.')
+                        return resp['data']
+                    else:
+                        self.__logger.info('Server returned failure response.')
+                else:
+                    self.__logger.info(f'Server response status error: {response.status}')
