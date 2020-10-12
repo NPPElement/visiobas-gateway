@@ -4,6 +4,7 @@ from threading import Thread
 
 import aiohttp
 import requests
+from aiohttp import ClientResponse
 
 from visiobas_gateway.gateway.exceptions import LogInError
 
@@ -141,18 +142,45 @@ class VisioClient(Thread):
         headers = {
             'Authorization': f'Bearer {self.__bearer_token}'
         }
-
         async with aiohttp.ClientSession(headers=headers) as session:
             async with session.get(url=url) as response:
                 self.__logger.debug(f'GET: {url}')
+                data = await self.__extract_response_data(response=response)
+                return data
 
-                if response.status == 200:
-                    resp = await response.json()
-                    if resp['success']:
-                        self.__logger.info('Received information about '
-                                           'devices from the server.')
-                        return resp['data']
-                    else:
-                        self.__logger.info('Server returned failure response.')
-                else:
-                    self.__logger.info(f'Server response status error: {response.status}')
+    async def __rq_device_object(self, device_id, object_type) -> list:
+        """
+        Request of all available objects by device_id and object_type
+        :param device_id:
+        :param object_type: 
+        :return: data received from the server
+        """
+        self.__logger.info(f"Requesting information about device_id: {device_id}, "
+                           f"object_type: {object_type} from the server ...")
+
+        url = f'{self.address}/vbas/gate/get/{device_id}/{object_type}'
+        headers = {
+            'Authorization': f'Bearer {self.__bearer_token}'
+        }
+        async with aiohttp.ClientSession(headers=headers) as session:
+            async with session.get(url=url) as response:
+                self.__logger.debug(f'GET: {url}')
+                data = await self.__extract_response_data(response=response)
+                return data
+
+    async def __extract_response_data(self, response: ClientResponse) -> list or dict:
+        """
+        Checks the correctness of the response.
+        :param response: server's response
+        :return: response['data'] field
+        """
+        if response.status == 200:
+            resp_json = await response.json()
+            if resp_json['success']:
+                self.__logger.info('Received information about '
+                                   'devices from the server.')
+                return resp_json['data']
+            else:
+                self.__logger.info('Server returned failure response.')
+        else:
+            self.__logger.info(f'Server response status error: {response.status}')

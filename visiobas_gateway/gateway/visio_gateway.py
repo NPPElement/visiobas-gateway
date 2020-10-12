@@ -1,7 +1,6 @@
 import asyncio
 import json
 import logging
-import time
 from pathlib import Path
 
 from visiobas_gateway.connectors.bacnet.bacnet_connector import BACnetConnector
