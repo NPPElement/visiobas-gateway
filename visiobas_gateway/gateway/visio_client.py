@@ -3,7 +3,6 @@ import logging
 from threading import Thread
 
 import aiohttp
-import requests
 from aiohttp import ClientResponse
 
 from visiobas_gateway.gateway.exceptions import LogInError
@@ -53,7 +52,7 @@ class VisioClient(Thread):
         while not self.__stopped:
             if not self.__connected:  # LOGIN
                 try:
-                    self.__rq_login()
+                    asyncio.run(self.__rq_login())
                 except ConnectionRefusedError as e:
                     self.__logger.error(f'Login error: {e}')
                 except LogInError as e:
@@ -63,9 +62,8 @@ class VisioClient(Thread):
                     self.__logger.info('Successfully log in to the server.')
 
             else:  # IF AUTHORIZED
-                if self.__is_data_for_server():
-                    pass
-                    # TODO: send data to server
+                pass
+                # TODO: send data to server
 
             # delay
             asyncio.run(asyncio.sleep(10))
@@ -73,52 +71,40 @@ class VisioClient(Thread):
         else:
             self.__logger.info('VisioClient stopped.')
 
-    @property
-    def address(self) -> str:
-        return ':'.join((self.__host, str(self.__port)))
-
-    @property
-    def auth_headers(self) -> dict:
-        headers = {
-            'Authorization': f'Bearer {self.__bearer_token}'
-        }
-        return headers
-
     def is_connected(self) -> bool:
         return self.__connected
 
     def stop(self) -> None:
         self.__stopped = True
-        self.__logger.info('VisioClient stopped')
+        self.__logger.info('VisioClient was stopped.')
 
-    @staticmethod
-    def __is_data_for_server() -> bool:
-        return False
-        # TODO: implement
+    @property
+    def __address(self) -> str:
+        return ':'.join((self.__host, str(self.__port)))
 
-    def __rq_login(self) -> None:
+    @property
+    def __auth_headers(self) -> dict:
+        headers = {
+            'Authorization': f'Bearer {self.__bearer_token}'
+        }
+        return headers
+
+    async def __rq_login(self) -> None:
         self.__logger.info('Logging in to the server ...')
-        url = f'{self.address}/auth/rest/login'
+        url = f'{self.__address}/auth/rest/login'
         data = {
             'login': self.__login,
             'password': self.__md5_pwd
         }
-        with requests.Session() as session:
-            self.__logger.info(f'POST: {url}')
-            response = session.post(url=url, json=data)
 
-            if response.status_code == 200:
-                resp = response.json()
-                if resp['success']:
-                    self.__bearer_token = resp['data']['token']
-                    self.__user_id = resp['data']['user_id']
-                    self.__auth_user_id = resp['data']['auth_user_id']
-                else:
-                    self.__logger.info('Server returned failure response.')
-                    raise LogInError
-            else:
-                self.__logger.info(f'Server response status error: {response.status_code}')
-                raise LogInError
+        async with aiohttp.ClientSession() as session:
+            async with session.post(url=url, json=data) as response:
+                self.__logger.info(f'POST: {url}')
+                data = await self.__extract_response_data(response=response)
+
+                self.__bearer_token = data['token']
+                self.__user_id = data['user_id']
+                self.__auth_user_id = data['auth_user_id']
 
     async def __rq_devices(self) -> dict:
         """
@@ -128,9 +114,9 @@ class VisioClient(Thread):
         """
         self.__logger.debug('Requesting information about devices from the server ...')
 
-        url = f'{self.address}/vbas/gate/getDevices'
+        url = f'{self.__address}/vbas/gate/getDevices'
 
-        async with aiohttp.ClientSession(headers=self.auth_headers) as session:
+        async with aiohttp.ClientSession(headers=self.__auth_headers) as session:
             async with session.get(url=url) as response:
                 self.__logger.debug(f'GET: {url}')
                 data = await self.__extract_response_data(response=response)
@@ -146,9 +132,9 @@ class VisioClient(Thread):
         self.__logger.debug(f"Requesting information about device_id: {device_id}, "
                             f"object_type: {object_type} from the server ...")
 
-        url = f'{self.address}/vbas/gate/get/{device_id}/{object_type}'
+        url = f'{self.__address}/vbas/gate/get/{device_id}/{object_type}'
 
-        async with aiohttp.ClientSession(headers=self.auth_headers) as session:
+        async with aiohttp.ClientSession(headers=self.__auth_headers) as session:
             async with session.get(url=url) as response:
                 self.__logger.debug(f'GET: {url}')
                 data = await self.__extract_response_data(response=response)
