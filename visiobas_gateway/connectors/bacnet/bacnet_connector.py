@@ -27,11 +27,21 @@ class BACnetConnector(Thread, Connector):
 
         self.__verifier = BACnetVerifier()
 
-        self.__devices_from_server = set()  # contains bacnet devices id
+        self.__object_types_to_request = [
+            'analog-input',
+            'analog-output',
+            'analog-value',
+            'binary-input',
+            'binary-output',
+            'binary-value',
+            'multi-state-input',
+            'multi-state-output',
+            'multi-state-value',
+            # 'notification-class'
+        ]
+
         self.__ready_devices_id = set()
         self.__connected_devices_id = set()
-        self.__collected_data = []  # queue
-        self.__verified_data = []  # queue
 
         # Match device_id with device_address. Example: {200: '10.21.80.12'}
         self.__address_cache = {}
@@ -43,22 +53,30 @@ class BACnetConnector(Thread, Connector):
 
     def run(self):
         self.__logger.info('Starting BACnet Connector')
-        self.__parse_address_cache()  # once?
+
+        self.__parse_address_cache()  # todo: Can the address_cache be updated?
 
         while not self.__stopped:
             if not self.__network:
                 self.__logger.info('BACnet network initializing')
                 try:
                     self.__network = BAC0.lite()
-
                 except InitializationError as e:
                     self.__logger.error(f'Network initialization error: {e}')
                 else:
                     self.__logger.info('Network initialized.')
 
-            else:
+            else:  # IF HAVING INITIALIZED NETWORK
                 try:
-                    self.__connect_addr_cache()
+                    # Requesting objects and their types from the server
+                    devices_objects = self.__gateway.get_devices_objects(
+                        devices_id=list(self.__address_cache.keys()),
+                        object_types=self.__object_types_to_request
+                    )
+
+                    # todo: Connect the received devices. Start polling
+                    # self.__connect_addr_cache()
+
                     # if self.__ready_devices_id:
                     #     # self.__connect_devices()
                     #
@@ -70,10 +88,11 @@ class BACnetConnector(Thread, Connector):
                 except Exception as e:
                     self.__logger.error(f'Error: {e}')
 
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-            loop.run_until_complete(asyncio.sleep(10))
-            loop.close()
+            # delay
+            asyncio.run(asyncio.sleep(10))
+
+        else:
+            self.__logger.info('BACnet connector stopped.')
 
     def open(self):
         self.__connected = True
@@ -127,18 +146,18 @@ class BACnetConnector(Thread, Connector):
                                     f"address: '{address}' was parsed from address_cache")
                 self.__address_cache[device_id] = address
 
-    def update_devices(self, devices: list) -> None:
-        """
-        :param devices: contains devices id
-        """
-        self.__devices_from_server.update(set(devices))
-
-        for device_id in devices:
-            if device_id in self.__address_cache:
-                self.__ready_devices_id.add(device_id)
-            else:
-                self.__logger.info("The address of the device with "
-                                   f"id '{device_id}' was not found.")
+    # def update_devices(self, devices: list) -> None:
+    #     """
+    #     :param devices: contains devices id
+    #     """
+    #     self.__devices_from_server.update(set(devices))
+    #
+    #     for device_id in devices:
+    #         if device_id in self.__address_cache:
+    #             self.__ready_devices_id.add(device_id)
+    #         else:
+    #             self.__logger.info("The address of the device with "
+    #                                f"id '{device_id}' was not found.")
 
     def __connect_devices(self) -> None:
         """Connects devices to the network"""
@@ -153,17 +172,17 @@ class BACnetConnector(Thread, Connector):
             else:
                 self.__logger.debug(f"Device with id '{device_id}' was connected")
 
-    def __connect_addr_cache(self):
-        self.__logger.info('Connecting to devices from address_cache')
-        for device_id in self.__address_cache.keys():
-            try:
-                device = BAC0.device(address=self.__address_cache[device_id],
-                                     device_id=device_id,
-                                     network=self.__network,
-                                     poll=self.__config.get('poll_period', 10))
-
-                self.__logger.info(f'Device points: {device.points}')
-            except Exception as e:
-                self.__logger.error(f'Device_id: {device_id} connection error: {e}')
-            else:
-                self.__logger.debug(f"Device with id '{device_id}' was connected")
+    # def __connect_addr_cache(self):
+    #     self.__logger.info('Connecting to devices from address_cache')
+    #     for device_id in self.__address_cache.keys():
+    #         try:
+    #             device = BAC0.device(address=self.__address_cache[device_id],
+    #                                  device_id=device_id,
+    #                                  network=self.__network,
+    #                                  poll=self.__config.get('poll_period', 10))
+    #
+    #             self.__logger.info(f'Device points: {device.points}')
+    #         except Exception as e:
+    #             self.__logger.error(f'Device_id: {device_id} connection error: {e}')
+    #         else:
+    #             self.__logger.debug(f"Device with id '{device_id}' was connected")

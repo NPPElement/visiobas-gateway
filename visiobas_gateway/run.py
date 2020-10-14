@@ -4,7 +4,7 @@ import sys
 from visiobas_gateway.gateway.visio_gateway import VisioGateway
 
 logging.basicConfig(format='%(levelname)-8s [%(asctime)s] %(name)s: %(message)s',
-                    level=logging.DEBUG, stream=sys.stdout)
+                    level=logging.INFO, stream=sys.stdout)
 
 
 def main():

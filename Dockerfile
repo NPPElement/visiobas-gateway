@@ -6,6 +6,6 @@ WORKDIR /usr/scr/gateway/
 COPY . /usr/scr/gateway/
 RUN pip install --no-cache-dir -r requirements.txt
 
-EXPOSE 8080 47808
+EXPOSE 8080 47808 47809 47810 47811 47812 47813
 
 CMD ["python", "visiobas_gateway/run.py"]

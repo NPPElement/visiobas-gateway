@@ -25,10 +25,11 @@ class VisioGateway:
         self.__stopped = False
 
         self.__client = None  # VisioClient(gateway=self, config=self._config['client'])
-        self.__data_for_connectors = {}
 
         self.__notifier = None
         self.__statistic = None
+
+        self.__address_cache_devices_id = None
 
         self.__connectors = {
             'bacnet': BACnetConnector(
@@ -50,25 +51,15 @@ class VisioGateway:
 
         while not self.__stopped:
             try:
-                if self.__is_data_for_connectors():
-                    self.__update_connectors()
+                pass
 
-                loop = asyncio.new_event_loop()
-                asyncio.set_event_loop(loop)
-                loop.run_until_complete(asyncio.sleep(10))
-                loop.close()
+                # delay
+                asyncio.run(asyncio.sleep(10))
 
             except Exception as e:
                 self.__logger.error(f'Error: {e}')
-
-    def update_from_client(self, data: list):
-        """Calls from client to update data from server."""
-        # FIXME: NOW IT'S BACnet INFO
-
-        self.__data_for_connectors['bacnet'] = [device['75'] for device in data]
-
-    def __is_data_for_connectors(self) -> bool:
-        return bool(self.__data_for_connectors)
+        else:
+            self.__logger.info('VisioGateway stopped.')
 
     def __start_connectors(self) -> None:
         """Opens connection with all connectors"""
@@ -81,22 +72,22 @@ class VisioGateway:
                 self.__logger.info(f'Open: {connector}')
                 self._connectors_connected = True
 
-    # def put_devices_to_connectors(self, devices_for_connectors: dict) -> None:
-    #     """Sends information about devices to connectors"""
-    #
-    #     for protocol_name, devices in devices_for_connectors.items():
-    #         try:
-    #             self.__connectors[protocol_name].update_devices(devices=devices)
-    #         except KeyError as e:
-    #             self.__logger.error(f'Connector for {protocol_name} not implemented: {e}')
-    #         except Exception as e:
-    #             self.__logger.error(f'Error updating devices for '
-    #                                 f'the connector {protocol_name}: {e}')
+    def get_devices_objects(self, devices_id: list, object_types: list):
+        """
+        Called from the BACnet connector. Uses the VisioClient.
 
-    def __update_connectors(self) -> None:
-        # FIXME NOW ONLY BACNET CONNECTOR
+        :param devices_id:
+        :param object_types:
+        :return: dictionary with object types for each device
+        """
         try:
-            self.__connectors['bacnet'].update_devices(self.__data_for_connectors['bacnet'])
-            self.__data_for_connectors = {}
+            devices_objects = asyncio.run(
+                self.__client.rq_devices_objects(devices_id=devices_id,
+                                                 object_types=object_types)
+            )
         except Exception as e:
-            self.__logger.error(f'Update connector error: {e}')
+            self.__logger.error('Error retrieving information about '
+                                f'devices objects from the server: {e}')
+        else:
+            self.__logger.info('Received object lists for all devices')
+            return devices_objects
