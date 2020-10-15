@@ -5,6 +5,7 @@ from threading import Thread
 
 import BAC0
 from BAC0.core.io.IOExceptions import InitializationError
+from aiohttp.web_exceptions import HTTPClientError, HTTPServerError
 
 from visiobas_gateway.connectors.bacnet.bacnet_verifier import BACnetVerifier
 from visiobas_gateway.connectors.connector import Connector
@@ -41,7 +42,7 @@ class BACnetConnector(Thread, Connector):
         ]
 
         self.__ready_devices_id = set()
-        self.__connected_devices_id = set()
+        self.__connected_devices = []
 
         # Match device_id with device_address. Example: {200: '10.21.80.12'}
         self.__address_cache = {}
@@ -62,31 +63,51 @@ class BACnetConnector(Thread, Connector):
                 try:
                     self.__network = BAC0.lite()
                 except InitializationError as e:
-                    self.__logger.error(f'Network initialization error: {e}')
+                    self.__logger.error(f'Network initialization error: {e}', exc_info=True)
                 else:
                     self.__logger.info('Network initialized.')
 
             else:  # IF HAVING INITIALIZED NETWORK
-                try:
-                    # Requesting objects and their types from the server
-                    devices_objects = self.__gateway.get_devices_objects(
+                # todo: implement circular request one time per hour
+
+                devices_objects = {}
+                try:  # Requesting objects and their types from the server
+                    devices_objects.update(self.__gateway.get_devices_objects(
                         devices_id=list(self.__address_cache.keys()),
-                        object_types=self.__object_types_to_request
-                    )
+                        object_types=self.__object_types_to_request))
+                except (HTTPServerError, HTTPClientError) as e:
+                    self.__logger.error('Error retrieving information about '
+                                        f'devices objects from the server: {e}',
+                                        exc_info=True)
 
-                    # todo: Connect the received devices. Start polling
-                    # self.__connect_addr_cache()
+                if devices_objects:  # If received devices with objects from the server
+                    self.__logger.info('Received devices with '
+                                       f'objects: {[*devices_objects.keys()]}')
 
-                    # if self.__ready_devices_id:
-                    #     # self.__connect_devices()
-                    #
-                    # else:
-                    #     self.__logger.debug('No ready devices for polling.')
+                    for device_id, objects in devices_objects.items():
+                        try:
+                            bac0_objects = self.__unpack_objects(objects=objects)
+                            self.__connect_device(device_id=device_id,
+                                                  objects=bac0_objects)
+
+                        except Exception as e:
+                            self.__logger.error(f'Device initialization error: {e}',
+                                                exc_info=True)
+                        else:
+                            self.__logger.info('Device with '
+                                               f'id: {device_id} initialized.')
+
+                    for device in self.__connected_devices:
+                        self.__logger.info(f'Devices points: {device.points}')
+
+                    # todo: Start polling
 
                     # todo: verify collected data
                     # todo: send data to the gateway then to client
-                except Exception as e:
-                    self.__logger.error(f'Error: {e}')
+
+                else:
+                    pass
+                    self.__logger.error('No objects from server')
 
             # delay
             asyncio.run(asyncio.sleep(10))
@@ -146,43 +167,43 @@ class BACnetConnector(Thread, Connector):
                                     f"address: '{address}' was parsed from address_cache")
                 self.__address_cache[device_id] = address
 
-    # def update_devices(self, devices: list) -> None:
-    #     """
-    #     :param devices: contains devices id
-    #     """
-    #     self.__devices_from_server.update(set(devices))
-    #
-    #     for device_id in devices:
-    #         if device_id in self.__address_cache:
-    #             self.__ready_devices_id.add(device_id)
-    #         else:
-    #             self.__logger.info("The address of the device with "
-    #                                f"id '{device_id}' was not found.")
+    @staticmethod
+    def __unpack_objects(objects: dict) -> list:
+        # todo: use object names from BAC0
+        """
+        :param objects: objects in dict, where key - object_type,
+                                                values - object identifiers
+        :return: list with objects for the BAC0 device initialization
+        """
+        map_ = {
+            'analog-input': 'analogInput',
+            'analog-output': 'analogOutput',
+            'analog-value': 'analogValue',
+            'binary-input': 'binaryInput',
+            'binary-output': 'binaryOutput',
+            'binary-value': 'binaryValue',
+            'multi-state-input': 'multiStateInput',
+            'multi-state-output': 'multiStateOutput',
+            'multi-state-value': 'multiStateValue',
+            # 'notification-class': 'notificationClass'
+        }
+        bac0_objects = []
 
-    def __connect_devices(self) -> None:
-        """Connects devices to the network"""
-        for device_id in self.__ready_devices_id:
-            try:
-                BAC0.device(address=self.__address_cache[device_id],
-                            device_id=device_id,
-                            network=self.__network,
-                            poll=self.__config.get('poll_period', 10))
-            except Exception as e:
-                self.__logger.error(f'Device connection error: {e}')
-            else:
-                self.__logger.debug(f"Device with id '{device_id}' was connected")
+        for object_type, objects_id in objects.items():
+            for object_id in objects_id:
+                bac0_objects.append((map_[object_type], object_id))
 
-    # def __connect_addr_cache(self):
-    #     self.__logger.info('Connecting to devices from address_cache')
-    #     for device_id in self.__address_cache.keys():
-    #         try:
-    #             device = BAC0.device(address=self.__address_cache[device_id],
-    #                                  device_id=device_id,
-    #                                  network=self.__network,
-    #                                  poll=self.__config.get('poll_period', 10))
-    #
-    #             self.__logger.info(f'Device points: {device.points}')
-    #         except Exception as e:
-    #             self.__logger.error(f'Device_id: {device_id} connection error: {e}')
-    #         else:
-    #             self.__logger.debug(f"Device with id '{device_id}' was connected")
+        # todo: write list comprehension
+
+        return bac0_objects
+
+    def __connect_device(self, device_id: int, objects: list) -> None:
+        """Connects the device to the network."""
+
+        device = BAC0.device(address=self.__address_cache[device_id],
+                             device_id=device_id,
+                             network=self.__network,
+                             poll=self.__config.get('poll_period', 10),
+                             object_list=objects
+                             )
+        self.__connected_devices.append(device)

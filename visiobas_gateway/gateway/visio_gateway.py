@@ -19,7 +19,7 @@ class VisioGateway:
             with open(config_path, mode='r', encoding='utf-8') as cfg_file:
                 self._config = json.load(fp=cfg_file)
         except FileNotFoundError as e:
-            self.__logger.error(f"Not found config file: {e}")
+            self.__logger.error(f'Not found config file: {e}')
             raise e
 
         self.__stopped = False
@@ -47,7 +47,7 @@ class VisioGateway:
             self.__client = VisioClient(gateway=self, config=self._config['client'])
             self.__start_connectors()
         except Exception as e:
-            self.__logger.error(f'Init error: {e}')
+            self.__logger.error(f'Init error: {e}', exc_info=True)
 
         while not self.__stopped:
             try:
@@ -57,7 +57,7 @@ class VisioGateway:
                 asyncio.run(asyncio.sleep(10))
 
             except Exception as e:
-                self.__logger.error(f'Error: {e}')
+                self.__logger.error(f'Error: {e}', exc_info=True)
         else:
             self.__logger.info('VisioGateway stopped.')
 
@@ -80,14 +80,9 @@ class VisioGateway:
         :param object_types:
         :return: dictionary with object types for each device
         """
-        try:
-            devices_objects = asyncio.run(
-                self.__client.rq_devices_objects(devices_id=devices_id,
-                                                 object_types=object_types)
-            )
-        except Exception as e:
-            self.__logger.error('Error retrieving information about '
-                                f'devices objects from the server: {e}')
-        else:
-            self.__logger.info('Received object lists for all devices')
-            return devices_objects
+        devices_objects = asyncio.run(
+            self.__client.rq_devices_objects(devices_id=devices_id,
+                                             object_types=object_types)
+        )
+
+        return devices_objects

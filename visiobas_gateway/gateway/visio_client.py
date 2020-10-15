@@ -3,9 +3,8 @@ import logging
 from threading import Thread
 
 import aiohttp
-from aiohttp import ClientResponse
-
-from visiobas_gateway.gateway.exceptions import LogInError
+from aiohttp import ClientResponse, ClientConnectorError
+from aiohttp.web_exceptions import HTTPServerError, HTTPClientError
 
 
 class VisioClient(Thread):
@@ -53,10 +52,8 @@ class VisioClient(Thread):
             if not self.__connected:  # LOGIN
                 try:
                     asyncio.run(self.__rq_login())
-                except ConnectionRefusedError as e:
-                    self.__logger.error(f'Login error: {e}')
-                except LogInError as e:
-                    self.__logger.error(f'Login error: {e}')
+                except ClientConnectorError as e:
+                    self.__logger.error(f'Login error: {e}', exc_info=True)
                 else:
                     self.__connected = True
                     self.__logger.info('Successfully log in to the server.')
@@ -99,7 +96,7 @@ class VisioClient(Thread):
 
         async with aiohttp.ClientSession() as session:
             async with session.post(url=url, json=data) as response:
-                self.__logger.info(f'POST: {url}')
+                self.__logger.debug(f'POST: {url}')
                 data = await self.__extract_response_data(response=response)
 
                 self.__bearer_token = data['token']
@@ -109,7 +106,6 @@ class VisioClient(Thread):
     async def __rq_devices(self) -> dict:
         """
         Request of all available devices from server
-        # todo: Now only bacnet devices.
         :return: data received from the server
         """
         self.__logger.debug('Requesting information about devices from the server ...')
@@ -122,7 +118,7 @@ class VisioClient(Thread):
                 data = await self.__extract_response_data(response=response)
                 return data
 
-    async def __rq_device_object(self, device_id, object_type) -> list:
+    async def __rq_device_object(self, device_id: int, object_type: str) -> list:
         """
         Request of all available objects by device_id and object_type
         :param device_id:
@@ -179,6 +175,7 @@ class VisioClient(Thread):
         """
 
         # Create list with requests
+
         devices_requests = [self.__rq_objects_for_device(device_id=device_id,
                                                          object_types=object_types) for
                             device_id in devices_id]
@@ -187,9 +184,11 @@ class VisioClient(Thread):
         # and the value is the dictionary, where the key is the object type,
         # and the value is the list of id of objects of this type.
         devices = {device_id: device_objects for device_id, device_objects in
-                   zip(devices_id, await asyncio.gather(*devices_requests))}
+                   zip(devices_id, await asyncio.gather(*devices_requests))
+                   if device_objects}
 
         # todo: What should we do with devices with no objects?
+        #  Now drops devices with no objects
         return devices
 
     async def __extract_response_data(self, response: ClientResponse) -> list or dict:
@@ -205,5 +204,7 @@ class VisioClient(Thread):
                 return resp_json['data']
             else:
                 self.__logger.warning('Server returned failure response.')
+                # raise HTTPServerError
         else:
             self.__logger.warning(f'Server response status error: {response.status}')
+            # raise HTTPClientError
