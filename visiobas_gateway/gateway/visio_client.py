@@ -4,7 +4,9 @@ from threading import Thread
 
 import aiohttp
 from aiohttp import ClientResponse, ClientConnectorError
-from aiohttp.web_exceptions import HTTPServerError, HTTPClientError
+
+from visiobas_gateway.connectors.bacnet.object_property import ObjectProperty
+from visiobas_gateway.connectors.bacnet.object_type import ObjectType
 
 
 class VisioClient(Thread):
@@ -118,7 +120,7 @@ class VisioClient(Thread):
                 data = await self.__extract_response_data(response=response)
                 return data
 
-    async def __rq_device_object(self, device_id: int, object_type: str) -> list:
+    async def __rq_device_object(self, device_id: int, object_type: ObjectType) -> list:
         """
         Request of all available objects by device_id and object_type
         :param device_id:
@@ -126,9 +128,9 @@ class VisioClient(Thread):
         :return: data received from the server
         """
         self.__logger.debug(f"Requesting information about device_id: {device_id}, "
-                            f"object_type: {object_type} from the server ...")
+                            f"object_type: {object_type.name_dashed} from the server ...")
 
-        url = f'{self.__address}/vbas/gate/get/{device_id}/{object_type}'
+        url = f'{self.__address}/vbas/gate/get/{device_id}/{object_type.name_dashed}'
 
         async with aiohttp.ClientSession(headers=self.__auth_headers) as session:
             async with session.get(url=url) as response:
@@ -142,7 +144,7 @@ class VisioClient(Thread):
 
         :param device_id:
         :param object_types:
-        :return: Dictionary, where the key is the type of the objects,
+        :return: Dictionary, where the key is the id of type of the objects,
         and the value is the list of id of objects of this type
         """
 
@@ -154,10 +156,13 @@ class VisioClient(Thread):
         # From each response, if it's not empty, getting the id of objects.
         # Creating a dictionary, where the key is the type of the objects,
         # and the value is the list of id of objects of this type.
-        device_objects = {object_type: [prop['75'] for prop in objects] for
-                          object_type, objects in
-                          zip(object_types, await asyncio.gather(*objects_requests))
-                          if objects}
+        device_objects = {
+            object_type: [prop[str(ObjectProperty.OBJECT_IDENTIFIER.id)] for
+                          prop in objects] for
+            object_type, objects in
+            zip(object_types, await asyncio.gather(*objects_requests))
+            if objects
+        }
 
         self.__logger.debug(f'For device_id: {device_id} '
                             f'received objects: {device_objects}')

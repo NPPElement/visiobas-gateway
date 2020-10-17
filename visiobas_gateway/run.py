@@ -14,9 +14,13 @@ def main():
     parser.add_argument('-d', '--debug', action='store_true', help='Enable detailed logs.')
     args = parser.parse_args()
 
+    # Setting the VisioGateway logging level
     level = logging.DEBUG if args.debug else logging.INFO
     logging.basicConfig(format=LOGGER_FORMAT,
                         level=level, stream=sys.stdout)
+
+    # Setting the BAC0 logging levels
+    # BAC0.log_level('silence')
 
     VisioGateway()
 

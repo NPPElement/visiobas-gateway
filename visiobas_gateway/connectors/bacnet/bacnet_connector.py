@@ -1,13 +1,16 @@
 import asyncio
 import logging
 from pathlib import Path
+from pprint import pprint
 from threading import Thread
 
 import BAC0
-from BAC0.core.io.IOExceptions import InitializationError
+from BAC0.core.io.IOExceptions import InitializationError, NoResponseFromController
 from aiohttp.web_exceptions import HTTPClientError, HTTPServerError
 
+from visiobas_gateway.connectors.bacnet.bacnet_device import BACnetDevice
 from visiobas_gateway.connectors.bacnet.bacnet_verifier import BACnetVerifier
+from visiobas_gateway.connectors.bacnet.object_type import ObjectType
 from visiobas_gateway.connectors.connector import Connector
 
 
@@ -29,15 +32,17 @@ class BACnetConnector(Thread, Connector):
         self.__verifier = BACnetVerifier()
 
         self.__object_types_to_request = [
-            'analog-input',
-            'analog-output',
-            'analog-value',
-            'binary-input',
-            'binary-output',
-            'binary-value',
-            'multi-state-input',
-            'multi-state-output',
-            'multi-state-value',
+            ObjectType.ANALOG_INPUT,
+            ObjectType.ANALOG_OUTPUT,
+            ObjectType.ANALOG_VALUE,
+
+            ObjectType.BINARY_INPUT,
+            ObjectType.BINARY_OUTPUT,
+            ObjectType.BINARY_VALUE,
+
+            ObjectType.MULTI_STATE_INPUT,
+            ObjectType.MULTI_STATE_OUTPUT,
+            ObjectType.MULTI_STATE_VALUE,
             # 'notification-class'
         ]
 
@@ -61,7 +66,10 @@ class BACnetConnector(Thread, Connector):
             if not self.__network:
                 self.__logger.info('BACnet network initializing')
                 try:
+                    # BAC0.log_level('silence')
                     self.__network = BAC0.lite()
+                    BAC0.log_level('silence')
+
                 except InitializationError as e:
                     self.__logger.error(f'Network initialization error: {e}', exc_info=True)
                 else:
@@ -85,13 +93,20 @@ class BACnetConnector(Thread, Connector):
                                        f'objects: {[*devices_objects.keys()]}')
 
                     for device_id, objects in devices_objects.items():
-                        try:
-                            bac0_objects = self.__unpack_objects(objects=objects)
-                            self.__connect_device(device_id=device_id,
-                                                  objects=bac0_objects)
+                        try:  # polling all objects from the device
+                            device = BACnetDevice(address=self.__address_cache[device_id],
+                                                  device_id=device_id,
+                                                  network=self.__network,
+                                                  objects=objects)
+                            device_data = device.poll()
+                            pprint(device_data)
+                            self.__logger.critical(f'COLLECTED: {device_data}')
+                            # todo: send to server
+                        except NoResponseFromController:
+                            self.__logger.warning('No response from device.')
 
                         except Exception as e:
-                            self.__logger.error(f'Device initialization error: {e}',
+                            self.__logger.error(f'Device polling error: {e}',
                                                 exc_info=True)
                         else:
                             self.__logger.info('Device with '
