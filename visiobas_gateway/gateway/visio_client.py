@@ -65,7 +65,7 @@ class VisioClient(Thread):
                 # TODO: send data to server
 
             # delay
-            asyncio.run(asyncio.sleep(10))
+            # asyncio.run(asyncio.sleep(10))
 
         else:
             self.__logger.info('VisioClient stopped.')
@@ -120,6 +120,50 @@ class VisioClient(Thread):
                 data = await self.__extract_response_data(response=response)
                 return data
 
+    async def rq_post_device(self, device_id: int, data) -> list:
+        """
+        Sends the polled information about the device to the server.
+        Now only inform about rejected devices.
+
+        :param device_id:
+        :param data:
+        :return: list of objects id, rejected by server side.
+        """
+
+        self.__logger.debug(f'Sending collected data about device [{device_id}]')
+
+        url = f'{self.__address}/vbas/gate/light/{device_id}'
+
+        async with aiohttp.ClientSession(headers=self.__auth_headers) as session:
+            async with session.post(url=url, data=data) as response:
+                self.__logger.debug(f'POST: {url}')
+                data = await self.__extract_response_data(response=response)
+                await self.__check_rejected(device_id=device_id,
+                                            data=data)
+                return data
+
+    async def __check_rejected(self, device_id: int, data: list) -> list:
+        """
+        Inform about rejected objects.
+
+        # todo: Now the server does not always correctly return the list with errors.
+
+        :param data: polled by BACnet Device
+        :return: list of rejected by server side.
+        """
+        if not data:  # all object are accepted on server side
+            self.__logger.info(f'POST-result: Device [{device_id}] '
+                               'All objects were accepted on the server side.')
+            return data
+        else:
+            rejected_objects_id = [obj[str(ObjectProperty.OBJECT_IDENTIFIER.id)] for obj in
+                                   data]
+            self.__logger.warning(f'POST-result: Device [{device_id}] '
+                                  'Error processing objects on '
+                                  f'the server: {rejected_objects_id}')
+            # todo: What should we doing with rejected objects?
+            return rejected_objects_id
+
     async def __rq_device_object(self, device_id: int, object_type: ObjectType) -> list:
         """
         Request of all available objects by device_id and object_type
@@ -127,7 +171,7 @@ class VisioClient(Thread):
         :param object_type:
         :return: data received from the server
         """
-        self.__logger.debug(f"Requesting information about device_id: {device_id}, "
+        self.__logger.debug(f"Requesting information about device [{device_id}], "
                             f"object_type: {object_type.name_dashed} from the server ...")
 
         url = f'{self.__address}/vbas/gate/get/{device_id}/{object_type.name_dashed}'

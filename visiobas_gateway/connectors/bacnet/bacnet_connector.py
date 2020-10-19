@@ -1,11 +1,10 @@
 import asyncio
 import logging
 from pathlib import Path
-from pprint import pprint
 from threading import Thread
 
 import BAC0
-from BAC0.core.io.IOExceptions import InitializationError, NoResponseFromController
+from BAC0.core.io.IOExceptions import InitializationError
 from aiohttp.web_exceptions import HTTPClientError, HTTPServerError
 
 from visiobas_gateway.connectors.bacnet.bacnet_device import BACnetDevice
@@ -47,7 +46,7 @@ class BACnetConnector(Thread, Connector):
         ]
 
         self.__ready_devices_id = set()
-        self.__connected_devices = []
+        self.__polling_devices = []
 
         # Match device_id with device_address. Example: {200: '10.21.80.12'}
         self.__address_cache = {}
@@ -58,7 +57,7 @@ class BACnetConnector(Thread, Connector):
         return 'BACnet connector'
 
     def run(self):
-        self.__logger.info('Starting BACnet Connector')
+        self.__logger.info('Starting BACnet Connector ...')
 
         self.__parse_address_cache()  # todo: Can the address_cache be updated?
 
@@ -66,9 +65,8 @@ class BACnetConnector(Thread, Connector):
             if not self.__network:
                 self.__logger.info('BACnet network initializing')
                 try:
-                    # BAC0.log_level('silence')
                     self.__network = BAC0.lite()
-                    BAC0.log_level('silence')
+                    BAC0.log_level('silence')  # fixme: no reaction - still having debug
 
                 except InitializationError as e:
                     self.__logger.error(f'Network initialization error: {e}', exc_info=True)
@@ -77,6 +75,7 @@ class BACnetConnector(Thread, Connector):
 
             else:  # IF HAVING INITIALIZED NETWORK
                 # todo: implement circular request one time per hour
+                asyncio.run(asyncio.sleep(0.5))  # for client login fixme!
 
                 devices_objects = {}
                 try:  # Requesting objects and their types from the server
@@ -94,38 +93,36 @@ class BACnetConnector(Thread, Connector):
 
                     for device_id, objects in devices_objects.items():
                         try:  # polling all objects from the device
-                            device = BACnetDevice(address=self.__address_cache[device_id],
-                                                  device_id=device_id,
-                                                  network=self.__network,
-                                                  objects=objects)
-                            device_data = device.poll()
-                            pprint(device_data)
-                            self.__logger.critical(f'COLLECTED: {device_data}')
-                            # todo: send to server
-                        except NoResponseFromController:
-                            self.__logger.warning('No response from device.')
-
+                            self.__polling_devices.append(
+                                BACnetDevice(gateway=self.__gateway,
+                                             address=self.__address_cache[device_id],
+                                             device_id=device_id,
+                                             network=self.__network,
+                                             objects=objects)
+                            )
                         except Exception as e:
-                            self.__logger.error(f'Device polling error: {e}',
+                            self.__logger.error(f'Device [{device_id}] starting error: {e}',
                                                 exc_info=True)
                         else:
-                            self.__logger.info('Device with '
-                                               f'id: {device_id} initialized.')
+                            self.__logger.info(f'Device [{device_id}] initialized.')
 
-                    for device in self.__connected_devices:
-                        self.__logger.info(f'Devices points: {device.points}')
+                    # delay
+                    asyncio.run(asyncio.sleep(3600))
 
-                    # todo: Start polling
+                    #     except NoResponseFromController:
+                    #         self.__logger.warning('No response from device.')
+                    #
 
-                    # todo: verify collected data
-                    # todo: send data to the gateway then to client
+                # todo: Start polling
+
+                # todo: verify collected data
+                # todo: send data to the gateway then to client
 
                 else:
-                    pass
                     self.__logger.error('No objects from server')
+                    continue
 
-            # delay
-            asyncio.run(asyncio.sleep(10))
+
 
         else:
             self.__logger.info('BACnet connector stopped.')
@@ -212,13 +209,13 @@ class BACnetConnector(Thread, Connector):
 
         return bac0_objects
 
-    def __connect_device(self, device_id: int, objects: list) -> None:
-        """Connects the device to the network."""
-
-        device = BAC0.device(address=self.__address_cache[device_id],
-                             device_id=device_id,
-                             network=self.__network,
-                             poll=self.__config.get('poll_period', 10),
-                             object_list=objects
-                             )
-        self.__connected_devices.append(device)
+    # def __connect_device(self, device_id: int, objects: list) -> None:
+    #     """Connects the device to the network."""
+    #
+    #     device = BAC0.device(address=self.__address_cache[device_id],
+    #                          device_id=device_id,
+    #                          network=self.__network,
+    #                          poll=self.__config.get('poll_period', 10),
+    #                          object_list=objects
+    #                          )
+    #     self.__connected_devices.append(device)

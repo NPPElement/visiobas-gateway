@@ -33,6 +33,9 @@ class ObjectType(enum.Enum):
     TRUNK = "trunk", -1
     GRAPHIC = "graphic", -1
 
+    def __repr__(self):
+        return f'ObjectType.{self.name}'
+
     @property
     def id(self):
         return self.value[1]
