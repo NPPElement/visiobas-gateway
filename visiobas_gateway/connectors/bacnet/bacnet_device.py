@@ -108,6 +108,13 @@ class BACnetDevice(Thread):
         # FIXME: temporarily. unfinished
         try:
             pv, sf = self.__network.readMultiple(args_rpm)
+
+            # convert active\inactive to 1\0
+            if pv == 'active':
+                pv = 1
+            elif pv == 'inactive':
+                pv = 0
+
         except ValueError:
             raise ReadPropertyMultipleException
 
@@ -228,10 +235,10 @@ class BACnetDevice(Thread):
                     pass
 
         if polled_data:
-            self.__logger.info("////////////////////////////////////////"
-                               f'{len(polled_data)} out of {len(self)} objects were polled.'
-                               f'Not support RPM: {self.__count_objects(self.__not_support_rpm)}'
-                               f'Not responding: {self.__count_objects(self.__not_responding)}'
+            self.__logger.info("////////////////////////////////////////\n"
+                               f'{len(polled_data)} out of {len(self)} objects were polled.\n'
+                               f'Not support RPM: {self.__count_objects(self.__not_support_rpm)}\n'
+                               f'Not responding: {self.__count_objects(self.__not_responding)}\n'
                                '////////////////////////////////////////')
             self.__logger.info('COLLECTED: ')
             pprint(polled_data)
