@@ -176,7 +176,7 @@ class BACnetDevice(Thread):
             pv = 1
         elif pv == 'inactive':
             pv = 0
-            
+
         sf = rp_responses[1]
         binary_sf = self.__status_flags_to_binary(status_flags=sf)
         return ' '.join([str(object_id),
@@ -248,7 +248,8 @@ class BACnetDevice(Thread):
                                '////////////////////////////////////////')
             self.__logger.info('COLLECTED: ')
             pprint(polled_data)
-            return ';'.join(polled_data)
+            request_body = ';'.join(polled_data) + ';'
+            return request_body
         else:
             self.__logger.critical('No objects were successfully polled')
             self.set_inactive()
