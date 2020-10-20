@@ -109,18 +109,18 @@ class BACnetDevice(Thread):
         try:
             pv, sf = self.__network.readMultiple(args_rpm)
 
-            # convert active\inactive to 1\0
-            if pv == 'active':
-                pv = 1
-            elif pv == 'inactive':
-                pv = 0
-
         except ValueError:
             raise ReadPropertyMultipleException
 
         # todo: check parts
 
         if pv and sf:
+            # convert active\inactive to 1\0
+            if pv == 'active':
+                pv = 1
+            elif pv == 'inactive':
+                pv = 0
+
             binary_sf = self.__status_flags_to_binary(status_flags=sf)
             return ' '.join([str(object_id),
                              str(object_type.id),
@@ -171,6 +171,12 @@ class BACnetDevice(Thread):
 
         # FIXME: temporarily. unfinished
         pv = rp_responses[0]
+        # convert active\inactive to 1\0
+        if pv == 'active':
+            pv = 1
+        elif pv == 'inactive':
+            pv = 0
+            
         sf = rp_responses[1]
         binary_sf = self.__status_flags_to_binary(status_flags=sf)
         return ' '.join([str(object_id),
