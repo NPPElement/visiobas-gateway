@@ -42,7 +42,7 @@ class VisioGateway:
             # etc. todo: not implemented
         }
 
-        self.__logger.info('Starting VisioGateway.')
+        self.__logger.info(f'{self} starting ...')
         try:
             self.__client = VisioClient(gateway=self, config=self._config['client'])
             self.__start_connectors()
@@ -51,15 +51,16 @@ class VisioGateway:
 
         while not self.__stopped:
             try:
-                pass
-
                 # delay
-                asyncio.run(asyncio.sleep(10))
+                asyncio.run(asyncio.sleep(60 * 60))
 
             except Exception as e:
                 self.__logger.error(f'Error: {e}', exc_info=True)
         else:
-            self.__logger.info('VisioGateway stopped.')
+            self.__logger.info(f'{self} stopped.')
+
+    def __repr__(self):
+        return 'VisioGateway'
 
     def __start_connectors(self) -> None:
         """Opens connection with all connectors"""
@@ -67,10 +68,7 @@ class VisioGateway:
             try:
                 connector.open()
             except Exception as e:
-                self.__logger.error(f'Connector opening error: {e}')
-            else:
-                self.__logger.info(f'Open: {connector}')
-                self._connectors_connected = True
+                self.__logger.error(f'{connector} opening error: {e}')
 
     def get_devices_objects(self, devices_id: list, object_types: list):
         """

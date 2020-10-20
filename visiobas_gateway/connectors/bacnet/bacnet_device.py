@@ -12,13 +12,13 @@ class BACnetDevice(Thread):
     def __init__(self, gateway, address: str, device_id: int, network, objects: dict):
         super().__init__()
 
-        self.__logger = self.__logger = logging.getLogger(f'BACnet-Device [{device_id}]')
-        self.setName(name=f'BACnet Device [{device_id}]-Thread')
+        self.__device_id = device_id
+        self.__logger = self.__logger = logging.getLogger(f'{self}')
+        self.setName(name=f'{self}-Thread')
 
         self.__gateway = gateway
 
         self.__address = address
-        self.__device_id = device_id
         self.__network = network
         self.__objects2poll = objects
 
@@ -30,33 +30,44 @@ class BACnetDevice(Thread):
         # self.__objects_per_rpm = 25
         # todo: Should we use one rpm for several objects?
 
-        self.__not_support_rpm = False
+        self.__not_support_rpm = {}
+        self.__not_responding = {}
+        self.__is_active = False
 
         self.__polling = True
 
+        self.__logger.info(f'{self} starting ...')
         self.start()
 
-    def run(self):
-        self.__logger.info('Started polling.')
+    def __repr__(self):
+        return f'BACnetDevice [{self.__device_id}]'
 
+    def run(self):
         while self.__polling:
+            self.__logger.info('Polling started')
             try:
-                data = self.start_poll()
+                data = self.poll()
                 self.__gateway.post_device(device_id=self.__device_id,
                                            data=data)
+                exit(666)  # FIXME delete
             except Exception as e:
-                self.__logger.error(f'Polling error: {e}')
+                self.__logger.error(f'Polling error: {e}', exc_info=False)
         else:
-            self.__logger.info('Stopped polling.')
-
-    def stop_polling(self):
-        self.__polling = False
-        self.__logger.info('Stopping polling ...')
+            self.__logger.info(f'{self} stopped.')
 
     def start_polling(self):
         self.__polling = True
         self.__logger.info('Starting polling ...')
         self.start()
+
+    def stop_polling(self):
+        self.__polling = False
+        self.__logger.info('Stopping polling ...')
+
+    def set_inactive(self):
+        # todo: push to connector for ping checking
+        self.stop_polling()
+        self.__logger.warning(f'{self} inactive.')
 
     def __rpm_object(self, object_type: ObjectType, object_id: int,
                      properties: list) -> str:
@@ -73,58 +84,70 @@ class BACnetDevice(Thread):
             [self.__address, object_type.name, str(object_id), *properties_as_string])
         # rpm_resp = self.__network.readMultiple(args_rpm)
         # FIXME: temporarily. unfinished
-        pv, sf = self.__network.readMultiple(args_rpm)
+        try:
+            pv, sf = self.__network.readMultiple(args_rpm)
+        except ValueError:
+            raise ReadPropertyMultipleException
+
+        # todo: check parts
 
         if pv and sf:
             binary_sf = self.__status_flags_to_binary(status_flags=sf)
             return ' '.join([str(object_id),
                              str(object_type.id),
                              str(pv),
-                             str(binary_sf),
-                             ';'])
+                             str(binary_sf)])
         else:
-            raise NoResponseFromController
-        # if rpm_resp:
-        #     pass
-        #     # todo: process statusFlags and etc
-        #     # todo: verify
-        # else:
-        #     # todo: set reliability
-        #     raise NoResponseFromController
+            raise ReadPropertyMultipleException
 
     def __rp(self, object_type: ObjectType, object_id: int, property_: ObjectProperty):
-        args_rp = ' '.join(
-            [self.__address, object_type.name, str(object_id), property_.name])
-        rp_resp = self.__network.read(args_rp)
-
-        if rp_resp:
-            return rp_resp
+        """RP request for one property"""
+        args_rp = ' '.join([self.__address,
+                            object_type.name,
+                            str(object_id),
+                            property_.name])
+        rp_response = self.__network.read(args_rp)
+        if rp_response:
+            self.set_not_support_rpm(object_type=object_type, object_id=object_id)
+            return rp_response
         else:
+            self.set_not_responding(object_type=object_type, object_id=object_id)
             raise NoResponseFromController
 
-    def __simulate_rpm_object(self, object_type: ObjectType, object_id: int,
-                              properties: list):
-        # rp_resps = []
-        #
-        # for prop in properties:
-        #     rp_resp = self.__rp(object_type=object_type,
-        #                         object_id=object_id,
-        #                         property_=prop)
-        #     rp_resps.append(rp_resp)
+    def set_not_support_rpm(self, object_type: ObjectType, object_id: int) -> None:
+        """Mark object as not supporting rpm"""
+        if object_type in self.__not_support_rpm:
+            self.__not_support_rpm[object_type].append(object_id)
+        else:
+            self.__not_support_rpm[object_type] = [object_id]
+        self.__logger.debug(f'({object_type}, {object_id}) marked as not supporting RPM')
 
-        rp_resps = [self.__rp(object_type=object_type,
-                              object_id=object_id,
-                              property_=prop) for prop in properties]
+    def set_not_responding(self, object_type: ObjectType, object_id: int) -> None:
+        """Mark object as not responding"""
+        if object_type in self.__not_responding:
+            self.__not_responding[object_type].append(object_id)
+        else:
+            self.__not_responding[object_type] = [object_id]
+        self.__logger.debug(f'({object_type}, {object_id}) marked as not responding')
+
+    def __simulate_rpm_object(self, object_type: ObjectType, object_id: int,
+                              properties: list) -> str:
+        try:
+            rp_responses = [self.__rp(object_type=object_type,
+                                      object_id=object_id,
+                                      property_=prop) for prop in properties]
+        except NoResponseFromController as e:
+            self.__logger.warning(f'RP\'s error for ({object_type}, {object_id})')
+            raise NoResponseFromController(f'RP error: {e}')
+
         # FIXME: temporarily. unfinished
-        if len(rp_resps) == 2:
-            pv = rp_resps[0]
-            sf = rp_resps[1]
-            binary_sf = self.__status_flags_to_binary(status_flags=sf)
-            return ' '.join([str(object_id),
-                             str(object_type.id),
-                             str(pv),
-                             str(binary_sf),
-                             ';'])
+        pv = rp_responses[0]
+        sf = rp_responses[1]
+        binary_sf = self.__status_flags_to_binary(status_flags=sf)
+        return ' '.join([str(object_id),
+                         str(object_type.id),
+                         str(pv),
+                         str(binary_sf)])
 
     @staticmethod
     def __status_flags_to_binary(status_flags: list) -> int:
@@ -133,46 +156,61 @@ class BACnetDevice(Thread):
 
         :param status_flags: ex. [1, 0, 1, 0]
         :return: status_flags in binary coding.
-            ex. [1, 0, 1, 0] -> 10
+
+            Example:
+            -------
+            [1, 0, 1, 0] -> 10
             (b1000 + b0010) = 10 in decimal
         """
         return int(''.join([str(flag) for flag in status_flags]), base=2)
 
-    def start_poll(self) -> str:
+    def __is_object_responding(self, object_type: ObjectType, object_id: int) -> bool:
+        return object_id not in self.__not_responding.get(object_type, [])
 
-        polled_data = ''
+    def poll(self) -> str:
+
+        polled_data = []
         for object_type, objects_id in self.__objects2poll.items():
             for object_id in objects_id:
-                data = None
-                try:
-                    data = self.__rpm_object(object_type=object_type,
-                                             object_id=object_id,
-                                             properties=self.__properties2poll)
-                    # todo: process statusFlags and etc
-                    # todo: verify
+                if self.__is_object_responding(object_type=object_type,
+                                               object_id=object_id):
+                    data = None
+                    try:
+                        data = self.__rpm_object(object_type=object_type,
+                                                 object_id=object_id,
+                                                 properties=self.__properties2poll)
+                        # todo: process statusFlags and etc
+                        # todo: verify
 
-                except ReadPropertyMultipleException as e:
-                    self.__logger.warning('RPM error for '
-                                          f'({object_type.name}, {object_id}): {e} '
-                                          'Trying to poll by RP ...')
-                    # todo: remember that the object is non-readable by RPM
-                    data = self.__simulate_rpm_object(object_type=object_type,
-                                                      object_id=object_id,
-                                                      properties=self.__properties2poll)
+                    except ReadPropertyMultipleException as e:
+                        self.__logger.warning('RPM error for '
+                                              f'({object_type.name}, {object_id}): {e} '
+                                              'Trying to poll by RP ...')
+                        try:
+                            data = self.__simulate_rpm_object(object_type=object_type,
+                                                              object_id=object_id,
+                                                              properties=self.__properties2poll)
+                        except (ValueError, NoResponseFromController) as e:
+                            self.__logger.warning(f'PRM simulation error: {e}')
 
-                except NoResponseFromController as e:
-                    self.__logger.warning('No BACnet response from '
-                                          f'({object_type.name}, {object_id}): {e} ')
+                    except NoResponseFromController as e:
+                        self.__logger.warning('No BACnet response from '
+                                              f'({object_type.name}, {object_id}): {e} ')
 
-                except UnknownObjectError as e:
-                    self.__logger.error('Unknown BACnet object: '
-                                        f'({object_type.name}, {object_id}): {e}')
-                finally:
-                    if data:
-                        polled_data += data
+                    except UnknownObjectError as e:
+                        self.__logger.error('Unknown BACnet object: '
+                                            f'({object_type.name}, {object_id}): {e}')
+                    finally:
+                        if data:
+                            polled_data.append(data)
+                else:  # object not responding
+                    pass
 
         if polled_data:
-            return polled_data
+            self.__logger.info(f'{len(polled_data)} objects were successfully polled')
+            return ';'.join(polled_data)
         else:
-            self.__logger.critical('Cannot be polled.')
-            raise NoResponseFromController
+            self.__logger.critical('No objects were successfully polled')
+            self.set_inactive()
+            # todo: What we should doing with inactive device?
+            #   push to connector to check ping?

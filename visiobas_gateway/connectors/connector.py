@@ -12,5 +12,5 @@ class Connector(ABC):
         pass
 
     @abstractmethod
-    def __str__(self):
+    def __repr__(self):
         pass

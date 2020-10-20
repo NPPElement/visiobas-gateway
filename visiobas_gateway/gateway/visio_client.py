@@ -13,15 +13,15 @@ class VisioClient(Thread):
     def __init__(self, gateway, config: dict):
         super().__init__()
 
-        self.__logger = logging.getLogger('VisioClient')
-        self.setName(name='VisioClient-Thread')
+        self.__logger = logging.getLogger(f'{self}')
+        self.setName(name=f'{self}-Thread')
 
         self.__gateway = gateway
 
         if isinstance(config, dict):
             self.__config = config
         else:
-            raise ValueError(f'Config for VisioClient not found.')
+            raise ValueError(f'Config for {self} not found.')
 
         self.__host = config['test_host']  # FIXME: test/prod
         self.__port = config['port']
@@ -39,6 +39,7 @@ class VisioClient(Thread):
         self.__bearer_token = None
         self.__auth_user_id = None
 
+        self.__logger.info(f'{self} starting ...')
         self.start()
 
     def run(self) -> None:
@@ -46,10 +47,7 @@ class VisioClient(Thread):
         Keeps the connection to the server. Login if necessary.
         Periodically requests updates from the server.
             Sends information received from the server to the gateway.
-
-        # TODO: Periodically sends the information received from the gateway to the server.
         """
-        self.__logger.info('Starting VisioClient.')
         while not self.__stopped:
             if not self.__connected:  # LOGIN
                 try:
@@ -61,21 +59,20 @@ class VisioClient(Thread):
                     self.__logger.info('Successfully log in to the server.')
 
             else:  # IF AUTHORIZED
-                pass
-                # TODO: send data to server
-
-            # delay
-            # asyncio.run(asyncio.sleep(10))
-
+                # delay
+                asyncio.run(asyncio.sleep(60 * 60))
         else:
-            self.__logger.info('VisioClient stopped.')
+            self.__logger.info(f'{self} stopped.')
+
+    def __repr__(self):
+        return 'VisioClient'
 
     def is_connected(self) -> bool:
         return self.__connected
 
     def stop(self) -> None:
         self.__stopped = True
-        self.__logger.info('VisioClient was stopped.')
+        self.__logger.info(f'{self} was stopped.')
 
     @property
     def __address(self) -> str:

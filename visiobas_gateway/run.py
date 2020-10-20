@@ -15,9 +15,11 @@ def main():
     args = parser.parse_args()
 
     # Setting the VisioGateway logging level
+    # todo: change to logging level by param
     level = logging.DEBUG if args.debug else logging.INFO
     logging.basicConfig(format=LOGGER_FORMAT,
-                        level=level, stream=sys.stdout)
+                        level=level,
+                        stream=sys.stdout)
 
     # Setting the BAC0 logging levels
     # BAC0.log_level('silence')
