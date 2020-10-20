@@ -133,7 +133,8 @@ class VisioClient(Thread):
 
         async with aiohttp.ClientSession(headers=self.__auth_headers) as session:
             async with session.post(url=url, data=data) as response:
-                self.__logger.debug(f'POST: {url}')
+                self.__logger.info(f'POST: {url}')
+                self.__logger.info(f'Body: {data}')
                 data = await self.__extract_response_data(response=response)
                 await self.__check_rejected(device_id=device_id,
                                             data=data)
@@ -250,6 +251,7 @@ class VisioClient(Thread):
                 return resp_json['data']
             else:
                 self.__logger.warning('Server returned failure response.')
+                self.__logger.info(f'{resp_json}')
                 # raise HTTPServerError
         else:
             self.__logger.warning(f'Server response status error: {response.status}')

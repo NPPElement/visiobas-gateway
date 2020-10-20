@@ -1,4 +1,6 @@
 import logging
+import time
+from pprint import pprint
 from threading import Thread
 
 from BAC0.core.io.IOExceptions import NoResponseFromController, UnknownObjectError, \
@@ -42,11 +44,31 @@ class BACnetDevice(Thread):
     def __repr__(self):
         return f'BACnetDevice [{self.__device_id}]'
 
+    def __len__(self):
+        """Returns the quantity of objects in the device received from the server side"""
+        return self.__count_objects(objects=self.__objects2poll)
+
+    @staticmethod
+    def __count_objects(objects: dict) -> int:
+        """
+        Counts the number of objects in the object dictionaries.
+        Used in __len__
+        """
+        counter = 0
+        for object_type in objects:
+            counter += len(objects[object_type])
+        # fixme: can be refactored
+        return counter
+
     def run(self):
         while self.__polling:
             self.__logger.info('Polling started')
             try:
+                t0 = time.time()
                 data = self.poll()
+                t1 = time.time()
+                time_delta = t1 - t0
+                self.__logger.info(f'{self} polled for {time_delta} sec')
                 self.__gateway.post_device(device_id=self.__device_id,
                                            data=data)
                 exit(666)  # FIXME delete
@@ -168,7 +190,6 @@ class BACnetDevice(Thread):
         return object_id not in self.__not_responding.get(object_type, [])
 
     def poll(self) -> str:
-
         polled_data = []
         for object_type, objects_id in self.__objects2poll.items():
             for object_id in objects_id:
@@ -207,7 +228,13 @@ class BACnetDevice(Thread):
                     pass
 
         if polled_data:
-            self.__logger.info(f'{len(polled_data)} objects were successfully polled')
+            self.__logger.info("////////////////////////////////////////"
+                               f'{len(polled_data)} out of {len(self)} objects were polled.'
+                               f'Not support RPM: {self.__count_objects(self.__not_support_rpm)}'
+                               f'Not responding: {self.__count_objects(self.__not_responding)}'
+                               '////////////////////////////////////////')
+            self.__logger.info('COLLECTED: ')
+            pprint(polled_data)
             return ';'.join(polled_data)
         else:
             self.__logger.critical('No objects were successfully polled')
