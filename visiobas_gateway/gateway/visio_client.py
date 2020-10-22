@@ -23,7 +23,7 @@ class VisioClient(Thread):
         else:
             raise ValueError(f'Config for {self} not found.')
 
-        self.__host = config['test_host']  # FIXME: test/prod
+        self.__host = config['host-mirror']  # FIXME: test/prod
         self.__port = config['port']
 
         self.__verify = config['ssl_verify']
