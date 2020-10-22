@@ -147,28 +147,37 @@ class Object:
         return values
 
     def evaluate(self, values: dict) -> dict:
+        # todo replace to verifier
+        #   temp
+
         bacnet_properties = {}
         if not values:
             return bacnet_properties
 
-        for property_, value in values.items():
+        sf = values.get(ObjectProperty.statusFlags, StatusFlags())
+        if sf:
+            bacnet_properties.update({
+                ObjectProperty.statusFlags: sf
+            })
 
-            if property_ is ObjectProperty.presentValue and value:
-                bacnet_properties.update({ObjectProperty.presentValue: value})
-            else:
-                bacnet_properties.update({ObjectProperty.presentValue: 'null'})
-
-            if property_ is ObjectProperty.statusFlags and value:
-                bacnet_properties.update(
-                    {ObjectProperty.statusFlags: StatusFlags(status_flags=value)})
-            else:
-                bacnet_properties.update({ObjectProperty.statusFlags: StatusFlags()})
+        pv = values.get(ObjectProperty.presentValue, 'null')
+        if pv and pv != 'null':
+            bacnet_properties.update({
+                ObjectProperty.presentValue: values[ObjectProperty.presentValue]
+            })
+        else:
+            status_flags = values.get(ObjectProperty.statusFlags, StatusFlags())
+            status_flags.set(fault=True)
+            bacnet_properties.update({
+                ObjectProperty.presentValue: pv,
+                ObjectProperty.statusFlags: status_flags
+            })
             # todo: etc ...
 
         # todo: make reliability Enum
         # todo: implement reliability concatenation
         if not self.is_responding():
-            status_flags = bacnet_properties.get(ObjectProperty.statusFlags, StatusFlags)
+            status_flags = bacnet_properties.get(ObjectProperty.statusFlags, StatusFlags())
             status_flags.set(fault=True)
             bacnet_properties.update({
                 ObjectProperty.presentValue: 'null',
@@ -176,8 +185,8 @@ class Object:
                 ObjectProperty.reliability: 'no-response'
             })
 
-        if self.is_unknown():
-            status_flags = bacnet_properties.get(ObjectProperty.statusFlags, StatusFlags)
+        elif self.is_unknown():
+            status_flags = bacnet_properties.get(ObjectProperty.statusFlags, StatusFlags())
             status_flags.set(fault=True)
             bacnet_properties.update({
                 ObjectProperty.presentValue: 'null',
@@ -187,10 +196,13 @@ class Object:
         return bacnet_properties
 
     def as_str(self, properties: dict):
-        return ' '.join([
-            str(self.__id),
-            str(self.__type.id),
-            str(properties.get(ObjectProperty.presentValue, 'null')),
-            str(properties.get(ObjectProperty.statusFlags, StatusFlags()).as_binary),
-            str(properties.get(ObjectProperty.reliability, 'null'))
-        ])
+        if properties:
+            return ' '.join([
+                str(self.__id),
+                str(self.__type.id),
+                str(properties.get(ObjectProperty.presentValue, 'null')),
+                str(properties.get(ObjectProperty.statusFlags, '0')),
+                str(properties.get(ObjectProperty.reliability, ''))
+            ])
+        else:
+            return ''
