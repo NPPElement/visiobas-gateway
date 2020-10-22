@@ -174,7 +174,8 @@ class Object:
                 ObjectProperty.presentValue: values[ObjectProperty.presentValue]
             })
         else:
-            status_flags = values.get(ObjectProperty.statusFlags, StatusFlags())
+            status_flags = values.get(ObjectProperty.statusFlags, [0, 0, 0, 0])
+            status_flags = StatusFlags(status_flags=status_flags)
             status_flags.set(fault=True)
             bacnet_properties.update({
                 ObjectProperty.presentValue: pv,
