@@ -160,13 +160,9 @@ class Object:
 
         sf = values.get(ObjectProperty.statusFlags, [0, 0, 0, 0])
         if sf:
-            bacnet_properties.update({
-                ObjectProperty.statusFlags: StatusFlags(sf)
-            })
+            bacnet_properties.update({ObjectProperty.statusFlags: StatusFlags(sf)})
         else:
-            bacnet_properties.update({
-                ObjectProperty.statusFlags: StatusFlags()
-            })
+            bacnet_properties.update({ObjectProperty.statusFlags: StatusFlags()})
 
         pv = values.get(ObjectProperty.presentValue, 'null')
         if pv and pv != 'null':
@@ -174,18 +170,15 @@ class Object:
                 pv = 1
             elif pv == 'inactive':
                 pv = 0
-            bacnet_properties.update({
-                ObjectProperty.presentValue: pv  # values[ObjectProperty.presentValue]
-            })
+            bacnet_properties.update({ObjectProperty.presentValue: pv})
         else:
             status_flags = values.get(ObjectProperty.statusFlags, [0, 0, 0, 0])
             status_flags = StatusFlags(status_flags=status_flags)
             status_flags.set(fault=True)
             bacnet_properties.update({
-                ObjectProperty.presentValue: pv,
+                ObjectProperty.presentValue: 'null',
                 ObjectProperty.statusFlags: status_flags
             })
-            # todo: etc ...
 
         # todo: make reliability Enum
         # todo: implement reliability concatenation
