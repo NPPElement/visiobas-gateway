@@ -68,6 +68,8 @@ class Object:
                 property_.name
             ])
             value = self.__device.network.read(request)
+        except UnknownObjectError as e:
+            raise ReadPropertyException(f'Unknown object: {e}')
         except NoResponseFromController as e:
             raise ReadPropertyException(f'No response from controller: {e}')
         except KeyError as e:
@@ -187,7 +189,7 @@ class Object:
     def as_str(self, properties: dict):
         return ' '.join([
             str(self.__id),
-            str(self.__type),
+            str(self.__type.id),
             str(properties.get(ObjectProperty.presentValue, 'null')),
             str(properties.get(ObjectProperty.statusFlags, StatusFlags()).as_binary),
             str(properties.get(ObjectProperty.reliability, 'null'))
