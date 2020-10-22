@@ -154,10 +154,10 @@ class Object:
         if not values:
             return bacnet_properties
 
-        sf = values.get(ObjectProperty.statusFlags, StatusFlags())
+        sf = values.get(ObjectProperty.statusFlags, [0, 0, 0, 0])
         if sf:
             bacnet_properties.update({
-                ObjectProperty.statusFlags: sf
+                ObjectProperty.statusFlags: StatusFlags(sf)
             })
 
         pv = values.get(ObjectProperty.presentValue, 'null')
