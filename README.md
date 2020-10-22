@@ -9,12 +9,19 @@ It is an application for polling devices using various protocols and transmittin
 ## Launch
 
 ## Update
-
-$ sudo docker-compose down
-$ sudo docker images
-$ sudo docker rmi [id] 
-	//id=(sudo docker images)
-$ sudo docker-compose up
+<pre>
+sudo docker-compose down
+</pre>
+<pre>
+sudo docker images
+</pre>
+<pre>
+sudo docker rmi [id] 
+</pre>
+ -- set the data received after executing the previous command instead of the id
+<pre>
+sudo docker-compose up
+</pre>
 
 ## License
 
