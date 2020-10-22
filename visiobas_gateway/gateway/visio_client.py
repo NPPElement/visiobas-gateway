@@ -154,7 +154,7 @@ class VisioClient(Thread):
                                'All objects were accepted on the server side.')
             return data
         else:
-            rejected_objects_id = [obj[str(ObjectProperty.OBJECT_IDENTIFIER.id)] for obj in
+            rejected_objects_id = [obj[str(ObjectProperty.objectIdentifier.id)] for obj in
                                    data]
             self.__logger.warning(f'POST-result: Device [{device_id}] '
                                   'Error processing objects on '
@@ -199,7 +199,7 @@ class VisioClient(Thread):
         # Creating a dictionary, where the key is the type of the objects,
         # and the value is the list of id of objects of this type.
         device_objects = {
-            object_type: [prop[str(ObjectProperty.OBJECT_IDENTIFIER.id)] for
+            object_type: [prop[str(ObjectProperty.objectIdentifier.id)] for
                           prop in objects] for
             object_type, objects in
             zip(object_types, await asyncio.gather(*objects_requests))

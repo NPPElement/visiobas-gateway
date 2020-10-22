@@ -39,7 +39,6 @@ class BACnetConnector(Thread, Connector):
             ObjectType.MULTI_STATE_INPUT,
             ObjectType.MULTI_STATE_OUTPUT,
             ObjectType.MULTI_STATE_VALUE,
-            # 'notification-class'
         ]
 
         self.__ready_devices_id = set()
@@ -64,7 +63,8 @@ class BACnetConnector(Thread, Connector):
                 try:
                     self.__network = BAC0.lite()
                     BAC0.log_level('silence')  # fixme: no reaction - still having debug
-                    # self.__network.readMultiple()
+                    # BAC0.device()
+                    # self.__network.build_rp_request()
 
                 except InitializationError as e:
                     self.__logger.error(f'Network initialization error: {e}', exc_info=True)
@@ -77,6 +77,7 @@ class BACnetConnector(Thread, Connector):
 
                 devices_objects = {}
                 try:  # Requesting objects and their types from the server
+                    # FIXME: write method for update
                     devices_objects.update(self.__gateway.get_devices_objects(
                         devices_id=list(self.__address_cache.keys()),
                         object_types=self.__object_types_to_request))
@@ -100,8 +101,7 @@ class BACnetConnector(Thread, Connector):
                             )
                         except Exception as e:
                             self.__logger.error(f'Device [{device_id}] '
-                                                f'error: {e}', )
-                            # exc_info=True)
+                                                f'error: {e}', exc_info=True)
 
                     # delay
                     asyncio.run(asyncio.sleep(3600))

@@ -1,8 +1,18 @@
-import enum
+from enum import Enum, unique, DynamicClassAttribute
 
 
-class ObjectProperty(enum.Enum):
-    ACKED_TRANSITIONS = '0'
+@unique
+class ObjectProperty(Enum):
+    # @DynamicClassAttribute
+    # def name(self):
+    #     words = self._name_.split(sep='_')
+    #     camel_case_name = ''.join([
+    #         words.pop(0).lower(),
+    #         *[word.capitalize() for word in words]
+    #     ])
+    #     return camel_case_name
+
+    ACKED_TRANSITIONS = 0
     ACK_REQUIRED = '1'
     ACTION = '2'
     ACTION_TEXT = '3'
@@ -74,16 +84,16 @@ class ObjectProperty(enum.Enum):
     NOTIFY_TYPE = '72'
     NUMBER_OF_APDU_RETRIES = '73'
     NUMBER_OF_STATES = '74'
-    OBJECT_IDENTIFIER = 75, 'objectIdentifier'
+    objectIdentifier = 75
     OBJECT_LIST = '76'
     OBJECT_PROPERTY_REFERENCE = '77'
-    OBJECT_TYPE = '79'
+    objectType = 79
     OPTIONAL = '80'
     OUT_OF_SERVICE = '81'
     OUTPUT_UNITS = '82'
     EVENT_PARAMETERS = '83'
     POLARITY = '84'
-    PRESENT_VALUE = '85', 'presentValue'
+    presentValue = '85'
     PRIORITY = '86'
     PRIORITY_ARRAY = '87'
     PRIORITY_FOR_WRITING = '88'
@@ -99,7 +109,7 @@ class ObjectProperty(enum.Enum):
     READ_ONLY = '99'
     REASON_FOR_HALT = '100'
     RECIPIENT_LIST = '102'
-    RELIABILITY = '103', 'reliability'
+    reliability = 103
     RELINQUISH_DEFAULT = '104'
     REQUIRED = '105'
     RESOLUTION = '106'
@@ -107,7 +117,7 @@ class ObjectProperty(enum.Enum):
     SETPOINT = '108'
     SETPOINT_REFERENCE = '109'
     STATE_TEXT = '110'
-    STATUS_FLAGS = '111', 'statusFlags'
+    statusFlags = 111
     SYSTEM_STATUS = '112'
     TIME_DELAY = '113'
     TIME_OF_ACTIVE_TIME_RESET = '114'
@@ -355,10 +365,18 @@ class ObjectProperty(enum.Enum):
     EGRESS_ACTIVE = '386'
     DEVICE_ID = '846'
 
-    @property
-    def id(self):
-        return self.value[0]
+    # def __repr__(self):
+    #     return self.name
 
     @property
-    def name(self):
-        return self.value[1]
+    def id(self):
+        return self.value
+
+    # @property
+    # def name(self):
+    #     return self.value[1]
+
+
+if __name__ == '__main__':
+    obj_prop = ObjectProperty(value=75)
+    print(obj_prop.name)
