@@ -209,13 +209,10 @@ class Object:
         return bacnet_properties
 
     def as_str(self, properties: dict):
-        if properties:
-            return ' '.join([
-                str(self.__id),
-                str(self.__type.id),
-                str(properties.get(ObjectProperty.presentValue, 'null')),
-                str(properties.get(ObjectProperty.statusFlags, '0')),
-                str(properties.get(ObjectProperty.reliability, ''))
-            ]).strip()
-        else:
-            return ''
+        return ' '.join([
+            str(self.__id),
+            str(self.__type.id),
+            str(properties.get(ObjectProperty.presentValue, 'null')),
+            str(properties.get(ObjectProperty.statusFlags, '0')),
+            str(properties.get(ObjectProperty.reliability, ''))
+        ]).strip()

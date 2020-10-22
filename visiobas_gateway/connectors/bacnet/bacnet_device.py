@@ -108,8 +108,9 @@ class BACnetDevice(Thread):
                     except Exception as e:
                         raise Exception(f'{obj} Poll Error: {e}')
                     else:
-                        data_str = obj.as_str(properties=evaluated_values)
-                        polled_data.append(data_str)
+                        if evaluated_values:
+                            data_str = obj.as_str(properties=evaluated_values)
+                            polled_data.append(data_str)
 
                     # todo: How much objects need to switch into inactive?
 
