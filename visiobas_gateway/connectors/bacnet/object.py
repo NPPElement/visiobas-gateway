@@ -177,7 +177,8 @@ class Object:
             status_flags.set(fault=True)
             bacnet_properties.update({
                 ObjectProperty.presentValue: 'null',
-                ObjectProperty.statusFlags: status_flags
+                ObjectProperty.statusFlags: status_flags,
+                ObjectProperty.reliability: 'no-response'
             })
 
         # todo: make reliability Enum
