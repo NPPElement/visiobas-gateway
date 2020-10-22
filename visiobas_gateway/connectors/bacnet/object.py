@@ -178,7 +178,7 @@ class Object:
             bacnet_properties.update({
                 ObjectProperty.presentValue: 'null',
                 ObjectProperty.statusFlags: status_flags,
-                ObjectProperty.reliability: 'no-response'
+                ObjectProperty.reliability: '64'
             })
 
         # todo: make reliability Enum
@@ -189,7 +189,7 @@ class Object:
             bacnet_properties.update({
                 ObjectProperty.presentValue: 'null',
                 ObjectProperty.statusFlags: status_flags,
-                ObjectProperty.reliability: 'no-response'
+                ObjectProperty.reliability: '64'
             })
 
         elif self.is_unknown():
@@ -198,7 +198,7 @@ class Object:
             bacnet_properties.update({
                 ObjectProperty.presentValue: 'null',
                 ObjectProperty.statusFlags: status_flags,
-                ObjectProperty.reliability: 'unknown-object'
+                ObjectProperty.reliability: '65'
             })
         return bacnet_properties
 
