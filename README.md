@@ -5,9 +5,10 @@ It is an application for polling devices using various protocols and transmittin
 ## Installation
 
 ## Setting
+To configure it, you need to edit the file visiobas_gateway/config/gateway.json
 
 ## Launch
--- go to the visiobas-gateway directory
+Go to the visiobas-gateway directory
 <pre>
 sudo docker-compose up
 </pre>
@@ -22,7 +23,7 @@ sudo docker images
 <pre>
 sudo docker rmi [id] 
 </pre>
- -- set the data received after executing the previous command instead of the id
+Set the data received after executing the previous command instead of the id
 <pre>
 sudo git pull
 </pre>
@@ -30,6 +31,9 @@ sudo git pull
 sudo docker-compose up
 </pre>
 
-## License
+## Level
+You can change the logging level using visiobas_gateway/run.py
+level being 'DEBUG, INFO, WARNING, ERROR'
 
+## License
 GPL-3.0 License
