@@ -2,8 +2,8 @@
 	"client": {
 		"host1": "http://10.21.80.9",
 		"host2": "http://10.21.171.11",
-		"host3": "http://10.21.80.10",
-		"host-mirror": "http://nppelement.com",
+		"host3": "http://nppelement.com",
+		"host-mirror": "http://10.21.80.10",
 		"port": 8080,
 		"ssl_verify": false,
 		"auth": {
