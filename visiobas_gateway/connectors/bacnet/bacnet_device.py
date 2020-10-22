@@ -101,7 +101,7 @@ class BACnetDevice(Thread):
             for object_type, objects_id in self.__objects2poll.items():
                 for object_id in objects_id:
                     obj = Object(device=self, type_=object_type, id_=object_id)
-                    
+
                     try:
                         values = obj.read(properties=self.__properties2poll)
                         evaluated_values = obj.evaluate(values=values)

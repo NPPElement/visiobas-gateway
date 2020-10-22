@@ -163,6 +163,10 @@ class Object:
             bacnet_properties.update({
                 ObjectProperty.statusFlags: StatusFlags(sf)
             })
+        else:
+            bacnet_properties.update({
+                ObjectProperty.statusFlags: StatusFlags()
+            })
 
         pv = values.get(ObjectProperty.presentValue, 'null')
         if pv and pv != 'null':
