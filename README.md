@@ -65,6 +65,13 @@ sudo docker-compose up
 sudo docker-compose down
 </pre>
 <pre>
+docker-compose up --build
+</pre>
+Or with full cleaning
+<pre>
+sudo docker-compose down
+</pre>
+<pre>
 sudo docker images
 </pre>
 <pre>
