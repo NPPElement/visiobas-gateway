@@ -20,6 +20,9 @@ sudo docker rmi [id]
 </pre>
  -- set the data received after executing the previous command instead of the id
 <pre>
+sudo git pull
+</pre>
+<pre>
 sudo docker-compose up
 </pre>
 
