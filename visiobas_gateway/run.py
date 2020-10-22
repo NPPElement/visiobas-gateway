@@ -16,7 +16,8 @@ def main():
 
     # Setting the VisioGateway logging level
     # todo: change to logging level by param
-    level = logging.DEBUG if args.debug else logging.INFO
+    # level = logging.DEBUG if args.debug else logging.INFO
+    level = logging.INFO
     logging.basicConfig(format=LOGGER_FORMAT,
                         level=level,
                         stream=sys.stdout)
