@@ -45,11 +45,3 @@ class StatusFlags:
             self.overriden = overriden
         if out_of_service is not None:
             self.out_of_service = out_of_service
-
-
-# TODO: for 'testing'
-if __name__ == '__main__':
-    sf = StatusFlags([0, 0, 0, 0])
-    print(sf)
-    sf.set(in_alarm=True, overriden=True)
-    print(sf)

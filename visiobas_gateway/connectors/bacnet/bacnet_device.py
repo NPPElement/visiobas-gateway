@@ -30,9 +30,9 @@ class BACnetDevice(Thread):
         # self.__objects_per_rpm = 25
         # todo: Should we use one RPM for several objects?
 
-        self.__not_support_rpm = {}
-        self.__not_responding = {}
-        self.__unknown_objects = {}
+        self.__not_support_rpm = set()
+        self.__not_responding = set()
+        self.__unknown_objects = set()
 
         self.__polling = True
 
@@ -101,6 +101,7 @@ class BACnetDevice(Thread):
             for object_type, objects_id in self.__objects2poll.items():
                 for object_id in objects_id:
                     obj = Object(device=self, type_=object_type, id_=object_id)
+                    
                     try:
                         values = obj.read(properties=self.__properties2poll)
                         evaluated_values = obj.evaluate(values=values)

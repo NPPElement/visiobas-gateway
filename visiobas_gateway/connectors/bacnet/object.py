@@ -140,11 +140,15 @@ class Object:
                         values = self.__simulate_rpm(properties=properties)
                     except Exception as e:
                         self.__logger.error(f'Read Error: {e}', exc_info=True)
-                        raise Exception(f'Read Error')
+                        return {}
             else:
-                values = self.__simulate_rpm(properties=properties)
-        # fixme
-        return values
+                try:
+                    values = self.__simulate_rpm(properties=properties)
+                except Exception as e:
+                    self.__logger.error(f'Read Error: {e}', exc_info=True)
+                    return {}
+
+            return values
 
     def evaluate(self, values: dict) -> dict:
         # todo replace to verifier
