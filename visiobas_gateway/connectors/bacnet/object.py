@@ -216,6 +216,6 @@ class Object:
                 str(properties.get(ObjectProperty.presentValue, 'null')),
                 str(properties.get(ObjectProperty.statusFlags, '0')),
                 str(properties.get(ObjectProperty.reliability, ''))
-            ])
+            ]).strip()
         else:
             return ''
