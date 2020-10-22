@@ -1,4 +1,4 @@
-from enum import Enum, unique, DynamicClassAttribute
+from enum import Enum, unique
 
 
 @unique
@@ -375,8 +375,3 @@ class ObjectProperty(Enum):
     # @property
     # def name(self):
     #     return self.value[1]
-
-
-if __name__ == '__main__':
-    obj_prop = ObjectProperty(value=75)
-    print(obj_prop.name)

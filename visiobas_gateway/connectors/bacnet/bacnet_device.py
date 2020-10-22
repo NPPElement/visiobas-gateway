@@ -1,3 +1,4 @@
+import asyncio
 import logging
 import time
 from threading import Thread
@@ -29,6 +30,8 @@ class BACnetDevice(Thread):
 
         # self.__objects_per_rpm = 25
         # todo: Should we use one RPM for several objects?
+
+        self.__active = True
 
         self.__not_support_rpm = set()
         self.__not_responding = set()
@@ -65,17 +68,25 @@ class BACnetDevice(Thread):
     def run(self):
         while self.__polling:
             self.__logger.info('Polling started')
-            try:
-                t0 = time.time()
-                data = self.poll()
-                t1 = time.time()
-                time_delta = t1 - t0
-                self.__logger.info(f'{self} polled for {time_delta} sec')
-                self.__gateway.post_device(device_id=self.__device_id,
-                                           data=data)
-                exit(666)  # FIXME delete
-            except Exception as e:
-                self.__logger.error(f'Polling error: {e}', exc_info=True)
+            if self.__active:
+                try:
+                    t0 = time.time()
+                    data = self.poll()
+                    t1 = time.time()
+                    time_delta = t1 - t0
+                    if data:
+                        self.__logger.info(f'{self} polled for {time_delta} sec')
+                        self.__gateway.post_device(device_id=self.__device_id,
+                                                   data=data)
+                except Exception as e:
+                    self.__logger.error(f'Polling error: {e}', exc_info=True)
+            else:  # if device inactive
+                if self.network.whois(f'{self.address}'):
+                    self.__active = True
+                    continue
+                # delay
+                # todo: move delay in config
+                asyncio.run(asyncio.sleep(delay=60))
         else:
             self.__logger.info(f'{self} stopped.')
 
@@ -89,28 +100,36 @@ class BACnetDevice(Thread):
         self.__logger.info('Stopping polling ...')
 
     def set_inactive(self):
-        # todo: push to connector for ping checking
-        self.stop_polling()
-        self.__logger.warning(f'{self} inactive.')
-        # todo: What we should doing with inactive device?
-        #   push to connector to check ping?
+        # self.stop_polling()
+        self.__active = False
+        self.__logger.warning(f'{self} switched to inactive.')
 
     def poll(self) -> str:
+        limit = 25  # to switch to inactive
+        # todo move to cfg
         while self.__polling:
             polled_data = []
+            no_res_in_row = 0
             for object_type, objects_id in self.__objects2poll.items():
                 for object_id in objects_id:
-                    obj = Object(device=self, type_=object_type, id_=object_id)
+                    if no_res_in_row < limit:
+                        obj = Object(device=self, type_=object_type, id_=object_id)
 
-                    try:
-                        values = obj.read(properties=self.__properties2poll)
-                        evaluated_values = obj.evaluate(values=values)
-                    except Exception as e:
-                        raise Exception(f'{obj} Poll Error: {e}')
+                        try:
+                            values = obj.read(properties=self.__properties2poll)
+                            evaluated_values = obj.evaluate(values=values)
+                        except Exception as e:
+                            no_res_in_row += 1
+                            raise Exception(f'{obj} Poll Error: {e}')
+                        else:
+                            if evaluated_values:
+                                data_str = obj.as_str(properties=evaluated_values)
+                                polled_data.append(data_str)
+                            else:
+                                no_res_in_row += 1
                     else:
-                        if evaluated_values:
-                            data_str = obj.as_str(properties=evaluated_values)
-                            polled_data.append(data_str)
+                        self.set_inactive()
+                        return ''
 
                     # todo: How much objects need to switch into inactive?
 
@@ -126,3 +145,4 @@ class BACnetDevice(Thread):
             else:
                 self.__logger.critical('No objects were successfully polled')
                 self.set_inactive()
+                return ''

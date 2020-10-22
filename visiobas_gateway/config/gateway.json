@@ -1,6 +1,9 @@
 {
 	"client": {
 		"host": "http://10.21.171.11",
+		"host1": "http://10.21.80.5",
+		"host2": "http://10.21.80.6",
+		"host3": "http://10.21.80.7",
 		"test_host": "http://nppelement.com",
 		"port": 8080,
 		"ssl_verify": false,
