@@ -7,6 +7,10 @@ It is an application for polling devices using various protocols and transmittin
 ## Setting
 
 ## Launch
+go to the visiobas-gateway directory
+<pre>
+sudo docker-compose up
+</pre>
 
 ## Update
 <pre>
