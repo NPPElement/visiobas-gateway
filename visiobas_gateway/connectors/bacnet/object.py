@@ -51,12 +51,15 @@ class Object:
              ) -> None:
         if not_support_rpm is not None:
             self.__not_support_rpm = not_support_rpm
+            self.__device.not_support_rpm.add(self)
             self.__logger.debug(f'{self} marked as not supporting RPM')
         if not_responding:
             self.__not_responding = not_responding
+            self.__device.not_responding.add(self)
             self.__logger.debug(f'{self} marked as not responding')
         if unknown_object:
             self.__unknown_object = unknown_object
+            self.__device.unknown_objects.add(self)
             self.__logger.debug(f'{self} marked as unknown object')
 
     def __read_property(self, property_: ObjectProperty):
