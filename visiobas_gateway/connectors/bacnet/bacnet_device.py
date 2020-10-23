@@ -144,6 +144,7 @@ class BACnetDevice(Thread):
 
                 # todo: close Thread and push to bacnet-connector
                 asyncio.run(asyncio.sleep(delay=60))
+            # exit(666)
         else:
             self.__logger.info(f'{self} stopped.')
 

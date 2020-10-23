@@ -18,17 +18,17 @@ class StatusFlags:
 
     def __repr__(self):
         """Uses to convert into number by binary coding"""
-        return str(int(''.join([str(int(self.in_alarm)),
-                                str(int(self.fault)),
+        return str(int(''.join([str(int(self.out_of_service)),
                                 str(int(self.overriden)),
-                                str(int(self.out_of_service))]), base=2))
+                                str(int(self.fault)),
+                                str(int(self.in_alarm))]), base=2))
 
     @property
     def as_binary(self):
-        return int(''.join([str(int(self.in_alarm)),
-                            str(int(self.fault)),
+        return int(''.join([str(int(self.out_of_service)),
                             str(int(self.overriden)),
-                            str(int(self.out_of_service))]), base=2)
+                            str(int(self.fault)),
+                            str(int(self.in_alarm))]), base=2)
 
     def set(self,
             *,
@@ -45,3 +45,11 @@ class StatusFlags:
             self.overriden = overriden
         if out_of_service is not None:
             self.out_of_service = out_of_service
+
+
+if __name__ == '__main__':
+    sf = StatusFlags()
+    sf.set(fault=True)
+    print('Fault', sf)
+    sf.set(fault=False, overriden=True)
+    print('Overriden', sf)
