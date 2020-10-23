@@ -103,7 +103,21 @@ class BACnetDevice(Thread):
                 except Exception as e:
                     self.__logger.error(f'Polling error: {e}', exc_info=True)
             else:  # if device inactive
-                if self.network.whois(f'{self.address}'):
+                who_is = self.network.whois(f'{self.address}')
+
+                base_dir = Path(__file__).resolve().parent.parent
+                log_file = base_dir / 'log/log.txt'
+
+                with open(file=log_file, mode='a', encoding='utf-8') as file:
+                    file.write(
+                        '=================================================='
+                        f'{self} requested WHO-IS'
+                        f'WHO IS: {who_is}'
+                        f'who-is type: {type(who_is)}'
+                        '=================================================='
+                    )
+                self.__lock.release()
+                if who_is:
                     self.__active = True
                     continue
                 # delay
