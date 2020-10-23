@@ -57,11 +57,12 @@ class BACnetDevice(Thread):
     def log_in_file(self, time_: float, polled_objects: int) -> None:
         base_dir = Path(__file__).resolve().parent.parent
         log_file = base_dir / 'log/log.txt'
+
         self.__lock.acquire()
         with open(file=log_file, mode='a', encoding='utf-8') as file:
             file.write(
                 '=================================================='
-                f'{self} polled for {round(time_, ndigits=2)} seconds'
+                f'{self} ip:{self.address} polled for {round(time_, ndigits=2)} seconds'
                 f'Polled objects: {polled_objects}/{len(self)}'
                 f'Objects not support RPM: {len(self.not_support_rpm)}'
                 f'Objects not responding: {len(self.not_responding)}'
@@ -125,6 +126,18 @@ class BACnetDevice(Thread):
     def set_inactive(self):
         # self.stop_polling()
         self.__active = False
+
+        base_dir = Path(__file__).resolve().parent.parent
+        log_file = base_dir / 'log/log.txt'
+        self.__lock.acquire()
+        with open(file=log_file, mode='a', encoding='utf-8') as file:
+            file.write(
+                '=================================================='
+                f'{self} ip:{self.address} switched to inactive.'
+                '=================================================='
+            )
+        self.__lock.release()
+
         self.__logger.warning(f'{self} switched to inactive.')
 
     def poll(self) -> str:
