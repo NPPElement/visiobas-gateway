@@ -1,7 +1,6 @@
 import asyncio
 import logging
 import time
-from pathlib import Path
 from threading import Thread, RLock
 
 from BAC0.core.io.IOExceptions import ReadPropertyException
@@ -57,22 +56,22 @@ class BACnetDevice(Thread):
         """
         return self.__count_objects(objects=self.__objects2poll)
 
-    def log_in_file(self, time_: float, polled_objects: int) -> None:
-        base_dir = Path(__file__).resolve().parent.parent
-        log_file = base_dir / 'log/log.txt'
+    # def log_in_file(self, time_: float, polled_objects: int) -> None:
+    #     base_dir = Path(__file__).resolve().parent.parent
+    #     log_file = base_dir / 'log/log.txt'
 
-        # self.__lock.acquire()
-        # with open(file=log_file, mode='a', encoding='utf-8') as file:
-        #     file.write(
-        #         '=================================================='
-        #         f'{self} ip:{self.address} polled for {round(time_, ndigits=2)} seconds'
-        #         f'Polled objects: {polled_objects}/{len(self)}'
-        #         f'Objects not support RPM: {len(self.not_support_rpm)}'
-        #         f'Objects not responding: {len(self.not_responding)}'
-        #         f'Unknown objects: {len(self.unknown_objects)}'
-        #         '=================================================='
-        #     )
-        # self.__lock.release()
+    # self.__lock.acquire()
+    # with open(file=log_file, mode='a', encoding='utf-8') as file:
+    #     file.write(
+    #         '=================================================='
+    #         f'{self} ip:{self.address} polled for {round(time_, ndigits=2)} seconds'
+    #         f'Polled objects: {polled_objects}/{len(self)}'
+    #         f'Objects not support RPM: {len(self.not_support_rpm)}'
+    #         f'Objects not responding: {len(self.not_responding)}'
+    #         f'Unknown objects: {len(self.unknown_objects)}'
+    #         '=================================================='
+    #     )
+    # self.__lock.release()
 
     @staticmethod
     def __count_objects(objects: dict) -> int:
@@ -97,6 +96,14 @@ class BACnetDevice(Thread):
                     data = self.poll()
                     t1 = time.time()
                     time_delta = t1 - t0
+
+                    self.__logger.info('=================================================='
+                                       f'{self} ip:{self.address} polled for {round(time_delta, ndigits=2)} seconds'
+                                       f'Objects: {len(self)}'
+                                       f'Objects not support RPM: {len(self.not_support_rpm)}'
+                                       f'Objects not responding: {len(self.not_responding)}'
+                                       f'Unknown objects: {len(self.unknown_objects)}'
+                                       '==================================================')
                     # self.log_in_file(time_=time_delta, polled_objects=len(data))
                     if data:
                         self.__logger.info(f'{self} polled for {time_delta} sec')
@@ -109,8 +116,9 @@ class BACnetDevice(Thread):
                 try:
                     device_obj = Object(device=self, type_=ObjectType.DEVICE,
                                         id_=self.__device_id)
-                    device_id = device_obj.read_property(property_=ObjectProperty.objectIdentifier)
-                    #who_is = self.network.read(f'{self.address} ')
+                    device_id = device_obj.read_property(
+                        property_=ObjectProperty.objectIdentifier)
+                    self.__logger.info(f'PING: device_id: {device_id}')
 
                     # base_dir = Path(__file__).resolve().parent.parent
                     # log_file = base_dir / 'log/log.txt'
@@ -166,7 +174,7 @@ class BACnetDevice(Thread):
         self.__logger.warning(f'{self} switched to inactive.')
 
     def poll(self) -> str:
-        limit = 25  # to switch to inactive
+        limit = 50  # to switch to inactive
         # todo move to cfg
         while self.__polling:
             polled_data = []
