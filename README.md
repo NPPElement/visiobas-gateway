@@ -57,7 +57,11 @@ To configure it, you need to edit the file visiobas_gateway/config/gateway.json
 ## Launch
 Go to the visiobas-gateway directory
 <pre>
-sudo docker-compose up
+sudo docker-compose up -d
+</pre>
+For enable docker logs:
+<pre>
+sudo docker-compose logs -f
 </pre>
 
 ## Update
