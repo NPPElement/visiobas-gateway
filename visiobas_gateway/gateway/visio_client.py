@@ -97,10 +97,12 @@ class VisioClient(Thread):
             async with session.post(url=url, json=data) as response:
                 self.__logger.debug(f'POST: {url}')
                 data = await self.__extract_response_data(response=response)
-
-                self.__bearer_token = data['token']
-                self.__user_id = data['user_id']
-                self.__auth_user_id = data['auth_user_id']
+                try:
+                    self.__bearer_token = data['token']
+                    self.__user_id = data['user_id']
+                    self.__auth_user_id = data['auth_user_id']
+                except TypeError as e:
+                    self.__logger.error(f'Login Error! Please check login/password: {e}')
 
     async def __rq_devices(self) -> dict:
         """
