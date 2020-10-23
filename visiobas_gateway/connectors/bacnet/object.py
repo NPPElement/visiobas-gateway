@@ -62,7 +62,7 @@ class Object:
             self.__device.unknown_objects.add(self)
             self.__logger.debug(f'{self} marked as unknown object')
 
-    def __read_property(self, property_: ObjectProperty):
+    def read_property(self, property_: ObjectProperty):
         try:
             request = ' '.join([
                 self.__device.address,
@@ -114,7 +114,7 @@ class Object:
         values = {}
         for property_ in properties:
             try:
-                value = self.__read_property(property_=property_)
+                value = self.read_property(property_=property_)
                 values.update({property_: value})
             except ReadPropertyException:
                 self.mark(not_responding=True)
