@@ -1,7 +1,7 @@
-import enum
+from enum import Enum
 
 
-class ObjectType(enum.Enum):
+class ObjectType(Enum):
     ANALOG_INPUT = "analog-input", 0, 'analogInput'
     ANALOG_OUTPUT = "analog-output", 1, 'analogOutput'
     ANALOG_VALUE = "analog-value", 2, 'analogValue'

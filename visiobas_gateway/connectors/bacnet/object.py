@@ -15,10 +15,11 @@ class Object:
         self.__bacnet_properties = {
             ObjectProperty.objectType: type_,
             ObjectProperty.objectIdentifier: id_
-        }
+        }  # todo switch to named tuple?
 
         self.__logger = self.__logger = logging.getLogger(f'{self}')
 
+        # todo move in device
         self.__not_support_rpm: bool = False
         self.__not_responding: bool = False
         self.__unknown_object: bool = False
