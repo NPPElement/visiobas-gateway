@@ -78,6 +78,7 @@ class BACnetConnector(Thread, Connector):
                 devices_objects = {}
                 try:  # Requesting objects and their types from the server
                     # FIXME: write method for update
+                    # FIXME: check login
                     devices_objects.update(self.__gateway.get_devices_objects(
                         devices_id=list(self.__address_cache.keys()),
                         object_types=self.__object_types_to_request))
@@ -85,6 +86,9 @@ class BACnetConnector(Thread, Connector):
                     self.__logger.error('Error retrieving information about '
                                         f'devices objects from the server: {e}',
                                         exc_info=True)
+                except OSError as e:
+                    self.__logger.error(f'Please, check login: {e}')
+                    # FIXME
 
                 if devices_objects:  # If received devices with objects from the server
                     self.__logger.info('Received devices with '

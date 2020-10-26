@@ -53,7 +53,7 @@ class VisioClient(Thread):
                 try:
                     asyncio.run(self.__rq_login())
                 except ClientConnectorError as e:
-                    self.__logger.error(f'Login error: {e}', exc_info=True)
+                    self.__logger.error(f'Login error: {e}')  #, exc_info=True)
                 else:
                     self.__connected = True
                     self.__logger.info('Successfully log in to the server.')
@@ -103,6 +103,8 @@ class VisioClient(Thread):
                     self.__auth_user_id = data['auth_user_id']
                 except TypeError as e:
                     self.__logger.error(f'Login Error! Please check login/password: {e}')
+                # except OSError as e:
+                #     self.__logger.error(f'Login Error! Please check server availability: {e}')
 
     async def __rq_devices(self) -> dict:
         """

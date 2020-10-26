@@ -1,7 +1,7 @@
 import logging
 
 from BAC0.core.io.IOExceptions import ReadPropertyMultipleException, \
-    NoResponseFromController, UnknownObjectError, ReadPropertyException, Timeout, APDUError
+    NoResponseFromController, UnknownObjectError, ReadPropertyException, Timeout
 
 from visiobas_gateway.connectors.bacnet.object_property import ObjectProperty
 from visiobas_gateway.connectors.bacnet.object_type import ObjectType
@@ -21,7 +21,7 @@ class Object:
 
         # todo move in device
         self.__not_support_rpm: bool = False
-        self.__not_responding: bool = False
+        # self.__not_responding: bool = False
         self.__unknown_object: bool = False
 
     @property
@@ -117,16 +117,16 @@ class Object:
             try:
                 value = self.read_property(property_=property_)
                 values.update({property_: value})
-            except ReadPropertyException:
-                self.mark(not_responding=True)
-            except APDUError:
-                self.mark(not_responding=True)
-            except Timeout:
-                self.mark(not_responding=True)  # todo: What we should doing with timeout?
-            except NoResponseFromController:
-                self.mark(not_responding=True)
-            except UnknownObjectError:
-                self.mark(unknown_object=True)
+            # except ReadPropertyException:
+            #     self.mark(not_responding=True)
+            # except APDUError:
+            #     self.mark(not_responding=True)
+            # except Timeout:
+            #     self.mark(not_responding=True)  # todo: What we should doing with timeout?
+            # except NoResponseFromController:
+            #     self.mark(not_responding=True)
+            # except UnknownObjectError:
+            #     self.mark(unknown_object=True)
             except Exception as e:
                 self.__logger.error(f'RPM Simulation Error: {e}', exc_info=True)
                 raise Exception(f'RPM Simulation  Error: {e}', )
@@ -135,24 +135,24 @@ class Object:
         return values
 
     def read(self, properties: list) -> dict:
-        if self.is_responding() and not self.is_unknown():
-            if self.is_support_rpm():
-                try:
-                    values = self.__read_property_multiple(properties=properties)
-                except ReadPropertyMultipleException:
-                    try:
-                        values = self.__simulate_rpm(properties=properties)
-                    except Exception as e:
-                        self.__logger.error(f'Read Error: {e}', exc_info=True)
-                        return {}
-            else:
+        #if self.is_responding() and not self.is_unknown():
+        if self.is_support_rpm():
+            try:
+                values = self.__read_property_multiple(properties=properties)
+            except ReadPropertyMultipleException:
                 try:
                     values = self.__simulate_rpm(properties=properties)
                 except Exception as e:
                     self.__logger.error(f'Read Error: {e}', exc_info=True)
                     return {}
+        else:
+            try:
+                values = self.__simulate_rpm(properties=properties)
+            except Exception as e:
+                self.__logger.error(f'Read Error: {e}', exc_info=True)
+                return {}
 
-            return values
+        return values
 
     def evaluate(self, values: dict) -> dict:
         # todo replace to verifier

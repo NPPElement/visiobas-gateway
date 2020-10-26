@@ -24,9 +24,10 @@ class BACnetDevice(Thread):
 
         self.address = address
         self.network = network
-        self.__objects2poll = objects
+        #self.__objects2poll = objects
 
         self.__objects = set()
+        self.unpack_objects(objects=objects)
 
         self.__properties2poll = [
             ObjectProperty.presentValue,
@@ -39,7 +40,7 @@ class BACnetDevice(Thread):
         self.__active = True
 
         self.not_support_rpm = set()
-        self.not_responding = set()
+        # self.not_responding = set()
         self.unknown_objects = set()
 
         self.__polling = True
@@ -54,7 +55,8 @@ class BACnetDevice(Thread):
         """
         :return: the quantity of objects in the device received from the server side
         """
-        return self.__count_objects(objects=self.__objects2poll)
+        # return self.__count_objects(objects=self.__objects2poll)
+        return len(self.__objects)
 
     # def log_in_file(self, time_: float, polled_objects: int) -> None:
     #     base_dir = Path(__file__).resolve().parent.parent
@@ -97,13 +99,14 @@ class BACnetDevice(Thread):
                     t1 = time.time()
                     time_delta = t1 - t0
 
-                    self.__logger.info('=================================================='
-                                       f'{self} ip:{self.address} polled for {round(time_delta, ndigits=2)} seconds'
-                                       f'Objects: {len(self)}'
-                                       f'Objects not support RPM: {len(self.not_support_rpm)}'
-                                       f'Objects not responding: {len(self.not_responding)}'
-                                       f'Unknown objects: {len(self.unknown_objects)}'
-                                       '==================================================')
+                    self.__logger.info(
+                        '\n=================================================='
+                        f'{self} ip:{self.address} polled for {round(time_delta, ndigits=2)} seconds\n'
+                        f'Objects: {len(self)}\n'
+                        f'Objects not support RPM: {len(self.not_support_rpm)}\n'
+                        # f'Objects not responding: {len(self.not_responding)}\n'
+                        f'Unknown objects: {len(self.unknown_objects)}\n'
+                        '==================================================')
                     # self.log_in_file(time_=time_delta, polled_objects=len(data))
                     if data:
                         self.__logger.info(f'{self} polled for {time_delta} sec')
@@ -120,18 +123,6 @@ class BACnetDevice(Thread):
                         property_=ObjectProperty.objectIdentifier)
                     self.__logger.info(f'PING: device_id: {device_id}')
 
-                    # base_dir = Path(__file__).resolve().parent.parent
-                    # log_file = base_dir / 'log/log.txt'
-                    #
-                    # with open(file=log_file, mode='a', encoding='utf-8') as file:
-                    #     file.write(
-                    #         '=================================================='
-                    #         f'{self} requested WHO-IS'
-                    #         f'WHO IS: {who_is}'
-                    #         f'who-is type: {type(who_is)}'
-                    #         '=================================================='
-                    #     )
-                    # self.__lock.release()
                     if device_id:
                         self.__active = True
                         continue
@@ -175,33 +166,19 @@ class BACnetDevice(Thread):
         self.__logger.warning(f'{self} switched to inactive.')
 
     def poll(self) -> str:
-        limit = 50  # to switch to inactive
-        # todo move to cfg
         while self.__polling:
             polled_data = []
-            no_res_in_row = 0
-            for object_type, objects_id in self.__objects2poll.items():
-                for object_id in objects_id:
-                    if no_res_in_row < limit:
-                        obj = Object(device=self, type_=object_type, id_=object_id)
-
-                        try:
-                            values = obj.read(properties=self.__properties2poll)
-                            evaluated_values = obj.evaluate(values=values)
-                        except Exception as e:
-                            no_res_in_row += 1
-                            raise Exception(f'{obj} Poll Error: {e}')
-                        else:
-                            if evaluated_values:
-                                data_str = obj.as_str(properties=evaluated_values)
-                                polled_data.append(data_str)
-                            else:
-                                no_res_in_row += 1
-                    else:
-                        self.set_inactive()
-                        return ''
-
-                    # todo: How much objects need to switch into inactive?
+            for obj in self.__objects:
+                try:
+                    values = obj.read(properties=self.__properties2poll)
+                    evaluated_values = obj.evaluate(values=values)
+                except Exception:
+                    pass
+                    # raise Exception(f'{obj} Poll Error: {e}')
+                else:
+                    if evaluated_values:
+                        data_str = obj.as_str(properties=evaluated_values)
+                        polled_data.append(data_str)
 
             if polled_data:
                 request_body = ';'.join(polled_data) + ';'
@@ -210,3 +187,9 @@ class BACnetDevice(Thread):
                 self.__logger.critical('No objects were successfully polled')
                 self.set_inactive()
                 return ''
+
+    def unpack_objects(self, objects: dict) -> None:
+        for object_type, objects_id in objects.items():
+            for object_id in objects_id:
+                obj = Object(device=self, type_=object_type, id_=object_id)
+                self.__objects.add(obj)
