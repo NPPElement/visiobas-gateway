@@ -170,8 +170,10 @@ class BACnetDevice(Thread):
             polled_data = []
             for obj in self.__objects:
                 try:
+                    evaluated_values = None
                     values = obj.read(properties=self.__properties2poll)
-                    evaluated_values = obj.evaluate(values=values)
+                    if values:
+                        evaluated_values = obj.evaluate(values=values)
                 except Exception:
                     pass
                     # raise Exception(f'{obj} Poll Error: {e}')

@@ -110,7 +110,7 @@ class Object:
         else:
             return values
 
-    def __simulate_rpm(self, properties: list):
+    def __simulate_rpm(self, properties: list) -> dict:
 
         values = {}
         for property_ in properties:
@@ -126,10 +126,14 @@ class Object:
             # except NoResponseFromController:
             #     self.mark(not_responding=True)
             # except UnknownObjectError:
-            #     self.mark(unknown_object=True)
+            #     self.mark(unknown_object=True
+            except ValueError as e:
+                self.__logger.error(f'RPM Simulation Error: {e}', exc_info=True)
+                raise ReadPropertyException('RPM Simulation Error')
             except Exception as e:
                 self.__logger.error(f'RPM Simulation Error: {e}', exc_info=True)
-                raise Exception(f'RPM Simulation  Error: {e}', )
+                # raise Exception(f'RPM Simulation  Error: {e}', )
+                raise ReadPropertyException('RPM Simulation Error')
             else:
                 self.mark(not_support_rpm=True)
         return values

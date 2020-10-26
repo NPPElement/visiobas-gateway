@@ -27,7 +27,7 @@ class ObjectProperty(Enum):
     covIncrement = 22
     dateList = 23
     daylightSavingsStatus = 24
-    deadband = 25
+    deadBand = 25
     derivativeConstant = 26
     derivativeConstantUnits = 27
     description = 28
