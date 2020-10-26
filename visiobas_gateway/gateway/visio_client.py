@@ -203,7 +203,7 @@ class VisioClient(Thread):
         # Creating a dictionary, where the key is the type of the objects,
         # and the value is the list of id of objects of this type.
         device_objects = {
-            object_type: [prop[str(ObjectProperty.objectIdentifier)] for
+            object_type: [prop[str(ObjectProperty.objectIdentifier.id)] for
                           prop in objects] for
             object_type, objects in
             zip(object_types, await asyncio.gather(*objects_requests))

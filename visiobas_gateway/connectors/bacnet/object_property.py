@@ -356,5 +356,9 @@ class ObjectProperty(Enum):
     egressActive = 386
     deviceId = 846
 
+    @property
+    def id(self):
+        return self.value
+
     # def __repr__(self):
     #     return self.name
