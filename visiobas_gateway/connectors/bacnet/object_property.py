@@ -105,10 +105,10 @@ class ObjectProperty(Enum):
     required = 105
     resolution = 106
     segmentationSupported = 107
-    setpoint = 108
-    setpointReference = 109
+    setPoint = 108
+    setPointReference = 109
     stateText = 110
-    statusflags = 111
+    statusFlags = 111
     systemStatus = 112
     timeDelay = 113
     timeOfActiveTimeReset = 114
