@@ -18,7 +18,7 @@ class BACnetConnector(Thread, Connector):
         super().__init__()
 
         self.__logger = logging.getLogger(f'{self}')
-        handler = RotatingFileHandler(filename=f'logs/{__name__}.log',
+        handler = RotatingFileHandler(filename=f'{__name__}.log',
                                       mode='a',
                                       maxBytes=5_000_000,
                                       encoding='utf-8'
