@@ -40,9 +40,30 @@ class BACnetDevice(Thread):
         self.__objects = set()
         self.unpack_objects(objects=objects)
 
-        self.__properties2poll = [
+        self.__BI_AI_MI_AC = {
+            ObjectType.BINARY_INPUT,
+            ObjectType.ANALOG_INPUT,
+            ObjectType.MULTI_STATE_INPUT,
+        }
+
+        self.__BI_AI_MI_AC_properties = [
             ObjectProperty.presentValue,
             ObjectProperty.statusFlags,
+        ]
+
+        self.__BO_BV_AO_AV_MV_MO = {
+            ObjectType.BINARY_OUTPUT,
+            ObjectType.BINARY_VALUE,
+            ObjectType.ANALOG_OUTPUT,
+            ObjectType.ANALOG_VALUE,
+            ObjectType.MULTI_STATE_VALUE,
+            ObjectType.MULTI_STATE_OUTPUT
+        }
+
+        self.__BO_BV_AO_AV_MV_MO_properties = [
+            ObjectProperty.presentValue,
+            ObjectProperty.statusFlags,
+            ObjectProperty.priorityArray
         ]
 
         # self.__objects_per_rpm = 25
@@ -146,18 +167,6 @@ class BACnetDevice(Thread):
         # self.stop_polling()
         self.__active = False
         self.__logger.info('Set inactive')
-
-        # base_dir = Path(__file__).resolve().parent.parent
-        # log_file = base_dir / 'log/log.txt'
-        # self.__lock.acquire()
-        # with open(file=log_file, mode='a', encoding='utf-8') as file:
-        #     file.write(
-        #         '=================================================='
-        #         f'{self} ip:{self.address} switched to inactive.'
-        #         '=================================================='
-        #     )
-        # self.__lock.release()
-
         self.__logger.warning(f'{self} switched to inactive.')
 
     def poll(self) -> str:
@@ -166,19 +175,23 @@ class BACnetDevice(Thread):
             for obj in self.__objects:
                 try:
                     evaluated_values = None
-                    values = obj.read(properties=self.__properties2poll)
-                    self.__logger.debug(f'Values: {values}')
+                    if obj.type in self.__BI_AI_MI_AC:
+                        values = obj.read(properties=self.__BI_AI_MI_AC_properties)
+                    elif obj.type in self.__BO_BV_AO_AV_MV_MO:
+                        values = obj.read(properties=self.__BO_BV_AO_AV_MV_MO_properties)
+                    else:
+                        raise NotImplementedError
+                    self.__logger.debug(f'VALUES: {values}')
                     if values:
                         evaluated_values = obj.evaluate(values=values)
-                        self.__logger.debug(f'Evaluated values: {evaluated_values}')
+                        self.__logger.debug(f'EVALUATED VALUES: {evaluated_values}')
                     if evaluated_values:
                         data_str = obj.as_str(properties=evaluated_values)
-                        self.__logger.debug(f'Data_str: {data_str}')
+                        self.__logger.debug(f'DATA_STR: {data_str}')
                         polled_data.append(data_str)
                 except Exception as e:
                     self.__logger.error(f'{e}', exc_info=True)
                     # raise Exception(f'{obj} Poll Error: {e}')
-                # else:
 
             if polled_data:
                 self.__logger.debug(f'Polled objects: {len(polled_data)}')

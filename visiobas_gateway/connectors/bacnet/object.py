@@ -25,15 +25,15 @@ class Object:
         self.__unknown_object: bool = False
 
     @property
-    def __type(self) -> ObjectType:
+    def type(self) -> ObjectType:
         return self.__bacnet_properties[ObjectProperty.objectType]
 
     @property
-    def __id(self) -> int:
+    def id(self) -> int:
         return self.__bacnet_properties[ObjectProperty.objectIdentifier]
 
     def __repr__(self):
-        return f'{self.__device} ({self.__type}, {self.__id})'
+        return f'{self.__device} ({self.type}, {self.id})'
 
     # def is_responding(self) -> bool:
     #     return not self.__not_responding
@@ -232,8 +232,8 @@ class Object:
 
     def as_str(self, properties: dict):
         return ' '.join([
-            str(self.__id),
-            str(self.__type.id),
+            str(self.id),
+            str(self.type.id),
             str(properties.get(ObjectProperty.presentValue, 'null')),
             str(properties.get(ObjectProperty.statusFlags, '0')),
             str(properties.get(ObjectProperty.reliability, ''))
