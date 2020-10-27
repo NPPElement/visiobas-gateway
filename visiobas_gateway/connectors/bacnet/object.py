@@ -173,13 +173,14 @@ class Object:
             bacnet_properties.update({ObjectProperty.statusFlags: StatusFlags()})
 
         pv = values.get(ObjectProperty.presentValue, 'null')
-        if pv != 'null':
+        if pv != 'null' and pv != float('inf') and pv != float('-inf'):
             if pv == 'active':
                 pv = 1
             elif pv == 'inactive':
                 pv = 0
+
             bacnet_properties.update({ObjectProperty.presentValue: pv})
-        else:
+        elif pv == 'null':
             status_flags = values.get(ObjectProperty.statusFlags, [0, 0, 0, 0])
             status_flags = StatusFlags(status_flags=status_flags)
             status_flags.set(fault=True)
@@ -187,6 +188,25 @@ class Object:
                 ObjectProperty.presentValue: 'null',
                 ObjectProperty.statusFlags: status_flags,
                 ObjectProperty.reliability: '64'
+            })
+
+        elif pv == float('inf'):
+            status_flags = values.get(ObjectProperty.statusFlags, [0, 0, 0, 0])
+            status_flags = StatusFlags(status_flags=status_flags)
+            status_flags.set(fault=True)
+            bacnet_properties.update({
+                ObjectProperty.presentValue: 'null',
+                ObjectProperty.statusFlags: status_flags,
+                ObjectProperty.reliability: '2'
+            })
+        elif pv == float('-inf'):
+            status_flags = values.get(ObjectProperty.statusFlags, [0, 0, 0, 0])
+            status_flags = StatusFlags(status_flags=status_flags)
+            status_flags.set(fault=True)
+            bacnet_properties.update({
+                ObjectProperty.presentValue: 'null',
+                ObjectProperty.statusFlags: status_flags,
+                ObjectProperty.reliability: '3'
             })
 
         # todo: make reliability Enum
