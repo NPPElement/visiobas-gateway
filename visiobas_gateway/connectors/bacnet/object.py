@@ -35,8 +35,8 @@ class Object:
     def __repr__(self):
         return f'{self.__device} ({self.__type}, {self.__id})'
 
-    def is_responding(self) -> bool:
-        return not self.__not_responding
+    # def is_responding(self) -> bool:
+    #     return not self.__not_responding
 
     def is_support_rpm(self) -> bool:
         return not self.__not_support_rpm
@@ -125,8 +125,8 @@ class Object:
             #     self.mark(not_responding=True)  # todo: What we should doing with timeout?
             # except NoResponseFromController:
             #     self.mark(not_responding=True)
-            # except UnknownObjectError:
-            #     self.mark(unknown_object=True
+            except UnknownObjectError:
+                self.mark(unknown_object=True)
             except ValueError as e:
                 self.__logger.error(f'RPM Simulation Error: {e}')  #, exc_info=True)
                 raise ReadPropertyException('RPM Simulation Error')
@@ -191,16 +191,16 @@ class Object:
 
         # todo: make reliability Enum
         # todo: implement reliability concatenation
-        if not self.is_responding():
-            status_flags = bacnet_properties.get(ObjectProperty.statusFlags, StatusFlags())
-            status_flags.set(fault=True)
-            bacnet_properties.update({
-                ObjectProperty.presentValue: 'null',
-                ObjectProperty.statusFlags: status_flags,
-                ObjectProperty.reliability: '64'
-            })
+        # if not self.is_responding():
+        #     status_flags = bacnet_properties.get(ObjectProperty.statusFlags, StatusFlags())
+        #     status_flags.set(fault=True)
+        #     bacnet_properties.update({
+        #         ObjectProperty.presentValue: 'null',
+        #         ObjectProperty.statusFlags: status_flags,
+        #         ObjectProperty.reliability: '64'
+        #     })
 
-        elif self.is_unknown():
+        if self.is_unknown():
             status_flags = bacnet_properties.get(ObjectProperty.statusFlags, StatusFlags())
             status_flags.set(fault=True)
             bacnet_properties.update({

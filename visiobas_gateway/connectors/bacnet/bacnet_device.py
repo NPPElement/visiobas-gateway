@@ -170,15 +170,15 @@ class BACnetDevice(Thread):
                     self.__logger.debug(f'Values: {values}')
                     if values:
                         evaluated_values = obj.evaluate(values=values)
-                except Exception as e:
-                    self.__logger.error(f'{e}', exc_info=True)
-                    # raise Exception(f'{obj} Poll Error: {e}')
-                else:
-                    self.__logger.debug(f'Evaluated values: {evaluated_values}')
+                        self.__logger.debug(f'Evaluated values: {evaluated_values}')
                     if evaluated_values:
                         data_str = obj.as_str(properties=evaluated_values)
                         self.__logger.debug(f'Data_str: {data_str}')
                         polled_data.append(data_str)
+                except Exception as e:
+                    self.__logger.error(f'{e}', exc_info=True)
+                    # raise Exception(f'{obj} Poll Error: {e}')
+                # else:
 
             if polled_data:
                 self.__logger.debug(f'Polled objects: {len(polled_data)}')
