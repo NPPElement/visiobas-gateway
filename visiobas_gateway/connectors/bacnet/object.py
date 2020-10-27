@@ -187,7 +187,7 @@ class Object:
             bacnet_properties.update({
                 ObjectProperty.presentValue: 'null',
                 ObjectProperty.statusFlags: status_flags,
-                ObjectProperty.reliability: '64'
+                ObjectProperty.reliability: '7'
             })
 
         elif pv == float('inf'):
