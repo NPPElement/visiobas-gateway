@@ -27,5 +27,5 @@ services:
       - 47821:47821
       - 47822:47822
       - 47823:47823
-#  volumes:
-#      logs:
+  volumes:
+    opt/visiobas-gateway/visiobas_gateway/logs:
