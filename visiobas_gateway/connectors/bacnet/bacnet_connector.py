@@ -165,7 +165,10 @@ class BACnetConnector(Thread, Connector):
         for line in text.split('\n'):
             trimmed = line.strip()
             if not trimmed.startswith(';') and trimmed:
-                device_id, mac, _, _, apdu = trimmed.split()
+                try:
+                    device_id, mac, _, _, apdu = trimmed.split()
+                except ValueError:
+                    continue
                 device_id = int(device_id)
                 # In mac we have ip-address host:port
                 mac = mac.split(':')
