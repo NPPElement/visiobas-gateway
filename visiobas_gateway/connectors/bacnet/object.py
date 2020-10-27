@@ -173,7 +173,7 @@ class Object:
             bacnet_properties.update({ObjectProperty.statusFlags: StatusFlags()})
 
         pv = values.get(ObjectProperty.presentValue, 'null')
-        if pv and pv != 'null':
+        if pv != 'null':
             if pv == 'active':
                 pv = 1
             elif pv == 'inactive':
