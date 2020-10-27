@@ -81,7 +81,7 @@ class Object:
         except Timeout as e:
             raise ReadPropertyException(f'Timeout: {e}')
         except Exception as e:
-            self.__logger.error(f'RP Error: {e}', exc_info=True)
+            self.__logger.error(f'RP Error: {e}') #, exc_info=True)
             raise ReadPropertyException(f'RP Error: {e}')
         else:
             # self.__bacnet_properties[property_] = value
@@ -128,10 +128,10 @@ class Object:
             # except UnknownObjectError:
             #     self.mark(unknown_object=True
             except ValueError as e:
-                self.__logger.error(f'RPM Simulation Error: {e}', exc_info=True)
+                self.__logger.error(f'RPM Simulation Error: {e}')  #, exc_info=True)
                 raise ReadPropertyException('RPM Simulation Error')
             except Exception as e:
-                self.__logger.error(f'RPM Simulation Error: {e}', exc_info=True)
+                self.__logger.error(f'RPM Simulation Error: {e}')  #, exc_info=True)
                 # raise Exception(f'RPM Simulation  Error: {e}', )
                 raise ReadPropertyException('RPM Simulation Error')
             else:
@@ -139,7 +139,7 @@ class Object:
         return values
 
     def read(self, properties: list) -> dict:
-        #if self.is_responding() and not self.is_unknown():
+        # if self.is_responding() and not self.is_unknown():
         if self.is_support_rpm():
             try:
                 values = self.__read_property_multiple(properties=properties)
@@ -147,13 +147,13 @@ class Object:
                 try:
                     values = self.__simulate_rpm(properties=properties)
                 except Exception as e:
-                    self.__logger.error(f'Read Error: {e}', exc_info=True)
+                    self.__logger.error(f'Read Error: {e}')  # , exc_info=True)
                     return {}
         else:
             try:
                 values = self.__simulate_rpm(properties=properties)
             except Exception as e:
-                self.__logger.error(f'Read Error: {e}', exc_info=True)
+                self.__logger.error(f'Read Error: {e}')  # , exc_info=True)
                 return {}
 
         return values

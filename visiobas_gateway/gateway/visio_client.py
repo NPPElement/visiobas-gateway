@@ -1,5 +1,6 @@
 import asyncio
 import logging
+from logging.handlers import RotatingFileHandler
 from threading import Thread
 
 import aiohttp
@@ -14,6 +15,13 @@ class VisioClient(Thread):
         super().__init__()
 
         self.__logger = logging.getLogger(f'{self}')
+        handler = RotatingFileHandler(filename=f'logs/{__name__}.log',
+                                      mode='a',
+                                      maxBytes=5_000_000,
+                                      encoding='utf-8'
+                                      )
+        self.__logger.addHandler(handler)
+
         self.setName(name=f'{self}-Thread')
 
         self.__gateway = gateway
@@ -23,7 +31,8 @@ class VisioClient(Thread):
         else:
             raise ValueError(f'Config for {self} not found.')
 
-        self.__host = config['host-mirror']  # FIXME: test/prod
+        self.__host = config['host-mirror']  # FIXME: prod
+        # self.__host = config['host3']  # FIXME: test
         self.__port = config['port']
 
         self.__verify = config['ssl_verify']

@@ -1,7 +1,8 @@
 import asyncio
 import logging
 import time
-from threading import Thread, RLock
+from logging.handlers import RotatingFileHandler
+from threading import Thread
 
 from BAC0.core.io.IOExceptions import ReadPropertyException
 
@@ -9,22 +10,32 @@ from visiobas_gateway.connectors.bacnet.object import Object
 from visiobas_gateway.connectors.bacnet.object_property import ObjectProperty
 from visiobas_gateway.connectors.bacnet.object_type import ObjectType
 
+LOGGER_FORMAT = '%(levelname)-8s [%(asctime)s] [%(threadName)s] %(name)s - (%(filename)s).%(funcName)s(%(lineno)d): %(message)s'
+
 
 class BACnetDevice(Thread):
     def __init__(self, gateway, address: str, device_id: int, network, objects: dict):
         super().__init__()
 
-        self.__lock = RLock()
-
         self.__device_id = device_id
+
         self.__logger = self.__logger = logging.getLogger(f'{self}')
+        handler = RotatingFileHandler(filename=f'logs/{device_id}.log',
+                                      mode='a',
+                                      maxBytes=5_000_000,
+                                      encoding='utf-8'
+                                      )
+        formatter = logging.Formatter(LOGGER_FORMAT)
+        handler.setFormatter(formatter)
+        self.__logger.addHandler(handler)
+
         self.setName(name=f'{self}-Thread')
 
         self.__gateway = gateway
 
         self.address = address
         self.network = network
-        #self.__objects2poll = objects
+        # self.__objects2poll = objects
 
         self.__objects = set()
         self.unpack_objects(objects=objects)
@@ -58,23 +69,6 @@ class BACnetDevice(Thread):
         # return self.__count_objects(objects=self.__objects2poll)
         return len(self.__objects)
 
-    # def log_in_file(self, time_: float, polled_objects: int) -> None:
-    #     base_dir = Path(__file__).resolve().parent.parent
-    #     log_file = base_dir / 'log/log.txt'
-
-    # self.__lock.acquire()
-    # with open(file=log_file, mode='a', encoding='utf-8') as file:
-    #     file.write(
-    #         '=================================================='
-    #         f'{self} ip:{self.address} polled for {round(time_, ndigits=2)} seconds'
-    #         f'Polled objects: {polled_objects}/{len(self)}'
-    #         f'Objects not support RPM: {len(self.not_support_rpm)}'
-    #         f'Objects not responding: {len(self.not_responding)}'
-    #         f'Unknown objects: {len(self.unknown_objects)}'
-    #         '=================================================='
-    #     )
-    # self.__lock.release()
-
     @staticmethod
     def __count_objects(objects: dict) -> int:
         """
@@ -100,21 +94,21 @@ class BACnetDevice(Thread):
                     time_delta = t1 - t0
 
                     self.__logger.info(
-                        '\n=================================================='
+                        '\n==================================================\n'
                         f'{self} ip:{self.address} polled for {round(time_delta, ndigits=2)} seconds\n'
                         f'Objects: {len(self)}\n'
                         f'Objects not support RPM: {len(self.not_support_rpm)}\n'
                         # f'Objects not responding: {len(self.not_responding)}\n'
                         f'Unknown objects: {len(self.unknown_objects)}\n'
                         '==================================================')
-                    # self.log_in_file(time_=time_delta, polled_objects=len(data))
                     if data:
-                        self.__logger.info(f'{self} polled for {time_delta} sec')
+                        # self.__logger.info(f'{self} polled for {time_delta} sec')
                         self.__gateway.post_device(device_id=self.__device_id,
                                                    data=data)
+                        self.__logger.info(f'Collected data: {data} was sent to server')
 
                 except Exception as e:
-                    self.__logger.error(f'Polling error: {e}', exc_info=True)
+                    self.__logger.error(f'Polling error: {e}')  #, exc_info=True)
             else:  # if device inactive
                 try:
                     device_obj = Object(device=self, type_=ObjectType.DEVICE,
@@ -151,6 +145,7 @@ class BACnetDevice(Thread):
     def set_inactive(self):
         # self.stop_polling()
         self.__active = False
+        self.__logger.info('Set inactive')
 
         # base_dir = Path(__file__).resolve().parent.parent
         # log_file = base_dir / 'log/log.txt'
@@ -183,10 +178,11 @@ class BACnetDevice(Thread):
                         polled_data.append(data_str)
 
             if polled_data:
+                self.__logger.debug(f'Polled objects: {len(polled_data)}')
                 request_body = ';'.join(polled_data) + ';'
                 return request_body
             else:
-                self.__logger.critical('No objects were successfully polled')
+                self.__logger.warning('No objects were successfully polled')
                 self.set_inactive()
                 return ''
 

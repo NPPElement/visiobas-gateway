@@ -1,5 +1,6 @@
 import asyncio
 import logging
+from logging.handlers import RotatingFileHandler
 from pathlib import Path
 from threading import Thread
 
@@ -17,6 +18,13 @@ class BACnetConnector(Thread, Connector):
         super().__init__()
 
         self.__logger = logging.getLogger(f'{self}')
+        handler = RotatingFileHandler(filename=f'logs/{__name__}.log',
+                                      mode='a',
+                                      maxBytes=5_000_000,
+                                      encoding='utf-8'
+                                      )
+        self.__logger.addHandler(handler)
+
         self.setName(name=f'{self}-Thread')
 
         self.__gateway = gateway
