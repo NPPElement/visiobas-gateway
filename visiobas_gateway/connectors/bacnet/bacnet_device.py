@@ -129,7 +129,7 @@ class BACnetDevice(Thread):
                         self.__logger.info(f'Collected data: {data} was sent to server')
 
                 except Exception as e:
-                    self.__logger.error(f'Polling error: {e}')  #, exc_info=True)
+                    self.__logger.error(f'Polling error: {e}')  # , exc_info=True)
             else:  # if device inactive
                 try:
                     device_obj = Object(device=self, type_=ObjectType.DEVICE,
@@ -185,14 +185,18 @@ class BACnetDevice(Thread):
                     if ObjectProperty.priorityArray in values:
                         for i in range(16):
                             try:
-                                self.__logger.debug(f'No. {i} value: {values[ObjectProperty.priorityArray].value[i]}'
-                                                    f'No. {i} value: {values[ObjectProperty.priorityArray].value[i].value}'
-                                                    f'type: {type(values[ObjectProperty.priorityArray].value[i])}')
+                                self.__logger.debug(
+                                    f'\n=================================================\n'
+                                    f'No. {i} value: {values[ObjectProperty.priorityArray].value[i].value}\n'
+                                    f'type: {type(values[ObjectProperty.priorityArray].value[i].value)}\n'
+                                    f'\n================================================='
+                                    )
                             except Exception:
                                 self.__logger.debug(
-                                    f'No. {i} value: {values[ObjectProperty.priorityArray].value[i]}'
-                                    #f'No. {i} value: {values[ObjectProperty.priorityArray].value[i].value}'
-                                    f'type: {type(values[ObjectProperty.priorityArray].value[i])}')
+                                    '\n==================================================\n'
+                                    f'No. {i} value: {values[ObjectProperty.priorityArray].value[i]}\n'
+                                    f'type: {type(values[ObjectProperty.priorityArray].value[i])}\n'
+                                    '\n=================================================')
                         # i = 0
                         # for elem in values[ObjectProperty.priorityArray]:
                         #     self.__logger.debug(f'{i}, elem:{elem}, type: {type(elem)}')
