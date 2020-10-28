@@ -181,6 +181,12 @@ class BACnetDevice(Thread):
                         values = obj.read(properties=self.__BO_BV_AO_AV_MV_MO_properties)
                     else:
                         raise NotImplementedError
+
+                    if ObjectProperty.priorityArray in values:
+                        i = 0
+                        for elem in values[ObjectProperty.priorityArray]:
+                            self.__logger.debug(f'{i}, elem:{elem}, type: {type(elem)}')
+                            i += 1
                     self.__logger.debug(f'VALUES: {values}')
                     if values:
                         evaluated_values = obj.evaluate(values=values)
