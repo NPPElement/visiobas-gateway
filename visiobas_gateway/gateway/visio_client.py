@@ -164,7 +164,7 @@ class VisioClient(Thread):
         """
         if not data:  # all object are accepted on server side
             self.__logger.info(f'POST-result: Device [{device_id}] '
-                               'All objects were accepted on the server side.')
+                               'Server didn\'t return unaccepted objects.')
             return data
         else:
             rejected_objects_id = [obj[str(ObjectProperty.objectIdentifier.id)] for obj in

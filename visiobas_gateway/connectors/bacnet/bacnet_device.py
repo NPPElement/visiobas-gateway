@@ -184,8 +184,15 @@ class BACnetDevice(Thread):
 
                     if ObjectProperty.priorityArray in values:
                         for i in range(16):
-                            self.__logger.debug(f'No. {i} value: {values[ObjectProperty.priorityArray].value[i]}'
-                                                f'type: {type(values[ObjectProperty.priorityArray].value[i])}')
+                            try:
+                                self.__logger.debug(f'No. {i} value: {values[ObjectProperty.priorityArray].value[i]}'
+                                                    f'No. {i} value: {values[ObjectProperty.priorityArray].value[i].value}'
+                                                    f'type: {type(values[ObjectProperty.priorityArray].value[i])}')
+                            except Exception:
+                                self.__logger.debug(
+                                    f'No. {i} value: {values[ObjectProperty.priorityArray].value[i]}'
+                                    #f'No. {i} value: {values[ObjectProperty.priorityArray].value[i].value}'
+                                    f'type: {type(values[ObjectProperty.priorityArray].value[i])}')
                         # i = 0
                         # for elem in values[ObjectProperty.priorityArray]:
                         #     self.__logger.debug(f'{i}, elem:{elem}, type: {type(elem)}')
