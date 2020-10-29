@@ -22,7 +22,7 @@ class BACnetDevice(Thread):
         self.__logger = self.__logger = logging.getLogger(f'{self}')
         handler = RotatingFileHandler(filename=f'{device_id}.log',
                                       mode='a',
-                                      maxBytes=5_000_000,
+                                      maxBytes=50_000,
                                       encoding='utf-8'
                                       )
         formatter = logging.Formatter(LOGGER_FORMAT)

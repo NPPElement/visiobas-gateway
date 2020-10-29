@@ -140,7 +140,13 @@ class Object:
         return values
 
     def read(self, properties: list) -> dict:
-        self.__bacnet_properties = {}
+        obj_type = self.__bacnet_properties[ObjectProperty.objectType]
+        obj_id = self.__bacnet_properties[ObjectProperty.objectIdentifier]
+        self.__bacnet_properties = {
+            ObjectProperty.objectType: obj_type,
+            ObjectProperty.objectIdentifier: obj_id
+        }
+
         # if self.is_responding() and not self.is_unknown():
         if self.is_support_rpm():
             try:
@@ -175,13 +181,14 @@ class Object:
             bacnet_properties.update({ObjectProperty.statusFlags: StatusFlags()})
 
         pv = values.get(ObjectProperty.presentValue, 'null')
+
         if pv != 'null' and pv != float('inf') and pv != float('-inf'):
             if pv == 'active':
                 pv = 1
             elif pv == 'inactive':
                 pv = 0
-
             bacnet_properties.update({ObjectProperty.presentValue: pv})
+
         elif pv == 'null':
             status_flags = values.get(ObjectProperty.statusFlags, [0, 0, 0, 0])
             status_flags = StatusFlags(status_flags=status_flags)
