@@ -209,6 +209,8 @@ class Object:
                 ObjectProperty.reliability: '3'
             })
 
+        # TODO: PRIORITYARRAY HERE
+
         # todo: make reliability Enum
         # todo: implement reliability concatenation
         # if not self.is_responding():

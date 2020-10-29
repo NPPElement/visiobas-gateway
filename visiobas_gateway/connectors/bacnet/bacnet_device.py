@@ -184,8 +184,11 @@ class BACnetDevice(Thread):
 
                     if ObjectProperty.priorityArray in values:
                         for i in range(16):
-
                             pa = values[ObjectProperty.priorityArray].value[i]
+                            if isinstance(pa, int):
+                                self.__logger.debug(f'No {i} value: {pa} type: int')
+                                continue
+
                             try:
                                 key, value = zip(*pa.dict_contents().items())
                                 self.__logger.debug(f'No. {i} key: {key} val: {value}'
@@ -193,22 +196,6 @@ class BACnetDevice(Thread):
                             except Exception as e:
                                 pass
 
-                            #     self.__logger.debug(
-                            #         f'\n=================================================\n'
-                            #         f'No. {i} value: {values[ObjectProperty.priorityArray].value[i].value}\n'
-                            #         f'type: {type(values[ObjectProperty.priorityArray].value[i].value)}\n'
-                            #         f'\n================================================='
-                            #         )
-                            # except Exception:
-                            #     self.__logger.debug(
-                            #         '\n==================================================\n'
-                            #         f'No. {i} value: {values[ObjectProperty.priorityArray].value[i]}\n'
-                            #         f'type: {type(values[ObjectProperty.priorityArray].value[i])}\n'
-                            #         '\n=================================================')
-                        # i = 0
-                        # for elem in values[ObjectProperty.priorityArray]:
-                        #     self.__logger.debug(f'{i}, elem:{elem}, type: {type(elem)}')
-                        #     i += 1
                     self.__logger.debug(f'VALUES: {values}')
                     if values:
                         evaluated_values = obj.evaluate(values=values)
