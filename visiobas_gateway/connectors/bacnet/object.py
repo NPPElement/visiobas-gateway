@@ -2,6 +2,7 @@ import logging
 
 from BAC0.core.io.IOExceptions import ReadPropertyMultipleException, \
     NoResponseFromController, UnknownObjectError, ReadPropertyException, Timeout
+from bacpypes.basetypes import PriorityArray
 
 from visiobas_gateway.connectors.bacnet.object_property import ObjectProperty
 from visiobas_gateway.connectors.bacnet.object_type import ObjectType
@@ -81,7 +82,7 @@ class Object:
         except Timeout as e:
             raise ReadPropertyException(f'Timeout: {e}')
         except Exception as e:
-            self.__logger.error(f'RP Error: {e}') #, exc_info=True)
+            self.__logger.error(f'RP Error: {e}')  # , exc_info=True)
             raise ReadPropertyException(f'RP Error: {e}')
         else:
             # self.__bacnet_properties[property_] = value
@@ -128,10 +129,10 @@ class Object:
             except UnknownObjectError:
                 self.mark(unknown_object=True)
             except ValueError as e:
-                self.__logger.error(f'RPM Simulation Error: {e}')  #, exc_info=True)
+                self.__logger.error(f'RPM Simulation Error: {e}')  # , exc_info=True)
                 raise ReadPropertyException('RPM Simulation Error')
             except Exception as e:
-                self.__logger.error(f'RPM Simulation Error: {e}')  #, exc_info=True)
+                self.__logger.error(f'RPM Simulation Error: {e}')  # , exc_info=True)
                 # raise Exception(f'RPM Simulation  Error: {e}', )
                 raise ReadPropertyException('RPM Simulation Error')
             else:
@@ -139,6 +140,7 @@ class Object:
         return values
 
     def read(self, properties: list) -> dict:
+        self.__bacnet_properties = {}
         # if self.is_responding() and not self.is_unknown():
         if self.is_support_rpm():
             try:
@@ -209,7 +211,10 @@ class Object:
                 ObjectProperty.reliability: '3'
             })
 
-        # TODO: PRIORITYARRAY HERE
+        if ObjectProperty.priorityArray in values:
+            bacnet_properties.update({
+                ObjectProperty.priorityArray: values[ObjectProperty.priorityArray]
+            })
 
         # todo: make reliability Enum
         # todo: implement reliability concatenation
@@ -232,11 +237,37 @@ class Object:
             })
         return bacnet_properties
 
-    def as_str(self, properties: dict):
-        return ' '.join([
-            str(self.id),
-            str(self.type.id),
-            str(properties.get(ObjectProperty.presentValue, 'null')),
-            str(properties.get(ObjectProperty.statusFlags, '0')),
-            str(properties.get(ObjectProperty.reliability, ''))
-        ]).strip()
+    @staticmethod
+    def __extract_priorities(priority_array: PriorityArray) -> str:
+        pa_size = priority_array.value[0]
+        priorities = []
+
+        for i in range(1, pa_size):
+            pa = priority_array.value[i]
+            key, value = zip(*pa.dict_contents().items())
+            if key[0] == 'null':
+                priorities.append('')
+            else:
+                priorities.append(value[0])
+
+        pa_str = ','.join(priorities)
+        return pa_str
+
+    def as_str(self, properties: dict) -> str:
+        if ObjectProperty.priorityArray in properties:
+            return ' '.join([
+                str(self.id),
+                str(self.type.id),
+                str(properties.get(ObjectProperty.presentValue, 'null')),
+                self.__extract_priorities(properties[ObjectProperty.priorityArray]),
+                str(properties.get(ObjectProperty.statusFlags, '0')),
+                str(properties.get(ObjectProperty.reliability, ''))
+            ]).strip()
+        else:
+            return ' '.join([
+                str(self.id),
+                str(self.type.id),
+                str(properties.get(ObjectProperty.presentValue, 'null')),
+                str(properties.get(ObjectProperty.statusFlags, '0')),
+                str(properties.get(ObjectProperty.reliability, ''))
+            ]).strip()
