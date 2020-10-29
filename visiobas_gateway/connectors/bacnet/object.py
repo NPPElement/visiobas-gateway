@@ -257,6 +257,7 @@ class Object:
             else:
                 priorities.append(value[0])
 
+        priorities = [str(pr) for pr in priorities]
         pa_str = ','.join(priorities)
         return pa_str
 
