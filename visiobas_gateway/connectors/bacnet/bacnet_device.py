@@ -183,18 +183,18 @@ class BACnetDevice(Thread):
                         raise NotImplementedError
 
                     if ObjectProperty.priorityArray in values:
-                        for i in range(16):
-                            pa = values[ObjectProperty.priorityArray].value[i]
-                            if isinstance(pa, int):
-                                self.__logger.debug(f'No {i} value: {pa} type: int')
-                                continue
+                        for i in range(17):
+                                pa = values[ObjectProperty.priorityArray].value[i]
+                                if isinstance(pa, int):
+                                    self.__logger.debug(f'No {i} value: {pa} type: int')
+                                    continue
 
-                            try:
-                                key, value = zip(*pa.dict_contents().items())
-                                self.__logger.debug(f'No. {i} key: {key} val: {value}'
-                                                    f'keyType: {type(key)} valType: {type(value)}')
-                            except Exception as e:
-                                pass
+                                try:
+                                    key, value = zip(*pa.dict_contents().items())
+                                    self.__logger.debug(f'No. {i} key: {key} val: {value}'
+                                                        f'keyType: {type(key)} valType: {type(value)}')
+                                except Exception as e:
+                                    pass
 
                     self.__logger.debug(f'VALUES: {values}')
                     if values:
