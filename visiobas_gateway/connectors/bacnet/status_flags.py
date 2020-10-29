@@ -14,7 +14,8 @@ class StatusFlags:
                                                                               flag in
                                                                               status_flags]
         else:
-            raise ValueError('Please, provide list with 4 flags')
+            raise ValueError('Please, provide list with 4 flags.'
+                             f'Provided: {status_flags} {type(status_flags)}')
 
     def __repr__(self):
         """Uses to convert into number by binary coding"""
