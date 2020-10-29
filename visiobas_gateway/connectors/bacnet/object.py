@@ -175,7 +175,7 @@ class Object:
             return bacnet_properties
 
         sf = values.get(ObjectProperty.statusFlags, [0, 0, 0, 0])
-        #if sf:
+        # if sf:
         bacnet_properties.update({ObjectProperty.statusFlags: StatusFlags(sf)})
         # else:
         #     bacnet_properties.update({ObjectProperty.statusFlags: StatusFlags()})
@@ -246,10 +246,12 @@ class Object:
 
     @staticmethod
     def __extract_priorities(priority_array: PriorityArray) -> str:
+        """ Converts priorityArray object to str like ,,,,,,,,40.5,,,,,,49.2,
+        """
         pa_size = priority_array.value[0]
         priorities = []
 
-        for i in range(1, pa_size):
+        for i in range(1, pa_size + 1):
             pa = priority_array.value[i]
             key, value = zip(*pa.dict_contents().items())
             if key[0] == 'null':
