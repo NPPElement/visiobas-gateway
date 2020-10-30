@@ -2,7 +2,7 @@ version: "3.3"
 
 services:
   gateway:
-    build: .
+    build: gateway_bacnet/
     image: gateway:v1
     restart: always
     environment:
