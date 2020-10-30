@@ -2,14 +2,14 @@ version: "3.3"
 
 services:
   gateway:
-    build: /opt/visiobas-gateway/
+    build: gateway/
     image: gateway:v1
     restart: always
     environment:
       - TZ=Europe/Moscow
       - PYTHONPATH=/usr/scr/gateway/
     volumes:
-      - /opt/visiobas-gateway:/usr/scr/gateway
+      - /opt/visiobas-gateway:/usr/scr/gateway/
     ports:
       - 8080:8080
       - 47808:47808
