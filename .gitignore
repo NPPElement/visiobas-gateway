@@ -4,3 +4,5 @@ venv
 visiobas_gateway/connectors/bacnet/address_cache
 visiobas_gateway/logs/*.log
 visiobas_gateway/*.log
+*.DS_Store
+.DS_Store

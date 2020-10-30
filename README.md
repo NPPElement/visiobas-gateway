@@ -80,7 +80,7 @@ sudo docker-compose down
 sudo docker images
 </pre>
 <pre>
-sudo docker rmi [id] 
+sudo docker rmi -f <image_id>
 </pre>
 Set the data received after executing the previous command instead of the id
 <pre>
