@@ -1,4 +1,4 @@
-FROM python:3.9-slim-buster
+FROM python:3.9
 
 LABEL maintainer="VisioBAS <info.visiobas.com>" \
  description="VisioBAS Gateway"
