@@ -80,7 +80,7 @@ Or with full cleaning
 sudo docker-compose down
 </pre>
 <pre>
-sudo docker images
+sudo docker images -a
 </pre>
 <pre>
 sudo docker rmi -f [image_id]
@@ -99,7 +99,7 @@ sudo docker-compose up
 ## Remove
 Delete all containers
 <pre>
-sudo docker ps -a -q | xargs -n 1 -I {} sudo docker rm {}
+sudo docker ps -a -q | xargs -n 1 -I {} sudo docker rm -f {}
 </pre>
 Remove all unused images, not just dangling ones
 <pre>
