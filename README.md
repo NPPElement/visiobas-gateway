@@ -69,6 +69,9 @@ sudo docker-compose logs -f
 sudo docker-compose down
 </pre>
 <pre>
+sudo docker-compose build
+</pre>
+<pre>
 sudo docker-compose up --build
 </pre>
 
@@ -80,11 +83,14 @@ sudo docker-compose down
 sudo docker images
 </pre>
 <pre>
-sudo docker rmi -f <image_id>
+sudo docker rmi -f [image_id]
 </pre>
 Set the data received after executing the previous command instead of the id
 <pre>
 sudo git pull
+</pre>
+<pre>
+sudo docker-compose build
 </pre>
 <pre>
 sudo docker-compose up
