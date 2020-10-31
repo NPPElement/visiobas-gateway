@@ -2,7 +2,7 @@ FROM python:3.8.5
 
 RUN mkdir -p /usr/scr/gateway/
 
-ADD . /usr/scr/gateway/
+COPY . /usr/scr/gateway/
 RUN pip install --no-cache-dir -r requirements.txt
 
 WORKDIR /usr/scr/gateway/
