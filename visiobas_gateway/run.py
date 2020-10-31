@@ -2,7 +2,7 @@ import argparse
 import logging
 import sys
 
-from visiobas_gateway.gateway.visio_gateway import VisioGateway
+from gateway.visio_gateway import VisioGateway
 
 LOGGER_FORMAT = '%(levelname)-8s [%(asctime)s] [%(threadName)s] %(name)s - (%(filename)s).%(funcName)s(%(lineno)d): %(message)s'
 

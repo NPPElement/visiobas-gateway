@@ -8,9 +8,9 @@ import BAC0
 from BAC0.core.io.IOExceptions import InitializationError
 from aiohttp.web_exceptions import HTTPClientError, HTTPServerError
 
-from visiobas_gateway.connectors.bacnet.bacnet_device import BACnetDevice
-from visiobas_gateway.connectors.bacnet.object_type import ObjectType
-from visiobas_gateway.connectors.connector import Connector
+from connectors.bacnet.bacnet_device import BACnetDevice
+from connectors.bacnet.object_type import ObjectType
+from connectors.connector import Connector
 
 
 class BACnetConnector(Thread, Connector):

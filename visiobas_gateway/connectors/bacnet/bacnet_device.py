@@ -6,9 +6,9 @@ from threading import Thread
 
 from BAC0.core.io.IOExceptions import ReadPropertyException
 
-from visiobas_gateway.connectors.bacnet.object import Object
-from visiobas_gateway.connectors.bacnet.object_property import ObjectProperty
-from visiobas_gateway.connectors.bacnet.object_type import ObjectType
+from connectors.bacnet.object import Object
+from connectors.bacnet.object_property import ObjectProperty
+from connectors.bacnet.object_type import ObjectType
 
 LOGGER_FORMAT = '%(levelname)-8s [%(asctime)s] [%(threadName)s] %(name)s - (%(filename)s).%(funcName)s(%(lineno)d): %(message)s'
 

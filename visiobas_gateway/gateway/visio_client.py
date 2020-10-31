@@ -6,8 +6,8 @@ from threading import Thread
 import aiohttp
 from aiohttp import ClientResponse, ClientConnectorError
 
-from visiobas_gateway.connectors.bacnet.object_property import ObjectProperty
-from visiobas_gateway.connectors.bacnet.object_type import ObjectType
+from connectors.bacnet.object_property import ObjectProperty
+from connectors.bacnet.object_type import ObjectType
 
 
 class VisioClient(Thread):

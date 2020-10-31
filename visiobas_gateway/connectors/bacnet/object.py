@@ -4,9 +4,9 @@ from BAC0.core.io.IOExceptions import ReadPropertyMultipleException, \
     NoResponseFromController, UnknownObjectError, ReadPropertyException, Timeout
 from bacpypes.basetypes import PriorityArray
 
-from visiobas_gateway.connectors.bacnet.object_property import ObjectProperty
-from visiobas_gateway.connectors.bacnet.object_type import ObjectType
-from visiobas_gateway.connectors.bacnet.status_flags import StatusFlags
+from connectors.bacnet.object_property import ObjectProperty
+from connectors.bacnet.object_type import ObjectType
+from connectors.bacnet.status_flags import StatusFlags
 
 
 class Object:

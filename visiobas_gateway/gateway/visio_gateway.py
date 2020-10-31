@@ -3,8 +3,8 @@ import json
 import logging
 from pathlib import Path
 
-from visiobas_gateway.connectors.bacnet.bacnet_connector import BACnetConnector
-from visiobas_gateway.gateway.visio_client import VisioClient
+from connectors.bacnet.bacnet_connector import BACnetConnector
+from gateway.visio_client import VisioClient
 
 
 class VisioGateway:
