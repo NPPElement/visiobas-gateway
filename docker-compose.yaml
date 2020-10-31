@@ -2,8 +2,8 @@ version: "3.3"
 
 services:
   gateway:
-    build: visiobas_gateway/
-    image: gateway:0.0.1
+    build: vb-gateway/
+    image: vb-gateway:0.0.1
     restart: always
     environment:
       - TZ=Europe/Moscow
@@ -27,3 +27,13 @@ services:
       - 47821:47821
       - 47822:47822
       - 47823:47823
+  mqtt:
+    build: vb-mqtt/
+    image: vb-mqtt:0.0.1
+    restart: always
+    environment:
+      - TZ=Europe/Moscow
+      - PYTHONPATH=/usr/scr/mqtt/
+    ports:
+      - 1883:1883
+      - 8883:8883

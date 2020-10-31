@@ -1,7 +1,7 @@
 venv
 .idea
 *.pyc
-visiobas_gateway/logs/*.log
-visiobas_gateway/*.log
+vb-gateway/logs/*.log
+vb-gateway/*.log
 *.DS_Store
 .DS_Store

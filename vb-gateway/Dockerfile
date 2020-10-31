@@ -1,8 +1,11 @@
 FROM python:3.8.5
+MAINTAINER VISIODAS, info.visiobas.com
 
 RUN mkdir -p /usr/scr/gateway/
 
 ADD . /usr/scr/gateway/
+ADD ./../config /usr/scr/gateway/
+
 WORKDIR /usr/scr/gateway/
 
 RUN pip install --upgrade pip
