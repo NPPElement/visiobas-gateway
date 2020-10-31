@@ -9,7 +9,7 @@ COPY . /gateway/
 
 WORKDIR /gateway/
 
-VOLUME ["/gateway/config", "/gateway/logs"]
+# VOLUME ["/gateway/config", "/gateway/logs", "/gateway/connectors/bacnet"]
 
 # RUN pip install --upgrade pip
 RUN pip install --no-cache-dir -r requirements.txt
