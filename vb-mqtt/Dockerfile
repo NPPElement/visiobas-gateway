@@ -14,7 +14,6 @@ RUN locale-gen en_US.UTF-8 en_GB.UTF-8 fr_CH.UTF-8 && \
     echo "Europe/Moscow" > /etc/timezone
 
 # Install mosquitto clients
-RUN apt-add-repository ppa:mosquitto-dev/mosquitto-ppa
-RUN apt-get update && install mosquitto-clients
+RUN apt-get install mosquitto-clients
 
 EXPOSE 1883 8883 
