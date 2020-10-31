@@ -5,6 +5,12 @@ LABEL maintainer="VisioBAS <info.visiobas.com>" \
 
 ENV LWS_VERSION=0.0.1
 
+RUN	mkdir -p /mqtt
+
+COPY . /mqtt/
+
+WORKDIR /mqtt/
+
 # Install packages
 RUN apk --no-cache add mosquitto-clients
 

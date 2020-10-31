@@ -80,7 +80,7 @@ Or with full cleaning
 sudo docker-compose down 
 </pre>
 <pre>
-sudo docker images -a
+sudo docker images
 </pre>
 <pre>
 sudo docker rmi -f [image_id]
