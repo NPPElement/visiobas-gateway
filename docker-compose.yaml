@@ -27,6 +27,11 @@ services:
       - 47821:47821
       - 47822:47822
       - 47823:47823
+    volumes:
+      - /opt/visiobas-gateway/vb-gateway/gateway/config:/gateway/config
+      - /opt/visiobas-gateway/vb-gateway/gateway/logs:/gateway/logs
+      - /opt/visiobas-gateway/vb-gateway/gateway/connectors/bacnet:/gateway/connectors/bacnet
+      - /opt/visiobas-gateway/vb-gateway/gateway/config:/gateway/config
   mqtt:
     build: vb-mqtt/
     image: vb-mqtt:0.0.1
