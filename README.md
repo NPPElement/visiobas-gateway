@@ -96,6 +96,16 @@ sudo docker-compose build
 sudo docker-compose up
 </pre>
 
+## Remove
+Delete all containers
+<pre>
+sudo docker ps -a -q | xargs -n 1 -I {} sudo docker rm {}
+</pre>
+Remove all unused images, not just dangling ones
+<pre>
+sudo docker image prune -a -f
+</pre>
+
 ## Level
 You can change the logging level using visiobas_gateway/run.py
 level being 'DEBUG, INFO, WARNING, ERROR'
