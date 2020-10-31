@@ -11,8 +11,3 @@ RUN apk --no-cache add mosquitto-clients
 # Expose MQTT port
 # TODO SSL 8883
 EXPOSE 1883
-
-RUN while true; \
-	do mosquitto_pub -h 10.21.80.10 -t heartbeat -m ok; \
-	sleep 10; \
-	done;
