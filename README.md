@@ -77,10 +77,10 @@ sudo docker-compose up --build
 
 Or with full cleaning
 <pre>
-sudo docker-compose down
+sudo docker-compose down 
 </pre>
 <pre>
-sudo docker images -a
+sudo docker images -a | xargs -n 1 -I {} sudo docker rm -f {}
 </pre>
 <pre>
 sudo docker rmi -f [image_id]
@@ -104,6 +104,11 @@ sudo docker ps -a -q | xargs -n 1 -I {} sudo docker rm -f {}
 Remove all unused images, not just dangling ones
 <pre>
 sudo docker image prune -a -f
+</pre>
+If deleting or stopping the container is hopeless
+<pre>
+sudo systemctl daemon-reload
+sudo systemctl restart dock
 </pre>
 
 ## Level
