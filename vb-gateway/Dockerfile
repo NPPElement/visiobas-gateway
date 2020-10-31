@@ -4,7 +4,7 @@ MAINTAINER VISIODAS, info.visiobas.com
 RUN mkdir -p /usr/scr/gateway/
 
 ADD . /usr/scr/gateway/
-ADD ./../config /usr/scr/gateway/
+ADD /opt/visiobas-gateway/vb-gateway/config /usr/scr/gateway/
 
 WORKDIR /usr/scr/gateway/
 
