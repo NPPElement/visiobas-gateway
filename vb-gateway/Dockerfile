@@ -1,11 +1,11 @@
 FROM python:3.8.5
 MAINTAINER VISIODAS, info.visiobas.com
 
-RUN mkdir -p /usr/scr/gateway/
+RUN mkdir -p /gateway/
 
-ADD . /usr/scr/gateway/
+ADD . /gateway/
 
-WORKDIR /usr/scr/gateway/
+WORKDIR /gateway/
 
 RUN pip install --upgrade pip
 RUN pip install --no-cache-dir -r requirements.txt
