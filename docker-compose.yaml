@@ -37,4 +37,4 @@ services:
     ports:
       - 1883:1883
       - 8883:8883
-    command: sh ./run.sh
+    command: sh run.sh
