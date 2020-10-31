@@ -12,4 +12,4 @@ RUN apk --no-cache add mosquitto-clients
 # TODO SSL 8883
 EXPOSE 1883
 
-RUN while true; do mosquitto_pub -h 10.21.80.10 -t heartbeat -m ok; sleep 10; done;
+# RUN while true; do mosquitto_pub -h 10.21.80.10 -t heartbeat -m ok; sleep 10; done;
