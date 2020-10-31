@@ -9,7 +9,7 @@ services:
       - TZ=Europe/Moscow
       - PYTHONPATH=/usr/scr/gateway/
     volumes:
-      - /opt/visiobas-gateway:/usr/scr/gateway/
+      - /opt/visiobas-gateway/gateway/:/usr/scr/gateway/
     ports:
       - 8080:8080
       - 47808:47808
