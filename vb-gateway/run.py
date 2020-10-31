@@ -1,6 +1,7 @@
 import argparse
 import logging
 import sys
+import os
 
 from gateway.visio_gateway import VisioGateway
 
@@ -23,6 +24,8 @@ def main():
 
     # Setting the BAC0 logging levels
     # BAC0.log_level('silence')
+
+    os.system("mosquitto_pub -h 10.21.80.10 -t heartbeat -m OK")
 
     VisioGateway()
 
