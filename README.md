@@ -72,7 +72,7 @@ sudo docker-compose down
 sudo docker-compose build
 </pre>
 <pre>
-sudo docker-compose up --build
+sudo docker-compose up
 </pre>
 
 Or with full cleaning
@@ -80,20 +80,22 @@ Or with full cleaning
 sudo docker-compose down 
 </pre>
 <pre>
-sudo docker images -a | xargs -n 1 -I {} sudo docker rm -f {}
+sudo docker images -a
 </pre>
 <pre>
 sudo docker rmi -f [image_id]
+</pre>
+OR
+<pre>
+sudo docker images -a | xargs -n 1 -I {} sudo docker rmi -f {}
+</pre>
 </pre>
 Set the data received after executing the previous command instead of the id
 <pre>
 sudo git pull
 </pre>
 <pre>
-sudo docker-compose build
-</pre>
-<pre>
-sudo docker-compose up
+sudo docker-compose up --build
 </pre>
 
 ## Remove
@@ -108,7 +110,7 @@ sudo docker image prune -a -f
 If deleting or stopping the container is hopeless
 <pre>
 sudo systemctl daemon-reload
-sudo systemctl restart dock
+sudo systemctl restart docker
 </pre>
 
 ## Level
