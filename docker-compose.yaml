@@ -2,7 +2,7 @@ version: "3.3"
 
 services:
   gateway:
-    build: vb-gateway/
+    build: vb_gateway/
     image: vb-gateway:0.0.1
     restart: always
     environment:
@@ -10,7 +10,9 @@ services:
       - PYTHONPATH=/usr/scr/gateway/
     command: python ./run.py
     ports:
+      - 1883:1883
       - 8080:8080
+      - 8883:8883
       - 47808:47808
       - 47809:47809
       - 47810:47810
@@ -27,5 +29,3 @@ services:
       - 47821:47821
       - 47822:47822
       - 47823:47823
-      - 1883:1883
-      - 8883:8883
