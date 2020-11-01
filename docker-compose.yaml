@@ -2,7 +2,7 @@ version: "3.3"
 
 services:
   gateway:
-    build: ./vb_gateway
+    build: .
     image: vb-gateway:0.0.2
     restart: always
     environment:
