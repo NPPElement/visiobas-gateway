@@ -4,9 +4,9 @@ LABEL maintainer="VisioBAS <info.visiobas.com>" \
  description="VisioBAS Gateway"
 
 RUN	mkdir -p /vb_gateway
-WORKDIR /vb_gateway
-
 COPY . /vb_gateway
+
+WORKDIR /
 
 # VOLUME ["/gateway/config", "/gateway/logs", "/gateway/connectors/bacnet"]
 
