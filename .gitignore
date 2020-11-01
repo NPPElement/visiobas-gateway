@@ -5,3 +5,4 @@ vb-gateway/logs/*.log
 vb-gateway/*.log
 *.DS_Store
 .DS_Store
+*address_cache
