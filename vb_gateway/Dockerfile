@@ -6,7 +6,6 @@ LABEL maintainer="VisioBAS <info.visiobas.com>" \
 RUN	mkdir -p /vb_gateway
 WORKDIR /vb_gateway
 
-#COPY ./vb_gateway /vb_gateway
 COPY . /vb_gateway
 
 # VOLUME ["/gateway/config", "/gateway/logs", "/gateway/connectors/bacnet"]
