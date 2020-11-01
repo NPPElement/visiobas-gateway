@@ -3,7 +3,7 @@ FROM python:3.9
 LABEL maintainer="VisioBAS <info.visiobas.com>" \
  description="VisioBAS Gateway"
 
-RUN	mkdir -p /gateway
+RUN	mkdir -p /vb_gateway
 
 COPY ./vb_gateway /vb_gateway
 
