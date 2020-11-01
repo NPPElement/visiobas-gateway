@@ -5,7 +5,7 @@ LABEL maintainer="VisioBAS <info.visiobas.com>" \
 
 RUN	mkdir -p /gateway
 
-COPY . /gateway
+COPY vb_gateway /gateway
 
 WORKDIR /gateway
 

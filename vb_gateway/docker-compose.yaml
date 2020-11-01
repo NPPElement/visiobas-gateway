@@ -2,14 +2,14 @@ version: "3.3"
 
 services:
   gateway:
-    build: .
+    build: ..
     image: vb-gateway:0.0.2
     restart: always
     environment:
       - TZ=Europe/Moscow
       - PYTHONPATH=/gateway/
     volumes:
-      - /home/user/vb-gateway-logs:/vb_gateway/logs
+      - ~/vb-gateway-logs:/vb_gateway/logs
     command: python ./run.py
     ports:
       - 1883:1883
