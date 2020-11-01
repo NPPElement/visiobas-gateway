@@ -9,10 +9,10 @@ services:
     restart: always
     environment:
       - TZ=Europe/Moscow
-      - PYTHONPATH=/vb_gateway/
+      - PYTHONPATH=/vb_gateway
     volumes:
       - ~/vb-gateway-logs:/vb_gateway/logs
-    command: python ./run.py
+    command: python run.py
     ports:
       - 1883:1883
       - 8080:8080
