@@ -11,7 +11,7 @@ services:
       - TZ=Europe/Moscow
       - PYTHONPATH=/
     volumes:
-      - ~/visiobas-gateway:/
+      - ~/visiobas-gateway/vb_gateway/logs:/vb_gateway/logs
     command: python /vb_gateway/run.py
     ports:
       - 1883:1883
