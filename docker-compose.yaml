@@ -9,7 +9,7 @@ services:
     restart: always
     environment:
       - TZ=Europe/Moscow
-      - PYTHONPATH=/vb_gateway
+      - PYTHONPATH=/
     volumes:
       - ~/vb-gateway-logs:/vb_gateway/logs
     command: python /vb_gateway/run.py
