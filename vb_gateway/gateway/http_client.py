@@ -72,7 +72,7 @@ class VisioHTTPClient(Thread):
                     device_id, device_str = self.__bacnet_queue.get()
                     self.__logger.debug('Received data from BACnetVerifier: '
                                         f'Device[{device_id}]: {device_str}')
-                    self.__rq_post_device(device_id=device_id, data=device_str)
+                    asyncio.run(self.__rq_post_device(device_id=device_id, data=device_str))
                 except Exception as e:
                     self.__logger.error(f"Receive'n'post device error: {e}", exc_info=True)
 
