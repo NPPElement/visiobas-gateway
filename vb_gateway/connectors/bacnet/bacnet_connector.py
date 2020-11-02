@@ -64,10 +64,10 @@ class BACnetConnector(Thread, Connector):
         self.__network = None
 
         self.queue = SimpleQueue()
-        self.verifier = BACnetVerifier(bacnet_queue=self.queue,
-                                       client_queue=client_queue,
-                                       http_enable=True,
-                                       mqtt_enable=False)
+        self.__verifier = BACnetVerifier(bacnet_queue=self.queue,
+                                         client_queue=client_queue,
+                                         http_enable=True,
+                                         mqtt_enable=False)
 
     def __repr__(self):
         return 'BACnetConnector'
@@ -119,6 +119,8 @@ class BACnetConnector(Thread, Connector):
                 else:
                     self.__logger.info('Network initialized.')
         else:
+            self.__network.disconnect()
+            self.__logger.info('BAC0 Network disconnected.')
             self.__logger.info(f'{self} stopped.')
 
     def open(self):
@@ -130,7 +132,14 @@ class BACnetConnector(Thread, Connector):
         self.__stopped = True
         self.__connected = False
 
+        self.__stop_devices()
+
+        self.__verifier.close()
+        self.__verifier.join()
+
     def start_devices(self, devices: dict) -> None:
+        """ Starts BACnet Devices threads
+        """
         for device_id, objects in devices.items():
             try:  # stop polling current device thread
                 self.__polling_devices[device_id].stop_polling()
@@ -151,7 +160,18 @@ class BACnetConnector(Thread, Connector):
                 )
             except Exception as e:
                 self.__logger.error(f'Device [{device_id}] '
-                                    f'error: {e}', exc_info=True)
+                                    f'starting error: {e}', exc_info=True)
+
+    def __stop_devices(self) -> None:
+        """ Stops BACnet Devices threads
+        """
+        try:
+            for device in self.__polling_devices:
+                device.stop_polling()
+                device.join()
+        except Exception as e:
+            self.__logger.error(f'Device stopping error: {e}', exc_info=True)
+        self.__logger.info('All devices were stopping.')
 
     def __parse_address_cache(self, address_cache_path: Path = None) -> None:
         """

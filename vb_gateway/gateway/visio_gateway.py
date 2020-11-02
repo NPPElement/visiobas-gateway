@@ -27,9 +27,9 @@ class VisioGateway:
         self.__stopped = False
 
         self.__client_bacnet_queue = SimpleQueue()
-        self.__client = VisioHTTPClient(gateway=self,
-                                        config=self._config['http_client'],
-                                        bacnet_queue=self.__client_bacnet_queue)
+        self.__http_client = VisioHTTPClient(gateway=self,
+                                             config=self._config['http_client'],
+                                             bacnet_queue=self.__client_bacnet_queue)
 
         # self.__notifier = None  # todo
         # self.__statistic = None  # todo
@@ -57,7 +57,8 @@ class VisioGateway:
         while not self.__stopped:
             try:
                 sleep(60 * 60)
-
+            except (KeyboardInterrupt, SystemExit):
+                self.__stop()
             except Exception as e:
                 self.__logger.error(f'Error: {e}', exc_info=True)
         else:
@@ -66,13 +67,31 @@ class VisioGateway:
     def __repr__(self):
         return 'VisioGateway'
 
+    def __stop(self):
+        self.__stop_connectors()
+
+        self.__http_client.stop()
+        self.__http_client.join()
+        raise SystemExit
+
     def __start_connectors(self) -> None:
-        """Opens connection with all connectors"""
+        """ Opens connection with all connectors
+        """
         for connector in self.__connectors.values():
             try:
                 connector.open()
             except Exception as e:
                 self.__logger.error(f'{connector} opening error: {e}')
+
+    def __stop_connectors(self) -> None:
+        """ Closes connections with all connectors
+        """
+        for connector in self.__connectors.values():
+            try:
+                connector.close()
+                connector.join()
+            except Exception as e:
+                self.__logger.error(f'{connector} closing error: {e}')
 
     def get_devices_objects(self, devices_id: list, object_types: list):
         """
@@ -85,8 +104,8 @@ class VisioGateway:
 
         # FIXME: CHANGE TO QUEUE, MOVE TO CLIENT
         devices_objects = asyncio.run(
-            self.__client.rq_devices_objects(devices_id=devices_id,
-                                             object_types=object_types)
+            self.__http_client.rq_devices_objects(devices_id=devices_id,
+                                                  object_types=object_types)
         )
         return devices_objects
 
@@ -101,7 +120,7 @@ class VisioGateway:
         """
         # FIXME: MOVE TO CLIENT
         rejected_objects = asyncio.run(
-            self.__client.__rq_post_device(device_id=device_id,
-                                           data=data)
+            self.__http_client.__rq_post_device(device_id=device_id,
+                                                data=data)
         )
         return rejected_objects

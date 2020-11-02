@@ -168,7 +168,7 @@ class BACnetDevice(Thread):
 
                 # todo: close Thread and push to bacnet-connector
                 sleep(60)
-            # exit(666)
+            exit(666)
         else:
             self.__logger.info(f'{self} stopped.')
 
