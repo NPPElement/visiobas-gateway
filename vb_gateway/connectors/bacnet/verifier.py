@@ -73,7 +73,8 @@ class BACnetVerifier(Process):
 
                     # verifying all properties of the object
                     verified_object_properties = self.verify(obj_properties=obj_properties)
-                    self.__logger.debug(f'Verified properties: {verified_object_properties}')
+                    self.__logger.debug(
+                        f'Verified properties: {verified_object_properties}')
 
                     # representing all properties of the object as string
                     str_verified_obj_properties = self.convert_properties_to_str(
@@ -198,8 +199,8 @@ class BACnetVerifier(Process):
                     properties[ObjProperty.statusFlags] = sf
         properties[ObjProperty.priorityArray] = tuple(priorities)
 
-    @staticmethod
-    def convert_properties_to_str(verified_objects_properties: dict) -> str:
+    # @staticmethod
+    def convert_properties_to_str(self, verified_objects_properties: dict) -> str:
         try:
             general_properties_str = ' '.join((
                 str(verified_objects_properties[ObjProperty.objectIdentifier]),
@@ -208,9 +209,11 @@ class BACnetVerifier(Process):
             ))
 
             if ObjProperty.priorityArray in verified_objects_properties:
+                pa_str = self.convert_pa_to_str(
+                    verified_objects_properties[ObjProperty.priorityArray])
                 pa_sf_str = ' '.join((
-                    verified_objects_properties[ObjProperty.priorityArray],
-                    verified_objects_properties[ObjProperty.statusFlags]
+                    pa_str,
+                    str(verified_objects_properties[ObjProperty.statusFlags])
                 ))
                 general_properties_str = ' '.join((general_properties_str, pa_sf_str))
                 return general_properties_str
@@ -277,6 +280,3 @@ class BACnetVerifier(Process):
         topic = obj_name.replace(':', '/').replace('.', '/')
         # ...
         raise NotImplementedError
-
-
-
