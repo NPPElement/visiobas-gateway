@@ -204,7 +204,7 @@ class BACnetVerifier(Process):
         try:
             general_properties_str = ' '.join((
                 str(verified_objects_properties[ObjProperty.objectIdentifier]),
-                verified_objects_properties[ObjProperty.objectType.name],
+                verified_objects_properties[ObjProperty.objectType].name,
                 str(verified_objects_properties[ObjProperty.presentValue])
             ))
 
