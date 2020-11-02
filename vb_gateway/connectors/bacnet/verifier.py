@@ -186,8 +186,8 @@ class BACnetVerifier(Process):
         manual_life_safety = 9
 
         for i in range(1, pa_size + 1):
-            pa = pa.value[i]
-            key, value = zip(*pa.dict_contents().items())
+            priority = pa.value[i]
+            key, value = zip(*priority.dict_contents().items())
             if key[0] == 'null':
                 priorities.append('')
             else:
