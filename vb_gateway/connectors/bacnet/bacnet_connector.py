@@ -30,13 +30,18 @@ class BACnetConnector(Thread, Connector):
                                       )
         self.__logger.addHandler(handler)
 
+        self.__config = config
         self.setName(name=f'{self}-Thread')
         self.setDaemon(True)
 
         self.__gateway = gateway
         self.__client_queue = client_queue
 
-        self.__config = config
+        self.__verifier_queue = SimpleQueue()
+        self.__verifier = BACnetVerifier(bacnet_queue=self.__verifier_queue,
+                                         client_queue=client_queue,
+                                         http_enable=config['http_enable'],
+                                         mqtt_enable=config['mqtt_enable'])
 
         self.__connected = False
         self.__stopped = False
@@ -55,7 +60,6 @@ class BACnetConnector(Thread, Connector):
             ObjType.MULTI_STATE_VALUE,
         ]
 
-        self.__ready_devices_id = set()
         self.__polling_devices = {}
 
         # Match device_id with device_address. Example: {200: '10.21.80.12'}
@@ -63,30 +67,22 @@ class BACnetConnector(Thread, Connector):
 
         self.__network = None
 
-        self.queue = SimpleQueue()
-        self.__verifier = BACnetVerifier(bacnet_queue=self.queue,
-                                         client_queue=client_queue,
-                                         http_enable=True,
-                                         mqtt_enable=False)
-
     def __repr__(self):
         return 'BACnetConnector'
 
     def run(self):
         self.__logger.info(f'{self} starting ...')
 
-        self.__parse_address_cache()  # todo: Can the address_cache be updated?
-
         while not self.__stopped:
-            if self.__network:  # IF HAVING INITIALIZED NETWORK
-                sleep(1)  # for client login fixme!
+            self.__update_address_cache(address_cache_path=None)
 
-                # devices_objects = {}
+            if self.__network:  # IF HAVING INITIALIZED NETWORK
                 try:  # Requesting objects and their types from the server
                     # FIXME: move to client
                     devices_objects = self.__gateway.get_devices_objects(
                         devices_id=list(self.__address_cache.keys()),
                         object_types=self.__object_types_to_request)
+
                     if devices_objects:  # If received devices with objects from the server
                         self.__logger.info('Received devices with '
                                            f'objects: {[*devices_objects.keys()]}'
@@ -98,14 +94,13 @@ class BACnetConnector(Thread, Connector):
 
                 except (HTTPServerError, HTTPClientError) as e:
                     self.__logger.error('Error retrieving information about '
-                                        f'devices objects from the server: {e}',
-                                        exc_info=True)
+                                        f'devices objects from the server: {e}')
                 except OSError as e:
                     self.__logger.error(f'Please, check login: {e}')
                     # FIXME
 
-                    # delay
-                    sleep(60 * 60)
+                # delay
+                sleep(60 * 60)
 
             else:  # IF NOT HAVE INITIALIZED BAC0 NETWORK
                 self.__logger.info('BACnet network initializing ...')
@@ -140,18 +135,13 @@ class BACnetConnector(Thread, Connector):
     def start_devices(self, devices: dict) -> None:
         """ Starts BACnet Devices threads
         """
-        for device_id, objects in devices.items():
-            try:  # stop polling current device thread
-                self.__polling_devices[device_id].stop_polling()
-                self.__polling_devices[device_id].join()
-                self.__polling_devices.pop(device_id)
-            except KeyError:
-                pass
+        self.__stop_devices()
 
-            try:  # starting poll updated device
+        for device_id, objects in devices.items():
+            try:  # start polling device
                 self.__polling_devices[device_id] = BACnetDevice(
                     gateway=self.__gateway,
-                    client_queue=self.__client_queue,
+                    verifier_queue=self.__verifier_queue,
                     connector=self,
                     address=self.__address_cache[device_id],
                     device_id=device_id,
@@ -165,30 +155,40 @@ class BACnetConnector(Thread, Connector):
     def __stop_devices(self) -> None:
         """ Stops BACnet Devices threads
         """
-        try:
-            for device in self.__polling_devices:
-                device.stop_polling()
-                device.join()
-        except Exception as e:
-            self.__logger.error(f'Device stopping error: {e}', exc_info=True)
-        self.__logger.info('All devices were stopping.')
+        for device_id in self.__polling_devices.keys():
+            self.__stop_device(device_id=device_id)
+        self.__logger.info('BACnet devices were stopping')
 
-    def __parse_address_cache(self, address_cache_path: Path = None) -> None:
+    def __stop_device(self, device_id: int) -> None:
+        """ Stops device by device_id
         """
-        Parse text file format of address_cache.
-        Add information about devices
+        try:
+            self.__polling_devices[device_id].stop_polling()
+            self.__polling_devices[device_id].join()
+            del self.__polling_devices[device_id]
+        except KeyError as e:
+            self.__logger.error(f'The device with id {device_id} is not running. '
+                                f'Please provide the id of the polling device: {e}')
+        except Exception as e:
+            self.__logger.error(f'Device stopping error: {e}')
 
-        Example of file format:
+    def __update_address_cache(self, address_cache_path: Path = None) -> None:
+        """ Updates address_cache file
 
-        ;Device   MAC (hex)            SNET  SADR (hex)           APDU
-        ;-------- -------------------- ----- -------------------- ----
-          200     0A:15:50:0C:BA:C0    0     00                   480
-          300     0A:15:50:0D:BA:C0    0     00                   480
-          400     0A:15:50:0E:BA:C0    0     00                   480
-          500     0A:15:50:0F:BA:C0    0     00                   480
-          600     0A:15:50:10:BA:C0    0     00                   480
-        ;
-        ; Total Devices: 5
+            Parse text file format of address_cache.
+            Add information about devices
+
+            Example of address_cache format:
+
+            ;Device   MAC (hex)            SNET  SADR (hex)           APDU
+            ;-------- -------------------- ----- -------------------- ----
+              200     0A:15:50:0C:BA:C0    0     00                   480
+              300     0A:15:50:0D:BA:C0    0     00                   480
+              400     0A:15:50:0E:BA:C0    0     00                   480
+              500     0A:15:50:0F:BA:C0    0     00                   480
+              600     0A:15:50:10:BA:C0    0     00                   480
+            ;
+            ; Total Devices: 5
         """
         if (address_cache_path is None) or (not address_cache_path.is_file()):
             base_dir = Path(__file__).resolve().parent.parent.parent
@@ -200,6 +200,8 @@ class BACnetConnector(Thread, Connector):
             self.__logger.error(f"Not found address_cache file: {e}")
             raise e
 
+        self.__address_cache = {}
+
         for line in text.split('\n'):
             trimmed = line.strip()
             if not trimmed.startswith(';') and trimmed:
@@ -208,7 +210,7 @@ class BACnetConnector(Thread, Connector):
                 except ValueError:
                     continue
                 device_id = int(device_id)
-                # In mac we have ip-address host:port
+                # In mac we have ip-address host:port in hex
                 mac = mac.split(':')
                 address = '{}.{}.{}.{}:{}'.format(int(mac[0], base=16),
                                                   int(mac[1], base=16),

@@ -30,6 +30,7 @@ class VisioGateway:
         self.__http_client = VisioHTTPClient(gateway=self,
                                              config=self._config['http_client'],
                                              bacnet_queue=self.__client_bacnet_queue)
+        sleep(1)
 
         # self.__notifier = None  # todo
         # self.__statistic = None  # todo
@@ -93,7 +94,7 @@ class VisioGateway:
             except Exception as e:
                 self.__logger.error(f'{connector} closing error: {e}')
 
-    def get_devices_objects(self, devices_id: list, object_types: list):
+    def get_devices_objects(self, devices_id: list, object_types: list) -> dict:
         """
         Called from the BACnet connector. Uses the VisioClient.
 
@@ -109,18 +110,18 @@ class VisioGateway:
         )
         return devices_objects
 
-    def post_device(self, device_id: int, data: str) -> list:
-        """
-        Called from BACnet Device. Uses the VisioClient.
-        Post polled device data to server.
-
-        :param device_id:
-        :param data:
-        :return: list of devices rejected on server side.
-        """
-        # FIXME: MOVE TO CLIENT
-        rejected_objects = asyncio.run(
-            self.__http_client.__rq_post_device(device_id=device_id,
-                                                data=data)
-        )
-        return rejected_objects
+    # def post_device(self, device_id: int, data: str) -> list:
+    #     """
+    #     Called from BACnet Device. Uses the VisioClient.
+    #     Post polled device data to server.
+    #
+    #     :param device_id:
+    #     :param data:
+    #     :return: list of devices rejected on server side.
+    #     """
+    #     # FIXME: MOVE TO CLIENT
+    #     rejected_objects = asyncio.run(
+    #         self.__http_client.__rq_post_device(device_id=device_id,
+    #                                             data=data)
+    #     )
+    #     return rejected_objects

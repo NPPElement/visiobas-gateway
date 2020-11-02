@@ -30,7 +30,7 @@ class BACnetVerifier(Process):
         handler.setFormatter(formatter)
         self.__logger.addHandler(handler)
 
-        self.__connector_queue = bacnet_queue
+        self.__bacnet_queue = bacnet_queue
         self.__client_queue = client_queue
 
         self.__active = True
@@ -51,21 +51,21 @@ class BACnetVerifier(Process):
         self.__logger.info(f'{self} Starting ...')
         while self.__active:
             try:
-                data = self.__connector_queue.get()
+                bacnet_data = self.__bacnet_queue.get()
 
-                if isinstance(data, int):
+                if isinstance(bacnet_data, int):
                     # These are not properties. This is a signal that
                     # the polling of the device is over.
                     # This means that the collected information on the device with
                     # that id can be sent to the http server.
-                    device_id = data
+                    device_id = bacnet_data
                     self.__logger.debug('Received signal to send collected data about '
                                         f'Device[{device_id}] to HTTP server')
                     self.__http_send_to_server(device_id=device_id)
 
-                elif data and isinstance(data, dict):
+                elif bacnet_data and isinstance(bacnet_data, dict):
                     # Received data about object from the BACnetConnector
-                    obj_properties = data
+                    obj_properties = bacnet_data
                     self.__logger.debug(f'Received properties: {obj_properties}')
 
                     device_id = obj_properties.pop(ObjProperty.deviceId)
@@ -89,9 +89,10 @@ class BACnetVerifier(Process):
                         verified_str=str_verified_obj_properties)
                 else:
                     raise TypeError(f'Object of unexpected type provided: '
-                                    f'{data} {type(data)}. Please provide device_id <int> '
+                                    f'{bacnet_data} {type(bacnet_data)}. '
+                                    'Please provide device_id <int> '
                                     'to send data into HTTP server. '
-                                    'Or provide dict with ObjProperties.')
+                                    'Or provide <dict> with ObjProperties.')
 
             except TypeError as e:
                 self.__logger.error(f'Verifying type error: {e}', exc_info=True)
@@ -252,6 +253,7 @@ class BACnetVerifier(Process):
             If MQTT enable send data to broker
         """
         if self.__http_enable:
+            self.__logger.debug('Collecting verified str to http storage')
             self.__http_collect_str(device_id=device_id, verified_str=verified_str)
         if self.__mqtt_enable:
             self.__mqtt_send_to_broker(obj_name=obj_name, verified_str=verified_str)

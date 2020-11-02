@@ -62,15 +62,16 @@ class VisioHTTPClient(Thread):
         self.start()
 
     def run(self) -> None:
-        """
-        Keeps the connection to the server. Login if necessary.
-        Periodically requests updates from the server.
-            Sends information received from the server to the gateway.
+        """ Keeps the connection to the server. Login if necessary.
+            Periodically requests updates from the server.
+            Sends data from connectors.
         """
         while not self.__stopped:
-            if self.__connected:  # IF LOGGED IN
+            if self.__connected:  # IF AUTHORIZED
                 try:
                     device_id, device_str = self.__bacnet_queue.get()
+                    self.__logger.debug('Received data from BACnetVerifier: '
+                                        f'Device[{device_id}]: {device_str}')
                     self.__rq_post_device(device_id=device_id, data=device_str)
                 except Exception as e:
                     self.__logger.error(f"Receive'n'post device error: {e}", exc_info=True)
@@ -159,8 +160,8 @@ class VisioHTTPClient(Thread):
 
         async with aiohttp.ClientSession(headers=self.__auth_headers) as session:
             async with session.post(url=url, data=data) as response:
-                self.__logger.info(f'POST: {url}')
-                self.__logger.info(f'Body: {data}')
+                self.__logger.debug(f'POST: {url}')
+                self.__logger.debug(f'Body: {data}')
                 data = await self.__extract_response_data(response=response)
                 await self.__check_rejected(device_id=device_id,
                                             data=data)

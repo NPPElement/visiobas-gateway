@@ -15,7 +15,7 @@ from vb_gateway.connectors.bacnet.status_flags import StatusFlags
 
 class BACnetDevice(Thread):
     def __init__(self, gateway,
-                 client_queue: SimpleQueue,
+                 verifier_queue: SimpleQueue,
                  connector,
                  address: str,
                  device_id: int,
@@ -44,7 +44,7 @@ class BACnetDevice(Thread):
 
         self.__gateway = gateway
         self.__connector = connector
-        self.__client_queue = client_queue
+        self.__verifier_queue = verifier_queue
 
         self.address = address
         self.network = network
@@ -65,12 +65,9 @@ class BACnetDevice(Thread):
         ]
 
         self.__BO_BV_AO_AV_MV_MO = {
-            ObjType.BINARY_OUTPUT,
-            ObjType.BINARY_VALUE,
-            ObjType.ANALOG_OUTPUT,
-            ObjType.ANALOG_VALUE,
-            ObjType.MULTI_STATE_VALUE,
-            ObjType.MULTI_STATE_OUTPUT
+            ObjType.BINARY_OUTPUT, ObjType.BINARY_VALUE,
+            ObjType.ANALOG_OUTPUT, ObjType.ANALOG_VALUE,
+            ObjType.MULTI_STATE_VALUE, ObjType.MULTI_STATE_OUTPUT
         }
 
         self.__BO_BV_AO_AV_MV_MO_properties = [
@@ -140,6 +137,7 @@ class BACnetDevice(Thread):
                         # f'Objects not responding: {len(self.not_responding)}\n'
                         f'Unknown objects: {len(self.unknown_objects)}\n'
                         '==================================================')
+                    self.stop_polling()  # FIXME
                     # if data:
                     #     # self.__logger.info(f'{self} polled for {time_delta} sec')
                     #     # self.__gateway.post_device(device_id=self.__device_id,
@@ -160,15 +158,14 @@ class BACnetDevice(Thread):
                         self.__active = True
                         continue
                 except ReadPropertyException:
-                    continue
+                    pass
                 except Exception:
-                    continue
+                    pass
                 # delay
                 # todo: move delay in config
 
                 # todo: close Thread and push to bacnet-connector
                 sleep(60)
-            exit(666)
         else:
             self.__logger.info(f'{self} stopped.')
 
@@ -190,14 +187,16 @@ class BACnetDevice(Thread):
         self.__logger.info('Set inactive')
         self.__logger.warning(f'{self} switched to inactive.')
 
+        # TODO put to bacnet connector for ping checking
+
     def poll(self) -> None:
         while self.__polling:
             for obj in self.objects:
                 properties = {
                     ObjProperty.deviceId: self.__device_id,
+                    ObjProperty.objectName: obj.name,
                     ObjProperty.objectType: obj.type,
                     ObjProperty.objectIdentifier: obj.id,
-                    ObjProperty.objectName: obj.name
                 }
                 try:
                     if not obj.is_unknown:
@@ -218,11 +217,11 @@ class BACnetDevice(Thread):
                 else:
                     if values:
                         properties.update(values)
-                        # send data into Verifier-process
+                        # send data into Verifier-Process
                         self.__put_data_into_verifier(properties=properties)
 
-                    self.__logger.debug(f'From {obj} received: {properties}')
-                    self.__put_data_into_verifier(properties=properties)
+                    # self.__logger.debug(f'From {obj} received: {properties}')
+                    # self.__put_data_into_verifier(properties=properties)
 
             # notify verifier, that device polled and should send collected objects via HTTP
             self.__put_device_end_to_verifier()
@@ -265,12 +264,12 @@ class BACnetDevice(Thread):
         """ device_id in queue means that device polled.
             Should send collected objects to HTTP
         """
-        self.__connector.queue.put(self.__device_id)
+        self.__verifier_queue.put(self.__device_id)
 
     def __put_data_into_verifier(self, properties: dict) -> None:
         """ Send collected data about obj into BACnetVerifier
         """
-        self.__connector.queue.put(properties)
+        self.__verifier_queue.put(properties)
 
     def __unpack_objects(self, objects: dict) -> None:
         """ Uses to create objects at Device init
