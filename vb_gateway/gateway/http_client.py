@@ -41,8 +41,8 @@ class VisioHTTPClient(Thread):
         else:
             raise ValueError(f'Config for {self} not found.')
 
-        # self.__host = config['host-mirror']  # FIXME: prod
-        self.__host = config['host3']  # FIXME: test
+        self.__host = config['host-mirror']  # FIXME: prod
+        # self.__host = config['host3']  # FIXME: test
         self.__port = config['port']
 
         self.__verify = config['ssl_verify']
