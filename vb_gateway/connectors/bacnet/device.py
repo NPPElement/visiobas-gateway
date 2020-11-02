@@ -209,8 +209,6 @@ class BACnetDevice(Thread):
                         else:
                             self.__logger.warning(f'Unexpected ObjType: {obj.type}')
                             raise NotImplementedError
-                        if values:
-                            self.__put_data_into_verifier(properties=values)
 
                     else:  # if obj is unknown
                         values = self.__get_unknown_obj_properties()
@@ -218,10 +216,13 @@ class BACnetDevice(Thread):
                 except Exception as e:
                     self.__logger.error(f'{e}', exc_info=True)
                 else:
-                    properties.update(values)
-                    # send data into Verifier-process through pipe
+                    if values:
+                        properties.update(values)
+                        # send data into Verifier-process
+                        self.__put_data_into_verifier(properties=properties)
+
                     self.__logger.debug(f'From {obj} received: {properties}')
-                    self.__put_data_into_verifier(properties=properties)  # fixme
+                    self.__put_data_into_verifier(properties=properties)
 
             # notify verifier, that device polled and should send collected objects via HTTP
             self.put_device_end_to_verifier()
