@@ -16,7 +16,7 @@ def main():
     # level = logging.DEBUG 
     # level = logging.INFO
     # level = logging.WARNING
-    level = logging.ERROR
+    level = logging.DEBUG
 
     logging.basicConfig(format=LOGGER_FORMAT,
                         level=level,
