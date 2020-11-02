@@ -225,7 +225,7 @@ class BACnetDevice(Thread):
                     self.__put_data_into_verifier(properties=properties)
 
             # notify verifier, that device polled and should send collected objects via HTTP
-            self.put_device_end_to_verifier()
+            self.__put_device_end_to_verifier()
         else:
             self.__logger.info(f'{self} stopped.')
 
@@ -261,11 +261,11 @@ class BACnetDevice(Thread):
             #  todo: make reliability class as Enum
         }
 
-    def put_device_end_to_verifier(self) -> None:
+    def __put_device_end_to_verifier(self) -> None:
         """ device_id in queue means that device polled.
             Should send collected objects to HTTP
         """
-        self.__client_queue.put(self.__device_id)
+        self.__connector.queue.put(self.__device_id)
 
     def __put_data_into_verifier(self, properties: dict) -> None:
         """ Send collected data about obj into BACnetVerifier
