@@ -30,6 +30,7 @@ class BACnetConnector(Thread, Connector):
                                       )
         LOGGER_FORMAT = '%(levelname)-8s [%(asctime)s] [%(threadName)s] %(name)s - (%(filename)s).%(funcName)s(%(lineno)d): %(message)s'
         formatter = logging.Formatter(LOGGER_FORMAT)
+        handler.setFormatter(formatter)
         self.__logger.addHandler(handler)
 
         self.__config = config
