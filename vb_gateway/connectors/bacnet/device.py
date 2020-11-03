@@ -233,6 +233,8 @@ class BACnetDevice(Thread):
     def __unpack_objects(self, objects: dict) -> None:
         """ Uses to create objects at Device init
         """
+        # TODO REWRITE TO COMPREHENSION
+
         for obj_type, obj_properties in objects.items():
             for obj_id, obj_name in obj_properties:
                 obj = BACnetObject(device=self,
