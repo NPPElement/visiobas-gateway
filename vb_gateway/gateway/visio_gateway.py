@@ -109,19 +109,3 @@ class VisioGateway:
                                                   object_types=object_types)
         )
         return devices_objects
-
-    # def post_device(self, device_id: int, data: str) -> list:
-    #     """
-    #     Called from BACnet Device. Uses the VisioClient.
-    #     Post polled device data to server.
-    #
-    #     :param device_id:
-    #     :param data:
-    #     :return: list of devices rejected on server side.
-    #     """
-    #     # FIXME: MOVE TO CLIENT
-    #     rejected_objects = asyncio.run(
-    #         self.__http_client.__rq_post_device(device_id=device_id,
-    #                                             data=data)
-    #     )
-    #     return rejected_objects

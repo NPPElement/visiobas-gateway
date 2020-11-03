@@ -105,26 +105,14 @@ class BACnetDevice(Thread):
     # def __eq__(self, other):
     #     return self.objects is other.objects
 
-    # @staticmethod
-    # def __count_objects(objects: dict) -> int:
-    #     """
-    #     Used in __len__, statistic
-    #
-    #     :param objects: object dictionary
-    #     :return: the number of objects in the object dictionary
-    #     """
-    #     counter = 0
-    #     for object_type in objects:
-    #         counter += len(objects[object_type])
-    #     return counter
-
     def run(self):
         while self.__polling:
             self.__logger.info('Polling started')
             if self.__active:
+                self.__logger.debug(f'{self} is active')
                 try:
                     t0 = time()
-                    self.poll()
+                    self.poll()  # poll all objects
                     t1 = time()
                     time_delta = t1 - t0
 
@@ -136,23 +124,20 @@ class BACnetDevice(Thread):
                         # f'Objects not responding: {len(self.not_responding)}\n'
                         f'Unknown objects: {len(self.unknown_objects)}\n'
                         '==================================================')
-                    # if data:
-                    #     # self.__logger.info(f'{self} polled for {time_delta} sec')
-                    #     # self.__gateway.post_device(device_id=self.__device_id,
-                    #     #                            data=data)
-                    #     # self.__logger.info(f'Collected data: {data} was sent to server')
 
                 except Exception as e:
                     self.__logger.error(f'Polling error: {e}')  # , exc_info=True)
             else:  # if device inactive
+                self.__logger.debug(f'{self} is inactive')
                 try:
                     device_obj = BACnetObject(device=self, type_=ObjType.DEVICE,
                                               id_=self.__device_id)
                     device_id = device_obj.read_property(
                         property_=ObjProperty.objectIdentifier)
-                    self.__logger.info(f'PING: device_id: {device_id}')
+                    self.__logger.info(f'PING: device_id: {device_id} <{type(device_id)}>')
 
                     if device_id:
+                        self.__logger.debug(f'{self} set to active')
                         self.__active = True
                         continue
                 except ReadPropertyException:
@@ -163,6 +148,7 @@ class BACnetDevice(Thread):
                 # todo: move delay in config
 
                 # todo: close Thread and push to bacnet-connector
+                self.__logger.debug('Sleeping 60 sec ...')
                 sleep(60)
         else:
             self.__logger.info(f'{self} stopped.')
@@ -188,64 +174,39 @@ class BACnetDevice(Thread):
         # TODO put to bacnet connector for ping checking
 
     def poll(self) -> None:
-        while self.__polling:
-            for obj in self.objects:
-                properties = {
-                    ObjProperty.deviceId: self.__device_id,
-                    ObjProperty.objectName: obj.name,
-                    ObjProperty.objectType: obj.type,
-                    ObjProperty.objectIdentifier: obj.id,
-                }
-                try:
-                    if not obj.is_unknown:
-                        if obj.type in self.__BI_AI_MI_AC:
-                            values = obj.read(properties=self.__BI_AI_MI_AC_properties)
-                        elif obj.type in self.__BO_BV_AO_AV_MV_MO:
-                            values = obj.read(
-                                properties=self.__BO_BV_AO_AV_MV_MO_properties)
-                        else:
-                            self.__logger.warning(f'Unexpected ObjType: {obj.type}')
-                            raise NotImplementedError
+        for obj in self.objects:
+            properties = {
+                ObjProperty.deviceId: self.__device_id,
+                ObjProperty.objectName: obj.name,
+                ObjProperty.objectType: obj.type,
+                ObjProperty.objectIdentifier: obj.id,
+            }
+            try:
+                if not obj.is_unknown:
+                    if obj.type in self.__BI_AI_MI_AC:
+                        values = obj.read(properties=self.__BI_AI_MI_AC_properties)
+                    elif obj.type in self.__BO_BV_AO_AV_MV_MO:
+                        values = obj.read(
+                            properties=self.__BO_BV_AO_AV_MV_MO_properties)
+                    else:
+                        self.__logger.warning(f'Unexpected ObjType: {obj.type}')
+                        raise NotImplementedError
 
-                    else:  # if obj is unknown
-                        values = self.__get_unknown_obj_properties()
+                else:  # if obj is unknown
+                    values = self.__get_unknown_obj_properties()
 
-                except Exception as e:
-                    self.__logger.error(f'{e}', exc_info=True)
-                else:
-                    if values:
-                        properties.update(values)
-                        # send data into Verifier-Process
-                        self.__put_data_into_verifier(properties=properties)
+            except Exception as e:
+                self.__logger.error(f'{e}', exc_info=True)
+            else:
+                if values:
+                    self.__logger.info(f'Received data from  {obj}. Send to verifier.')
+                    properties.update(values)
+                    # send data into Verifier-Process
+                    self.__put_data_into_verifier(properties=properties)
 
-                    # self.__logger.debug(f'From {obj} received: {properties}')
-                    # self.__put_data_into_verifier(properties=properties)
-
-            # notify verifier, that device polled and should send collected objects via HTTP
-            self.__put_device_end_to_verifier()
-        else:
-            self.__logger.info(f'{self} stopped.')
-
-            #         self.__logger.debug(f'VALUES: {values}')
-            #         if values:
-            #             evaluated_values = obj.evaluate(values=values)
-            #             self.__logger.debug(f'EVALUATED VALUES: {evaluated_values}')
-            #         if evaluated_values:
-            #             data_str = obj.as_str(properties=evaluated_values)
-            #             self.__logger.debug(f'DATA_STR: {data_str}')
-            #             polled_data.append(data_str)
-            #     except Exception as e:
-            #         self.__logger.error(f'{e}', exc_info=True)
-            #         # raise Exception(f'{obj} Poll Error: {e}')
-            #
-            # if polled_data:
-            #     self.__logger.debug(f'Polled objects: {len(polled_data)}')
-            #     request_body = ';'.join(polled_data) + ';'
-            #     return request_body
-            # else:
-            #     self.__logger.warning('No objects were successfully polled')
-            #     self.set_inactive()
-            #     return ''
+        # notify verifier, that device polled and should send collected objects via HTTP
+        self.__logger.debug('All objects were polled. Send device_id to verifier')
+        self.__put_device_end_to_verifier()
 
     @staticmethod
     def __get_unknown_obj_properties() -> dict:

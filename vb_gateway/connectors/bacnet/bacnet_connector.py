@@ -28,6 +28,8 @@ class BACnetConnector(Thread, Connector):
                                       maxBytes=50_000,
                                       encoding='utf-8'
                                       )
+        LOGGER_FORMAT = '%(levelname)-8s [%(asctime)s] [%(threadName)s] %(name)s - (%(filename)s).%(funcName)s(%(lineno)d): %(message)s'
+        formatter = logging.Formatter(LOGGER_FORMAT)
         self.__logger.addHandler(handler)
 
         self.__config = config
@@ -85,7 +87,7 @@ class BACnetConnector(Thread, Connector):
 
                     if devices_objects:  # If received devices with objects from the server
                         self.__logger.info('Received devices with '
-                                           f'objects: {[*devices_objects.keys()]}'
+                                           f'objects: {[*devices_objects.keys()]} '
                                            'Starting them ...')
                         self.start_devices(devices=devices_objects)
                     else:
@@ -100,6 +102,7 @@ class BACnetConnector(Thread, Connector):
                     # FIXME
 
                 # delay
+                self.__logger.debug('Sleep 1h')
                 sleep(60 * 60)
 
             else:  # IF NOT HAVE INITIALIZED BAC0 NETWORK
@@ -135,9 +138,11 @@ class BACnetConnector(Thread, Connector):
     def start_devices(self, devices: dict) -> None:
         """ Starts BACnet Devices threads
         """
+        self.__logger.debug('Stopping current devices ...')
         self.__stop_devices()
 
         for device_id, objects in devices.items():
+            self.__logger.info(f'Starting device [{device_id}] ...')
             try:  # start polling device
                 self.__polling_devices[device_id] = BACnetDevice(
                     gateway=self.__gateway,
@@ -151,6 +156,8 @@ class BACnetConnector(Thread, Connector):
             except Exception as e:
                 self.__logger.error(f'Device [{device_id}] '
                                     f'starting error: {e}', exc_info=True)
+            else:
+                self.__logger.info(f'Device [{device_id}] started')
 
     def __stop_devices(self) -> None:
         """ Stops BACnet Devices threads
@@ -166,6 +173,7 @@ class BACnetConnector(Thread, Connector):
             self.__polling_devices[device_id].stop_polling()
             self.__polling_devices[device_id].join()
             del self.__polling_devices[device_id]
+            self.__logger.info(f'Device [{device_id}] stopped')
         except KeyError as e:
             self.__logger.error(f'The device with id {device_id} is not running. '
                                 f'Please provide the id of the polling device: {e}')
