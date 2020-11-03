@@ -163,18 +163,25 @@ class BACnetConnector(Thread, Connector):
     def __stop_devices(self) -> None:
         """ Stops BACnet Devices threads
         """
-        for device_id in self.__polling_devices.keys():
-            self.__stop_device(device_id=device_id)
-        self.__logger.info('BACnet devices were stopping')
+        try:
+            for device_id in self.__polling_devices.keys():
+                self.__stop_device(device_id=device_id)
+        except Exception as e:
+            self.__logger.error(f'Stopping devices error: {e}', exc_info=True)
+        else:
+            self.__logger.info('BACnet devices were stopping')
 
     def __stop_device(self, device_id: int) -> None:
         """ Stops device by device_id
         """
         try:
+            self.__logger.debug(f'Device [{device_id}] stopping polling ...')
             self.__polling_devices[device_id].stop_polling()
+            self.__logger.debug(f'Device [{device_id}] stopped polling')
             self.__polling_devices[device_id].join()
+            self.__logger.debug(f'Device [{device_id}]-Thread stopped')
             del self.__polling_devices[device_id]
-            self.__logger.info(f'Device [{device_id}] stopped')
+            self.__logger.info(f'Device [{device_id}]-Thread removed')
         except KeyError as e:
             self.__logger.error(f'The device with id {device_id} is not running. '
                                 f'Please provide the id of the polling device: {e}')

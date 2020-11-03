@@ -186,6 +186,7 @@ class BACnetVerifier(Process):
 
         # todo: move priorities into Enum
         manual_life_safety = 9
+        automatic_life_safety = 10
 
         for i in range(1, pa_size + 1):
             priority = pa.value[i]
@@ -194,7 +195,7 @@ class BACnetVerifier(Process):
                 priorities.append('')
             else:
                 priorities.append(value[0])
-                if i == manual_life_safety:
+                if i == manual_life_safety or i == automatic_life_safety:
                     sf = properties.get(ObjProperty.statusFlags, StatusFlags([0, 0, 0, 0]))
                     sf.set(overriden=True)
                     properties[ObjProperty.statusFlags] = sf
