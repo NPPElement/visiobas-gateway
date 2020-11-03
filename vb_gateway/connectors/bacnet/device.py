@@ -105,19 +105,18 @@ class BACnetDevice(Thread):
     # def __eq__(self, other):
     #     return self.objects is other.objects
 
-    @staticmethod
-    def __count_objects(objects: dict) -> int:
-        """
-        Used in __len__, statistic
-
-        :param objects: object dictionary
-        :return: the number of objects in the object dictionary
-        """
-        counter = 0
-        for object_type in objects:
-            counter += len(objects[object_type])
-        # fixme: can be refactored: change to set of tuple
-        return counter
+    # @staticmethod
+    # def __count_objects(objects: dict) -> int:
+    #     """
+    #     Used in __len__, statistic
+    #
+    #     :param objects: object dictionary
+    #     :return: the number of objects in the object dictionary
+    #     """
+    #     counter = 0
+    #     for object_type in objects:
+    #         counter += len(objects[object_type])
+    #     return counter
 
     def run(self):
         while self.__polling:
@@ -137,7 +136,6 @@ class BACnetDevice(Thread):
                         # f'Objects not responding: {len(self.not_responding)}\n'
                         f'Unknown objects: {len(self.unknown_objects)}\n'
                         '==================================================')
-                    self.stop_polling()  # FIXME
                     # if data:
                     #     # self.__logger.info(f'{self} polled for {time_delta} sec')
                     #     # self.__gateway.post_device(device_id=self.__device_id,
