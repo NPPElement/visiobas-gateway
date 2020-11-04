@@ -102,6 +102,8 @@ class BACnetConnector(Thread, Connector):
                 except OSError as e:
                     self.__logger.error(f'Please, check login: {e}')
                     # FIXME
+                except Exception as e:
+                    self.__logger.error(f'Device update error: {e}')
 
                 # delay
                 self.__logger.debug('Sleep 1h')
@@ -143,6 +145,7 @@ class BACnetConnector(Thread, Connector):
         self.__logger.debug('Stopping current devices ...')
         self.__stop_devices()
 
+        self.__logger.debug('Starting new Devices ...')
         for device_id, objects in devices.items():
             self.__logger.info(f'Starting device [{device_id}] ...')
             try:  # start polling device
