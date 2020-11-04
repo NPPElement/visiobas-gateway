@@ -176,6 +176,7 @@ class BACnetDevice(Thread):
 
     def poll(self) -> None:
         for obj in self.objects:
+            self.__logger.debug(f'Polling {obj} ...')
             properties = {
                 ObjProperty.deviceId: self.__device_id,
                 ObjProperty.objectName: obj.name,
@@ -197,10 +198,10 @@ class BACnetDevice(Thread):
                     values = self.__get_unknown_obj_properties()
 
             except Exception as e:
-                self.__logger.error(f'{e}', exc_info=True)
+                self.__logger.error(f'{obj} polling error: {e}', exc_info=True)
             else:
                 if values:
-                    self.__logger.info(f'Received data from  {obj}. Send to verifier.')
+                    self.__logger.info(f'Received data from {obj}. Send to verifier.')
                     properties.update(values)
                     # send data into Verifier-Process
                     self.__put_data_into_verifier(properties=properties)
@@ -241,6 +242,6 @@ class BACnetDevice(Thread):
                 obj = BACnetObject(device=self,
                                    type_=obj_type,
                                    id_=obj_id,
-                                   name=obj_name
-                                   )
+                                   name=obj_name)
                 self.objects.add(obj)
+                self.__logger.debug(f'{obj} created in {self}')
