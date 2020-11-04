@@ -107,7 +107,7 @@ class BACnetConnector(Thread, Connector):
 
                 # delay
                 self.__logger.debug('Sleep 1h')
-                sleep(60 * 60)
+                sleep(60 * 60)  # FIXME REPLACE TO threading.Timer? in ThreadPoolExecutor?
 
             else:  # IF NOT HAVE INITIALIZED BAC0 NETWORK
                 self.__logger.info('BACnet network initializing ...')
