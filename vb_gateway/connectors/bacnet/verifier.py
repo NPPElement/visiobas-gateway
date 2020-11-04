@@ -24,6 +24,7 @@ class BACnetVerifier(Process):
         handler = RotatingFileHandler(filename=log_path,
                                       mode='a',
                                       maxBytes=50_000,
+                                      backupCount=1,
                                       encoding='utf-8')
         LOGGER_FORMAT = '%(levelname)-8s [%(asctime)s] [%(threadName)s] %(name)s - (%(filename)s).%(funcName)s(%(lineno)d): %(message)s'
         formatter = logging.Formatter(LOGGER_FORMAT)
