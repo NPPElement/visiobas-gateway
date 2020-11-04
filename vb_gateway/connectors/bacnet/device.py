@@ -31,7 +31,7 @@ class BACnetDevice(Thread):
         log_path = base_path / f'logs/{device_id}.log'
         handler = RotatingFileHandler(filename=log_path,
                                       mode='a',
-                                      maxBytes=50_000,
+                                      maxBytes=50_000_000,
                                       backupCount=1,
                                       encoding='utf-8'
                                       )
