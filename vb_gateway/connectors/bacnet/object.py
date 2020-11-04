@@ -19,18 +19,18 @@ class BACnetObject:
             self.name = name
 
         self.__logger = self.__logger = logging.getLogger(f'{self}')
-        base_path = Path(__file__).resolve().parent.parent.parent
-        log_path = base_path / f'logs/{self.__device.id}-objects.log'
-        handler = RotatingFileHandler(filename=log_path,
-                                      mode='a',
-                                      maxBytes=50_000_000,
-                                      backupCount=1,
-                                      encoding='utf-8'
-                                      )
-        LOGGER_FORMAT = '%(levelname)-8s [%(asctime)s] [%(threadName)s] %(name)s - (%(filename)s).%(funcName)s(%(lineno)d): %(message)s'
-        formatter = logging.Formatter(LOGGER_FORMAT)
-        handler.setFormatter(formatter)
-        self.__logger.addHandler(handler)
+        # base_path = Path(__file__).resolve().parent.parent.parent
+        # log_path = base_path / f'logs/{self.__device.id}-objects.log'
+        # handler = RotatingFileHandler(filename=log_path,
+        #                               mode='a',
+        #                               maxBytes=50_000_000,
+        #                               backupCount=1,
+        #                               encoding='utf-8'
+        #                               )
+        # LOGGER_FORMAT = '%(levelname)-8s [%(asctime)s] [%(threadName)s] %(name)s - (%(filename)s).%(funcName)s(%(lineno)d): %(message)s'
+        # formatter = logging.Formatter(LOGGER_FORMAT)
+        # handler.setFormatter(formatter)
+        # self.__logger.addHandler(handler)
 
         # todo move in device
         # TODO: MOVE READ METHODS INTO DEVICE

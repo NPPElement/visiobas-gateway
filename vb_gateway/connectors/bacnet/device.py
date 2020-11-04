@@ -187,15 +187,18 @@ class BACnetDevice(Thread):
                 if not obj.is_unknown:
                     if obj.type in self.__BI_AI_MI_AC:
                         values = obj.read(properties=self.__BI_AI_MI_AC_properties)
+                        self.__logger.debug(f'{obj} values: {values}')
                     elif obj.type in self.__BO_BV_AO_AV_MV_MO:
                         values = obj.read(
                             properties=self.__BO_BV_AO_AV_MV_MO_properties)
+                        self.__logger.debug(f'{obj} values: {values}')
                     else:
                         self.__logger.warning(f'Unexpected ObjType: {obj.type}')
                         raise NotImplementedError
 
                 else:  # if obj is unknown
                     values = self.__get_unknown_obj_properties()
+                    self.__logger.debug(f'{obj} unknown object. Set values: {values}')
 
             except Exception as e:
                 self.__logger.error(f'{obj} polling error: {e}', exc_info=True)
