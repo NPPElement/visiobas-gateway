@@ -23,12 +23,12 @@ class BACnetDevice(Thread):
                  objects: dict):
         super().__init__()
 
-        self.__device_id = device_id
+        self.id = device_id
 
         self.__logger = self.__logger = logging.getLogger(f'{self}')
 
         base_path = Path(__file__).resolve().parent.parent.parent
-        log_path = base_path / f'logs/{device_id}.log'
+        log_path = base_path / f'logs/{self.id}.log'
         handler = RotatingFileHandler(filename=log_path,
                                       mode='a',
                                       maxBytes=50_000_000,
@@ -92,7 +92,7 @@ class BACnetDevice(Thread):
         self.start()
 
     def __repr__(self):
-        return f'BACnetDevice [{self.__device_id}]'
+        return f'BACnetDevice [{self.id}]'
 
     def __len__(self):
         """
@@ -132,7 +132,7 @@ class BACnetDevice(Thread):
                 self.__logger.debug(f'{self} is inactive')
                 try:
                     device_obj = BACnetObject(device=self, type_=ObjType.DEVICE,
-                                              id_=self.__device_id)
+                                              id_=self.id)
                     device_id = device_obj.read_property(
                         property_=ObjProperty.objectIdentifier)
                     self.__logger.info(f'PING: device_id: {device_id} <{type(device_id)}>')
@@ -178,7 +178,7 @@ class BACnetDevice(Thread):
         for obj in self.objects:
             self.__logger.debug(f'Polling {obj} ...')
             properties = {
-                ObjProperty.deviceId: self.__device_id,
+                ObjProperty.deviceId: self.id,
                 ObjProperty.objectName: obj.name,
                 ObjProperty.objectType: obj.type,
                 ObjProperty.objectIdentifier: obj.id,
@@ -200,6 +200,7 @@ class BACnetDevice(Thread):
             except Exception as e:
                 self.__logger.error(f'{obj} polling error: {e}', exc_info=True)
             else:
+                self.__logger.debug(f'From {obj} read: {values}')
                 if values:
                     self.__logger.info(f'Received data from {obj}. Send to verifier.')
                     properties.update(values)
@@ -225,7 +226,7 @@ class BACnetDevice(Thread):
         """ device_id in queue means that device polled.
             Should send collected objects to HTTP
         """
-        self.__verifier_queue.put(self.__device_id)
+        self.__verifier_queue.put(self.id)
 
     def __put_data_into_verifier(self, properties: dict) -> None:
         """ Send collected data about obj into BACnetVerifier
