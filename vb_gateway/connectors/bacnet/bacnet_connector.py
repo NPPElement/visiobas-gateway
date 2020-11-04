@@ -91,7 +91,7 @@ class BACnetConnector(Thread, Connector):
                         self.__logger.info('Received devices with '
                                            f'objects: {[*devices_objects.keys()]} '
                                            'Starting them ...')
-                        self.start_devices(devices=devices_objects)
+                        self.update_devices(devices=devices_objects)
                     else:
                         self.__logger.error('No objects from server')
                         continue
@@ -139,30 +139,38 @@ class BACnetConnector(Thread, Connector):
         self.__verifier.close()
         self.__verifier.join()
 
-    def start_devices(self, devices: dict) -> None:
+    def update_devices(self, devices: dict) -> None:
         """ Starts BACnet Devices threads
         """
-        self.__logger.debug('Stopping current devices ...')
-        self.__stop_devices()
-
-        self.__logger.debug('Starting new Devices ...')
         for device_id, objects in devices.items():
+
+            self.__logger.info(f'Stopping device [{device_id}] ...')
+            self.__stop_device(device_id=device_id)
+
             self.__logger.info(f'Starting device [{device_id}] ...')
-            try:  # start polling device
-                self.__polling_devices[device_id] = BACnetDevice(
-                    gateway=self.__gateway,
-                    verifier_queue=self.__verifier_queue,
-                    connector=self,
-                    address=self.__address_cache[device_id],
-                    device_id=device_id,
-                    network=self.__network,
-                    objects=objects
-                )
-            except Exception as e:
-                self.__logger.error(f'Device [{device_id}] '
-                                    f'starting error: {e}', exc_info=True)
-            else:
-                self.__logger.info(f'Device [{device_id}] started')
+            self.__start_device(device_id=device_id, objects=objects)
+
+        self.__logger.info('Devices updated')
+
+    def __start_device(self, device_id: int, objects: dict) -> None:
+        """ Start BACnet Device thread
+        """
+        self.__logger.debug(f'Starting Device [{device_id}] ...')
+        try:
+            self.__polling_devices[device_id] = BACnetDevice(
+                gateway=self.__gateway,
+                verifier_queue=self.__verifier_queue,
+                connector=self,
+                address=self.__address_cache[device_id],
+                device_id=device_id,
+                network=self.__network,
+                objects=objects
+            )
+        except Exception as e:
+            self.__logger.error(f'Device [{device_id}] '
+                                f'starting error: {e}', exc_info=True)
+        else:
+            self.__logger.info(f'Device [{device_id}] started')
 
     def __stop_devices(self) -> None:
         """ Stops BACnet Devices threads
@@ -189,8 +197,7 @@ class BACnetConnector(Thread, Connector):
             self.__logger.debug(f'Device [{device_id}] stopped polling')
             self.__polling_devices[device_id].join()
             self.__logger.debug(f'Device [{device_id}]-Thread stopped')
-            # del self.__polling_devices[device_id]
-            # self.__logger.info(f'Device [{device_id}]-Thread removed')
+
         except KeyError as e:
             self.__logger.error(f'The device with id {device_id} is not running. '
                                 f'Please provide the id of the polling device: {e}')
