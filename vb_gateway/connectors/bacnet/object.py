@@ -1,7 +1,8 @@
 import logging
 
 from BAC0.core.io.IOExceptions import ReadPropertyMultipleException, \
-    NoResponseFromController, UnknownObjectError, ReadPropertyException, Timeout
+    NoResponseFromController, UnknownObjectError, ReadPropertyException, Timeout, \
+    UnknownPropertyError
 
 from vb_gateway.connectors.bacnet.object_property import ObjProperty
 from vb_gateway.connectors.bacnet.object_type import ObjType
@@ -79,48 +80,48 @@ class BACnetObject(object):  # Should we inherit from object do deny __dict__?
                 property_.name
             ])
             value = self.__device.network.read(request)
+        except UnknownPropertyError as e:
+            raise UnknownPropertyError(f'Unknown property: {property_} error')
         except UnknownObjectError as e:
-            self.__logger.error(f'RP Error: {e}')  # , exc_info=True)
             raise ReadPropertyException(f'Unknown object: {e}')
         except NoResponseFromController as e:
-            self.__logger.error(f'RP Error: {e}')  # , exc_info=True)
             raise ReadPropertyException(f'No response from controller: {e}')
         except KeyError as e:
-            self.__logger.error(f'RP Error: {e}')  # , exc_info=True)
             raise ReadPropertyException(f'Unknown property {property_}. {e}')
         except Timeout as e:
-            self.__logger.error(f'RP Error: {e}')  # , exc_info=True)
             raise ReadPropertyException(f'Timeout: {e}')
         except Exception as e:
-            self.__logger.error(f'RP Error: {e}')  # , exc_info=True)
             raise ReadPropertyException(f'RP Error: {e}')
         else:
             # self.__logger.debug(f'{self} RPM Success: {values}')  # , exc_info=True)
             return value
 
     def __read_property_multiple(self, properties: list) -> dict:
-        try:
-            request = ' '.join([
+        request = ' '.join([
                 self.__device.address,
                 self.type.name,
                 str(self.id),
-                *[prop.name for prop in properties]
+                *[prop.id for prop in properties]
             ])
-            response = self.__device.network.readMultiple(request, prop_id_required=True)
+        response = self.__device.network.readMultiple(request, prop_id_required=True)
+        # FIXME
 
-            values = {}
-            for each in response:
+        values = {}
+        for each in response:
+            try:
                 value, property_id = each
                 property_ = ObjProperty(value=property_id)
+            except UnknownPropertyError:
+                continue
+            except ValueError as e:
+                self.__logger.error(f'RPM Error: {e}')  # , exc_info=True)
+                raise ReadPropertyMultipleException(f'RPM Error: {e}')
+            except Exception as e:
+                self.__logger.error(f'RPM Error: {e}')  # , exc_info=True)
+                raise ReadPropertyMultipleException(f'RPM Error: {e}')
+            else:
                 values.update({property_: value})
-        except ValueError as e:
-            self.__logger.error(f'RPM Error: {e}')  # , exc_info=True)
-            raise ReadPropertyMultipleException(f'RPM Error: {e}')
-        except Exception as e:
-            self.__logger.error(f'RPM Error: {e}')  # , exc_info=True)
-            raise ReadPropertyMultipleException(f'RPM Error: {e}')
         else:
-            # self.__logger.debug(f'{self} RPM Success: {values}')  # , exc_info=True)
             return values
 
     def __simulate_rpm(self, properties: list) -> dict:
@@ -138,6 +139,11 @@ class BACnetObject(object):  # Should we inherit from object do deny __dict__?
             #     self.mark(not_responding=True)  # todo: What we should doing with timeout?
             # except NoResponseFromController:
             #     self.mark(not_responding=True)
+            except UnknownPropertyError as e:
+                if property_ is ObjProperty.priorityArray:
+                    continue
+                raise ReadPropertyException(f'Unknown property error: {e}')
+
             except UnknownObjectError:
                 self.mark(unknown_object=True)
             except ValueError as e:

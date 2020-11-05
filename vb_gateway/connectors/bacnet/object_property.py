@@ -363,3 +363,7 @@ class ObjProperty(Enum):
 
     # def __repr__(self):
     #     return self.name
+
+
+if __name__ == '__main__':
+    print(ObjProperty('presentValue'))

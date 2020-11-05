@@ -110,7 +110,6 @@ class BACnetVerifier(Process):
 
     def verify(self, obj_properties: dict) -> dict:
         verified_properties = {
-            # ObjProperty.deviceId: obj_properties[ObjProperty.deviceId],
             ObjProperty.objectType: obj_properties[ObjProperty.objectType],
             ObjProperty.objectIdentifier: obj_properties[ObjProperty.objectIdentifier],
         }
