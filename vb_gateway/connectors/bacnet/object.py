@@ -1,4 +1,6 @@
 import logging
+from logging.handlers import RotatingFileHandler
+from pathlib import Path
 
 from BAC0.core.io.IOExceptions import ReadPropertyMultipleException, \
     NoResponseFromController, UnknownObjectError, ReadPropertyException, Timeout
@@ -20,18 +22,18 @@ class BACnetObject(object):  # Should we inherit from object do deny __dict__?
             self.name = name
 
         self.__logger = self.__logger = logging.getLogger(f'{self}')
-        # base_path = Path(__file__).resolve().parent.parent.parent
-        # log_path = base_path / f'logs/{self.__device.id}-objects.log'
-        # handler = RotatingFileHandler(filename=log_path,
-        #                               mode='a',
-        #                               maxBytes=50_000_000,
-        #                               backupCount=1,
-        #                               encoding='utf-8'
-        #                               )
-        # LOGGER_FORMAT = '%(levelname)-8s [%(asctime)s] [%(threadName)s] %(name)s - (%(filename)s).%(funcName)s(%(lineno)d): %(message)s'
-        # formatter = logging.Formatter(LOGGER_FORMAT)
-        # handler.setFormatter(formatter)
-        # self.__logger.addHandler(handler)
+        base_path = Path(__file__).resolve().parent.parent.parent
+        log_path = base_path / f'logs/{self.__device.id}-objects.log'
+        handler = RotatingFileHandler(filename=log_path,
+                                      mode='a',
+                                      maxBytes=50_000_000,
+                                      backupCount=1,
+                                      encoding='utf-8'
+                                      )
+        LOGGER_FORMAT = '%(levelname)-8s [%(asctime)s] [%(threadName)s] %(name)s - (%(filename)s).%(funcName)s(%(lineno)d): %(message)s'
+        formatter = logging.Formatter(LOGGER_FORMAT)
+        handler.setFormatter(formatter)
+        self.__logger.addHandler(handler)
 
         # todo move in device
         # TODO: MOVE READ METHODS INTO DEVICE
@@ -92,10 +94,10 @@ class BACnetObject(object):  # Should we inherit from object do deny __dict__?
             self.__logger.error(f'RP Error: {e}')  # , exc_info=True)
             raise ReadPropertyException(f'Timeout: {e}')
         except Exception as e:
-            self.__logger.error(f'RP Error: {e}')  # , exc_info=True)
+            self.__logger.error(f'RP Error: {e}', exc_info=True)
             raise ReadPropertyException(f'RP Error: {e}')
         else:
-            # self.__logger.debug(f'{self} RPM Success: {values}')  # , exc_info=True)
+            self.__logger.debug(f'{self} RP Success: {value}')  # , exc_info=True)
             return value
 
     def __read_property_multiple(self, properties: list) -> dict:
@@ -117,10 +119,10 @@ class BACnetObject(object):  # Should we inherit from object do deny __dict__?
             self.__logger.error(f'RPM Error: {e}')  # , exc_info=True)
             raise ReadPropertyMultipleException(f'RPM Error: {e}')
         except Exception as e:
-            self.__logger.error(f'RPM Error: {e}')  # , exc_info=True)
+            self.__logger.error(f'RPM Error: {e}', exc_info=True)
             raise ReadPropertyMultipleException(f'RPM Error: {e}')
         else:
-            # self.__logger.debug(f'{self} RPM Success: {values}')  # , exc_info=True)
+            self.__logger.debug(f'{self} RPM Success: {values}')  # , exc_info=True)
             return values
 
     def __simulate_rpm(self, properties: list) -> dict:
@@ -144,7 +146,7 @@ class BACnetObject(object):  # Should we inherit from object do deny __dict__?
                 self.__logger.error(f'RPM Simulation Error: {e}')  # , exc_info=True)
                 raise ReadPropertyException('RPM Simulation Error')
             except Exception as e:
-                self.__logger.error(f'RPM Simulation Error: {e}')  # , exc_info=True)
+                self.__logger.error(f'RPM Simulation Error: {e}', exc_info=True)
                 # raise Exception(f'RPM Simulation  Error: {e}', )
                 raise ReadPropertyException('RPM Simulation Error')
             else:
@@ -159,13 +161,13 @@ class BACnetObject(object):  # Should we inherit from object do deny __dict__?
                 try:
                     values = self.__simulate_rpm(properties=properties)
                 except Exception as e:
-                    self.__logger.error(f'Read Error: {e}')  # , exc_info=True)
+                    self.__logger.error(f'Read Error: {e}', exc_info=True)
                     return {}
         else:
             try:
                 values = self.__simulate_rpm(properties=properties)
             except Exception as e:
-                self.__logger.error(f'Read Error: {e}')  # , exc_info=True)
+                self.__logger.error(f'Read Error: {e}', exc_info=True)
                 return {}
 
         self.__logger.debug(f'{self} read: {values}')

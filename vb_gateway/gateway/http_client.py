@@ -54,7 +54,7 @@ class VisioHTTPClient(Thread):
         self.__connected = False
         self.__stopped = False
 
-        # getting this data after login
+        # getting this fields after login
         self.__user_id = None
         self.__bearer_token = None
         self.__auth_user_id = None

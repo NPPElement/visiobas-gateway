@@ -144,10 +144,7 @@ class BACnetConnector(Thread, Connector):
         """
         for device_id, objects in devices.items():
 
-            self.__logger.info(f'Stopping device [{device_id}] ...')
             self.__stop_device(device_id=device_id)
-
-            self.__logger.info(f'Starting device [{device_id}] ...')
             self.__start_device(device_id=device_id, objects=objects)
 
         self.__logger.info('Devices updated')
@@ -192,9 +189,8 @@ class BACnetConnector(Thread, Connector):
         """ Stops device by device_id
         """
         try:
-            self.__logger.debug(f'Device [{device_id}] stopping polling ...')
             self.__polling_devices[device_id].stop_polling()
-            self.__logger.debug(f'Device [{device_id}] stopped polling')
+            self.__logger.debug(f'Device [{device_id}] stopping poll ...')
             self.__polling_devices[device_id].join()
             self.__logger.debug(f'Device [{device_id}]-Thread stopped')
 
