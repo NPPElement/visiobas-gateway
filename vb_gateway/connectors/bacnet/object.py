@@ -9,11 +9,8 @@ from vb_gateway.connectors.bacnet.object_property import ObjProperty
 from vb_gateway.connectors.bacnet.object_type import ObjType
 
 
-class BACnetObject(object):  # Should we inherit from object do deny __dict__?
+class BACnetObject:
     def __init__(self, device, type_: ObjType, id_: int, name: str = None):
-
-        __slots__ = ('type', 'id', 'name', '__logger',
-                     '__not_support_rpm', 'is_unknown')
         self.__device = device
 
         self.type = type_
