@@ -23,6 +23,12 @@ class BACnetDevice(Thread):
                  objects: dict):
         super().__init__()
 
+        __slots__ = ('id', '__logger', '__gateway', '__connector', '__verifier_queue',
+                     'address', 'network', 'objects',
+                     '__BI_AI_MI_AC', '__BI_AI_MI_AC_properties',
+                     '__BO_BV_AO_AV_MV_MO', '__BO_BV_AO_AV_MV_MO_properties',
+                     '__active', 'not_support_rpm', 'unknown_objects', '__polling')
+
         self.id = device_id
 
         self.__logger = self.__logger = logging.getLogger(f'{self}')
