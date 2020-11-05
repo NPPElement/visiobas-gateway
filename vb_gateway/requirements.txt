@@ -5,5 +5,5 @@ chardet==3.0.4
 idna==2.10
 multidict==5.0.0
 yarl==1.6.2
-BAC0~=20.2.20
+BAC0~=20.02.20
 bacpypes~=0.18.3
