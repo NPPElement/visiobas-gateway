@@ -103,14 +103,14 @@ class BACnetObject(object):  # Should we inherit from object do deny __dict__?
                 str(self.id),
                 *[prop.name for prop in properties]
             ])
-        response = self.__device.network.readMultiple(request, prop_id_required=True)
+        response = self.__device.network.readMultiple(request)  # , prop_id_required=True)
         # FIXME
 
         values = {}
-        for each in response:
+        for each in enumerate(response):
             try:
-                value, property_id = each
-                property_ = ObjProperty(value=property_id)
+                property_idx, value = each
+                property_ = properties[property_idx]
             except UnknownPropertyError:
                 continue
             except ValueError as e:
