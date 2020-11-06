@@ -130,7 +130,6 @@ class BACnetObject(object):  # Should we inherit from object do deny __dict__?
         for property_ in properties:
             try:
                 value = self.read_property(property_=property_)
-                values.update({property_: value})
             # except ReadPropertyException:
             #     self.mark(not_responding=True)
             # except APDUError:
@@ -154,6 +153,8 @@ class BACnetObject(object):  # Should we inherit from object do deny __dict__?
                 # raise Exception(f'RPM Simulation  Error: {e}', )
                 raise ReadPropertyException('RPM Simulation Error')
             else:
+                if value:
+                    values.update({property_: value})
                 self.mark(not_support_rpm=True)
         return values
 
