@@ -101,7 +101,7 @@ class BACnetObject(object):  # Should we inherit from object do deny __dict__?
                 self.__device.address,
                 self.type.name,
                 str(self.id),
-                *[str(prop.id) for prop in properties]
+                *[prop.name for prop in properties]
             ])
         response = self.__device.network.readMultiple(request, prop_id_required=True)
         # FIXME
