@@ -46,7 +46,6 @@ class BACnetConnector(Thread, Connector):
                                          client_queue=client_queue,
                                          http_enable=config['http_enable'],
                                          mqtt_enable=config['mqtt_enable'])
-
         self.__connected = False
         self.__stopped = False
 
