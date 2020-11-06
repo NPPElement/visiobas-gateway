@@ -137,11 +137,10 @@ class BACnetObject(object):  # Should we inherit from object do deny __dict__?
             # except APDUError:
             #     self.mark(not_responding=True)
             # except Timeout:
-            #     self.mark(not_responding=True)
+            #     self.mark(not_responding=True)  # todo: What we should doing with timeout?
             # except NoResponseFromController:
             #     self.mark(not_responding=True)
             except UnknownPropertyError as e:
-                self.__logger.debug(f'Unknown property: {property_} : {e}')
                 if property_ is ObjProperty.priorityArray:
                     continue
                 raise ReadPropertyException(f'Unknown property error: {e}')
@@ -168,7 +167,6 @@ class BACnetObject(object):  # Should we inherit from object do deny __dict__?
             except ReadPropertyMultipleException:
                 try:
                     values = self.__simulate_rpm(properties=properties)
-
                 except Exception as e:
                     self.__logger.error(f'Read Error: {e}')  # , exc_info=True)
                     return {}
@@ -180,7 +178,4 @@ class BACnetObject(object):  # Should we inherit from object do deny __dict__?
                 return {}
 
         self.__logger.debug(f'{self} read: {values}')
-        # drop empty values
-        values = {prop: value for prop, value in values.items()
-                  if value is None or value == ''}  # fixme why None here?
         return values
