@@ -94,7 +94,9 @@ class BACnetObject(object):  # Should we inherit from object do deny __dict__?
             raise ReadPropertyException(f'RP Error: {e}')
         else:
             # self.__logger.debug(f'{self} RPM Success: {values}')  # , exc_info=True)
-            return value
+            if value:
+                return value
+            raise UnknownPropertyError(f'Unknown property: {property_} error')
 
     def __read_property_multiple(self, properties: list) -> dict:
         request = ' '.join([
