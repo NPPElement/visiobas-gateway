@@ -127,8 +127,9 @@ class BACnetVerifier(Process):
         # Verified_properties updates in verify_pv()
 
         if ObjProperty.priorityArray in obj_properties:
-            self.verify_pa(pa=obj_properties[ObjProperty.priorityArray],
-                           properties=verified_properties)
+            if not obj_properties[ObjProperty.priorityArray] is None:
+                self.verify_pa(pa=obj_properties[ObjProperty.priorityArray],
+                               properties=verified_properties)
             # Verified properties updates in verify_pa()
             # PriorityArray represent as tuple
 
