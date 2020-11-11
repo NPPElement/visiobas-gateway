@@ -12,7 +12,7 @@ services:
       - PYTHONPATH=/
     volumes:
       - /home/user/visiobas-gateway/vb_gateway:/vb_gateway
-    command: python /vb_gateway/run.py
+    command: python ./vb_gateway/run.py
     ports:
       - 1883:1883
       - 8080:8080
