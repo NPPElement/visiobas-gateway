@@ -7,12 +7,13 @@ services:
       dockerfile: Dockerfile
     image: vb-gateway:0.0.2
     restart: always
+    user: visiobas
     environment:
       - TZ=Europe/Moscow
       - PYTHONPATH=/
     volumes:
       - /opt/visiobas-gateway/vb_gateway:/vb_gateway
-    command: python /opt/visiobas-gateway/vb_gateway/run.py
+    command: python /vb_gateway/run.py
     ports:
       - 1883:1883
       - 8080:8080
