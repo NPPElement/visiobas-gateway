@@ -11,8 +11,8 @@ services:
       - TZ=Europe/Moscow
       - PYTHONPATH=/
     volumes:
-      - /home/user/visiobas-gateway/vb_gateway:/vb_gateway
-    command: python ./vb_gateway/run.py
+      - /opt/visiobas-gateway/vb_gateway:/vb_gateway
+    command: python /opt/visiobas-gateway/vb_gateway/run.py
     ports:
       - 1883:1883
       - 8080:8080
