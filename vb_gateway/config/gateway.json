@@ -11,9 +11,14 @@
 			"pwd": "278D1DE033A395FE9A2AA9E1D07416D8"
 		}
 	},
-	"bacnet_connector": {
-	    "http_enable": true,
-	    "mqtt_enable": false,
+	"bacnet_verifier": {
+		"http_enable": true,
+		"mqtt_enable": false
+	},
+	"bacnet-connector": {
+		"default_period": 10
+	},
+	"modbus_connector": {
 		"default_period": 10
 	}
 }

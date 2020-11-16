@@ -1,49 +1,40 @@
 import asyncio
-import logging
-from logging.handlers import RotatingFileHandler
 from multiprocessing import SimpleQueue
 from pathlib import Path
 from threading import Thread
+from typing import List, Dict, Tuple
 
-import aiohttp
-from aiohttp import ClientResponse, ClientConnectorError
+from aiohttp import ClientResponse, ClientConnectorError, ClientSession
 
-from vb_gateway.connectors.bacnet.object_property import ObjProperty
-from vb_gateway.connectors.bacnet.object_type import ObjType
+from vb_gateway.connectors.bacnet.obj_property import ObjProperty
+from vb_gateway.connectors.bacnet.obj_type import ObjType
+from vb_gateway.utility.utility import get_file_logger
 
 
 class VisioHTTPClient(Thread):
-    def __init__(self, gateway, bacnet_queue: SimpleQueue, config: dict):
+    def __init__(self, gateway, verifier_queue: SimpleQueue, config: dict):
         super().__init__()
 
-        self.__logger = logging.getLogger(f'{self}')
-
         base_path = Path(__file__).resolve().parent.parent
-        log_path = base_path / f'logs/{__name__}.log'
-        handler = RotatingFileHandler(filename=log_path,
-                                      mode='a',
-                                      maxBytes=50_000_000,
-                                      backupCount=1,
-                                      encoding='utf-8'
-                                      )
-        LOGGER_FORMAT = '%(levelname)-8s [%(asctime)s] [%(threadName)s] %(name)s - (%(filename)s).%(funcName)s(%(lineno)d): %(message)s'
-        formatter = logging.Formatter(LOGGER_FORMAT)
-        handler.setFormatter(formatter)
-        self.__logger.addHandler(handler)
+        log_file_path = base_path / f'logs/{__name__}.log'
+
+        self.__logger = get_file_logger(logger_name=f'{self}',
+                                        file_size_bytes=50_000_000,
+                                        file_path=log_file_path)
 
         self.setName(name=f'{self}-Thread')
         self.setDaemon(True)
 
         self.__gateway = gateway
-        self.__bacnet_queue = bacnet_queue
+        self.__verifier_queue = verifier_queue
 
         if isinstance(config, dict):
             self.__config = config
         else:
             raise ValueError(f'Config for {self} not found.')
 
-        self.__host = config['host-mirror']  # FIXME: prod
-        # self.__host = config['host3']  # FIXME: test
+        # self.__host = config['host-mirror']  # FIXME: prod
+        self.__host = config['host3']  # FIXME: test
         self.__port = config['port']
 
         self.__verify = config['ssl_verify']
@@ -70,7 +61,7 @@ class VisioHTTPClient(Thread):
         while not self.__stopped:
             if self.__connected:  # IF AUTHORIZED
                 try:
-                    device_id, device_str = self.__bacnet_queue.get()
+                    device_id, device_str = self.__verifier_queue.get()
                     self.__logger.debug('Received data from BACnetVerifier: '
                                         f'Device[{device_id}]')
                     asyncio.run(self.__rq_post_device(device_id=device_id, data=device_str))
@@ -117,7 +108,7 @@ class VisioHTTPClient(Thread):
             'password': self.__md5_pwd
         }
 
-        async with aiohttp.ClientSession() as session:
+        async with ClientSession() as session:
             async with session.post(url=url, json=data) as response:
                 self.__logger.debug(f'POST: {url}')
                 data = await self.__extract_response_data(response=response)
@@ -159,7 +150,7 @@ class VisioHTTPClient(Thread):
 
         url = f'{self.__address}/vbas/gate/light/{device_id}'
 
-        async with aiohttp.ClientSession(headers=self.__auth_headers) as session:
+        async with ClientSession(headers=self.__auth_headers) as session:
             async with session.post(url=url, data=data) as response:
                 self.__logger.debug(f'POST: {url}')
                 self.__logger.debug(f'Body: {data}')
@@ -190,7 +181,7 @@ class VisioHTTPClient(Thread):
             # todo: What should we doing with rejected objects?
             return rejected_objects_id
 
-    async def __rq_device_object(self, device_id: int, object_type: ObjType) -> list:
+    async def __rq_device_object(self, device_id: int, object_type: ObjType) -> List[dict]:
         """
         Request of all available objects by device_id and object_type
         :param device_id:
@@ -202,69 +193,56 @@ class VisioHTTPClient(Thread):
 
         url = f'{self.__address}/vbas/gate/get/{device_id}/{object_type.name_dashed}'
 
-        async with aiohttp.ClientSession(headers=self.__auth_headers) as session:
+        async with ClientSession(headers=self.__auth_headers) as session:
             async with session.get(url=url) as response:
                 self.__logger.debug(f'GET: {url}')
                 data = await self.__extract_response_data(response=response)
                 return data
 
-    async def __rq_objects_for_device(self, device_id: int, object_types: list) -> dict:
+    async def __rq_objects_for_device(
+            self, device_id: int,
+            object_types: Tuple[ObjType]) -> Dict[ObjType, List[dict]]:
+        """ Requests types of objects by device_id
         """
-        Requests types of objects by device_id
-
-        :param device_id:
-        :param object_types:
-        :return: Dictionary, where the key is the id of type of the objects,
-        and the value is the list of id of objects of this type
-        """
-
         # Create list with requests
         objects_requests = [self.__rq_device_object(device_id=device_id,
                                                     object_type=object_type) for
                             object_type in object_types]
 
+        # TODO UPD
         # From each response, if it's not empty, getting the id of objects.
         # Creating a dictionary, where the key is the type of the objects,
         # and the value is the list of tuples with id and name of objects of this type.
         device_objects = {
-            object_type: [(prop[str(ObjProperty.objectIdentifier.id)],
-                           prop[str(ObjProperty.objectName.id)]) for
-                          prop in objects] for
-            object_type, objects in
+            obj_type: objects for
+            obj_type, objects in
             zip(object_types, await asyncio.gather(*objects_requests))
             if objects
         }
-
         self.__logger.debug(f'For device_id: {device_id} '
-                            f'received objects: {device_objects}')
+                            'received objects')  #: {device_objects}')
         return device_objects
 
-    async def rq_devices_objects(self, devices_id: list, object_types: list) -> dict:
+    async def rq_devices_objects(
+            self, devices_id: Tuple[int],
+            obj_types: Tuple[ObjType]) -> Dict[int, Dict[ObjType, List[dict]]]:
+        """ Requests types of objects for each device_id.
+            For each device creates a dictionary, where the key is object_type,
+            and the value is a dict with object properties.
         """
-        Requests types of objects for each device_id.
-        For each device creates a dictionary, where the key is object_type,
-        and the value is a list of object identifiers.
-
-        :param object_types:
-        :param devices_id:
-        :return: dictionary with object types for each device
-        """
-
         # Create list with requests
-
         devices_requests = [self.__rq_objects_for_device(device_id=device_id,
-                                                         object_types=object_types) for
+                                                         object_types=obj_types) for
                             device_id in devices_id]
 
-        # Creating a dictionary, where the key is the device_id,
-        # and the value is the dictionary, where the key is the object type,
-        # and the value is the list of id of objects of this type.
-        devices = {device_id: device_objects for device_id, device_objects in
-                   zip(devices_id, await asyncio.gather(*devices_requests))
-                   if device_objects}
+        devices = {
+            device_id: device_objects for
+            device_id, device_objects in
+            zip(devices_id, await asyncio.gather(*devices_requests))
+            if device_objects
+        }
+        # drops devices with no objects
 
-        # todo: What should we do with devices with no objects?
-        #  Now drops devices with no objects
         return devices
 
     async def __extract_response_data(self, response: ClientResponse) -> list or dict:

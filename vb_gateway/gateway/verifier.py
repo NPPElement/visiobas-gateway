@@ -1,38 +1,30 @@
-import logging
-from logging.handlers import RotatingFileHandler
 from multiprocessing import Process
 from multiprocessing import SimpleQueue
 from pathlib import Path
 
 from bacpypes.basetypes import PriorityArray
 
-from vb_gateway.connectors.bacnet.object_property import ObjProperty
+from vb_gateway.connectors.bacnet.obj_property import ObjProperty
 from vb_gateway.connectors.bacnet.status_flags import StatusFlags
+from vb_gateway.utility.utility import get_file_logger
 
 
 class BACnetVerifier(Process):
-    def __init__(self, bacnet_queue: SimpleQueue, client_queue: SimpleQueue,
+    def __init__(self, protocols_queue: SimpleQueue, http_queue: SimpleQueue,
                  *,
                  http_enable: bool = False,
                  mqtt_enable: bool = False):
         super().__init__(daemon=True)
 
-        self.__logger = logging.getLogger(f'{self}-Process')
+        base_path = Path(__file__).resolve().parent.parent
+        log_file_path = base_path / f'logs/{__name__}.log'
 
-        base_path = Path(__file__).resolve().parent.parent.parent
-        log_path = base_path / f'logs/{__name__}.log'
-        handler = RotatingFileHandler(filename=log_path,
-                                      mode='a',
-                                      maxBytes=50_000_000,
-                                      backupCount=1,
-                                      encoding='utf-8')
-        LOGGER_FORMAT = '%(levelname)-8s [%(asctime)s] [%(threadName)s] %(name)s - (%(filename)s).%(funcName)s(%(lineno)d): %(message)s'
-        formatter = logging.Formatter(LOGGER_FORMAT)
-        handler.setFormatter(formatter)
-        self.__logger.addHandler(handler)
+        self.__logger = get_file_logger(logger_name=f'{self}',
+                                        file_size_bytes=50_000_000,
+                                        file_path=log_file_path)
 
-        self.__bacnet_queue = bacnet_queue
-        self.__client_queue = client_queue
+        self.__protocols_queue = protocols_queue
+        self.__http_queue = http_queue
 
         self.__active = True
 
@@ -52,21 +44,21 @@ class BACnetVerifier(Process):
         self.__logger.info(f'{self} Starting ...')
         while self.__active:
             try:
-                bacnet_data = self.__bacnet_queue.get()
+                protocols_data = self.__protocols_queue.get()
 
-                if isinstance(bacnet_data, int):
+                if isinstance(protocols_data, int):
                     # These are not properties. This is a signal that
                     # the polling of the device is over.
                     # This means that the collected information on the device with
                     # that id can be sent to the http server.
-                    device_id = bacnet_data
+                    device_id = protocols_data
                     self.__logger.debug('Received signal to send collected data about '
                                         f'Device[{device_id}] to HTTP server')
                     self.__http_send_to_server(device_id=device_id)
 
-                elif bacnet_data and isinstance(bacnet_data, dict):
-                    # Received data about object from the BACnetConnector
-                    obj_properties = bacnet_data
+                elif protocols_data and isinstance(protocols_data, dict):
+                    # Received data about object from the BACnet/Modbus-Connectors
+                    obj_properties = protocols_data
                     self.__logger.debug(f'Received properties: {obj_properties}')
 
                     device_id = obj_properties.pop(ObjProperty.deviceId)
@@ -90,7 +82,7 @@ class BACnetVerifier(Process):
                         verified_str=str_verified_obj_properties)
                 else:
                     raise TypeError(f'Object of unexpected type provided: '
-                                    f'{bacnet_data} {type(bacnet_data)}. '
+                                    f'{protocols_data} {type(protocols_data)}. '
                                     'Please provide device_id <int> '
                                     'to send data into HTTP server. '
                                     'Or provide <dict> with ObjProperties.')
@@ -274,7 +266,7 @@ class BACnetVerifier(Process):
         """
         try:
             device_str = ';'.join((*self.__http_storage.pop(device_id), ''))
-            self.__client_queue.put((device_id, device_str))
+            self.__http_queue.put((device_id, device_str))
         except Exception as e:
             self.__logger.error(f'HTTP Sending Error: {e}')
 
