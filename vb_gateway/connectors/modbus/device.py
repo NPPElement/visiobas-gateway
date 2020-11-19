@@ -24,6 +24,14 @@ class ModbusDevice(Thread):
 
         self.id = device_id
         self.address, self.port = address.split(sep=':', maxsplit=1)
+        
+        base_path = Path(__file__).resolve().parent.parent.parent
+        log_file_path = base_path / f'logs/{__name__}.log'
+
+        self.__logger = get_file_logger(logger_name=f'{self}',
+                                        file_size_bytes=50_000_000,
+                                        file_path=log_file_path)
+
         self.__loop, self.__modbus_client = self.__set_client(address=self.address,
                                                               port=self.port)
         self.__available_functions = {
@@ -36,13 +44,6 @@ class ModbusDevice(Thread):
             15: self.__modbus_client.protocol.write_coils,
             16: self.__modbus_client.protocol.write_registers,
         }
-
-        base_path = Path(__file__).resolve().parent.parent.parent
-        log_file_path = base_path / f'logs/{__name__}.log'
-
-        self.__logger = get_file_logger(logger_name=f'{self}',
-                                        file_size_bytes=50_000_000,
-                                        file_path=log_file_path)
 
         self.setName(name=f'{self}-Thread')
         self.setDaemon(True)
