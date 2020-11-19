@@ -13,6 +13,7 @@ services:
       - PYTHONPATH=/
     volumes:
       - /opt/visiobas-gateway/vb_gateway:/vb_gateway
+      #- /home/user/visiobas-gateway/vb_gateway:/vb_gateway
     command: python /vb_gateway/run.py
     ports:
       - 502:502

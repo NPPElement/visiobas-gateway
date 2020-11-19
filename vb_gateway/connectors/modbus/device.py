@@ -96,6 +96,7 @@ class ModbusDevice(Thread):
                                                    port=port)
 
         if modbus_client.protocol is not None and loop is not None:
+            self.__logger.debug(f'Connected to {self}')
             return loop, modbus_client
         else:
             raise ConnectionError(f'Failed to connect to {self} '
@@ -113,9 +114,10 @@ class ModbusDevice(Thread):
                                                           units=units)
         if data.isError:
             return 'null'
+
+        self.__logger.debug(f'From register: {reg_address} read: {data.registers}')
         if quantity == 1:
             return data.registers[0]
-
         return data.registers
 
     async def poll(self, objects: List[ModbusObject]) -> None:
