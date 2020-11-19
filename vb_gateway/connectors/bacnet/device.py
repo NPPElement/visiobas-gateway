@@ -140,16 +140,16 @@ class BACnetDevice(Thread):
         else:
             self.__logger.info(f'{self} stopped.')
 
-    def start_polling(self):
+    def start_polling(self) -> None:
         self.__polling = True
         self.__logger.info('Starting polling ...')
         self.start()
 
-    def stop_polling(self):
+    def stop_polling(self) -> None:
         self.__polling = False
         self.__logger.info('Stopping polling ...')
 
-    def set_inactive(self):
+    def set_inactive(self) -> None:
         self.__active = False
         self.__logger.info('Set inactive')
         self.__logger.warning(f'{self} switched to inactive.')

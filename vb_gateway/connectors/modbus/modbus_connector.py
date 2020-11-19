@@ -123,9 +123,8 @@ class ModbusConnector(Thread, Connector):
         """ Starts Modbus devices threads
         """
         for dev_id, objs in devices.items():
-            self.__stop_device(device_id=dev_id)
-
-            self.__logger.info(f'Starting device [{dev_id}] ...')
+            if dev_id in self.__polling_devices:
+                self.__stop_device(device_id=dev_id)
             self.__start_device(device_id=dev_id, objects=objs)
 
         self.__logger.info('Devices updated')
@@ -142,12 +141,13 @@ class ModbusConnector(Thread, Connector):
                 device_id=device_id,
                 objects=objects
             )
+
         except ConnectionError as e:
-            self.__logger.error(f'Device [{device_id}] connection error: {e}',
-                                exc_info=True)
+            self.__logger.error(f'Device [{device_id}] connection error: {e}')
         except Exception as e:
             self.__logger.error(f'Device [{device_id}] '
                                 f'starting error: {e}', exc_info=True)
+
         else:
             self.__logger.info(f'Device [{device_id}] started')
 
@@ -189,7 +189,8 @@ class ModbusConnector(Thread, Connector):
         return devices_objs
 
     def unpack_objects(self,
-            objects: Dict[int, Dict[ObjType, List[dict]]]) -> Dict[int, Set[ModbusObject]]:
+                       objects: Dict[int, Dict[ObjType, List[dict]]]) -> Dict[
+        int, Set[ModbusObject]]:
         """ Makes BACnetObjects from device structure, received from the server
         """
         devices_objects = {dev_id: set() for dev_id in objects.keys()}

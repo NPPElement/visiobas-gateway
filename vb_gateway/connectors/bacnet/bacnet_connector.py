@@ -143,10 +143,8 @@ class BACnetConnector(Thread, Connector):
         """ Starts BACnet devices threads
         """
         for device_id, objects in devices.items():
-            self.__logger.info(f'Stopping device [{device_id}] ...')
-            self.__stop_device(device_id=device_id)
-
-            self.__logger.info(f'Starting device [{device_id}] ...')
+            if device_id not in self.__polling_devices:
+                self.__stop_device(device_id=device_id)
             self.__start_device(device_id=device_id, objects=objects)
 
         self.__logger.info('Devices updated')

@@ -61,6 +61,10 @@ class ModbusDevice(Thread):
     def __len__(self):
         return len(self.objects)
 
+    def stop_polling(self) -> None:
+        self.__polling = False
+        self.__logger.info('Stopping polling ...')
+
     def run(self):
         while self.__polling and self.__modbus_client:
             if self.__active:
@@ -90,7 +94,8 @@ class ModbusDevice(Thread):
         loop, modbus_client = AsyncModbusTCPClient(scheduler=ASYNC_IO,
                                                    host=address,
                                                    port=port)
-        if modbus_client is not None:
+
+        if modbus_client.protocol is not None and loop is not None:
             return loop, modbus_client
         else:
             raise ConnectionError(f'Failed to connect to {self} '
