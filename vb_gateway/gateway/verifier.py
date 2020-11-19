@@ -130,16 +130,27 @@ class BACnetVerifier(Process):
     @staticmethod
     def verify_pv(pv, properties: dict) -> None:
         if pv != 'null' and pv != float('inf') and pv != float('-inf'):
-            if pv == 'active':
-                pv = 1
-            elif pv == 'inactive':
-                pv = 0
-            properties.update({
-                ObjProperty.presentValue: pv
-            })
-            return None
+            if isinstance(pv, str) and pv.strip():
+                sf = properties.get(ObjProperty.statusFlags, StatusFlags([0, 0, 0, 0]))
+                sf.set(fault=True)
+                properties.update({
+                    ObjProperty.presentValue: 'null',
+                    ObjProperty.statusFlags: sf,
+                    ObjProperty.reliability: properties.get(ObjProperty.reliability,
+                                                            'empty')
+                    # reliability sets as 65 earlier in BACnetObject if obj is unknown
+                })
+            else:
+                if pv == 'active':
+                    pv = 1
+                elif pv == 'inactive':
+                    pv = 0
+                properties.update({
+                    ObjProperty.presentValue: pv
+                })
+                return None
 
-        elif pv == 'null':
+        if pv == 'null':
             sf = properties.get(ObjProperty.statusFlags, StatusFlags([0, 0, 0, 0]))
             sf.set(fault=True)
             properties.update({

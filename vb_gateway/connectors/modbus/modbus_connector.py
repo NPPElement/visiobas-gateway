@@ -57,8 +57,6 @@ class ModbusConnector(Thread, Connector):
         self.__address_cache = {}
         self.__polling_devices = {}
 
-        self.__loop, self.__modbus_client = None, None
-
     def __repr__(self):
         return 'ModbusConnector'
 
@@ -144,6 +142,9 @@ class ModbusConnector(Thread, Connector):
                 device_id=device_id,
                 objects=objects
             )
+        except ConnectionError as e:
+            self.__logger.error(f'Device [{device_id}] connection error: {e}',
+                                exc_info=True)
         except Exception as e:
             self.__logger.error(f'Device [{device_id}] '
                                 f'starting error: {e}', exc_info=True)

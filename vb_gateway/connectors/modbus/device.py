@@ -9,7 +9,6 @@ from pymodbus.client.asynchronous.schedulers import ASYNC_IO
 from pymodbus.client.asynchronous.tcp import AsyncModbusTCPClient
 
 from vb_gateway.connectors.bacnet.obj_property import ObjProperty
-from vb_gateway.connectors.bacnet.status_flags import StatusFlags
 from vb_gateway.connectors.modbus.object import ModbusObject
 from vb_gateway.utility.utility import get_file_logger
 
@@ -20,7 +19,7 @@ class ModbusDevice(Thread):
                  connector,
                  address: str,
                  device_id: int,
-                 objects: set[ModbusObject]):
+                 objects: Set[ModbusObject]):
         super().__init__()
 
         self.id = device_id
@@ -28,14 +27,14 @@ class ModbusDevice(Thread):
         self.__loop, self.__modbus_client = self.__set_client(address=self.address,
                                                               port=self.port)
         self.__available_functions = {
-            1: self.__modbus_client.read_coils,
-            2: self.__modbus_client.read_discrete_inputs,
-            3: self.__modbus_client.read_holding_registers,
-            4: self.__modbus_client.read_input_registers,
-            5: self.__modbus_client.write_coil,
-            6: self.__modbus_client.write_register,
-            15: self.__modbus_client.write_coils,
-            16: self.__modbus_client.write_registers,
+            1: self.__modbus_client.protocol.read_coils,
+            2: self.__modbus_client.protocol.read_discrete_inputs,
+            3: self.__modbus_client.protocol.read_holding_registers,
+            4: self.__modbus_client.protocol.read_input_registers,
+            5: self.__modbus_client.protocol.write_coil,
+            6: self.__modbus_client.protocol.write_register,
+            15: self.__modbus_client.protocol.write_coils,
+            16: self.__modbus_client.protocol.write_registers,
         }
 
         base_path = Path(__file__).resolve().parent.parent.parent
@@ -68,7 +67,7 @@ class ModbusDevice(Thread):
                 self.__logger.debug(f'{self} is active')
                 try:
                     t0 = time()
-                    asyncio.run(self.poll(list(self.objects)))
+                    self.__loop.run_until_complete(self.poll(objects=list(self.objects)))
                     t1 = time()
                     time_delta = t1 - t0
 
@@ -78,28 +77,41 @@ class ModbusDevice(Thread):
                         f'for {round(time_delta, ndigits=2)} seconds\n'
                         f'Objects: {len(self)}\n'
                         '==================================================')
+                except AssertionError:
+                    self.__logger.error('Length of objects and values not equal',
+                                        exc_info=True)
                 except Exception as e:
-                    self.__logger.error(f'Polling error: {e}')  # , exc_info=True)
+                    self.__logger.error(f'Polling error: {e}', exc_info=True)
 
     def __repr__(self):
         return f'ModbusDevice [{self.id}]'
 
-    @staticmethod
-    def __set_client(address: str, port: int) -> tuple:
+    def __set_client(self, address: str, port: int) -> tuple:
         loop, modbus_client = AsyncModbusTCPClient(scheduler=ASYNC_IO,
                                                    host=address,
                                                    port=port)
-        return loop, modbus_client.protocol
+        if modbus_client is not None:
+            return loop, modbus_client
+        else:
+            raise ConnectionError(f'Failed to connect to {self} '
+                                  f'({self.address}:{self.port})')
 
     async def read(self, cmd_code: int, reg_address: int,
-                   quantity: int = 1, units=0x01) -> list:
+                   quantity: int = 1, units=0x01):
         """ Read data from Modbus registers
         """
+        if cmd_code not in {1, 2, 3, 4}:
+            raise ValueError('Read functions must be one of  1..4')
 
         data = await self.__available_functions[cmd_code](address=reg_address,
                                                           count=quantity,
                                                           units=units)
-        return data
+        if data.isError:
+            return 'null'
+        if quantity == 1:
+            return data.registers[0]
+
+        return data.registers
 
     async def poll(self, objects: List[ModbusObject]) -> None:
         """ Poll all objects for Modbus Device asynchronously.
@@ -112,6 +124,7 @@ class ModbusDevice(Thread):
         values = await asyncio.gather(*obj_requests)
 
         assert len(values) == len(objects)
+
         for i in range(len(objects)):
             bacnet_properties = self.__convert_to_bacnet_properties(device_id=self.id,
                                                                     obj=objects[i],
@@ -124,12 +137,12 @@ class ModbusDevice(Thread):
                                        obj: ModbusObject, value) -> dict:
         """ Represent modbus register value as a bacnet object
         """
-        sf = StatusFlags()
-        if value is not None:
-            if isinstance(value, str) and not value.strip():
-                sf.set(fault=True)
-        else:
-            sf.set(fault=True)
+        # sf = StatusFlags()
+        # if value is not None:
+        # if isinstance(value, str) and not value.strip():
+        # sf.set(fault=True)
+        # else:
+        # sf.set(fault=True)
 
         properties = {
             ObjProperty.deviceId: device_id,
@@ -137,7 +150,7 @@ class ModbusDevice(Thread):
             ObjProperty.objectType: obj.type,
             ObjProperty.objectIdentifier: obj.id,
             ObjProperty.presentValue: value,
-            ObjProperty.statusFlags: sf
+            # ObjProperty.statusFlags: sf
         }
         return properties
 
