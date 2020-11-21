@@ -32,6 +32,8 @@ class BACnetConnector(Thread, Connector):
                                         file_path=log_file_path)
 
         self.__config = config
+        self.device_update_period = config.get('default_update_period', 10)
+
         self.setName(name=f'{self}-Thread')
         self.setDaemon(True)
 
@@ -160,7 +162,8 @@ class BACnetConnector(Thread, Connector):
                 address=self.__address_cache[device_id],
                 device_id=device_id,
                 network=self.__network,
-                objects=objects
+                objects=objects,
+                update_period=self.device_update_period
             )
         except Exception as e:
             self.__logger.error(f'Device [{device_id}] '

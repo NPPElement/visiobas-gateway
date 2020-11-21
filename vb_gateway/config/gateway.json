@@ -15,10 +15,10 @@
 		"http_enable": true,
 		"mqtt_enable": false
 	},
-	"bacnet-connector": {
-		"default_period": 10
+	"bacnet_connector": {
+		"default_update_period": 10
 	},
 	"modbus_connector": {
-		"default_period": 10
+		"default_update_period": 10
 	}
 }

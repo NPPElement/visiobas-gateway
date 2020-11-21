@@ -44,15 +44,17 @@ class VisioGateway:
 
         self.__verifier = BACnetVerifier(protocols_queue=self.__protocol_verifier_queue,
                                          http_queue=self.__verifier_http_queue,
-                                         http_enable=self.__config['bacnet_verifier']['http_enable'],
-                                         mqtt_enable=self.__config['bacnet_verifier']['mqtt_enable'])
+                                         http_enable=self.__config['bacnet_verifier'][
+                                             'http_enable'],
+                                         mqtt_enable=self.__config['bacnet_verifier'][
+                                             'mqtt_enable'])
 
         self.__connectors = {
-            # 'bacnet': BACnetConnector(
-            #     gateway=self,
-            #     verifier_queue=self.__protocol_verifier_queue,
-            #     # client_queue=self.__client_protocol_queue,
-            #     config=self.__config.get('bacnet_connector', None)),
+            'bacnet': BACnetConnector(
+                gateway=self,
+                verifier_queue=self.__protocol_verifier_queue,
+                # client_queue=self.__client_protocol_queue,
+                config=self.__config.get('bacnet_connector', None)),
             'modbus': ModbusConnector(
                 gateway=self,
                 verifier_queue=self.__protocol_verifier_queue,
