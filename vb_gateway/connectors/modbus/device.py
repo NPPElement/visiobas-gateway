@@ -27,7 +27,7 @@ class ModbusDevice(Thread):
                      '__loop', '__client', '__available_functions',
                      '__connector', '__verifier_queue',
                      '__active', '__polling',
-                     'objects', )
+                     'objects',)
 
         self.id = device_id
         self.address, self.port = address.split(sep=':', maxsplit=1)
@@ -131,9 +131,9 @@ class ModbusDevice(Thread):
         if cmd_code not in {1, 2, 3, 4}:
             raise ValueError('Read functions must be one from 1..4')
         try:
-            data = self.__available_functions[cmd_code](address=reg_address,
-                                                        count=quantity,
-                                                        unit=unit)
+            data = await self.__available_functions[cmd_code](address=reg_address,
+                                                              count=quantity,
+                                                              unit=unit)
         except asyncio.TimeoutError as e:
             self.__logger.error(f'Read Timeout: {e}')
             return 'null'
