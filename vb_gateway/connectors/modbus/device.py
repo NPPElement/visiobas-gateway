@@ -2,7 +2,7 @@ import asyncio
 from multiprocessing import SimpleQueue
 from pathlib import Path
 from threading import Thread
-from time import time
+from time import time, sleep
 from typing import Set, List
 
 from pymodbus.client.asynchronous.schedulers import ASYNC_IO
@@ -19,11 +19,19 @@ class ModbusDevice(Thread):
                  connector,
                  address: str,
                  device_id: int,
-                 objects: Set[ModbusObject]):
+                 objects: Set[ModbusObject],
+                 update_period: int = 10):
         super().__init__()
+
+        __slots__ = ('id', 'address', 'port', 'update_period', '__logger',
+                     '__loop', '__client', '__available_functions',
+                     '__connector', '__verifier_queue',
+                     '__active', '__polling',
+                     'objects', )
 
         self.id = device_id
         self.address, self.port = address.split(sep=':', maxsplit=1)
+        self.update_period = update_period
 
         base_path = Path(__file__).resolve().parent.parent.parent
         log_file_path = base_path / f'logs/{__name__}.log'
@@ -32,18 +40,18 @@ class ModbusDevice(Thread):
                                         file_size_bytes=50_000_000,
                                         file_path=log_file_path)
 
-        self.__loop, self.__modbus_client = self.__set_client(address=self.address,
-                                                              port=self.port)
+        self.__loop, self.__client = self.__set_client(address=self.address,
+                                                       port=self.port)
 
         self.__available_functions = {
-            1: self.__modbus_client.protocol.read_coils,
-            2: self.__modbus_client.protocol.read_discrete_inputs,
-            3: self.__modbus_client.protocol.read_holding_registers,
-            4: self.__modbus_client.protocol.read_input_registers,
-            5: self.__modbus_client.protocol.write_coil,
-            6: self.__modbus_client.protocol.write_register,
-            15: self.__modbus_client.protocol.write_coils,
-            16: self.__modbus_client.protocol.write_registers,
+            1: self.__client.protocol.read_coils,
+            2: self.__client.protocol.read_discrete_inputs,
+            3: self.__client.protocol.read_holding_registers,
+            4: self.__client.protocol.read_input_registers,
+            5: self.__client.protocol.write_coil,
+            6: self.__client.protocol.write_register,
+            15: self.__client.protocol.write_coils,
+            16: self.__client.protocol.write_registers,
         }
 
         self.setName(name=f'{self}-Thread')
@@ -69,7 +77,7 @@ class ModbusDevice(Thread):
         self.__logger.info('Stopping polling ...')
 
     def run(self):
-        while self.__polling and self.__modbus_client:
+        while self.__polling and self.__client:
             if self.__active:
                 self.__logger.debug(f'{self} is active')
                 try:
@@ -84,6 +92,11 @@ class ModbusDevice(Thread):
                         f'for {round(time_delta, ndigits=2)} seconds\n'
                         f'Objects: {len(self)}\n'
                         '==================================================')
+
+                    if time_delta < self.update_period:
+                        waiting_time = self.update_period - time_delta
+                        sleep(waiting_time)
+
                 except Exception as e:
                     self.__logger.error(f'Polling error: {e}', exc_info=True)
 

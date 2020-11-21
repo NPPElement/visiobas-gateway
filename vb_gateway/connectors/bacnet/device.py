@@ -21,16 +21,18 @@ class BACnetDevice(Thread):
                  address: str,
                  device_id: int,
                  network,
-                 objects: Set[BACnetObject]):
+                 objects: Set[BACnetObject],
+                 update_period: int = 10):
         super().__init__()
 
-        __slots__ = ('id', '__logger', '__connector', '__verifier_queue',
-                     'address', 'network', 'objects',
+        __slots__ = ('id', 'update_period', '__logger', '__connector', '__verifier_queue',
+                     'address', 'network', 'support_rpm', 'not_support_rpm',
                      '__BI_AI_MI_AC', '__BI_AI_MI_AC_properties',
                      '__BO_BV_AO_AV_MV_MO', '__BO_BV_AO_AV_MV_MO_properties',
-                     '__active', 'not_support_rpm', 'unknown_objects', '__polling')
+                     '__active', '__polling')
 
         self.id = device_id
+        self.update_period = update_period
 
         base_path = Path(__file__).resolve().parent.parent.parent
         log_file_path = base_path / f'logs/{__name__}.log'
@@ -110,6 +112,10 @@ class BACnetDevice(Thread):
                         f'Objects: {len(self)}\n'
                         f'Objects not support RPM: {len(self.not_support_rpm)}\n'
                         '==================================================')
+
+                    if time_delta < self.update_period:
+                        waiting_time = self.update_period - time_delta
+                        sleep(waiting_time)
 
                 except Exception as e:
                     self.__logger.error(f'Polling error: {e}')  # , exc_info=True)
