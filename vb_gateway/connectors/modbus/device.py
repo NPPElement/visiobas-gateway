@@ -24,7 +24,7 @@ class ModbusDevice(Thread):
 
         self.id = device_id
         self.address, self.port = address.split(sep=':', maxsplit=1)
-        
+
         base_path = Path(__file__).resolve().parent.parent.parent
         log_file_path = base_path / f'logs/{__name__}.log'
 
@@ -34,6 +34,7 @@ class ModbusDevice(Thread):
 
         self.__loop, self.__modbus_client = self.__set_client(address=self.address,
                                                               port=self.port)
+
         self.__available_functions = {
             1: self.__modbus_client.protocol.read_coils,
             2: self.__modbus_client.protocol.read_discrete_inputs,
@@ -64,6 +65,7 @@ class ModbusDevice(Thread):
 
     def stop_polling(self) -> None:
         self.__polling = False
+        # self.__modbus_client.close()  # for sync client
         self.__logger.info('Stopping polling ...')
 
     def run(self):
@@ -82,9 +84,6 @@ class ModbusDevice(Thread):
                         f'for {round(time_delta, ndigits=2)} seconds\n'
                         f'Objects: {len(self)}\n'
                         '==================================================')
-                except AssertionError:
-                    self.__logger.error('Length of objects and values not equal',
-                                        exc_info=True)
                 except Exception as e:
                     self.__logger.error(f'Polling error: {e}', exc_info=True)
 
@@ -103,23 +102,38 @@ class ModbusDevice(Thread):
             raise ConnectionError(f'Failed to connect to {self} '
                                   f'({self.address}:{self.port})')
 
+    # def __set_client(self, address: str, port: int):
+    #     client = ModbusTcpClient(host=address, port=port)
+    #     if client.connect():
+    #         self.__logger.debug(f'Connected to {self}')
+    #         return client
+    #     else:
+    #         raise ConnectionError(f'Failed to connect to {self} '
+    #                               f'({self.address}:{self.port})')
+
     async def read(self, cmd_code: int, reg_address: int,
-                   quantity: int = 1, units=0x01):
+                   quantity: int = 1, unit=0x01):
         """ Read data from Modbus registers
         """
         if cmd_code not in {1, 2, 3, 4}:
-            raise ValueError('Read functions must be one of  1..4')
-
-        data = await self.__available_functions[cmd_code](address=reg_address,
-                                                          count=quantity,
-                                                          units=units)
-        if data.isError:
+            raise ValueError('Read functions must be one from 1..4')
+        try:
+            data = self.__available_functions[cmd_code](address=reg_address,
+                                                        count=quantity,
+                                                        unit=unit)
+        except asyncio.TimeoutError as e:
+            self.__logger.error(f'Read Timeout: {e}')
             return 'null'
 
-        self.__logger.debug(f'From register: {reg_address} read: {data.registers}')
-        if quantity == 1:
-            return data.registers[0]
-        return data.registers
+        else:
+            if not data.isError():
+                self.__logger.debug(f'From register: {reg_address} read: {data.registers}')
+                if quantity == 1:
+                    return data.registers[0]
+                return data.registers
+            else:
+                self.__logger.error(f'Received error response from {reg_address}')
+                return 'null'
 
     async def poll(self, objects: List[ModbusObject]) -> None:
         """ Poll all objects for Modbus Device asynchronously.
