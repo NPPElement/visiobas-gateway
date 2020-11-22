@@ -149,17 +149,20 @@ class BACnetConnector(Thread, Connector):
 
         self.__stop_devices(devices_id=tuple(self.__polling_devices.keys()))
 
-    def update_devices(self, devices: Dict[int, Set[BACnetObject]]) -> None:
+    def update_devices(self, devices: Dict[int, Set[BACnetObject]],
+                       update_intervals: Dict[int, int]) -> None:
         """ Starts BACnet devices threads
         """
         for device_id, objects in devices.items():
             if device_id not in self.__polling_devices:
                 self.__stop_device(device_id=device_id)
-            self.__start_device(device_id=device_id, objects=objects)
+            self.__start_device(device_id=device_id, objects=objects,
+                                update_interval=update_intervals[device_id])
 
         self.__logger.info('Devices updated')
 
-    def __start_device(self, device_id: int, objects: Set[BACnetObject]) -> None:
+    def __start_device(self, device_id: int, objects: Set[BACnetObject],
+                       update_interval: int) -> None:
         """ Start BACnet device thread
         """
         self.__logger.debug(f'Starting Device [{device_id}] ...')
@@ -171,7 +174,7 @@ class BACnetConnector(Thread, Connector):
                 device_id=device_id,
                 network=self.__network,
                 objects=objects,
-                update_period=self.default_update_period
+                update_period=update_interval
             )
         except Exception as e:
             self.__logger.error(f'Device [{device_id}] '
@@ -222,7 +225,7 @@ class BACnetConnector(Thread, Connector):
 
         device_objs = asyncio.run(self.__gateway.http_client.rq_devices_objects(
             devices_id=devices_id,
-            obj_types=ObjType.DEVICE.name_dashed
+            obj_types=ObjType.DEVICE
         ))
 
         devices_intervals = {}

@@ -209,7 +209,7 @@ class ModbusConnector(Thread, Connector):
 
         device_objs = asyncio.run(self.__gateway.http_client.rq_devices_objects(
             devices_id=devices_id,
-            obj_types=ObjType.DEVICE.name_dashed
+            obj_types=ObjType.DEVICE
         ))
 
         devices_intervals = {}
