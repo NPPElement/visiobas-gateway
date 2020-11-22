@@ -62,6 +62,8 @@ class BACnetConnector(Thread, Connector):
         self.__address_cache = {}
         self.__polling_devices = {}
 
+        self.__update_itervals = {}
+
         self.__network = None
 
     def __repr__(self):
@@ -102,7 +104,8 @@ class BACnetConnector(Thread, Connector):
 
                         # Unpack json from server to BACnetObjects class
                         devices_objects = self.unpack_objects(objects=devices_objects)
-                        self.update_devices(devices=devices_objects)
+                        self.update_devices(devices=devices_objects,
+                                            update_intervals=self.__update_itervals)
                         del devices_objects
 
                     else:
@@ -221,7 +224,7 @@ class BACnetConnector(Thread, Connector):
         return devices_objs
 
     def get_devices_update_interval(self, devices_id: Tuple[int],
-                                    default_update_interval: int = 10) -> Dict[int, int]:
+                                    default_update_interval: int) -> Dict[int, int]:
 
         device_objs = asyncio.run(self.__gateway.http_client.rq_devices_objects(
             devices_id=devices_id,
