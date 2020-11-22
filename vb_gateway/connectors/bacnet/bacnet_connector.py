@@ -225,7 +225,7 @@ class BACnetConnector(Thread, Connector):
 
         device_objs = asyncio.run(self.__gateway.http_client.rq_devices_objects(
             devices_id=devices_id,
-            obj_types=ObjType.DEVICE
+            obj_types=(ObjType.DEVICE,)
         ))
 
         devices_intervals = {}
