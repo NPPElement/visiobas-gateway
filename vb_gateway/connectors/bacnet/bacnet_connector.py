@@ -1,9 +1,10 @@
 import asyncio
+from json import loads
 from multiprocessing import SimpleQueue
 from pathlib import Path
 from threading import Thread
 from time import sleep
-from typing import Dict, Set, List
+from typing import Dict, Set, List, Tuple
 
 import BAC0
 from BAC0.core.io.IOExceptions import InitializationError, NetworkInterfaceException
@@ -32,7 +33,7 @@ class BACnetConnector(Thread, Connector):
                                         file_path=log_file_path)
 
         self.__config = config
-        self.device_update_period = config.get('default_update_period', 10)
+        self.default_update_period = config.get('default_update_period', 10)
 
         self.setName(name=f'{self}-Thread')
         self.setDaemon(True)
@@ -82,7 +83,7 @@ class BACnetConnector(Thread, Connector):
 
             if self.__network:  # IF HAVING INITIALIZED NETWORK
                 try:  # Requesting objects and their types from the server
-                    # FIXME: move to client
+                    # FIXME: move to client?
                     devices_objects = self.get_devices_objects(
                         devices_id=tuple(self.__address_cache.keys()),
                         obj_types=self.__object_types_to_request)
@@ -90,9 +91,16 @@ class BACnetConnector(Thread, Connector):
                     if devices_objects:  # If received devices with objects from the server
                         self.__logger.info('Received devices with '
                                            f'objects: {[*devices_objects.keys()]} '
+                                           'Requesting update intervals for them ...')
+
+                        self.__update_itervals = self.get_devices_update_interval(
+                            devices_id=tuple(self.__address_cache.keys()),
+                            default_update_interval=self.default_update_period
+                        )
+                        self.__logger.info('Received update intervals for devices.'
                                            'Starting them ...')
 
-                        # unpack json from server to BACnetObjects class
+                        # Unpack json from server to BACnetObjects class
                         devices_objects = self.unpack_objects(objects=devices_objects)
                         self.update_devices(devices=devices_objects)
                         del devices_objects
@@ -163,7 +171,7 @@ class BACnetConnector(Thread, Connector):
                 device_id=device_id,
                 network=self.__network,
                 objects=objects,
-                update_period=self.device_update_period
+                update_period=self.default_update_period
             )
         except Exception as e:
             self.__logger.error(f'Device [{device_id}] '
@@ -175,9 +183,6 @@ class BACnetConnector(Thread, Connector):
         """ Stops BACnet Devices threads
         """
         try:
-            # for device_id in self.__polling_devices.keys():
-            #     self.__stop_device(device_id=device_id)
-
             [self.__stop_device(device_id=device_id) for device_id in devices_id]
             for dev_id in devices_id:
                 del self.__polling_devices[dev_id]
@@ -212,24 +217,39 @@ class BACnetConnector(Thread, Connector):
                                                           obj_types=obj_types))
         return devices_objs
 
+    def get_devices_update_interval(self, devices_id: Tuple[int],
+                                    default_update_interval: int = 10) -> Dict[int, int]:
+
+        device_objs = asyncio.run(self.__gateway.http_client.rq_devices_objects(
+            devices_id=devices_id,
+            obj_types=ObjType.DEVICE.name_dashed
+        ))
+
+        devices_intervals = {}
+
+        # Extract update_interval from server's response
+        for dev_id, obj_types in device_objs.items():
+            try:
+                prop_371 = obj_types[ObjType.DEVICE][0][str(ObjProperty.propertyList.id)]
+                upd_interval = loads(prop_371)['update_interval']
+                devices_intervals[dev_id] = upd_interval
+            except LookupError as e:
+                self.__logger.error(
+                    f'Update interval for Device [{dev_id}] cannot be extracted: {e}')
+                devices_intervals[dev_id] = default_update_interval
+
+        # devices_intervals = {
+        #     dev_id: loads(obj_types[ObjType.DEVICE][0][str(ObjProperty.propertyList.id)])[
+        #         'update_interval'] for dev_id, obj_types in device_objs.items()
+        # }
+
+        return devices_intervals
+
     @staticmethod
     def unpack_objects(
             objects: Dict[int, Dict[ObjType, List[dict]]]) -> Dict[int, Set[BACnetObject]]:
         """ Makes BACnetObjects from device structure, received from the server
         """
-        # dev_objects = {}
-        # for dev_id in objects:
-        #     for obj in dev_id:
-        #         obj_type = obj[str(ObjProperty.objectType.id)]
-        #         obj_id = obj[str(ObjProperty.objectIdentifier.id)]
-        #         obj_name = obj[str(ObjProperty.objectName.id)]
-        #         bacnet_obj = BACnetObject(type=obj_type, id=obj_id, name=obj_name)
-
-        # return {device_id: {BACnetObject(type=obj_type,
-        #                                  id=obj[str(ObjProperty.objectIdentifier.id)],
-        #                                  name=obj[str(ObjProperty.objectName.id)])
-        #                     for obj_type, obj in objs.items()} for device_id, objs in
-        #         objects.items()}
         devices_objects = {dev_id: set() for dev_id in objects.keys()}
 
         for dev_id, objs_by_types in objects.items():

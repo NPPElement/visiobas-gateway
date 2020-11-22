@@ -47,7 +47,7 @@ class VisioGateway:
                                          http_enable=self.__config['bacnet_verifier'][
                                              'http_enable'],
                                          mqtt_enable=self.__config['bacnet_verifier'][
-                                             'mqtt_enable'])
+                                             'mqtt_enable'])  # FIXME config into verifier
 
         self.__connectors = {
             'bacnet': BACnetConnector(

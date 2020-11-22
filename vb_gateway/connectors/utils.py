@@ -1,5 +1,6 @@
 from json import loads
 from pathlib import Path
+from typing import Dict
 
 from vb_gateway.connectors.bacnet.obj_property import ObjProperty
 from vb_gateway.connectors.bacnet.status_flags import StatusFlags
@@ -18,7 +19,7 @@ def get_fault_obj_properties(reliability: int or str,
     }
 
 
-def read_address_cache(address_cache_path: Path) -> dict:
+def read_address_cache(address_cache_path: Path) -> Dict[int, str]:
     """ Updates address_cache file
 
         Parse text file format of address_cache.

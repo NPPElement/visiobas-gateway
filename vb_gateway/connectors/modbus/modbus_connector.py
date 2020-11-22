@@ -1,9 +1,10 @@
 import asyncio
+from json import loads
 from multiprocessing import SimpleQueue
 from pathlib import Path
 from threading import Thread
 from time import sleep
-from typing import Dict, Set, List
+from typing import Dict, Set, List, Tuple
 
 from aiohttp.web_exceptions import HTTPServerError, HTTPClientError
 
@@ -30,7 +31,7 @@ class ModbusConnector(Thread, Connector):
                                         file_path=log_file_path)
 
         self.__config = config
-        self.device_update_period = config.get('default_update_period', 10)
+        self.default_update_period = config.get('default_update_period', 10)
 
         self.setName(name=f'{self}-Thread')
         self.setDaemon(True)
@@ -59,6 +60,8 @@ class ModbusConnector(Thread, Connector):
         self.__address_cache = {}
         self.__polling_devices = {}
 
+        self.__update_intervals = {}
+
     def __repr__(self):
         return 'ModbusConnector'
 
@@ -85,11 +88,19 @@ class ModbusConnector(Thread, Connector):
                 if devices_objects:  # If received devices with objects from the server
                     self.__logger.info('Received devices with '
                                        f'objects: {[*devices_objects.keys()]} '
+                                       'Requesting update intervals for them ...')
+
+                    self.__update_intervals = self.get_devices_update_interval(
+                        devices_id=tuple(self.__address_cache.keys()),
+                        default_update_interval=self.default_update_period
+                    )
+                    self.__logger.info('Received update intervals for devices.'
                                        'Starting them ...')
 
-                    # unpack json from server to BACnetObjects class
+                    # Unpack json from server to BACnetObjects class
                     devices_objects = self.unpack_objects(objects=devices_objects)
-                    self.update_devices(devices=devices_objects)
+                    self.update_devices(devices=devices_objects,
+                                        update_intervals=self.__update_intervals)
                     del devices_objects
 
                 else:
@@ -121,17 +132,20 @@ class ModbusConnector(Thread, Connector):
 
         self.__stop_devices(devices_id=tuple(self.__polling_devices.keys()))
 
-    def update_devices(self, devices: Dict[int, Set[ModbusObject]]) -> None:
+    def update_devices(self, devices: Dict[int, Set[ModbusObject]],
+                       update_intervals: Dict[int, int]) -> None:
         """ Starts Modbus devices threads
         """
         for dev_id, objs in devices.items():
             if dev_id in self.__polling_devices:
                 self.__stop_device(device_id=dev_id)
-            self.__start_device(device_id=dev_id, objects=objs)
+            self.__start_device(device_id=dev_id, objects=objs,
+                                update_interval=update_intervals[dev_id])
 
         self.__logger.info('Devices updated')
 
-    def __start_device(self, device_id, objects: Set[ModbusObject]) -> None:
+    def __start_device(self, device_id, objects: Set[ModbusObject],
+                       update_interval: int) -> None:
         """ Start Modbus devise thread
         """
         self.__logger.debug(f'Starting Device [{device_id}] ...')
@@ -142,9 +156,8 @@ class ModbusConnector(Thread, Connector):
                 address=self.__address_cache[device_id],
                 device_id=device_id,
                 objects=objects,
-                update_period=self.device_update_period
+                update_period=update_interval
             )
-
         except ConnectionError as e:
             self.__logger.error(f'Device [{device_id}] connection error: {e}')
         except Exception as e:
@@ -183,13 +196,41 @@ class ModbusConnector(Thread, Connector):
             self.__logger.info(f'Modbus devices [{devices_id}] were stopping')
 
     def get_devices_objects(self,
-                            devices_id: tuple,
+                            devices_id: Tuple[int],
                             obj_types: tuple) -> Dict[int, Dict[ObjType, List[dict]]]:
 
         devices_objs = asyncio.run(
             self.__gateway.http_client.rq_devices_objects(devices_id=devices_id,
                                                           obj_types=obj_types))
         return devices_objs
+
+    def get_devices_update_interval(self, devices_id: Tuple[int],
+                                    default_update_interval: int = 10) -> Dict[int, int]:
+
+        device_objs = asyncio.run(self.__gateway.http_client.rq_devices_objects(
+            devices_id=devices_id,
+            obj_types=ObjType.DEVICE.name_dashed
+        ))
+
+        devices_intervals = {}
+
+        # Extract update_interval from server's response
+        for dev_id, obj_types in device_objs.items():
+            try:
+                prop_371 = obj_types[ObjType.DEVICE][0][str(ObjProperty.propertyList.id)]
+                upd_interval = loads(prop_371)['update_interval']
+                devices_intervals[dev_id] = upd_interval
+            except LookupError as e:
+                self.__logger.error(
+                    f'Update interval for Device [{dev_id}] cannot be extracted: {e}')
+                devices_intervals[dev_id] = default_update_interval
+
+        # devices_intervals = {
+        #     dev_id: loads(obj_types[ObjType.DEVICE][0][str(ObjProperty.propertyList.id)])[
+        #         'update_interval'] for dev_id, obj_types in device_objs.items()
+        # }
+
+        return devices_intervals
 
     def unpack_objects(self,
                        objects: Dict[int, Dict[ObjType, List[dict]]]) -> Dict[
