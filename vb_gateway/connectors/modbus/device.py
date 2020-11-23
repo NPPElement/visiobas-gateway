@@ -3,7 +3,6 @@ from multiprocessing import SimpleQueue
 from pathlib import Path
 from threading import Thread
 from time import time, sleep
-from typing import Set, List
 
 from pymodbus.client.asynchronous.schedulers import ASYNC_IO
 from pymodbus.client.asynchronous.tcp import AsyncModbusTCPClient
@@ -19,28 +18,28 @@ class ModbusDevice(Thread):
                  connector,
                  address: str,
                  device_id: int,
-                 objects: Set[ModbusObject],
+                 objects: set[ModbusObject],
                  update_period: int = 10):
         super().__init__()
 
         __slots__ = ('id', 'address', 'port', 'update_period', '__logger',
                      '__loop', '__client', '__available_functions',
                      '__connector', '__verifier_queue',
-                     '__active', '__polling',
-                     'objects',)
+                     '__polling', 'objects')
 
         self.id = device_id
         self.address, self.port = address.split(sep=':', maxsplit=1)
         self.update_period = update_period
 
         base_path = Path(__file__).resolve().parent.parent.parent
-        log_file_path = base_path / f'logs/{__name__}.log'
+        log_file_path = base_path / f'logs/{__name__}{id}.log'
 
         self.__logger = get_file_logger(logger_name=f'{self}',
                                         file_size_bytes=50_000_000,
                                         file_path=log_file_path)
 
-        self.__loop, self.__client = self.__set_client(address=self.address,
+        # Here may occur ConnectionError, thar provides to ModbusConnector
+        self.__loop, self.__client = self.__get_client(address=self.address,
                                                        port=self.port)
 
         self.__available_functions = {
@@ -60,10 +59,9 @@ class ModbusDevice(Thread):
         self.__connector = connector
         self.__verifier_queue = verifier_queue
 
-        self.__active = True
         self.__polling = True
 
-        self.objects: Set[ModbusObject] = objects
+        self.objects: set[ModbusObject] = objects
 
         self.__logger.info(f'{self} starting ...')
         self.start()
@@ -73,37 +71,38 @@ class ModbusDevice(Thread):
 
     def stop_polling(self) -> None:
         self.__polling = False
-        # self.__modbus_client.close()  # for sync client
         self.__logger.info('Stopping polling ...')
 
     def run(self):
         while self.__polling and self.__client:
-            if self.__active:
-                self.__logger.debug(f'{self} is active')
-                try:
-                    t0 = time()
-                    self.__loop.run_until_complete(self.poll(objects=list(self.objects)))
-                    t1 = time()
-                    time_delta = t1 - t0
+            try:
+                t0 = time()
+                self.__loop.run_until_complete(self.poll(objects=list(self.objects)))
+                t1 = time()
+                time_delta = t1 - t0
 
-                    self.__logger.info(
-                        '\n==================================================\n'
-                        f'{self} ip:{self.address} polled '
-                        f'for {round(time_delta, ndigits=2)} seconds\n'
-                        f'Objects: {len(self)}\n'
-                        '==================================================')
+                self.__logger.info(
+                    '\n==================================================\n'
+                    f'{self} ip:{self.address} polled '
+                    f'for {round(time_delta, ndigits=2)} seconds\n'
+                    f'Objects: {len(self)}\n'
+                    '==================================================')
 
-                    if time_delta < self.update_period:
-                        waiting_time = self.update_period - time_delta
-                        sleep(waiting_time)
+                if time_delta < self.update_period:
+                    waiting_time = self.update_period - time_delta
+                    self.__logger.debug(
+                        f'{self} Sleeping {round(waiting_time, ndigits=2)} sec ...')
+                    sleep(waiting_time)
 
-                except Exception as e:
-                    self.__logger.error(f'Polling error: {e}', exc_info=True)
+            except Exception as e:
+                self.__logger.error(f'Polling error: {e}', exc_info=True)
 
     def __repr__(self):
         return f'ModbusDevice [{self.id}]'
 
-    def __set_client(self, address: str, port: int) -> tuple:
+    def __get_client(self, address: str, port: int) -> tuple:
+        """ Initialize loop and asynchronously modbus client
+        """
         loop, modbus_client = AsyncModbusTCPClient(scheduler=ASYNC_IO,
                                                    host=address,
                                                    port=port)
@@ -114,15 +113,6 @@ class ModbusDevice(Thread):
         else:
             raise ConnectionError(f'Failed to connect to {self} '
                                   f'({self.address}:{self.port})')
-
-    # def __set_client(self, address: str, port: int):
-    #     client = ModbusTcpClient(host=address, port=port)
-    #     if client.connect():
-    #         self.__logger.debug(f'Connected to {self}')
-    #         return client
-    #     else:
-    #         raise ConnectionError(f'Failed to connect to {self} '
-    #                               f'({self.address}:{self.port})')
 
     async def read(self, cmd_code: int, reg_address: int,
                    quantity: int = 1, unit=0x01):
@@ -137,6 +127,9 @@ class ModbusDevice(Thread):
         except asyncio.TimeoutError as e:
             self.__logger.error(f'Read Timeout: {e}')
             return 'null'
+        except Exception as e:
+            self.__logger.error(
+                f'Read error from reg: {reg_address}, quantity: {quantity} : {e}')
 
         else:
             if not data.isError():
@@ -148,7 +141,7 @@ class ModbusDevice(Thread):
                 self.__logger.error(f'Received error response from {reg_address}')
                 return 'null'
 
-    async def poll(self, objects: List[ModbusObject]) -> None:
+    async def poll(self, objects: list[ModbusObject]) -> None:
         """ Poll all objects for Modbus Device asynchronously.
             Send objects into verifier.
             When all objects polled, send device_id into verifier as finish signal.
@@ -172,20 +165,12 @@ class ModbusDevice(Thread):
                                        obj: ModbusObject, value) -> dict:
         """ Represent modbus register value as a bacnet object
         """
-        # sf = StatusFlags()
-        # if value is not None:
-        # if isinstance(value, str) and not value.strip():
-        # sf.set(fault=True)
-        # else:
-        # sf.set(fault=True)
-
         properties = {
             ObjProperty.deviceId: device_id,
             ObjProperty.objectName: obj.name,
             ObjProperty.objectType: obj.type,
             ObjProperty.objectIdentifier: obj.id,
             ObjProperty.presentValue: value,
-            # ObjProperty.statusFlags: sf
         }
         return properties
 

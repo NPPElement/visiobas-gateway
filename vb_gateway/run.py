@@ -1,29 +1,20 @@
-import argparse
 import logging
-import sys
+import os
 # import paho.mqtt.client as mqtt
+import sys
 
 from vb_gateway.gateway.visio_gateway import VisioGateway
 
-LOGGER_FORMAT = '%(levelname)-8s [%(asctime)s] [%(threadName)s] %(name)s - (%(filename)s).%(funcName)s(%(lineno)d): %(message)s'
+LOGGER_FORMAT = '%(levelname)-8s [%(asctime)s] [%(threadName)s] %(name)s - ' \
+                '(%(filename)s).%(funcName)s(%(lineno)d): %(message)s'
 
 
 def main():
     # Setting the VisioGateway logging level
-    # todo: change to logging level by param
-    # level being 'DEBUG, INFO, WARNING, ERROR'
-    
-    # level = logging.DEBUG 
-    # level = logging.INFO
-    # level = logging.WARNING
-    level = logging.DEBUG
-
+    log_level = os.environ.get('LOG_LEVEL', 'INFO')
     logging.basicConfig(format=LOGGER_FORMAT,
-                        level=level,
+                        level=log_level,
                         stream=sys.stdout)
-
-    # Setting the BAC0 logging levels
-    # BAC0.log_level('silence')
 
     # The callback for when the client receives a CONNACK response from the server.
 

@@ -11,6 +11,7 @@ services:
     environment:
       - TZ=Europe/Moscow
       - PYTHONPATH=/
+      - LOG_LEVEL=INFO
     volumes:
       - /opt/visiobas-gateway/vb_gateway:/vb_gateway
       #- /home/user/visiobas-gateway/vb_gateway:/vb_gateway

@@ -4,7 +4,6 @@ from multiprocessing import SimpleQueue
 from pathlib import Path
 from threading import Thread
 from time import sleep
-from typing import Dict, Set, List, Tuple
 
 import BAC0
 from BAC0.core.io.IOExceptions import InitializationError, NetworkInterfaceException
@@ -62,7 +61,7 @@ class BACnetConnector(Thread, Connector):
         self.__address_cache = {}
         self.__polling_devices = {}
 
-        self.__update_itervals = {}
+        self.__update_intervals = {}
 
         self.__network = None
 
@@ -95,7 +94,7 @@ class BACnetConnector(Thread, Connector):
                                            f'objects: {[*devices_objects.keys()]} '
                                            'Requesting update intervals for them ...')
 
-                        self.__update_itervals = self.get_devices_update_interval(
+                        self.__update_intervals = self.get_devices_update_interval(
                             devices_id=tuple(self.__address_cache.keys()),
                             default_update_interval=self.default_update_period
                         )
@@ -105,7 +104,7 @@ class BACnetConnector(Thread, Connector):
                         # Unpack json from server to BACnetObjects class
                         devices_objects = self.unpack_objects(objects=devices_objects)
                         self.update_devices(devices=devices_objects,
-                                            update_intervals=self.__update_itervals)
+                                            update_intervals=self.__update_intervals)
                         del devices_objects
 
                     else:
@@ -113,20 +112,18 @@ class BACnetConnector(Thread, Connector):
                         del devices_objects
                         continue
 
-                except (HTTPServerError, HTTPClientError) as e:
+                except (HTTPServerError, HTTPClientError, OSError) as e:
                     self.__logger.error('Error retrieving information about '
                                         f'devices objects from the server: {e}')
-                # except OSError as e:
-                #     self.__logger.error(f'Please, check login: {e}')
                 except Exception as e:
                     self.__logger.error(f'Device update error: {e}', exc_info=True)
 
-                self.__logger.debug('Sleeping 1h ..')
+                self.__logger.info('Sleeping 1h ..')
                 sleep(60 * 60)
                 # FIXME REPLACE TO threading.Timer? in ThreadPoolExecutor?
 
             else:  # IF NOT HAVE INITIALIZED BAC0 NETWORK
-                self.__logger.info('Initializing BAC0 network ...')
+                self.__logger.debug('Initializing BAC0 network ...')
                 try:
                     self.__network = BAC0.lite()
                     BAC0.log_level('silence')  # fixme: no reaction - still having debug
@@ -135,7 +132,7 @@ class BACnetConnector(Thread, Connector):
                         NetworkInterfaceException) as e:
                     self.__logger.error(f'Network initialization error: {e}', exc_info=True)
                 else:
-                    self.__logger.info('Network initialized.')
+                    self.__logger.debug('BAC0 network initialized.')
         else:
             self.__network.disconnect()
             self.__logger.info('BAC0 Network disconnected.')
@@ -152,8 +149,8 @@ class BACnetConnector(Thread, Connector):
 
         self.__stop_devices(devices_id=tuple(self.__polling_devices.keys()))
 
-    def update_devices(self, devices: Dict[int, Set[BACnetObject]],
-                       update_intervals: Dict[int, int]) -> None:
+    def update_devices(self, devices: dict[int, set[BACnetObject]],
+                       update_intervals: dict[int, int]) -> None:
         """ Starts BACnet devices threads
         """
         for device_id, objects in devices.items():
@@ -162,9 +159,9 @@ class BACnetConnector(Thread, Connector):
             self.__start_device(device_id=device_id, objects=objects,
                                 update_interval=update_intervals[device_id])
 
-        self.__logger.info('Devices updated')
+        self.__logger.info(f'Devices [{[*devices.keys()]}]updated')
 
-    def __start_device(self, device_id: int, objects: Set[BACnetObject],
+    def __start_device(self, device_id: int, objects: set[BACnetObject],
                        update_interval: int) -> None:
         """ Start BACnet device thread
         """
@@ -214,8 +211,8 @@ class BACnetConnector(Thread, Connector):
         except Exception as e:
             self.__logger.error(f'Device stopping error: {e}')
 
-    def get_devices_objects(self, devices_id: tuple,
-                            obj_types: tuple) -> Dict[int, Dict[ObjType, List[dict]]]:
+    def get_devices_objects(self, devices_id: tuple[int],
+                            obj_types: tuple) -> dict[int, dict[ObjType, list[dict]]]:
         """ Requests objects for modbus connector from server via http client
         """
         devices_objs = asyncio.run(
@@ -223,14 +220,15 @@ class BACnetConnector(Thread, Connector):
                                                           obj_types=obj_types))
         return devices_objs
 
-    def get_devices_update_interval(self, devices_id: Tuple[int],
-                                    default_update_interval: int) -> Dict[int, int]:
+    def get_devices_update_interval(self, devices_id: tuple[int],
+                                    default_update_interval: int) -> dict[int, int]:
+        """ Receive update intervals for devices via http client
+        """
 
         device_objs = asyncio.run(self.__gateway.http_client.rq_devices_objects(
             devices_id=devices_id,
             obj_types=(ObjType.DEVICE,)
         ))
-
         devices_intervals = {}
 
         # Extract update_interval from server's response
@@ -253,7 +251,7 @@ class BACnetConnector(Thread, Connector):
 
     @staticmethod
     def unpack_objects(
-            objects: Dict[int, Dict[ObjType, List[dict]]]) -> Dict[int, Set[BACnetObject]]:
+            objects: dict[int, dict[ObjType, list[dict]]]) -> dict[int, set[BACnetObject]]:
         """ Makes BACnetObjects from device structure, received from the server
         """
         devices_objects = {dev_id: set() for dev_id in objects.keys()}

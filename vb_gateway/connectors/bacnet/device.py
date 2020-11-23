@@ -2,14 +2,13 @@ from multiprocessing import SimpleQueue
 from pathlib import Path
 from threading import Thread
 from time import sleep, time
-from typing import Set, List
 
 from BAC0.core.io.IOExceptions import ReadPropertyException, NoResponseFromController, \
     UnknownObjectError, UnknownPropertyError, ReadPropertyMultipleException
 
-from vb_gateway.connectors.bacnet.object import BACnetObject
 from vb_gateway.connectors.bacnet.obj_property import ObjProperty
 from vb_gateway.connectors.bacnet.obj_type import ObjType
+from vb_gateway.connectors.bacnet.object import BACnetObject
 from vb_gateway.connectors.utils import get_fault_obj_properties
 from vb_gateway.utility.utility import get_file_logger
 
@@ -21,7 +20,7 @@ class BACnetDevice(Thread):
                  address: str,
                  device_id: int,
                  network,
-                 objects: Set[BACnetObject],
+                 objects: set[BACnetObject],
                  update_period: int = 10):
         super().__init__()
 
@@ -35,7 +34,7 @@ class BACnetDevice(Thread):
         self.update_period = update_period
 
         base_path = Path(__file__).resolve().parent.parent.parent
-        log_file_path = base_path / f'logs/{__name__}.log'
+        log_file_path = base_path / f'logs/{__name__}{self.id}.log'
 
         self.__logger = get_file_logger(logger_name=f'{self}',
                                         file_size_bytes=50_000_000,
@@ -96,7 +95,7 @@ class BACnetDevice(Thread):
 
     def run(self):
         while self.__polling:
-            self.__logger.info('Polling started')
+            self.__logger.debug('Polling started')
             if self.__active:
                 self.__logger.debug(f'{self} is active')
                 try:
@@ -115,6 +114,8 @@ class BACnetDevice(Thread):
 
                     if time_delta < self.update_period:
                         waiting_time = self.update_period - time_delta
+                        self.__logger.debug(
+                            f'{self} Sleeping {round(waiting_time, ndigits=2)} sec ...')
                         sleep(waiting_time)
 
                 except Exception as e:
@@ -157,7 +158,7 @@ class BACnetDevice(Thread):
 
     def set_inactive(self) -> None:
         self.__active = False
-        self.__logger.info('Set inactive')
+        # self.__logger.info('Set inactive')
         self.__logger.warning(f'{self} switched to inactive.')
 
         # TODO put to bacnet connector for ping checking
@@ -225,7 +226,7 @@ class BACnetDevice(Thread):
             raise ReadPropertyException('Response is None')
 
     def read_property_multiple(self, obj: BACnetObject,
-                               properties: List[ObjProperty]) -> dict:
+                               properties: list[ObjProperty]) -> dict:
         try:
             request = ' '.join([
                 self.address,
@@ -248,7 +249,7 @@ class BACnetDevice(Thread):
             else:
                 raise ReadPropertyMultipleException('Response is None')
 
-    def __simulate_rpm(self, obj: BACnetObject, properties: List[ObjProperty]) -> dict:
+    def __simulate_rpm(self, obj: BACnetObject, properties: list[ObjProperty]) -> dict:
         values = {}
         for prop in properties:
             try:

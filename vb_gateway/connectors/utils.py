@@ -1,6 +1,4 @@
-from json import loads
 from pathlib import Path
-from typing import Dict
 
 from vb_gateway.connectors.bacnet.obj_property import ObjProperty
 from vb_gateway.connectors.bacnet.status_flags import StatusFlags
@@ -19,7 +17,7 @@ def get_fault_obj_properties(reliability: int or str,
     }
 
 
-def read_address_cache(address_cache_path: Path) -> Dict[int, str]:
+def read_address_cache(address_cache_path: Path) -> dict[int, str]:
     """ Updates address_cache file
 
         Parse text file format of address_cache.
@@ -61,16 +59,3 @@ def read_address_cache(address_cache_path: Path) -> Dict[int, str]:
                                               int(''.join((mac[4], mac[5])), base=16))
             address_cache[device_id] = address
     return address_cache
-
-
-def parse_modbus_properties(property_list: str) -> tuple:
-    try:
-        modbus_properties = loads(property_list)['modbus']
-
-        address = modbus_properties['address']
-        quantity = modbus_properties['quantity']
-        func_read = int(modbus_properties['functionRead'][-2:])
-    except KeyError as e:
-        raise e
-    else:
-        return address, quantity, func_read

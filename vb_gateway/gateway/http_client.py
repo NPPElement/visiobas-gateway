@@ -2,7 +2,7 @@ import asyncio
 from multiprocessing import SimpleQueue
 from pathlib import Path
 from threading import Thread
-from typing import List, Dict, Tuple
+from time import sleep
 
 from aiohttp import ClientResponse, ClientConnectorError, ClientSession
 
@@ -72,7 +72,9 @@ class VisioHTTPClient(Thread):
                 try:
                     asyncio.run(self.__rq_login())
                 except ClientConnectorError as e:
-                    self.__logger.error(f'Login error: {e}')  # , exc_info=True)
+                    self.__logger.error(f'Login error: {e}'
+                                        'Sleeping 30 sec ...')  # , exc_info=True)
+                    sleep(30)
                 else:
                     self.__connected = True
                     self.__logger.info('Successfully log in to the server.')
@@ -94,7 +96,7 @@ class VisioHTTPClient(Thread):
         return ':'.join((self.__host, str(self.__port)))
 
     @property
-    def __auth_headers(self) -> dict:
+    def __auth_headers(self) -> dict[str, str]:
         headers = {
             'Authorization': f'Bearer {self.__bearer_token}'
         }
@@ -169,8 +171,8 @@ class VisioHTTPClient(Thread):
         :return: list of rejected by server side.
         """
         if not data:  # all object are accepted on server side
-            self.__logger.info(f'POST-result: Device [{device_id}] '
-                               'Server didn\'t return unaccepted objects.')
+            self.__logger.debug(f'POST-result: Device [{device_id}] '
+                                'Server didn\'t return unaccepted objects.')
             return data
         else:
             rejected_objects_id = [obj[str(ObjProperty.objectIdentifier.id)] for obj in
@@ -181,7 +183,7 @@ class VisioHTTPClient(Thread):
             # todo: What should we doing with rejected objects?
             return rejected_objects_id
 
-    async def __rq_device_object(self, device_id: int, object_type: ObjType) -> List[dict]:
+    async def __rq_device_object(self, device_id: int, object_type: ObjType) -> list[dict]:
         """
         Request of all available objects by device_id and object_type
         :param device_id:
@@ -201,7 +203,7 @@ class VisioHTTPClient(Thread):
 
     async def __rq_objects_for_device(
             self, device_id: int,
-            object_types: Tuple[ObjType]) -> Dict[ObjType, List[dict]]:
+            object_types: tuple[ObjType]) -> dict[ObjType, list[dict]]:
         """ Requests types of objects by device_id
         """
         # Create list with requests
@@ -224,8 +226,8 @@ class VisioHTTPClient(Thread):
         return device_objects
 
     async def rq_devices_objects(
-            self, devices_id: Tuple[int],
-            obj_types: Tuple[ObjType]) -> Dict[int, Dict[ObjType, List[dict]]]:
+            self, devices_id: tuple[int],
+            obj_types: tuple[ObjType]) -> dict[int, dict[ObjType, list[dict]]]:
         """ Requests types of objects for each device_id.
             For each device creates a dictionary, where the key is object_type,
             and the value is a dict with object properties.

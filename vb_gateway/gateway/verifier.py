@@ -10,11 +10,12 @@ from vb_gateway.utility.utility import get_file_logger
 
 
 class BACnetVerifier(Process):
-    def __init__(self, protocols_queue: SimpleQueue, http_queue: SimpleQueue,
-                 *,
-                 http_enable: bool = False,
-                 mqtt_enable: bool = False):
+    def __init__(self, protocols_queue: SimpleQueue,
+                 http_queue: SimpleQueue,
+                 config: dict):
         super().__init__(daemon=True)
+
+        self.__config = config
 
         base_path = Path(__file__).resolve().parent.parent
         log_file_path = base_path / f'logs/{__name__}.log'
@@ -28,12 +29,12 @@ class BACnetVerifier(Process):
 
         self.__active = True
 
-        self.__mqtt_enable = mqtt_enable
-        self.__http_enable = http_enable
+        self.__mqtt_enable = config.get('mqtt_enable', False)
+        self.__http_enable = config.get('http_enable', True)
 
         # Dict, where key - device_id, and value - list of collected verified strings
-        if http_enable:
-            self.__http_storage = {}
+        if self.__http_enable:
+            self.__http_storage: dict[int, list[str]] = {}
 
         self.start()
 

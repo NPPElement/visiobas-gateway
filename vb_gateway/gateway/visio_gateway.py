@@ -28,8 +28,6 @@ class VisioGateway:
         self.__stopped = False
 
         # todo: refactor
-        # self.__http_bacnet_queue = SimpleQueue()
-        # self.__http_modbus_queue = SimpleQueue()
         self.__protocol_verifier_queue = SimpleQueue()
         self.__verifier_http_queue = SimpleQueue()
 
@@ -44,21 +42,17 @@ class VisioGateway:
 
         self.__verifier = BACnetVerifier(protocols_queue=self.__protocol_verifier_queue,
                                          http_queue=self.__verifier_http_queue,
-                                         http_enable=self.__config['bacnet_verifier'][
-                                             'http_enable'],
-                                         mqtt_enable=self.__config['bacnet_verifier'][
-                                             'mqtt_enable'])  # FIXME config into verifier
+                                         config=self.__config['bacnet_verifier']
+                                         )
 
         self.__connectors = {
             'bacnet': BACnetConnector(
                 gateway=self,
                 verifier_queue=self.__protocol_verifier_queue,
-                # client_queue=self.__client_protocol_queue,
                 config=self.__config.get('bacnet_connector', None)),
             'modbus': ModbusConnector(
                 gateway=self,
                 verifier_queue=self.__protocol_verifier_queue,
-                # client_queue=self.__client_modbus_queue,
                 config=self.__config.get('modbus_connector', None)
             ),
             # 'modbus_rtu': None,
@@ -91,7 +85,7 @@ class VisioGateway:
 
         self.http_client.stop()
         self.http_client.join()
-        # raise SystemExit
+        self.__stopped = True
 
     def __start_connectors(self) -> None:
         """ Opens connection with all connectors
@@ -111,19 +105,3 @@ class VisioGateway:
                 connector.join()
             except Exception as e:
                 self.__logger.error(f'{connector} closing error: {e}')
-
-    # def get_devices_objects(self, devices_id: list, object_types: list) -> dict:
-    #     """
-    #     Called from the BACnet connector. Uses the VisioClient.
-    #
-    #     :param devices_id:
-    #     :param object_types:
-    #     :return: dictionary with object types for each device
-    #     """
-    #
-    #     # FIXME: CHANGE TO QUEUE, MOVE TO CLIENT
-    #     devices_objects = asyncio.run(
-    #         self.http_client.rq_devices_objects(devices_id=devices_id,
-    #                                             obj_types=object_types)
-    #     )
-    #     return devices_objects
