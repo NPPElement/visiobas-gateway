@@ -32,7 +32,7 @@ class ModbusDevice(Thread):
         self.update_period = update_period
 
         base_path = Path(__file__).resolve().parent.parent.parent
-        log_file_path = base_path / f'logs/{__name__}{id}.log'
+        log_file_path = base_path / f'logs/{self.id}.log'
 
         self.__logger = get_file_logger(logger_name=f'{self}',
                                         file_size_bytes=50_000_000,
@@ -87,7 +87,6 @@ class ModbusDevice(Thread):
                 except Exception as e:
                     self.__logger.error(f'Polling error: {e}', exc_info=True)
             else:  # client protocol is None
-                sleep(60)
                 try:
                     self.__loop, self.__client = self.__get_client(address=self.address,
                                                                    port=self.port)

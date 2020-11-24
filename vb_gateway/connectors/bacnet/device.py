@@ -34,7 +34,7 @@ class BACnetDevice(Thread):
         self.update_period = update_period
 
         base_path = Path(__file__).resolve().parent.parent.parent
-        log_file_path = base_path / f'logs/{__name__}{self.id}.log'
+        log_file_path = base_path / f'logs/{self.id}.log'
 
         self.__logger = get_file_logger(logger_name=f'{self}',
                                         file_size_bytes=50_000_000,
@@ -116,7 +116,8 @@ class BACnetDevice(Thread):
                         f'Objects not support RPM: {len(self.not_support_rpm)}\n'
                         '==================================================')
 
-                    self.__logger.info(f'Timedelta = {time_delta}, upd_period = {self.update_period}')
+                    self.__logger.info(
+                        f'Timedelta = {time_delta}, upd_period = {self.update_period}')
                     if time_delta < self.update_period:
                         waiting_time = self.update_period - time_delta
                         self.__logger.info(
