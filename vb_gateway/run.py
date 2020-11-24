@@ -16,6 +16,10 @@ def main():
                         level=log_level,
                         stream=sys.stdout)
 
+    # Disable BAC0 loggers
+    logging.getLogger('BAC0_Root.BAC0.scripts.Base.Base').setLevel(log_level)
+    logging.getLogger('BAC0_Root.BAC0.scripts.Lite.Lite').setLevel(log_level)
+
     # The callback for when the client receives a CONNACK response from the server.
 
     # def on_connect(client, userdata, rc):
