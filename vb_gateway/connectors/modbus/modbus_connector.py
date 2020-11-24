@@ -58,6 +58,7 @@ class ModbusConnector(Thread, Connector):
         # Match device_id with device_address. Example: {200: '10.21.80.12'}
         self.__address_cache = {}
         self.__polling_devices = {}
+        # self.__not_connect_devices: set[int, ...] = set()
 
         self.__update_intervals = {}
 
@@ -157,8 +158,9 @@ class ModbusConnector(Thread, Connector):
                 objects=objects,
                 update_period=update_interval
             )
-        except ConnectionError as e:
-            self.__logger.error(f'Device [{device_id}] connection error: {e}')
+        # except ConnectionError as e:
+        #     self.__logger.error(f'Device [{device_id}] connection error: {e}')
+        #     self.__not_connect_devices.add(device_id)
         except Exception as e:
             self.__logger.error(f'Device [{device_id}] '
                                 f'starting error: {e}', exc_info=True)

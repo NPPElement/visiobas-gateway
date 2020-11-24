@@ -38,20 +38,8 @@ class ModbusDevice(Thread):
                                         file_size_bytes=50_000_000,
                                         file_path=log_file_path)
 
-        # Here may occur ConnectionError, thar provides to ModbusConnector
-        self.__loop, self.__client = self.__get_client(address=self.address,
-                                                       port=self.port)
-
-        self.__available_functions = {
-            1: self.__client.protocol.read_coils,
-            2: self.__client.protocol.read_discrete_inputs,
-            3: self.__client.protocol.read_holding_registers,
-            4: self.__client.protocol.read_input_registers,
-            5: self.__client.protocol.write_coil,
-            6: self.__client.protocol.write_register,
-            15: self.__client.protocol.write_coils,
-            16: self.__client.protocol.write_registers,
-        }
+        # Here may occur ConnectionError, that provides to ModbusConnector
+        self.__loop, self.__client, self.__available_functions = None, None, None
 
         self.setName(name=f'{self}-Thread')
         self.setDaemon(True)
@@ -74,28 +62,41 @@ class ModbusDevice(Thread):
         self.__logger.info('Stopping polling ...')
 
     def run(self):
-        while self.__polling and self.__client:
-            try:
-                t0 = time()
-                self.__loop.run_until_complete(self.poll(objects=list(self.objects)))
-                t1 = time()
-                time_delta = t1 - t0
+        while self.__polling:  # and self.__client.protocol is not None:
+            self.__logger.debug('Polling started')
+            if self.__client.protocol is not None and self.__loop is not None:
+                try:
+                    t0 = time()
+                    self.__loop.run_until_complete(self.poll(objects=list(self.objects)))
+                    t1 = time()
+                    time_delta = t1 - t0
 
-                self.__logger.info(
-                    '\n==================================================\n'
-                    f'{self} ip:{self.address} polled '
-                    f'for {round(time_delta, ndigits=2)} seconds\n'
-                    f'Objects: {len(self)}\n'
-                    '==================================================')
+                    self.__logger.info(
+                        '\n==================================================\n'
+                        f'{self} ip:{self.address} polled '
+                        f'for {round(time_delta, ndigits=2)} seconds\n'
+                        f'Objects: {len(self)}\n'
+                        '==================================================')
 
-                if time_delta < self.update_period:
-                    waiting_time = self.update_period - time_delta
-                    self.__logger.debug(
-                        f'{self} Sleeping {round(waiting_time, ndigits=2)} sec ...')
-                    sleep(waiting_time)
+                    if time_delta < self.update_period:
+                        waiting_time = self.update_period - time_delta
+                        self.__logger.debug(
+                            f'{self} Sleeping {round(waiting_time, ndigits=2)} sec ...')
+                        sleep(waiting_time)
 
-            except Exception as e:
-                self.__logger.error(f'Polling error: {e}', exc_info=True)
+                except Exception as e:
+                    self.__logger.error(f'Polling error: {e}', exc_info=True)
+            else:  # client protocol is None
+                sleep(60)
+                try:
+                    self.__loop, self.__client = self.__get_client(address=self.address,
+                                                                   port=self.port)
+                except ConnectionError as e:
+                    self.__logger.error(f'{self} connection error: {e}'
+                                        'Sleeping 60 sec to next attempt ...')
+                    sleep(60)
+        else:
+            self.__logger.info(f'{self} stopped.')
 
     def __repr__(self):
         return f'ModbusDevice [{self.id}]'
@@ -105,11 +106,22 @@ class ModbusDevice(Thread):
         """
         loop, modbus_client = AsyncModbusTCPClient(scheduler=ASYNC_IO,
                                                    host=address,
-                                                   port=port)
+                                                   port=port,
+                                                   timeout=10)
 
         if modbus_client.protocol is not None and loop is not None:
+            available_functions = {
+                1: self.__client.protocol.read_coils,
+                2: self.__client.protocol.read_discrete_inputs,
+                3: self.__client.protocol.read_holding_registers,
+                4: self.__client.protocol.read_input_registers,
+                5: self.__client.protocol.write_coil,
+                6: self.__client.protocol.write_register,
+                15: self.__client.protocol.write_coils,
+                16: self.__client.protocol.write_registers,
+            }
             self.__logger.debug(f'Connected to {self}')
-            return loop, modbus_client
+            return loop, modbus_client, available_functions
         else:
             raise ConnectionError(f'Failed to connect to {self} '
                                   f'({self.address}:{self.port})')

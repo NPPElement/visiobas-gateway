@@ -100,8 +100,12 @@ class BACnetDevice(Thread):
                 self.__logger.debug(f'{self} is active')
                 try:
                     t0 = time()
+                    self.__logger.info(f't0 = {t0}')
+
                     self.poll()  # poll all objects
+
                     t1 = time()
+                    self.__logger.info(f't1 = {t1}')
                     time_delta = t1 - t0
 
                     self.__logger.info(
@@ -112,9 +116,10 @@ class BACnetDevice(Thread):
                         f'Objects not support RPM: {len(self.not_support_rpm)}\n'
                         '==================================================')
 
+                    self.__logger.info(f'Timedelta = {time_delta}, upd_period = {self.update_period}')
                     if time_delta < self.update_period:
                         waiting_time = self.update_period - time_delta
-                        self.__logger.debug(
+                        self.__logger.info(
                             f'{self} Sleeping {round(waiting_time, ndigits=2)} sec ...')
                         sleep(waiting_time)
 

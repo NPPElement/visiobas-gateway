@@ -184,8 +184,7 @@ class VisioHTTPClient(Thread):
             return rejected_objects_id
 
     async def __rq_device_object(self, device_id: int, object_type: ObjType) -> list[dict]:
-        """
-        Request of all available objects by device_id and object_type
+        """ Request of all available objects by device_id and object_type
         :param device_id:
         :param object_type:
         :return: data received from the server
@@ -211,10 +210,8 @@ class VisioHTTPClient(Thread):
                                                     object_type=object_type) for
                             object_type in object_types]
 
-        # TODO UPD
-        # From each response, if it's not empty, getting the id of objects.
-        # Creating a dictionary, where the key is the type of the objects,
-        # and the value is the list of tuples with id and name of objects of this type.
+        # Each response, if it's not empty add in dict, where key is the type of object
+        # and the value is the list with objects
         device_objects = {
             obj_type: objects for
             obj_type, objects in
