@@ -38,7 +38,6 @@ class ModbusDevice(Thread):
                                         file_size_bytes=50_000_000,
                                         file_path=log_file_path)
 
-        # Here may occur ConnectionError, that provides to ModbusConnector
         self.__loop, self.__client, self.__available_functions = None, None, None
 
         self.setName(name=f'{self}-Thread')
@@ -64,7 +63,9 @@ class ModbusDevice(Thread):
     def run(self):
         while self.__polling:  # and self.__client.protocol is not None:
             self.__logger.debug('Polling started')
-            if self.__client.protocol is not None and self.__loop is not None:
+            if (self.__client is not None and
+                    self.__client.protocol is not None and
+                    self.__loop is not None):
                 try:
                     t0 = time()
                     self.__loop.run_until_complete(self.poll(objects=list(self.objects)))
@@ -88,8 +89,9 @@ class ModbusDevice(Thread):
                     self.__logger.error(f'Polling error: {e}', exc_info=True)
             else:  # client protocol is None
                 try:
-                    self.__loop, self.__client = self.__get_client(address=self.address,
-                                                                   port=self.port)
+                    self.__loop, self.__client, self.__available_functions = self.__get_client(
+                        address=self.address,
+                        port=self.port)
                 except ConnectionError as e:
                     self.__logger.error(f'{self} connection error: {e}'
                                         'Sleeping 60 sec to next attempt ...')

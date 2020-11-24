@@ -159,7 +159,7 @@ class BACnetConnector(Thread, Connector):
             self.__start_device(device_id=device_id, objects=objects,
                                 update_interval=update_intervals[device_id])
 
-        self.__logger.info(f'Devices [{[*devices.keys()]}]updated')
+        self.__logger.info(f'Devices {[*devices.keys()]} updated')
 
     def __start_device(self, device_id: int, objects: set[BACnetObject],
                        update_interval: int) -> None:
