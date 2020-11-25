@@ -181,6 +181,8 @@ class BACnetDevice(Thread):
             When all objects polled, send device_id into verifier as finish signal
         """
         for obj in self.support_rpm:
+            assert isinstance(obj, BACnetObject)
+
             self.__logger.debug(f'Polling supporting PRM {obj} ...')
             try:
                 values = self.rpm(obj=obj)
@@ -200,9 +202,13 @@ class BACnetDevice(Thread):
         self.support_rpm.difference_update(self.not_support_rpm)
 
         for obj in self.not_support_rpm:
+            assert isinstance(obj, BACnetObject)
+
             self.__logger.debug(f'Polling not supporting PRM {obj} ...')
             try:
                 values = self.simulate_rpm(obj=obj)
+            except UnknownObjectError as e:
+                self.__logger.error(f'{obj} is unknown: {e}')
             except Exception as e:
                 self.__logger.error(f'{obj} polling error: {e}', exc_info=True)
             else:
@@ -282,7 +288,7 @@ class BACnetDevice(Thread):
             else:
                 # read_property checks errors -> just update
                 values.update({prop: response})
-                self.not_support_rpm.update(obj)
+                # self.not_support_rpm.update(obj)
 
         return values
 
@@ -311,7 +317,6 @@ class BACnetDevice(Thread):
 
         except ReadPropertyMultipleException as e:
             self.__logger.error(f'Read Error: {e}')
-            self.not_support_rpm.update(obj)
             raise e
         else:
             properties.update(values)
