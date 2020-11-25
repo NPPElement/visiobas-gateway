@@ -120,14 +120,14 @@ class ModbusDevice(Thread):
                 modbus_client.protocol is not None and
                 loop is not None):
             available_functions = {
-                1: self.__client.protocol.read_coils,
-                2: self.__client.protocol.read_discrete_inputs,
-                3: self.__client.protocol.read_holding_registers,
-                4: self.__client.protocol.read_input_registers,
-                5: self.__client.protocol.write_coil,
-                6: self.__client.protocol.write_register,
-                15: self.__client.protocol.write_coils,
-                16: self.__client.protocol.write_registers,
+                1: modbus_client.protocol.read_coils,
+                2: modbus_client.protocol.read_discrete_inputs,
+                3: modbus_client.protocol.read_holding_registers,
+                4: modbus_client.protocol.read_input_registers,
+                5: modbus_client.protocol.write_coil,
+                6: modbus_client.protocol.write_register,
+                15: modbus_client.protocol.write_coils,
+                16: modbus_client.protocol.write_registers,
             }
             self.__logger.debug(f'Connected to {self}')
             return loop, modbus_client, available_functions
