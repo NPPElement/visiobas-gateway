@@ -146,7 +146,8 @@ class ModbusDevice(Thread):
                                                               count=quantity,
                                                               unit=unit)
         except asyncio.TimeoutError as e:
-            self.__logger.error(f'Read Timeout: {e}')
+            self.__logger.error(f'reg: {reg_address} quantity: {quantity} '
+                                f'Read Timeout: {e}')
             return 'null'
         except Exception as e:
             self.__logger.error(

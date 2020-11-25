@@ -17,15 +17,12 @@ def main():
                         stream=sys.stdout)
 
     # Disable BAC0 loggers
-    bac0_loggers = (
-        'BAC0_Root.BAC0.scripts.Base.Base',
-        'BAC0_Root.BAC0.scripts.Lite.Lite',
-        'BAC0_Root.BAC0.tasks.UpdateCOV.Update_local_COV',
-        'BAC0_Root.BAC0.tasks.TaskManager.Manager',
-        'BAC0_Root.BAC0.tasks.RecurringTask.RecurringTask'
+    loggers_to_disable = (
+        'BAC0_Root',
+        'bacpypes'
     )
-    for bac0_logger in bac0_loggers:
-        logging.getLogger(bac0_logger).setLevel(level=log_level)
+    for logger in loggers_to_disable:
+        logging.getLogger(logger).setLevel(level=logging.CRITICAL)
 
     # The callback for when the client receives a CONNACK response from the server.
 

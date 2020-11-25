@@ -62,6 +62,7 @@ cd visiobas-gateway
 ## Setting
 To configure it, you need to edit the file visiobas_gateway/config/gateway.json
 
+
 ## Launch
 Go to the visiobas-gateway directory
 ```
