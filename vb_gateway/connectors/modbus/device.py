@@ -93,7 +93,7 @@ class ModbusDevice(Thread):
                         address=self.address,
                         port=self.port)
                 except ConnectionError as e:
-                    self.__logger.error(f'{self} connection error: {e}'
+                    self.__logger.error(f'{self} connection error: {e} '
                                         'Sleeping 60 sec to next attempt ...')
                     sleep(60)
         else:

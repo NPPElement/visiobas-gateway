@@ -1,3 +1,4 @@
+from logging import getLogger, Logger
 from multiprocessing import SimpleQueue
 from pathlib import Path
 from threading import Thread
@@ -152,6 +153,10 @@ class BACnetDevice(Thread):
                 sleep(60)
         else:
             self.__logger.info(f'{self} stopped.')
+
+            # remove logger
+            getLogger(f'{self}').disabled = True
+            del Logger.manager.loggerDict[f'{self}']
 
     def start_polling(self) -> None:
         self.__polling = True

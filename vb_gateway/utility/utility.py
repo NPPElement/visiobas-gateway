@@ -1,15 +1,16 @@
-from logging import getLogger, Formatter, Logger
+from logging import getLogger, Formatter, Logger, DEBUG
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
 
 def get_file_logger(logger_name: str, file_size_bytes: int,
-                    file_path: Path, log_format: str = None) -> Logger:
+                    file_path: Path, log_format: str = None, log_level=DEBUG) -> Logger:
     if log_format is None:
         log_format = ('%(levelname)-8s [%(asctime)s] [%(threadName)s] %(name)s - '
                       '(%(filename)s).%(funcName)s(%(lineno)d): %(message)s')
 
     logger = getLogger(logger_name)
+    logger.setLevel(level=log_level)
 
     file_handler = RotatingFileHandler(filename=file_path,
                                        mode='a',
