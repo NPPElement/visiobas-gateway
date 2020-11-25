@@ -6,12 +6,12 @@ services:
       context: ./vb_gateway
       dockerfile: Dockerfile
     image: vb-gateway:0.0.3
-    logging:
-      # driver: none
-      driver: "json-file"
-      options:
-        max-file: 2
-        max-size: 50m
+#    logging:
+#      # driver: none
+#      driver: "json-file"
+#      options:
+#        max-file: 3
+#        max-size: 50m
     restart: always
     user: root
     environment:
