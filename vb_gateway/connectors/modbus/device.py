@@ -112,8 +112,8 @@ class ModbusDevice(Thread):
         """
         loop, modbus_client = AsyncModbusTCPClient(scheduler=ASYNC_IO,
                                                    host=address,
-                                                   port=port)  #,
-                                                   # timeout=10)
+                                                   port=port,
+                                                   timeout=20)
 
         if (modbus_client is not None and
                 hasattr(modbus_client, 'protocol') and

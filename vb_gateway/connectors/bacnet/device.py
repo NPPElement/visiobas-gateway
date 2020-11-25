@@ -50,7 +50,7 @@ class BACnetDevice(Thread):
         self.address = address
         self.network = network
 
-        self.support_rpm = objects
+        self.support_rpm: set[BACnetObject] = objects
         self.not_support_rpm: set[BACnetObject] = set()
 
         # TODO: move to connector:
@@ -107,6 +107,7 @@ class BACnetDevice(Thread):
 
                     t1 = time()
                     self.__logger.info(f't1 = {t1}')
+                    # FIXME PROBLEM: IN PRACTISE, TIMEDELTA != t1-t0
                     time_delta = t1 - t0
 
                     self.__logger.info(
@@ -126,7 +127,7 @@ class BACnetDevice(Thread):
                         sleep(waiting_time)
 
                 except Exception as e:
-                    self.__logger.error(f'Polling error: {e}')  # , exc_info=True)
+                    self.__logger.error(f'Polling error: {e}', exc_info=True)
             else:  # if device inactive
                 self.__logger.debug(f'{self} is inactive')
                 try:
@@ -187,14 +188,16 @@ class BACnetDevice(Thread):
             except ReadPropertyMultipleException as e:
                 self.__logger.error(f'{obj} rpm error: {e} '
                                     f'Marking as not supporting RPM ...')
-                self.not_support_rpm.update(obj)
-                self.support_rpm.discard(obj)
+                self.not_support_rpm.add(obj)
+                # self.support_rpm.discard(obj)
 
             except Exception as e:
                 self.__logger.error(f'{obj} polling error: {e}', exc_info=True)
             else:
                 self.__logger.debug(f'From {obj} read: {values}. Sending to verifier ...')
                 self.__put_data_into_verifier(properties=values)
+
+        self.support_rpm.difference_update(self.not_support_rpm)
 
         for obj in self.not_support_rpm:
             self.__logger.debug(f'Polling not supporting PRM {obj} ...')
