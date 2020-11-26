@@ -107,7 +107,7 @@ class BACnetVerifier(Process):
             ObjProperty.objectIdentifier: obj_properties[ObjProperty.objectIdentifier],
         }
 
-        sf = StatusFlags(obj_properties.get(ObjProperty.statusFlags, [0, 0, 0, 0]))
+        sf = obj_properties.get(ObjProperty.statusFlags, StatusFlags([0, 0, 0, 0]))
         # self.verify_sf()  use if needs to verify statusFlags
         verified_properties[ObjProperty.statusFlags] = sf
 
