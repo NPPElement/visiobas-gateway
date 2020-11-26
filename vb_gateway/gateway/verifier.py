@@ -280,7 +280,7 @@ class BACnetVerifier(Process):
             device_str = ';'.join((*self.__http_storage.pop(device_id), ''))
             self.__http_queue.put((device_id, device_str))
         except Exception as e:
-            self.__logger.error(f'HTTP Sending Error: {e}')
+            self.__logger.error(f'HTTP Sending Error: {e}', exc_info=True)
 
     def __mqtt_send_to_broker(self, obj_name: str, verified_str: str) -> None:
         """ Send verified strings to MQTT broker
