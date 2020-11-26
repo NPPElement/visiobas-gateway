@@ -23,7 +23,7 @@ def main():
         'BAC0_Root.BAC0.tasks.UpdateCOV.Update_local_COV',
         'BAC0_Root.BAC0.tasks.TaskManager.Manager',
         'BAC0_Root.BAC0.tasks.RecurringTask.RecurringTask',
-
+        'bacpypes.iocb._statelog'
     )
     for logger in loggers_to_disable:
         logging.getLogger(logger).setLevel(level=logging.CRITICAL)
