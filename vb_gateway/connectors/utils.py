@@ -6,9 +6,11 @@ from vb_gateway.connectors.bacnet.status_flags import StatusFlags
 
 def get_fault_obj_properties(reliability: int or str,
                              pv='null',
-                             sf: StatusFlags = StatusFlags([0, 1, 0, 0])) -> dict:
+                             sf: list = None) -> dict:
     """ Returns properties for unknown objects
     """
+    if sf is None:
+        sf = [0, 1, 0, 0]
     return {
         ObjProperty.presentValue: pv,
         ObjProperty.statusFlags: sf,

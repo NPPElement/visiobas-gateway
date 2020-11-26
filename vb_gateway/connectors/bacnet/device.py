@@ -115,7 +115,7 @@ class BACnetDevice(Thread):
                         f'{self} ip:{self.address} polled '
                         f'for {round(time_delta, ndigits=2)} seconds\n'
                         f'Objects: {len(self)}\n'
-                        f'Support RPM: {len(self.support_rpm)}'
+                        f'Support RPM: {len(self.support_rpm)}\n'
                         f'Not support RPM: {len(self.not_support_rpm)}\n'
                         '==================================================')
 
