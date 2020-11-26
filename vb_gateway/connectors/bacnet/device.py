@@ -344,18 +344,22 @@ class BACnetDevice(Thread):
                     'Now implemented only 9 types. Please provide one of: '
                     f'{[*self.__BI_AI_MI_AC, *self.__BO_BV_AO_AV_MV_MO]}')
 
+        except NoResponseFromController as e:
+            self.__logger.error(f'Error: {e}')
+            values = get_fault_obj_properties(reliability='no-response')
+        except UnknownPropertyError as e:
+            self.__logger.error(f'Error: {e}')
+            values = get_fault_obj_properties(reliability='unknown-property')
+        except UnknownObjectError as e:
+            self.__logger.error(f'Error: {e}')
+            values = get_fault_obj_properties(reliability='unknown-object')
+        except ReadPropertyException as e:
+            self.__logger.error(f'Error: {e}')
+            values = get_fault_obj_properties(reliability='rp-error')
+
         except Exception as e:
-            self.__logger.error(f'Read Error: {e}')
-            if e is NoResponseFromController:
-                values = get_fault_obj_properties(reliability='no-response')
-            elif e is UnknownPropertyError:
-                values = get_fault_obj_properties(reliability='unknown-property')
-            elif e is UnknownObjectError:
-                values = get_fault_obj_properties(reliability='unknown-object')
-            elif e is ReadPropertyException:
-                values = get_fault_obj_properties(reliability='rp-error')
-            else:
-                raise e
+            self.__logger.error(f'Read Error: {e}', exc_info=True)
+            values = get_fault_obj_properties(reliability='error')
 
         properties.update(values)
         return properties

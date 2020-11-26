@@ -18,8 +18,12 @@ def main():
 
     # Disable BAC0 loggers
     loggers_to_disable = (
-        'BAC0_Root',
-        'bacpypes'
+        'BAC0_Root.BAC0.scripts.Base.Base',
+        'BAC0_Root.BAC0.scripts.Lite.Lite',
+        'BAC0_Root.BAC0.tasks.UpdateCOV.Update_local_COV',
+        'BAC0_Root.BAC0.tasks.TaskManager.Manager',
+        'BAC0_Root.BAC0.tasks.RecurringTask.RecurringTask',
+
     )
     for logger in loggers_to_disable:
         logging.getLogger(logger).setLevel(level=logging.CRITICAL)
