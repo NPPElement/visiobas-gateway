@@ -171,7 +171,6 @@ class BACnetDevice(Thread):
 
     def set_inactive(self) -> None:
         self.__active = False
-        # self.__logger.info('Set inactive')
         self.__logger.warning(f'{self} switched to inactive.')
 
         # TODO put to bacnet connector for ping checking
@@ -189,8 +188,8 @@ class BACnetDevice(Thread):
                 values = self.rpm(obj=obj)
                 self.__logger.debug(f'{obj} values: {values}')
             except ReadPropertyMultipleException as e:
-                self.__logger.error(f'{obj} rpm error: {e} '
-                                    f'Marking as not supporting RPM ...')
+                self.__logger.warning(f'{obj} rpm error: {e}\n'
+                                    f'{obj} Marking as not supporting RPM ...')
                 self.not_support_rpm.add(obj)
                 # self.support_rpm.discard(obj)
 
@@ -262,7 +261,7 @@ class BACnetDevice(Thread):
                       if value is not None and str(value).strip()}
 
         except Exception as e:
-            self.__logger.error(f'RPM Error: {e}')
+            self.__logger.error(f'RPM Error: {e}', exc_info=True)
             raise ReadPropertyMultipleException(e)
         else:
             if values is not None:
@@ -277,17 +276,18 @@ class BACnetDevice(Thread):
                 response = self.read_property(obj=obj, prop=prop)
 
             except (UnknownObjectError, NoResponseFromController) as e:
-                self.__logger.error(f'sRPM Error: {e}')
+                self.__logger.warning(f'sRPM Error: {e}')
                 raise e
 
             except (UnknownPropertyError, ReadPropertyException) as e:
                 if prop is ObjProperty.priorityArray:
                     continue
-                self.__logger.error(f'sRPM Error: {e}')
+                self.__logger.warning(f'sRPM Error: {e}')
                 raise e
+            except Exception as e:
+                self.__logger.error(f'sRPM error: {e}', exc_info=True)
 
             else:
-                # read_property checks errors -> just update
                 values.update({prop: response})
                 # self.not_support_rpm.update(obj)
 
@@ -346,16 +346,16 @@ class BACnetDevice(Thread):
                     f'{[*self.__BI_AI_MI_AC, *self.__BO_BV_AO_AV_MV_MO]}')
 
         except NoResponseFromController as e:
-            self.__logger.error(f'Error: {e}')
+            self.__logger.error(f'No response error: {e}')
             values = get_fault_obj_properties(reliability='no-response')
         except UnknownPropertyError as e:
-            self.__logger.error(f'Error: {e}')
+            self.__logger.error(f'Unknown property error: {e}')
             values = get_fault_obj_properties(reliability='unknown-property')
         except UnknownObjectError as e:
-            self.__logger.error(f'Error: {e}')
+            self.__logger.error(f'Unknown object error: {e}')
             values = get_fault_obj_properties(reliability='unknown-object')
         except ReadPropertyException as e:
-            self.__logger.error(f'Error: {e}')
+            self.__logger.error(f'RP error: {e}')
             values = get_fault_obj_properties(reliability='rp-error')
 
         except Exception as e:

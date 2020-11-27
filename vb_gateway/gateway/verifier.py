@@ -5,6 +5,7 @@ from pathlib import Path
 from bacpypes.basetypes import PriorityArray
 
 from vb_gateway.connectors.bacnet.obj_property import ObjProperty
+from vb_gateway.connectors.bacnet.obj_type import ObjType
 from vb_gateway.connectors.bacnet.status_flags import StatusFlags
 from vb_gateway.utility.utility import get_file_logger
 
@@ -186,6 +187,10 @@ class BACnetVerifier(Process):
     def verify_pa(pa: PriorityArray, properties: dict) -> None:
         """ Extract priorityArray into a tuple
         """
+        not_round_types = {ObjType.ANALOG_VALUE,
+                           ObjType.ANALOG_OUTPUT,
+                           ObjType.ANALOG_INPUT}
+
         pa_size = pa.value[0]
         priorities = []
 
@@ -204,6 +209,10 @@ class BACnetVerifier(Process):
                     sf = properties.get(ObjProperty.statusFlags, StatusFlags([0, 0, 0, 0]))
                     sf.set(overriden=True)
                     properties[ObjProperty.statusFlags] = sf
+
+        if properties[ObjProperty.objectType] not in not_round_types:
+            priorities = (round(prior) for prior in priorities)
+
         properties[ObjProperty.priorityArray] = tuple(priorities)
 
     # @staticmethod
