@@ -154,7 +154,7 @@ class VisioHTTPClient(Thread):
 
         async with ClientSession(headers=self.__auth_headers) as session:
             async with session.post(url=url, data=data) as response:
-                self.__logger.debug(f'POST: {url}'
+                self.__logger.debug(f'POST: {url}\n'
                                     f'Body: {data}')
                 data = await self.__extract_response_data(response=response)
                 await self.__check_rejected(device_id=device_id,

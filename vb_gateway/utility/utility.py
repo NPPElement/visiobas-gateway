@@ -16,14 +16,14 @@ def get_file_logger(logger_name: str, file_size_bytes: int,
     logger = getLogger(logger_name)
     logger.setLevel(level=log_level)
 
-    file_handler = RotatingFileHandler(filename=file_path,
-                                       mode='a',
-                                       maxBytes=file_size_bytes,
-                                       backupCount=1,
-                                       encoding='utf-8')
-
-    formatter = Formatter(log_format)
-    file_handler.setFormatter(formatter)
-    logger.addHandler(file_handler)
+    if not logger.hasHandlers():
+        file_handler = RotatingFileHandler(filename=file_path,
+                                           mode='a',
+                                           maxBytes=file_size_bytes,
+                                           backupCount=1,
+                                           encoding='utf-8')
+        formatter = Formatter(log_format)
+        file_handler.setFormatter(formatter)
+        logger.addHandler(file_handler)
 
     return logger

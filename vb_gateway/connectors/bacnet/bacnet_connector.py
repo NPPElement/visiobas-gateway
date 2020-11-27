@@ -76,11 +76,12 @@ class BACnetConnector(Thread, Connector):
             address_cache_path = base_dir / 'connectors/bacnet/address_cache'
             self.__address_cache = read_address_cache(address_cache_path=address_cache_path)
 
-            # stop irrelevant devices
-            irrelevant_devices_id = tuple(set(self.__polling_devices.keys()) - set(
-                self.__address_cache.keys()))
-            if irrelevant_devices_id:
-                self.__stop_devices(devices_id=irrelevant_devices_id)
+            if len(self.__polling_devices) > 0:
+                # Check irrelevant devices. Stop them, if found
+                irrelevant_devices_id = tuple(set(self.__polling_devices.keys()) - set(
+                    self.__address_cache.keys()))
+                if irrelevant_devices_id:
+                    self.__stop_devices(devices_id=irrelevant_devices_id)
 
             if self.__network:  # IF HAVING INITIALIZED NETWORK
                 try:  # Requesting objects and their types from the server
@@ -98,11 +99,12 @@ class BACnetConnector(Thread, Connector):
                             devices_id=tuple(self.__address_cache.keys()),
                             default_update_interval=self.default_update_period
                         )
-                        self.__logger.info('Received update intervals for devices.'
+                        self.__logger.info('Received update intervals for devices. '
                                            'Starting them ...')
 
                         # Unpack json from server to BACnetObjects class
                         devices_objects = self.unpack_objects(objects=devices_objects)
+
                         self.update_devices(devices=devices_objects,
                                             update_intervals=self.__update_intervals)
                         del devices_objects
@@ -154,7 +156,7 @@ class BACnetConnector(Thread, Connector):
         """ Starts BACnet devices threads
         """
         for device_id, objects in devices.items():
-            if device_id not in self.__polling_devices:
+            if device_id in self.__polling_devices:
                 self.__stop_device(device_id=device_id)
             self.__start_device(device_id=device_id, objects=objects,
                                 update_interval=update_intervals[device_id])

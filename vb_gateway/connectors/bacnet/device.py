@@ -156,10 +156,6 @@ class BACnetDevice(Thread):
         else:
             self.__logger.info(f'{self} stopped.')
 
-            # remove logger
-            getLogger(f'{self}').disabled = True
-            del Logger.manager.loggerDict[f'{self}']
-
     def start_polling(self) -> None:
         self.__polling = True
         self.__logger.info('Starting polling ...')
@@ -261,7 +257,7 @@ class BACnetDevice(Thread):
                       if value is not None and str(value).strip()}
 
         except Exception as e:
-            self.__logger.warning(f'RPM Error: {e}', exc_info=True)
+            self.__logger.warning(f'RPM Error: {e}')
             raise ReadPropertyMultipleException(e)
         else:
             if values is not None:

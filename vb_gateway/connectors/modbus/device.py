@@ -100,10 +100,6 @@ class ModbusDevice(Thread):
         else:
             self.__logger.info(f'{self} stopped.')
 
-            # remove logger
-            getLogger(f'{self}').disabled = True
-            del Logger.manager.loggerDict[f'{self}']
-
     def __repr__(self):
         return f'ModbusDevice [{self.id}]'
 

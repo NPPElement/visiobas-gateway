@@ -82,6 +82,8 @@ class BACnetVerifier(Process):
                         device_id=device_id,
                         obj_name=obj_name,
                         verified_str=str_verified_obj_properties)
+                    self.__logger.debug(
+                        '==================================================')
                 else:
                     raise TypeError(f'Object of unexpected type provided: '
                                     f'{protocols_data} {type(protocols_data)}. '
@@ -204,10 +206,7 @@ class BACnetVerifier(Process):
             if key[0] == 'null':
                 priorities.append('')
             else:
-                if properties[ObjProperty.objectType] not in not_round_types:
-                    priorities.append(round(float(value[0])))
-                else:
-                    priorities.append(value[0])
+                priorities.append(round(float(value[0])))
                 if i == manual_life_safety or i == automatic_life_safety:
                     sf = properties.get(ObjProperty.statusFlags, StatusFlags([0, 0, 0, 0]))
                     sf.set(overriden=True)
