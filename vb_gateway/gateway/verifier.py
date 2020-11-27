@@ -204,14 +204,14 @@ class BACnetVerifier(Process):
             if key[0] == 'null':
                 priorities.append('')
             else:
-                priorities.append(value[0])
+                if properties[ObjProperty.objectType] not in not_round_types:
+                    priorities.append(round(float(value[0])))
+                else:
+                    priorities.append(value[0])
                 if i == manual_life_safety or i == automatic_life_safety:
                     sf = properties.get(ObjProperty.statusFlags, StatusFlags([0, 0, 0, 0]))
                     sf.set(overriden=True)
                     properties[ObjProperty.statusFlags] = sf
-
-        if properties[ObjProperty.objectType] not in not_round_types:
-            priorities = (round(float(prior)) for prior in priorities)
 
         properties[ObjProperty.priorityArray] = tuple(priorities)
 
