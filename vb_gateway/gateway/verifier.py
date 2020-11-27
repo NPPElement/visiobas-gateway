@@ -211,7 +211,7 @@ class BACnetVerifier(Process):
                     properties[ObjProperty.statusFlags] = sf
 
         if properties[ObjProperty.objectType] not in not_round_types:
-            priorities = (round(prior) for prior in priorities)
+            priorities = (round(float(prior)) for prior in priorities)
 
         properties[ObjProperty.priorityArray] = tuple(priorities)
 

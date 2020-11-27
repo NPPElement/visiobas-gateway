@@ -261,7 +261,7 @@ class BACnetDevice(Thread):
                       if value is not None and str(value).strip()}
 
         except Exception as e:
-            self.__logger.error(f'RPM Error: {e}', exc_info=True)
+            self.__logger.warning(f'RPM Error: {e}', exc_info=True)
             raise ReadPropertyMultipleException(e)
         else:
             if values is not None:
