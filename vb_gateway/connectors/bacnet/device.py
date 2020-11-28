@@ -101,19 +101,15 @@ class BACnetDevice(Thread):
                 self.__logger.debug(f'{self} is active')
                 try:
                     t0 = time()
-                    self.__logger.info(f't0 = {t0}')
-
                     self.poll()  # poll all objects
-
                     t1 = time()
-                    self.__logger.info(f't1 = {t1}')
-                    # FIXME PROBLEM: IN PRACTISE, TIMEDELTA != t1-t0
                     time_delta = t1 - t0
 
                     self.__logger.info(
                         '\n==================================================\n'
-                        f'{self} ip:{self.address} polled '
-                        f'for {round(time_delta, ndigits=2)} seconds\n'
+                        f'{self} ip:{self.address} polled for:'
+                        f'{round(time_delta, ndigits=2)} sec.\n'
+                        f'Update period: {self.update_period} sec.\n'
                         f'Objects: {len(self)}\n'
                         f'Support RPM: {len(self.support_rpm)}\n'
                         f'Not support RPM: {len(self.not_support_rpm)}\n'
