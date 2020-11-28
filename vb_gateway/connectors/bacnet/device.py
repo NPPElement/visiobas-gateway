@@ -107,7 +107,7 @@ class BACnetDevice(Thread):
 
                     self.__logger.info(
                         '\n==================================================\n'
-                        f'{self} ip:{self.address} polled for:'
+                        f'{self} ip:{self.address} polled for: '
                         f'{round(time_delta, ndigits=2)} sec.\n'
                         f'Update period: {self.update_period} sec.\n'
                         f'Objects: {len(self)}\n'
@@ -276,6 +276,9 @@ class BACnetDevice(Thread):
                     continue
                 self.__logger.warning(f'sRPM Error: {e}')
                 raise e
+            except TypeError as e:
+                self.__logger.error(f'Type error: {e}')
+                raise e
             except Exception as e:
                 self.__logger.error(f'sRPM error: {e}', exc_info=True)
 
@@ -346,7 +349,7 @@ class BACnetDevice(Thread):
         except UnknownObjectError as e:
             self.__logger.error(f'Unknown object error: {e}')
             values = get_fault_obj_properties(reliability='unknown-object')
-        except ReadPropertyException as e:
+        except (ReadPropertyException, TypeError) as e:
             self.__logger.error(f'RP error: {e}')
             values = get_fault_obj_properties(reliability='rp-error')
 
