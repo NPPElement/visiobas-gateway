@@ -1,12 +1,11 @@
 import os
-from logging import getLogger, Formatter, Logger, DEBUG, INFO, WARNING
+from logging import getLogger, Formatter, Logger
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
 
 def get_file_logger(logger_name: str, file_size_bytes: int,
                     file_path: Path, log_format: str = None) -> Logger:
-
     log_level = os.environ.get('FILE_LOG_LEVEL', 'INFO')
 
     if log_format is None:
@@ -15,15 +14,15 @@ def get_file_logger(logger_name: str, file_size_bytes: int,
 
     logger = getLogger(logger_name)
     logger.setLevel(level=log_level)
+    logger.handlers = []  # Remove all handlers
 
-    if not logger.hasHandlers():
-        file_handler = RotatingFileHandler(filename=file_path,
-                                           mode='a',
-                                           maxBytes=file_size_bytes,
-                                           backupCount=1,
-                                           encoding='utf-8')
-        formatter = Formatter(log_format)
-        file_handler.setFormatter(formatter)
-        logger.addHandler(file_handler)
+    file_handler = RotatingFileHandler(filename=file_path,
+                                       mode='a',
+                                       maxBytes=file_size_bytes,
+                                       backupCount=1,
+                                       encoding='utf-8')
+    formatter = Formatter(log_format)
+    file_handler.setFormatter(formatter)
+    logger.addHandler(file_handler)
 
     return logger
