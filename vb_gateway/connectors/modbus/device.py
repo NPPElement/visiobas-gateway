@@ -61,8 +61,8 @@ class ModbusDevice(Thread):
 
     def run(self):
         while self.__polling:  # and self.__client.protocol is not None:
-            self.__logger.debug('Polling started')
             if hasattr(self.__client, 'is_socket_open') and self.__client.is_socket_open():
+                self.__logger.debug('Polling started')
                 try:
                     t0 = time()
                     self.poll(objects=list(self.objects))
@@ -85,6 +85,7 @@ class ModbusDevice(Thread):
                 except Exception as e:
                     self.__logger.error(f'Polling error: {e}', exc_info=True)
             else:  # client not connect
+                self.__logger.info('Connecting to client ...')
                 try:
                     self.__client, self.__available_functions = self.__get_client(
                         address=self.address,
@@ -105,46 +106,50 @@ class ModbusDevice(Thread):
         """ Initialize modbus client
         """
         try:
-            with ModbusTcpClient(host=address,
-                                 port=port,
-                                 retries=3,
-                                 retry_on_empty=True) as client:
-                available_functions = {
-                    1: client.read_coils,
-                    2: client.read_discrete_inputs,
-                    3: client.read_holding_registers,
-                    4: client.read_input_registers,
-                    5: client.write_coil,
-                    6: client.write_register,
-                    15: client.write_coils,
-                    16: client.write_registers,
-                }
-                return client, available_functions
+            client = ModbusTcpClient(host=address,
+                                     port=port,
+                                     retries=3,
+                                     retry_on_empty=True)
+            client.connect()
+            available_functions = {
+                1: client.read_coils,
+                2: client.read_discrete_inputs,
+                3: client.read_holding_registers,
+                4: client.read_input_registers,
+                5: client.write_coil,
+                6: client.write_register,
+                15: client.write_coils,
+                16: client.write_registers,
+            }
+            self.__logger.info(f'{self} client initialized')
 
         except Exception as e:
             self.__logger.error(f'Modbus client init error: {e}', exc_info=True)
             raise ConnectionError
-            # try:
-            #     client = ModbusTcpClient(host=address,
-            #                              port=port,
-            #                              retries=3,
-            #                              retry_on_empty=True)
-            #     client.connect()
-            # except ConnectionError as e:
-            #     self.__logger.error(f'Modbus client init error: {e}')
-            # else:
-            #     self.__logger.info(f'Modbus client successfully init')
-            #     available_functions = {
-            #         1: client.read_coils,
-            #         2: client.read_discrete_inputs,
-            #         3: client.read_holding_registers,
-            #         4: client.read_input_registers,
-            #         5: client.write_coil,
-            #         6: client.write_register,
-            #         15: client.write_coils,
-            #         16: client.write_registers,
-            #     }
-            #     return client, available_functions
+        else:
+            return client, available_functions
+
+    # try:
+    #     client = ModbusTcpClient(host=address,
+    #                              port=port,
+    #                              retries=3,
+    #                              retry_on_empty=True)
+    #     client.connect()
+    # except ConnectionError as e:
+    #     self.__logger.error(f'Modbus client init error: {e}')
+    # else:
+    #     self.__logger.info(f'Modbus client successfully init')
+    #     available_functions = {
+    #         1: client.read_coils,
+    #         2: client.read_discrete_inputs,
+    #         3: client.read_holding_registers,
+    #         4: client.read_input_registers,
+    #         5: client.write_coil,
+    #         6: client.write_register,
+    #         15: client.write_coils,
+    #         16: client.write_registers,
+    #     }
+    #     return client, available_functions
 
     def read(self, cmd_code: int, reg_address: int,
              quantity: int = 1, unit=0x01):
