@@ -132,7 +132,8 @@ class BACnetConnector(Thread, Connector):
 
                 except (InitializationError,
                         NetworkInterfaceException) as e:
-                    self.__logger.error(f'Network initialization error: {e}', exc_info=True)
+                    self.__logger.error(f'Network initialization error: {e}')
+                    sleep(10)  # delay before next try
                 else:
                     self.__logger.debug('BAC0 network initialized.')
         else:

@@ -1,4 +1,3 @@
-from logging import getLogger, Logger
 from multiprocessing import SimpleQueue
 from pathlib import Path
 from threading import Thread
@@ -168,7 +167,7 @@ class BACnetDevice(Thread):
         # TODO put to bacnet connector for ping checking
 
     def poll(self) -> None:
-        """ Poll all object from device and.
+        """ Poll all object from device.
             Send each object into verifier after answer.
             When all objects polled, send device_id into verifier as finish signal
         """
@@ -181,7 +180,7 @@ class BACnetDevice(Thread):
                 self.__logger.debug(f'{obj} values: {values}')
             except ReadPropertyMultipleException as e:
                 self.__logger.warning(f'{obj} rpm error: {e}\n'
-                                    f'{obj} Marking as not supporting RPM ...')
+                                      f'{obj} Marking as not supporting RPM ...')
                 self.not_support_rpm.add(obj)
                 # self.support_rpm.discard(obj)
 
