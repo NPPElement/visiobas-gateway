@@ -158,7 +158,7 @@ class BACnetDevice(Thread):
 
     def stop_polling(self) -> None:
         self.__polling = False
-        self.network.disconnect()
+        # self.network.disconnect()
         self.__logger.info('Stopping polling ...')
 
     def set_inactive(self) -> None:
