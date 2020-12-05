@@ -11,3 +11,4 @@ class ModbusObject(NamedTuple):
     address: int
     quantity: int
     func_read: int
+    scale: int

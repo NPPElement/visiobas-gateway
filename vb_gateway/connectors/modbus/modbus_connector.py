@@ -235,8 +235,7 @@ class ModbusConnector(Thread, Connector):
 
         return devices_intervals
 
-    def unpack_objects(self,
-                       objects: dict[int, dict[ObjType, list[dict]]]) -> \
+    def unpack_objects(self, objects: dict[int, dict[ObjType, list[dict]]]) -> \
             dict[int, set[ModbusObject]]:
         """ Makes BACnetObjects from device structure, received from the server
         """
@@ -251,12 +250,13 @@ class ModbusConnector(Thread, Connector):
 
                     property_list = obj[str(ObjProperty.propertyList.id)]
                     if property_list is not None:
-                        address, quantity, func_read = self.parse_modbus_properties(
+                        address, quantity, func_read, scale = self.parse_modbus_properties(
                             property_list=property_list)
 
                         modbus_obj = ModbusObject(type=obj_type, id=obj_id, name=obj_name,
                                                   address=address, quantity=quantity,
-                                                  func_read=func_read)
+                                                  func_read=func_read,
+                                                  scale=scale)
                         devices_objects[dev_id].add(modbus_obj)
                     else:
                         self.__logger.warning(f'{ObjProperty.propertyList} is: '
@@ -266,14 +266,15 @@ class ModbusConnector(Thread, Connector):
         return devices_objects
 
     @staticmethod
-    def parse_modbus_properties(property_list: str) -> tuple[int, int, int]:
+    def parse_modbus_properties(property_list: str) -> tuple[int, int, int, int]:
         try:
             modbus_properties = loads(property_list)['modbus']
 
             address = modbus_properties['address']
             quantity = modbus_properties['quantity']
             func_read = int(modbus_properties['functionRead'][-2:])
+            scale = modbus_properties.get('scale', 1)
         except KeyError as e:
             raise e
         else:
-            return address, quantity, func_read
+            return address, quantity, func_read, scale
