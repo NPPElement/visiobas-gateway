@@ -163,12 +163,20 @@ class ModbusDevice(Thread):
 
         else:
             if not data.isError():
-                self.__logger.debug(f'From register: {reg_address} read: {data.registers}')
                 if quantity == 1:
-                    return data.registers[0] / scale
+                    scaled = data.registers[0] / scale
+                    self.__logger.debug(
+                        f'From register: {reg_address} read: {data.registers} '
+                        f'scale: {scale} scaled: {scaled} ')
+                    return scaled
                 if quantity == 2:
-                    return self.concat_2int16_to_int32(reg1=data.registers[0],
-                                                       reg2=data.registers[1]) / scale
+                    int32 = self.concat_2int16_to_int32(reg1=data.registers[0],
+                                                        reg2=data.registers[1])
+                    scaled = int32 / scale
+                    self.__logger.debug(
+                        f'From register: {reg_address} read: {data.registers} '
+                        f'int32: {int32} scale: {scale} scaled: {scaled} ')
+                    return scaled
                 return data.registers
             else:
                 self.__logger.error(f'Received error response from {reg_address}')
