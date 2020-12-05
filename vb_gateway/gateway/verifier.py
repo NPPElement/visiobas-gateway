@@ -5,7 +5,6 @@ from pathlib import Path
 from bacpypes.basetypes import PriorityArray
 
 from vb_gateway.connectors.bacnet.obj_property import ObjProperty
-from vb_gateway.connectors.bacnet.obj_type import ObjType
 from vb_gateway.connectors.bacnet.status_flags import StatusFlags
 from vb_gateway.utility.utility import get_file_logger
 
@@ -52,7 +51,7 @@ class BACnetVerifier(Process):
                     # These are not properties. This is a signal that
                     # the polling of the device is over.
                     # This means that the collected information on the device with
-                    # that id can be sent to the http server.
+                    # that id must be sent to the http server.
                     device_id = protocols_data
                     self.__logger.debug('Received signal to send collected data about '
                                         f'Device[{device_id}] to HTTP server')
@@ -104,7 +103,7 @@ class BACnetVerifier(Process):
     # todo: make reliability Enum
     # todo: implement reliability concatenation
 
-    def verify(self, obj_properties: dict) -> dict:
+    def verify(self, obj_properties: dict[ObjProperty, ...]) -> dict[ObjProperty, ...]:
         verified_properties = {
             ObjProperty.objectType: obj_properties[ObjProperty.objectType],
             ObjProperty.objectIdentifier: obj_properties[ObjProperty.objectIdentifier],
@@ -132,27 +131,13 @@ class BACnetVerifier(Process):
         return verified_properties
 
     @staticmethod
-    def verify_pv(pv, properties: dict) -> None:
-        if pv != 'null' and pv != float('inf') and pv != float('-inf'):
-            if isinstance(pv, str) and pv.strip():
-                sf = properties.get(ObjProperty.statusFlags, StatusFlags([0, 0, 0, 0]))
-                sf.set(fault=True)
-                properties.update({
-                    ObjProperty.presentValue: 'null',
-                    ObjProperty.statusFlags: sf,
-                    ObjProperty.reliability: properties.get(ObjProperty.reliability,
-                                                            'empty')
-                    # reliability sets as 65 earlier in BACnetObject if obj is unknown
-                })
-            else:
-                if pv == 'active':
-                    pv = 1
-                elif pv == 'inactive':
-                    pv = 0
-                properties.update({
-                    ObjProperty.presentValue: pv
-                })
-                return None
+    def verify_pv(pv, properties: dict[ObjProperty, ...]) -> None:
+        # if (
+        #         pv != 'null' and
+        #         pv != float('inf') and
+        #         pv != float('-inf') and
+        #         not (isinstance(pv, str) and not pv.strip())
+        # ):  # Extra check for better readability.
 
         if pv == 'null':
             sf = properties.get(ObjProperty.statusFlags, StatusFlags([0, 0, 0, 0]))
@@ -163,8 +148,6 @@ class BACnetVerifier(Process):
                 ObjProperty.reliability: properties.get(ObjProperty.reliability, 7)
                 # reliability sets as 65 earlier in BACnetObject if obj is unknown
             })
-            return None
-
         elif pv == float('inf'):
             sf = properties.get(ObjProperty.statusFlags, StatusFlags([0, 0, 0, 0]))
             sf.set(fault=True)
@@ -173,8 +156,6 @@ class BACnetVerifier(Process):
                 ObjProperty.statusFlags: sf,
                 ObjProperty.reliability: 2
             })
-            return None
-
         elif pv == float('-inf'):
             sf = properties.get(ObjProperty.statusFlags, StatusFlags([0, 0, 0, 0]))
             sf.set(fault=True)
@@ -183,16 +164,29 @@ class BACnetVerifier(Process):
                 ObjProperty.statusFlags: sf,
                 ObjProperty.reliability: 3
             })
-            return None
+        elif isinstance(pv, str) and not pv.strip():
+            sf = properties.get(ObjProperty.statusFlags, StatusFlags([0, 0, 0, 0]))
+            sf.set(fault=True)
+            properties.update({
+                ObjProperty.presentValue: 'null',
+                ObjProperty.statusFlags: sf,
+                ObjProperty.reliability: properties.get(ObjProperty.reliability,
+                                                        'empty')
+                # reliability sets as 65 earlier in BACnetObject if obj is unknown
+            })
+        else:  # positive case
+            if pv == 'active':
+                pv = 1
+            elif pv == 'inactive':
+                pv = 0
+            properties.update({
+                ObjProperty.presentValue: pv
+            })
 
     @staticmethod
     def verify_pa(pa: PriorityArray, properties: dict) -> None:
         """ Extract priorityArray into a tuple
         """
-        not_round_types = {ObjType.ANALOG_VALUE,
-                           ObjType.ANALOG_OUTPUT,
-                           ObjType.ANALOG_INPUT}
-
         pa_size = pa.value[0]
         priorities = []
 

@@ -158,6 +158,7 @@ class BACnetDevice(Thread):
 
     def stop_polling(self) -> None:
         self.__polling = False
+        self.network.disconnect()
         self.__logger.info('Stopping polling ...')
 
     def set_inactive(self) -> None:
@@ -231,8 +232,8 @@ class BACnetDevice(Thread):
             # return self.__get_fault_obj_properties(reliability='rp-error')
         else:
             if response is not None:
-                if isinstance(response, str) and response.strip():
-                    raise ReadPropertyException
+                if isinstance(response, str) and not response.strip():
+                    raise ReadPropertyException('Response is empty')
                 return response
             raise ReadPropertyException('Response is None')
 
