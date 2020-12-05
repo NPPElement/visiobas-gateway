@@ -131,6 +131,19 @@ class ModbusDevice(Thread):
         else:
             return client, available_functions
 
+    @staticmethod
+    def concat_2int16_to_int32(reg1: int, reg2: int) -> int:
+        """ Concatenate two int16 into one int32
+
+            Example:
+        56352, 18669 -> 1101110000100000, 100100011101101 ->
+        1101110000100000100100011101101 -> 1846561005
+        """
+        assert isinstance(reg1, int)
+        assert isinstance(reg2, int)
+
+        return int(bin(reg1)[2:] + bin(reg2)[2:], base=2)
+
     def read(self, cmd_code: int, reg_address: int,
              quantity: int = 1, unit=0x01):
         """ Read data from Modbus registers
@@ -153,6 +166,9 @@ class ModbusDevice(Thread):
                 self.__logger.debug(f'From register: {reg_address} read: {data.registers}')
                 if quantity == 1:
                     return data.registers[0]
+                if quantity == 2:
+                    return self.concat_2int16_to_int32(reg1=data.registers[0],
+                                                       reg2=data.registers[1])
                 return data.registers
             else:
                 self.__logger.error(f'Received error response from {reg_address}')

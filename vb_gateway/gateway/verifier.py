@@ -60,10 +60,12 @@ class BACnetVerifier(Process):
                 elif protocols_data and isinstance(protocols_data, dict):
                     # Received data about object from the BACnet/Modbus-Connectors
                     obj_properties = protocols_data
-                    self.__logger.debug(f'Received properties: {obj_properties}')
 
                     device_id = obj_properties.pop(ObjProperty.deviceId)
                     obj_name = obj_properties.pop(ObjProperty.objectName)
+
+                    self.__logger.debug(f'For Device [{device_id}] '
+                                        f'received properties: {obj_properties}')
 
                     # verifying all properties of the object
                     verified_object_properties = self.verify(obj_properties=obj_properties)
