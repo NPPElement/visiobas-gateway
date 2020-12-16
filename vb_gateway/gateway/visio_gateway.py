@@ -1,7 +1,5 @@
-from json import load
 from logging import getLogger
 from multiprocessing import SimpleQueue
-from pathlib import Path
 from time import sleep
 
 from vb_gateway.connectors.bacnet.bacnet_connector import BACnetConnector
@@ -11,20 +9,10 @@ from vb_gateway.gateway.verifier import BACnetVerifier
 
 
 class VisioGateway:
-    def __init__(self, config_path: Path = None):
+    def __init__(self, config: dict):
 
         self.__logger = getLogger('VisioGateway')
-
-        if (config_path is None) or (not config_path.is_file()):
-            base_dir = Path(__file__).resolve().parent.parent
-            config_path = base_dir / 'config/gateway.json'
-        try:
-            with open(config_path, mode='r', encoding='utf-8') as cfg_file:
-                self.__config = load(fp=cfg_file)
-        except FileNotFoundError as e:
-            self.__logger.error(f'Not found config file: {e}')
-            raise e
-
+        self.__config = config
         self.__stopped = False
 
         # todo: refactor
@@ -32,29 +20,25 @@ class VisioGateway:
         self.__verifier_http_queue = SimpleQueue()
 
         self.http_client = VisioHTTPClient(gateway=self,
-                                           config=self.__config['http_client'],
+                                           config=self.__config['http'],
                                            verifier_queue=self.__verifier_http_queue)
         # self.__mqtt_broker = VisioMQTTBroker()
         sleep(1)
-
         # self.__notifier = None  # todo
         # self.__statistic = None  # todo
-
         self.__verifier = BACnetVerifier(protocols_queue=self.__protocol_verifier_queue,
                                          http_queue=self.__verifier_http_queue,
-                                         config=self.__config['bacnet_verifier']
-                                         )
-
+                                         config=self.__config['bacnet_verifier'])
         self.__connectors = {
             'bacnet': BACnetConnector(
                 gateway=self,
                 verifier_queue=self.__protocol_verifier_queue,
-                config=self.__config.get('bacnet_connector', None)),
+                config=self.__config['bacnet']),
             'modbus': ModbusConnector(
                 gateway=self,
                 verifier_queue=self.__protocol_verifier_queue,
-                config=self.__config.get('modbus_connector', None)
-            ),
+                config=self.__config['modbus']),
+            # 'xml': None,
             # 'modbus_rtu': None,
             # 'knx_ip': None,
             # 'mqtt': None
@@ -65,15 +49,13 @@ class VisioGateway:
         try:
             self.__start_connectors()
         except Exception as e:
-            self.__logger.error(f'Init error: {e}', exc_info=True)
+            self.__logger.error(f'Start connectors error: {e}', exc_info=True)
 
         while not self.__stopped:
             try:
                 sleep(60 * 60)
             except (KeyboardInterrupt, SystemExit):
                 self.__stop()
-            except Exception as e:
-                self.__logger.error(f'Error: {e}', exc_info=True)
         else:
             self.__logger.info(f'{self} stopped.')
 
@@ -81,10 +63,16 @@ class VisioGateway:
         return 'VisioGateway'
 
     def __stop(self):
+        self.__logger.warning('Stopping ...')
+
         self.__stop_connectors()
+
+        self.__verifier.close()
+        self.__verifier.join()
 
         self.http_client.stop()
         self.http_client.join()
+
         self.__stopped = True
 
     def __start_connectors(self) -> None:
@@ -94,7 +82,7 @@ class VisioGateway:
             try:
                 connector.open()
             except Exception as e:
-                self.__logger.error(f'{connector} opening error: {e}')
+                self.__logger.error(f'{connector} starting error: {e}')
 
     def __stop_connectors(self) -> None:
         """ Closes connections with all connectors

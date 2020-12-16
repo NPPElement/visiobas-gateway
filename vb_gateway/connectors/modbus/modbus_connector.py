@@ -198,12 +198,13 @@ class ModbusConnector(Thread, Connector):
 
     def get_devices_objects(self,
                             devices_id: tuple[int],
-                            obj_types: tuple[ObjType, ...]) -> dict[
-        int, dict[ObjType, list[dict]]]:
+                            obj_types: tuple[ObjType, ...]
+                            ) -> dict[int, dict[ObjType, list[dict]]]:
 
-        devices_objs = asyncio.run(
+        devices_objs = asyncio.run_coroutine_threadsafe(
             self.__gateway.http_client.rq_devices_objects(devices_id=devices_id,
-                                                          obj_types=obj_types))
+                                                          obj_types=obj_types),
+            loop=self.__gateway.http_client.loop).result()
         return devices_objs
 
     def get_devices_update_interval(self, devices_id: tuple[int],
@@ -211,10 +212,11 @@ class ModbusConnector(Thread, Connector):
         """ Receive update intervals for devices via http client
         """
 
-        device_objs = asyncio.run(self.__gateway.http_client.rq_devices_objects(
-            devices_id=devices_id,
-            obj_types=(ObjType.DEVICE,)
-        ))
+        device_objs = asyncio.run_coroutine_threadsafe(
+            self.__gateway.http_client.rq_devices_objects(
+                devices_id=devices_id,
+                obj_types=(ObjType.DEVICE,)),
+            self.__gateway.http_client.loop).result()
         devices_intervals = {}
 
         # Extract update_interval from server's response

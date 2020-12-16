@@ -6,3 +6,4 @@ vb_gateway/*.log*
 *.DS_Store
 .DS_Store
 *address_cache
+vb_gateway/utility/for_test.py

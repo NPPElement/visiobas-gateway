@@ -75,6 +75,7 @@ class BACnetConnector(Thread, Connector):
             base_dir = Path(__file__).resolve().parent.parent.parent
             address_cache_path = base_dir / 'connectors/bacnet/address_cache'
             self.__address_cache = read_address_cache(address_cache_path=address_cache_path)
+            self.__logger.debug('ADDR CAHCE READ')
 
             if len(self.__polling_devices) > 0:
                 # Check irrelevant devices. Stop them, if found
@@ -86,6 +87,7 @@ class BACnetConnector(Thread, Connector):
             if self.__network:  # IF HAVING INITIALIZED NETWORK
                 try:  # Requesting objects and their types from the server
                     # FIXME: move to client?
+                    self.__logger.debug('TRY GETTINg OBJS')
                     devices_objects = self.get_devices_objects(
                         devices_id=tuple(self.__address_cache.keys()),
                         obj_types=self.__object_types_to_request)
@@ -218,20 +220,29 @@ class BACnetConnector(Thread, Connector):
                             obj_types: tuple) -> dict[int, dict[ObjType, list[dict]]]:
         """ Requests objects for modbus connector from server via http client
         """
-        devices_objs = asyncio.run(
+        self.__logger.warning('GETTING_DEVISES_OBJS')
+
+        future = asyncio.run_coroutine_threadsafe(
             self.__gateway.http_client.rq_devices_objects(devices_id=devices_id,
-                                                          obj_types=obj_types))
+                                                          obj_types=obj_types),
+            loop=self.__gateway.http_client.loop)
+        # devices_objs = self.__gateway.http_client.loop.run_until_complete(
+        #     self.__gateway.http_client.rq_devices_objects(devices_id=devices_id,
+        #                                                   obj_types=obj_types))
+        devices_objs = future.result(timeout=3)
         return devices_objs
 
     def get_devices_update_interval(self, devices_id: tuple[int],
                                     default_update_interval: int) -> dict[int, int]:
         """ Receive update intervals for devices via http client
         """
+        self.__logger.debug('GETTING UPD_INTERVALS')
 
-        device_objs = asyncio.run(self.__gateway.http_client.rq_devices_objects(
-            devices_id=devices_id,
-            obj_types=(ObjType.DEVICE,)
-        ))
+        device_objs = asyncio.run_coroutine_threadsafe(
+            self.__gateway.http_client.rq_devices_objects(
+                devices_id=devices_id,
+                obj_types=(ObjType.DEVICE,)),
+            loop=self.__gateway.http_client.loop).result(timeout=3)
         devices_intervals = {}
 
         # Extract update_interval from server's response

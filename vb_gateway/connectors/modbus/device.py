@@ -160,7 +160,6 @@ class ModbusDevice(Thread):
                 f'Read error from reg: {reg_address}, quantity: {quantity} : {e}',
                 exc_info=True)
             return 'null'
-
         else:
             if not data.isError():
                 if quantity == 1:
