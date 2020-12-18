@@ -14,11 +14,32 @@ services:
     #        max-size: 50m
     restart: always
     user: root
+    env_file:
+      - http_auth.env
+
     environment:
       - TZ=Europe/Moscow
       - PYTHONPATH=/
+
+      # Logging
       - LOG_LEVEL=INFO
       - FILE_LOG_LEVEL=INFO
+
+      # Address for request information via HTTP
+      - HTTP_GET_HOST=10.21.80.10
+
+      # Addresses to post information via HTTP. Delimiter: space (' ')
+      # Now uses HTTP_GET_HOST for post to same server
+      # - HTTP_POST_HOSTS='10.21.80.10'
+
+      - HTTP_PORT=8080
+
+      # Provide 'TRUE' or 'FALSE' for enable\disable sending data via protocol
+      - HTTP_ENABLE=TRUE
+      - MQTT_ENABLE=FALSE
+
+      - BACNET_DEFAULT_UPDATE_PERIOD=10
+      - MODBUS_DEFAULT_UPDATE_PERIOD=10
     volumes:
       - /opt/visiobas-gateway/vb_gateway:/vb_gateway
       #- /home/user/visiobas-gateway/vb_gateway:/vb_gateway

@@ -4,6 +4,8 @@ import os
 import sys
 
 from vb_gateway.gateway.visio_gateway import VisioGateway
+from vb_gateway.utility.for_test import get_test_cfg
+from vb_gateway.utility.utility import read_cfg_from_env
 
 LOGGER_FORMAT = '%(levelname)-8s [%(asctime)s] [%(threadName)s] %(name)s - ' \
                 '(%(filename)s).%(funcName)s(%(lineno)d): %(message)s'
@@ -11,12 +13,11 @@ LOGGER_FORMAT = '%(levelname)-8s [%(asctime)s] [%(threadName)s] %(name)s - ' \
 
 def main():
     # Setting the VisioGateway logging level
-    log_level = os.environ.get('LOG_LEVEL', 'INFO')
+    log_level = os.environ.get('LOG_LEVEL', 'DEBUG')
     logging.basicConfig(format=LOGGER_FORMAT,
                         level=log_level,
                         stream=sys.stdout)
-
-    # Disable BAC0 loggers
+    # Disable unused loggers
     loggers_to_disable = (
         'BAC0_Root.BAC0.scripts.Base.Base',
         'BAC0_Root.BAC0.scripts.Lite.Lite',
@@ -55,7 +56,10 @@ def main():
     # manual interface.
     # client.loop_forever()
 
-    VisioGateway()
+    # config = read_cfg_from_env()
+    config = get_test_cfg()
+
+    VisioGateway(config=config)
 
 
 if __name__ == '__main__':

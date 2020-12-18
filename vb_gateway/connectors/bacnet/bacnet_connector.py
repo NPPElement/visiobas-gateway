@@ -128,7 +128,8 @@ class BACnetConnector(Thread, Connector):
                 self.__logger.debug('Initializing BAC0 network ...')
                 try:
                     self.__network = BAC0.lite()
-                    BAC0.log_level('silence')  # fixme: no reaction - still having debug
+                    # BAC0.log_level('silence')  # no reaction - still having debug
+                    # disabling logger at start
 
                 except (InitializationError,
                         NetworkInterfaceException) as e:

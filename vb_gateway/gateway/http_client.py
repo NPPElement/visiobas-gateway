@@ -28,22 +28,18 @@ class VisioHTTPClient(Thread):
         self.__gateway = gateway
         self.__verifier_queue = verifier_queue
 
-        if isinstance(config, dict):
-            self.__config = config
-        else:
-            raise ValueError(f'Config for {self} not found.')
+        self.__config = config
 
-        self.__host = config['host-mirror']  # FIXME: prod
-        # self.__host = config['host3']  # FIXME: test
+        # fixme: Now must be same
+        self.__get_host: str = config['get_host']
+        # self.__post_hosts: list[str] = config['post_hosts']
         self.__port = config['port']
 
-        self.__verify = config['ssl_verify']
         self.__login = config['auth']['login']
-        self.__md5_pwd = config['auth']['pwd']
+        self.__password = config['auth']['password']
 
         # self.__session = None
         self.__connected = False
-        self.__stopped = False
 
         # getting this data after login
         self.__user_id = None
@@ -51,6 +47,7 @@ class VisioHTTPClient(Thread):
         self.__auth_user_id = None
 
         self.__logger.info(f'{self} starting ...')
+        self.__stopped = False
         self.start()
 
     def run(self) -> None:
@@ -93,7 +90,8 @@ class VisioHTTPClient(Thread):
 
     @property
     def __address(self) -> str:
-        return ':'.join((self.__host, str(self.__port)))
+        return f'http://{self.__get_host}:{str(self.__port)}'
+        # return ':'.join((self.__get_host, str(self.__port)))
 
     @property
     def __auth_headers(self) -> dict[str, str]:
@@ -107,7 +105,7 @@ class VisioHTTPClient(Thread):
         url = f'{self.__address}/auth/rest/login'
         data = {
             'login': self.__login,
-            'password': self.__md5_pwd
+            'password': self.__password
         }
 
         async with ClientSession() as session:
