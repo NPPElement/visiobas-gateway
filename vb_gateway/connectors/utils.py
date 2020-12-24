@@ -58,14 +58,7 @@ def read_address_cache(address_cache_path: Path) -> dict[int, str]:
                     str(int(addr3, base=16)),
                     str(int(addr4, base=16)))))
                 port = int(port1 + port2, base=16)
-
-                mac = mac.split(':')
-                address = '{}.{}.{}.{}:{}'.format(int(mac[0], base=16),
-                                                  int(mac[1], base=16),
-                                                  int(mac[2], base=16),
-                                                  int(mac[3], base=16),
-                                                  int(''.join((mac[4], mac[5])), base=16))
-                address_cache[device_id] = str(address) + str(port)
+                address_cache[device_id] = str(addr) + str(port)
             except ValueError:
                 continue
     return address_cache
