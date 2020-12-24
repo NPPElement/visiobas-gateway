@@ -1,12 +1,15 @@
 import asyncio
+from ipaddress import IPv4Interface, IPv4Address
 from json import loads
 from multiprocessing import SimpleQueue
 from pathlib import Path
 from threading import Thread
 from time import sleep
 
-import BAC0
+import netifaces
+from BAC0 import lite
 from BAC0.core.io.IOExceptions import InitializationError, NetworkInterfaceException
+from BAC0.scripts.Lite import Lite
 from aiohttp.web_exceptions import HTTPClientError, HTTPServerError
 
 from vb_gateway.connectors.bacnet.device import BACnetDevice
@@ -32,6 +35,19 @@ class BACnetConnector(Thread, Connector):
                                         file_path=log_file_path)
 
         self.__config = config
+
+        # If the BACnet devices are on different networks,
+        # dict with info about each interface
+        self.__interfaces = self.get_interfaces(interfaces=self.__config['interfaces']) if \
+            self.__config.get('interfaces', None) else None
+
+        # todo: init network only if we have device in this network
+        if self.__interfaces is not None:
+            self.__networks = self.get_networks(interfaces=self.__interfaces)
+        else:
+            self.__networks = lite()
+        self.__networks = None
+
         self.default_update_period = config.get('default_update_period', 10)
 
         self.setName(name=f'{self}-Thread')
@@ -44,16 +60,9 @@ class BACnetConnector(Thread, Connector):
         self.__stopped = False
 
         self.__object_types_to_request = (
-            ObjType.ANALOG_INPUT,
-            ObjType.ANALOG_OUTPUT,
-            ObjType.ANALOG_VALUE,
-
-            ObjType.BINARY_INPUT,
-            ObjType.BINARY_OUTPUT,
-            ObjType.BINARY_VALUE,
-
-            ObjType.MULTI_STATE_INPUT,
-            ObjType.MULTI_STATE_OUTPUT,
+            ObjType.ANALOG_INPUT, ObjType.ANALOG_OUTPUT, ObjType.ANALOG_VALUE,
+            ObjType.BINARY_INPUT, ObjType.BINARY_OUTPUT, ObjType.BINARY_VALUE,
+            ObjType.MULTI_STATE_INPUT, ObjType.MULTI_STATE_OUTPUT,
             ObjType.MULTI_STATE_VALUE,
         )
 
@@ -63,7 +72,50 @@ class BACnetConnector(Thread, Connector):
 
         self.__update_intervals = {}
 
-        self.__network = None
+    def get_interfaces(self, interfaces: list[str]) -> dict[str, dict]:
+        """ Inits networks for each network interface from config.
+        """
+        _interfaces = {}
+        for interface in interfaces:
+            try:
+                _interfaces[interface] = \
+                    netifaces.ifaddresses(interface)[netifaces.AF_INET][0]
+
+                addr_with_mask = IPv4Interface(
+                    '/'.join((_interfaces[interface]['addr'],
+                              _interfaces[interface]['netmask']))
+                )
+                addr, mask = str(addr_with_mask).split('/')
+
+                _interfaces[interface]['BAC0'] = lite(ip=addr, mask=mask)
+
+            except ValueError as e:
+                self.__logger.warning(f'Cannot create network for {interface}: {e}',
+                                      exc_info=True)
+            except Exception as e:
+                self.__logger.error(f'BAC0 Network error: {e}', exc_info=True)
+        return _interfaces
+
+    def get_networks(self, interfaces: dict[str, dict]) -> dict[str, Lite] or Lite:
+        """ Init BACnet networks"""
+
+        if self.__interfaces is not None:  # have several interfaces
+            _networks = {}
+            for interface, inter_data in interfaces.items():
+                try:
+                    _networks[interface] = lite(ip=inter_data['addr'],
+                                                mask=inter_data['netmask'])
+                except (InitializationError,
+                        NetworkInterfaceException) as e:
+                    self.__logger.warning(f'Cannot initialize BAC0 network: {e}')
+                except Exception as e:
+                    self.__logger.error(f'BAC0 network initialize error: {e}',
+                                        exc_info=True)
+                else:
+                    self.__logger.info(f'BAC0 Network for {interface} initialized.')
+            return _networks
+        else:  # have one interface
+            return lite()
 
     def __repr__(self):
         return 'BACnetConnector'
@@ -83,7 +135,7 @@ class BACnetConnector(Thread, Connector):
                 if irrelevant_devices_id:
                     self.__stop_devices(devices_id=irrelevant_devices_id)
 
-            if self.__network:  # IF HAVING INITIALIZED NETWORK
+            if self.__networks:  # IF HAVING INITIALIZED NETWORKS
                 try:  # Requesting objects and their types from the server
                     # FIXME: move to client?
                     devices_objects = self.get_devices_objects(
@@ -107,11 +159,8 @@ class BACnetConnector(Thread, Connector):
 
                         self.update_devices(devices=devices_objects,
                                             update_intervals=self.__update_intervals)
-                        del devices_objects
-
                     else:
                         self.__logger.error('No objects from server')
-                        del devices_objects
                         continue
 
                 except (HTTPServerError, HTTPClientError, OSError) as e:
@@ -119,18 +168,17 @@ class BACnetConnector(Thread, Connector):
                                         f'devices objects from the server: {e}')
                 except Exception as e:
                     self.__logger.error(f'Device update error: {e}', exc_info=True)
+                finally:
+                    del devices_objects
 
                 self.__logger.info('Sleeping 1h ..')
                 sleep(60 * 60)
                 # FIXME REPLACE TO threading.Timer? in ThreadPoolExecutor?
 
             else:  # IF NOT HAVE INITIALIZED BAC0 NETWORK
-                self.__logger.debug('Initializing BAC0 network ...')
+                self.__logger.info('Initializing BAC0 network ...')
                 try:
-                    self.__network = BAC0.lite()
-                    # BAC0.log_level('silence')  # no reaction - still having debug
-                    # disabling logger at start
-
+                    self.__networks = self.get_networks(interfaces=self.__interfaces)
                 except (InitializationError,
                         NetworkInterfaceException) as e:
                     self.__logger.error(f'Network initialization error: {e}')
@@ -138,8 +186,7 @@ class BACnetConnector(Thread, Connector):
                 else:
                     self.__logger.debug('BAC0 network initialized.')
         else:
-            self.__network.disconnect()
-            self.__logger.info('BAC0 Network disconnected.')
+            self.__close_bac0_networks()
             self.__logger.info(f'{self} stopped.')
 
     def open(self) -> None:
@@ -152,6 +199,15 @@ class BACnetConnector(Thread, Connector):
         self.__connected = False
 
         self.__stop_devices(devices_id=tuple(self.__polling_devices.keys()))
+
+    def __close_bac0_networks(self) -> None:
+        """ Close connections with BAC0 Networks"""
+        if isinstance(self.__networks, Lite):
+            self.__networks.disconnect()
+        elif self.__networks and isinstance(self.__networks, dict):
+            for network in self.__networks.values():
+                network.disconnect()
+        self.__logger.info('BAC0 Network(s) disconnected.')
 
     def update_devices(self, devices: dict[int, set[BACnetObject]],
                        update_intervals: dict[int, int]) -> None:
@@ -171,15 +227,38 @@ class BACnetConnector(Thread, Connector):
         """
         self.__logger.debug(f'Starting Device [{device_id}] ...')
         try:
+            # If have one interface
+            if self.__interfaces is None and isinstance(self.__networks, Lite):
+                network = self.__networks
+
+            # If have several interfaces
+            elif self.__interfaces and isinstance(self.__networks, dict):
+                addr, port = self.__address_cache[device_id].split(':')
+                addr = IPv4Address(addr)
+                for interface, int_prop in self.__interfaces.items():
+                    _interface = IPv4Interface('/'.join((int_prop['addr'],
+                                                         int_prop['netmask'])))
+                    if addr in _interface.network:
+                        network = self.__networks[interface]
+                        break
+                else:
+                    self.__logger.warning(f'Device [{device_id}] with address: '
+                                          f'{addr} is not in any interface')
+                    raise ValueError('Device [{device_id}] with address: '
+                                     f'{addr} is not in any interface')
+            else:
+                raise NotImplementedError(f'Unexpected situation: {self.__interfaces},'
+                                          f'{self.__networks}')
             self.__polling_devices[device_id] = BACnetDevice(
                 verifier_queue=self.__verifier_queue,
                 connector=self,
                 address=self.__address_cache[device_id],
                 device_id=device_id,
-                network=self.__network,
+                network=network,
                 objects=objects,
                 update_period=update_interval
             )
+
         except Exception as e:
             self.__logger.error(f'Device [{device_id}] '
                                 f'starting error: {e}', exc_info=True)

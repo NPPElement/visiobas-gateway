@@ -1,7 +1,7 @@
+from ipaddress import IPv4Address
 from pathlib import Path
 
 from vb_gateway.connectors.bacnet.obj_property import ObjProperty
-from vb_gateway.connectors.bacnet.status_flags import StatusFlags
 
 
 def get_fault_obj_properties(reliability: int or str,
@@ -49,15 +49,23 @@ def read_address_cache(address_cache_path: Path) -> dict[int, str]:
         if not trimmed.startswith(';') and trimmed:
             try:
                 device_id, mac, _, _, apdu = trimmed.split()
+                # In mac we have ip-address host:port in hex
+                device_id = int(device_id)
+                addr1, addr2, addr3, addr4, port1, port2 = mac.rsplit(':', maxsplit=5)
+                addr = IPv4Address('.'.join((
+                    str(int(addr1, base=16)),
+                    str(int(addr2, base=16)),
+                    str(int(addr3, base=16)),
+                    str(int(addr4, base=16)))))
+                port = int(port1 + port2, base=16)
+
+                mac = mac.split(':')
+                address = '{}.{}.{}.{}:{}'.format(int(mac[0], base=16),
+                                                  int(mac[1], base=16),
+                                                  int(mac[2], base=16),
+                                                  int(mac[3], base=16),
+                                                  int(''.join((mac[4], mac[5])), base=16))
+                address_cache[device_id] = str(address) + str(port)
             except ValueError:
                 continue
-            device_id = int(device_id)
-            # In mac we have ip-address host:port in hex
-            mac = mac.split(':')
-            address = '{}.{}.{}.{}:{}'.format(int(mac[0], base=16),
-                                              int(mac[1], base=16),
-                                              int(mac[2], base=16),
-                                              int(mac[3], base=16),
-                                              int(''.join((mac[4], mac[5])), base=16))
-            address_cache[device_id] = address
     return address_cache

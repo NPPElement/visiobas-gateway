@@ -27,7 +27,8 @@ def read_cfg_from_env() -> dict:
             },
             'bacnet': {
                 'default_update_period': int(
-                    os.environ.get('BACNET_DEFAULT_UPDATE_PERIOD', 10))
+                    os.environ.get('BACNET_DEFAULT_UPDATE_PERIOD', 10)),
+                'interfaces': os.environ.get('BACNET_INTERFACES', '').split()
             },
             'modbus': {
                 'default_update_period': int(

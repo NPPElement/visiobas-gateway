@@ -1,6 +1,5 @@
 import logging
 import os
-# import paho.mqtt.client as mqtt
 import sys
 
 from vb_gateway.gateway.visio_gateway import VisioGateway
