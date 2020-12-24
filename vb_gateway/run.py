@@ -3,7 +3,7 @@ import os
 import sys
 
 from vb_gateway.gateway.visio_gateway import VisioGateway
-from vb_gateway.utility.for_test import get_test_cfg
+# from vb_gateway.utility.for_test import get_test_cfg
 from vb_gateway.utility.utility import read_cfg_from_env
 
 LOGGER_FORMAT = '%(levelname)-8s [%(asctime)s] [%(threadName)s] %(name)s - ' \
@@ -55,8 +55,8 @@ def main():
     # manual interface.
     # client.loop_forever()
 
-    # config = read_cfg_from_env()
-    config = get_test_cfg()
+    config = read_cfg_from_env()
+    # config = get_test_cfg()
 
     VisioGateway(config=config)
 
