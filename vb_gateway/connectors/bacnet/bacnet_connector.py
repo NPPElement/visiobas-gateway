@@ -42,10 +42,10 @@ class BACnetConnector(Thread, Connector):
             self.__config.get('interfaces', None) else None
 
         # todo: init network only if we have device in this network
-        if self.__interfaces is not None:
-            self.__networks = self.get_networks(interfaces=self.__interfaces)
-        else:
-            self.__networks = lite()
+        # if self.__interfaces is not None:
+        #     self.__networks = self.get_networks(interfaces=self.__interfaces)
+        # else:
+        #     self.__networks = lite()
         self.__networks = None
 
         self.default_update_period = config.get('default_update_period', 10)
@@ -181,7 +181,7 @@ class BACnetConnector(Thread, Connector):
                     self.__networks = self.get_networks(interfaces=self.__interfaces)
                 except (InitializationError,
                         NetworkInterfaceException) as e:
-                    self.__logger.error(f'Network initialization error: {e}')
+                    self.__logger.error(f'Network initialization error: {e}', exc_info=True)
                     sleep(10)  # delay before next try
                 else:
                     self.__logger.debug('BAC0 network initialized.')
