@@ -152,8 +152,8 @@ class VisioHTTPClient(Thread):
             if get_host in post_hosts:
                 rq_tasks = [self.__rq_login(addr=self.get_url(host=host,
                                                               port=self.__port),
-                                            login=auth[host]['login'],
-                                            password=auth[host]['password'],
+                                            login=auth['login'],
+                                            password=auth['password'],
                                             session=session
                                             ) for host, auth in post_auth.items()]
 
@@ -225,9 +225,10 @@ class VisioHTTPClient(Thread):
         self.__logger.debug(f'Sending collected data about device [{device_id}]')
         url = f'{self.get_url(host=host, port=self.__port)}/vbas/gate/light/{device_id}'
 
-        async with session.post(url=url, data=data, headers={
-            self.get_auth_headers(auth_data=self.__post_auth[host])
-        }) as response:
+        async with session.post(
+                url=url, data=data,
+                headers=self.get_auth_headers(auth_data=self.__post_auth[host])
+        ) as response:
             self.__logger.debug(f'POST: {url}\n'
                                 f'Body: {data}')
             data = await self.__extract_response_data(response=response)
