@@ -87,10 +87,9 @@ class VisioHTTPClient(Thread):
                 try:
                     # asyncio.run(self.__rq_login())
                     asyncio.run(self.login(
-                        get_addr=self.get_url(host=self.__get_host, port=self.__port),
+                        get_host=self.__get_host,
                         get_auth=self.__get_auth,
-                        post_addrs=[self.get_url(host=host, port=self.__port) for
-                                    host in self.__post_hosts],
+                        post_hosts=self.__post_hosts,
                         post_auth=self.__post_auth
                     ))
                 except ClientConnectorError as e:
@@ -145,12 +144,12 @@ class VisioHTTPClient(Thread):
     #     }
     #     return headers
 
-    async def login(self, get_addr: str, get_auth: dict,
-                    post_addrs: list[str], post_auth: dict[str, dict]) -> None:
+    async def login(self, get_host: str, get_auth: dict,
+                    post_hosts: list[str], post_auth: dict[str, dict]) -> None:
         """ Perform async auth to several servers
         Update auth dicts."""
         async with ClientSession() as session:
-            if get_addr in post_addrs:
+            if get_host in post_hosts:
                 rq_tasks = [self.__rq_login(addr=self.get_url(host=host,
                                                               port=self.__port),
                                             login=auth[host]['login'],
@@ -158,7 +157,7 @@ class VisioHTTPClient(Thread):
                                             session=session
                                             ) for host, auth in post_auth.items()]
 
-                for post_addr, auth_resp in zip(post_addrs,
+                for post_addr, auth_resp in zip(post_hosts,
                                                 await asyncio.gather(*rq_tasks)):
                     try:
                         post_auth[post_addr]['user_id'] = auth_resp[0]
@@ -166,9 +165,9 @@ class VisioHTTPClient(Thread):
                         post_auth[post_addr]['auth_user_id'] = auth_resp[2]
                     except LookupError as e:
                         self.__logger.warning(f'Auth error: {e}', exc_info=True)
-                get_auth['user_id'] = post_auth[get_addr]['user_id']
-                get_auth['bearer_token'] = post_auth[get_addr]['bearer_token']
-                get_auth['auth_user_id'] = post_auth[get_addr]['auth_user_id']
+                get_auth['user_id'] = post_auth[get_host]['user_id']
+                get_auth['bearer_token'] = post_auth[get_host]['bearer_token']
+                get_auth['auth_user_id'] = post_auth[get_host]['auth_user_id']
             else:
                 raise NotImplementedError  # todo
 
