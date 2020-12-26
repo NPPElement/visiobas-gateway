@@ -117,7 +117,7 @@ class BACnetDevice(Thread):
                     self.__logger.info(
                         f'Timedelta = {time_delta}, upd_period = {self.update_period}')
                     if time_delta < self.update_period:
-                        waiting_time = self.update_period - time_delta
+                        waiting_time = (self.update_period - time_delta) * 0.8
                         self.__logger.info(
                             f'{self} Sleeping {round(waiting_time, ndigits=2)} sec ...')
                         sleep(waiting_time)

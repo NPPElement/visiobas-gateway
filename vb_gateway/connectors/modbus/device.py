@@ -78,7 +78,7 @@ class ModbusDevice(Thread):
                         '==================================================')
 
                     if time_delta < self.update_period:
-                        waiting_time = self.update_period - time_delta
+                        waiting_time = (self.update_period - time_delta) * 0.8
                         self.__logger.debug(
                             f'{self} Sleeping {round(waiting_time, ndigits=2)} sec ...')
                         sleep(waiting_time)
