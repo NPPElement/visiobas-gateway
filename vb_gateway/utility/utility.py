@@ -12,7 +12,7 @@ def read_cfg_from_env() -> dict:
         config = {
             'http': {
                 'get_host': os.environ['HTTP_GET_HOST'],
-                # 'post_hosts': os.environ['HTTP_POST_HOSTS'].split(), # todo
+                'post_hosts': os.environ.get('HTTP_POST_HOSTS', '').split(),  # todo
                 'port': int(os.environ.get('HTTP_PORT', 8080)),
                 'auth': {
                     'login': os.environ['HTTP_AUTH_LOGIN'],

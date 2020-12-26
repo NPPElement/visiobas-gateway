@@ -32,7 +32,7 @@ class VisioHTTPClient(Thread):
 
         # fixme: Now must be same
         self.__get_host: str = config['get_host']
-        # self.__post_hosts: list[str] = config['post_hosts']
+        self.__post_hosts: list[str] = config['post_hosts']
         self.__port = config['port']
 
         self.__login = config['auth']['login']

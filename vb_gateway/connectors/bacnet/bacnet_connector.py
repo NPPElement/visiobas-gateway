@@ -36,6 +36,8 @@ class BACnetConnector(Thread, Connector):
 
         self.__config = config
 
+
+
         # If the BACnet devices are on different networks,
         # dict with info about each interface
         self.__interfaces = self.get_interfaces(interfaces=self.__config['interfaces']) if \
@@ -113,6 +115,8 @@ class BACnetConnector(Thread, Connector):
                                         exc_info=True)
                 else:
                     self.__logger.info(f'BAC0 Network for {interface} initialized.')
+            if not _networks:
+                return lite()
             return _networks
         else:  # have one interface
             return lite()
@@ -228,7 +232,10 @@ class BACnetConnector(Thread, Connector):
         self.__logger.debug(f'Starting Device [{device_id}] ...')
         try:
             # If have one interface
-            if self.__interfaces is None and isinstance(self.__networks, Lite):
+            # if self.__interfaces is None and isinstance(self.__networks, Lite):
+            #     network = self.__networks
+
+            if isinstance(self.__networks, Lite):
                 network = self.__networks
 
             # If have several interfaces
@@ -239,7 +246,7 @@ class BACnetConnector(Thread, Connector):
                     _interface = IPv4Interface('/'.join((int_prop['addr'],
                                                          int_prop['netmask'])))
                     if addr in _interface.network:
-                        network = self.__networks[interface]
+                        network = self.__networks[interface]['BAC0']
                         break
                 else:
                     self.__logger.warning(f'Device [{device_id}] with address: '

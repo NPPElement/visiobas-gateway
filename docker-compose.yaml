@@ -30,7 +30,7 @@ services:
 
       # Addresses to post information via HTTP. Delimiter: space (' ').
       # Now uses HTTP_GET_HOST for post to same server
-      # - HTTP_POST_HOSTS='10.21.80.10'
+      - HTTP_POST_HOSTS='10.21.80.10 nppelement.com'
 
       - HTTP_PORT=8080
 
@@ -49,6 +49,9 @@ services:
       - /opt/visiobas-gateway/vb_gateway:/vb_gateway
       #- /home/user/visiobas-gateway/vb_gateway:/vb_gateway
     command: python /vb_gateway/run.py
+    networks:
+      - eno1.171
+      - eno2.176
     ports:
       - 502:502
       - 1883:1883
@@ -70,7 +73,10 @@ services:
       - 47821:47821
       - 47822:47822
       - 47823:47823
-
+      -
+networks:
+  - eno1.171
+  - eno2.176
 #  vb_mqtt:
 #    build:
 #      context: ./vb_mqtt

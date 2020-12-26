@@ -48,7 +48,7 @@ def read_address_cache(address_cache_path: Path) -> dict[int, str]:
         trimmed = line.strip()
         if not trimmed.startswith(';') and trimmed:
             try:
-                device_id, mac, _, _, apdu = trimmed.split()
+                device_id, mac, _, _, apdu = trimmed.split(maxsplit=4)
                 # In mac we have ip-address host:port in hex
                 device_id = int(device_id)
                 addr1, addr2, addr3, addr4, port1, port2 = mac.rsplit(':', maxsplit=5)
