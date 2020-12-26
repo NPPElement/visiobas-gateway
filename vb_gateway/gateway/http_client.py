@@ -32,19 +32,35 @@ class VisioHTTPClient(Thread):
 
         # fixme: Now must be same
         self.__get_host: str = config['get_host']
+        self.__get_auth = {
+            'login': config['auth']['login'],
+            'password': config['auth']['password'],
+            'user_id': '',
+            'bearer_token': '',
+            'auth_user_id': ''
+        }
         self.__post_hosts: list[str] = config['post_hosts']
+        # fixme: implement different auth data
+        self.__post_auth = {
+            host: {
+                'login': config['auth']['login'],
+                'password': config['auth']['password'],
+                'user_id': '',
+                'bearer_token': '',
+                'auth_user_id': ''
+            } for host in self.__post_hosts}
         self.__port = config['port']
 
-        self.__login = config['auth']['login']
-        self.__password = config['auth']['password']
+        # self.__login = config['auth']['login']
+        # self.__password = config['auth']['password']
 
         # self.__session = None
         self.__connected = False
 
         # getting this data after login
-        self.__user_id = None
-        self.__bearer_token = None
-        self.__auth_user_id = None
+        # self.__user_id = None
+        # self.__bearer_token = None
+        # self.__auth_user_id = None
 
         self.__logger.info(f'{self} starting ...')
         self.__stopped = False
@@ -61,13 +77,22 @@ class VisioHTTPClient(Thread):
                     device_id, device_str = self.__verifier_queue.get()
                     self.__logger.debug('Received data from BACnetVerifier: '
                                         f'Device[{device_id}]')
-                    asyncio.run(self.__rq_post_device(device_id=device_id, data=device_str))
+                    # todo: refactor - use one loop
+                    #   change to fire and forget
+                    asyncio.run(self.rq_post_device(device_id=device_id, data=device_str))
                 except Exception as e:
                     self.__logger.error(f"Receive'n'post device error: {e}", exc_info=True)
 
             else:  # IF NOT AUTHORIZED
                 try:
-                    asyncio.run(self.__rq_login())
+                    # asyncio.run(self.__rq_login())
+                    asyncio.run(self.login(
+                        get_addr=self.get_url(host=self.__get_host, port=self.__port),
+                        get_auth=self.__get_auth,
+                        post_addrs=[self.get_url(host=host, port=self.__port) for
+                                    host in self.__post_hosts],
+                        post_auth=self.__post_auth
+                    ))
                 except ClientConnectorError as e:
                     self.__logger.error(f'Login error: {e}'
                                         'Sleeping 30 sec ...')  # , exc_info=True)
@@ -88,38 +113,85 @@ class VisioHTTPClient(Thread):
         self.__stopped = True
         self.__logger.info(f'{self} was stopped.')
 
-    @property
-    def __address(self) -> str:
-        return f'http://{self.__get_host}:{str(self.__port)}'
-        # return ':'.join((self.__get_host, str(self.__port)))
+    # @property
+    # def __address(self) -> str:
+    #     return f'http://{self.__get_host}:{str(self.__port)}'
+    #     # return ':'.join((self.__get_host, str(self.__port)))
 
-    @property
-    def __auth_headers(self) -> dict[str, str]:
+    # @property
+    # def get_url(self) -> str:
+    #     return 'http://' + ':'.join((self.__get_host, str(self.__port)))
+
+    # @property
+    # def post_urls(self) -> list[str, ...]:
+    #     return ['http://' + ':'.join((post_host, self.__port))
+    #             for post_host in self.__post_hosts]
+
+    @staticmethod
+    def get_url(host: str, port: int = 8080) -> str:
+        return 'http://' + ':'.join((host, str(port)))
+
+    @staticmethod
+    def get_auth_headers(auth_data: dict) -> dict[str, str]:
         headers = {
-            'Authorization': f'Bearer {self.__bearer_token}'
+            'Authorization': f"Bearer {auth_data['bearer_token']}"
         }
         return headers
 
-    async def __rq_login(self) -> None:
-        self.__logger.info('Logging in to the server ...')
-        url = f'{self.__address}/auth/rest/login'
-        data = {
-            'login': self.__login,
-            'password': self.__password
-        }
+    # @property
+    # def __auth_headers(self) -> dict[str, str]:
+    #     headers = {
+    #         'Authorization': f'Bearer {self.__bearer_token}'
+    #     }
+    #     return headers
 
+    async def login(self, get_addr: str, get_auth: dict,
+                    post_addrs: list[str], post_auth: dict[str, dict]) -> None:
+        """ Perform async auth to several servers
+        Update auth dicts."""
         async with ClientSession() as session:
-            async with session.post(url=url, json=data) as response:
-                self.__logger.debug(f'POST: {url}')
-                data = await self.__extract_response_data(response=response)
-                try:
-                    self.__bearer_token = data['token']
-                    self.__user_id = data['user_id']
-                    self.__auth_user_id = data['auth_user_id']
-                except TypeError as e:
-                    self.__logger.error(f'Login Error! Please check login/password: {e}')
-                # except OSError as e:
-                #     self.__logger.error(f'Login Error! Please check server availability: {e}')
+            if get_addr in post_addrs:
+                rq_tasks = [self.__rq_login(addr=self.get_url(host=host,
+                                                              port=self.__port),
+                                            login=auth[host]['login'],
+                                            password=auth[host]['password'],
+                                            session=session
+                                            ) for host, auth in post_auth.items()]
+
+                for post_addr, auth_resp in zip(post_addrs,
+                                                await asyncio.gather(*rq_tasks)):
+                    try:
+                        post_auth[post_addr]['user_id'] = auth_resp[0]
+                        post_auth[post_addr]['bearer_token'] = auth_resp[1]
+                        post_auth[post_addr]['auth_user_id'] = auth_resp[2]
+                    except LookupError as e:
+                        self.__logger.warning(f'Auth error: {e}', exc_info=True)
+                get_auth['user_id'] = post_auth[get_addr]['user_id']
+                get_auth['bearer_token'] = post_auth[get_addr]['bearer_token']
+                get_auth['auth_user_id'] = post_auth[get_addr]['auth_user_id']
+            else:
+                raise NotImplementedError  # todo
+
+    async def __rq_login(self, addr: str, login: str, password: str,
+                         session: ClientSession) -> tuple[str, str, str]:
+        self.__logger.info('Logging in to the server ...')
+        url = f'{addr}/auth/rest/login'
+        data = {
+            'login': login,
+            'password': password
+        }
+        async with session.post(url=url, json=data) as response:
+            self.__logger.debug(f'POST: {url}')
+            data = await self.__extract_response_data(response=response)
+            try:
+                user_id = data['user_id']
+                bearer_token = data['token']
+                auth_user_id = data['auth_user_id']
+                return user_id, bearer_token, auth_user_id
+            except TypeError as e:
+                self.__logger.error(f'Login Error! Please check login/password: {e}')
+            # except OSError as e:
+            #     self.__logger.error(f'Login Error! Please check server availability: {e}')
 
     # async def __rq_devices(self) -> dict:
     #     """
@@ -136,28 +208,33 @@ class VisioHTTPClient(Thread):
     #             data = await self.__extract_response_data(response=response)
     #             return data
 
-    async def __rq_post_device(self, device_id: int, data) -> list:
-        """
-        Sends the polled information about the device to the server.
+    async def rq_post_device(self, device_id: int, data):
+        """ Send data to several servers async"""
+        async with ClientSession() as session:
+            rq_tasks = [self.__rq_post_device(host=host, device_id=device_id, data=data,
+                                              session=session) for host in
+                        self.__post_hosts]
+            await asyncio.gather(*rq_tasks)
+
+    async def __rq_post_device(self, host: str, device_id: int, data,
+                               session: ClientSession) -> None:
+        """ Sends the polled information about the device to the server.
         Now only inform about rejected devices.
 
-        :param device_id:
-        :param data:
-        :return: list of objects id, rejected by server side.
+        # :return: list of objects id, rejected by server side.
         """
-
         self.__logger.debug(f'Sending collected data about device [{device_id}]')
+        url = f'{self.get_url(host=host, port=self.__port)}/vbas/gate/light/{device_id}'
 
-        url = f'{self.__address}/vbas/gate/light/{device_id}'
-
-        async with ClientSession(headers=self.__auth_headers) as session:
-            async with session.post(url=url, data=data) as response:
-                self.__logger.debug(f'POST: {url}\n'
-                                    f'Body: {data}')
-                data = await self.__extract_response_data(response=response)
-                await self.__check_rejected(device_id=device_id,
-                                            data=data)
-                return data
+        async with session.post(url=url, data=data, headers={
+            self.get_auth_headers(auth_data=self.__post_auth[host])
+        }) as response:
+            self.__logger.debug(f'POST: {url}\n'
+                                f'Body: {data}')
+            data = await self.__extract_response_data(response=response)
+            await self.__check_rejected(device_id=device_id,
+                                        data=data)
+            # return data
 
     async def __check_rejected(self, device_id: int, data: list) -> list:
         """
@@ -190,9 +267,11 @@ class VisioHTTPClient(Thread):
         self.__logger.debug(f"Requesting information about device [{device_id}], "
                             f"object_type: {object_type.name_dashed} from the server ...")
 
-        url = f'{self.__address}/vbas/gate/get/{device_id}/{object_type.name_dashed}'
+        url = (f'{self.get_url(host=self.__get_host, port=self.__port)}/'
+               f'vbas/gate/get/{device_id}/{object_type.name_dashed}')
 
-        async with ClientSession(headers=self.__auth_headers) as session:
+        async with ClientSession(
+                headers=self.get_auth_headers(auth_data=self.__get_auth)) as session:
             async with session.get(url=url) as response:
                 self.__logger.debug(f'GET: {url}')
                 data = await self.__extract_response_data(response=response)
