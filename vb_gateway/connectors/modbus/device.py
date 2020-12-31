@@ -6,7 +6,8 @@ from time import time, sleep
 from pymodbus.client.sync import ModbusTcpClient
 
 from vb_gateway.connectors.bacnet.obj_property import ObjProperty
-from vb_gateway.connectors.modbus.object import ModbusObject
+from vb_gateway.connectors.modbus.object import ModbusObject, VisioModbusProperties
+from vb_gateway.connectors.modbus.utils import cast_to_bit, cast_2_registers
 from vb_gateway.utility.utility import get_file_logger
 
 
@@ -131,21 +132,8 @@ class ModbusDevice(Thread):
         else:
             return client, available_functions
 
-    @staticmethod
-    def concat_2int16_to_int32(reg1: int, reg2: int) -> int:
-        """ Concatenate two int16 into one int32
-
-            Example:
-        56352, 18669 -> 1101110000100000, 100100011101101 ->
-        1101110000100000100100011101101 -> 1846561005
-        """
-        assert isinstance(reg1, int)
-        assert isinstance(reg2, int)
-
-        return int(bin(reg1)[2:] + bin(reg2)[2:], base=2)
-
     def read(self, cmd_code: int, reg_address: int,
-             quantity: int = 1, unit=0x01, scale: int = 1):
+             quantity: int, unit=0x01) -> list[int] or None:
         """ Read data from Modbus registers
         """
         if cmd_code not in {1, 2, 3, 4}:
@@ -159,28 +147,48 @@ class ModbusDevice(Thread):
             self.__logger.error(
                 f'Read error from reg: {reg_address}, quantity: {quantity} : {e}',
                 exc_info=True)
-            return 'null'
+            return None
 
         else:
             if not data.isError():
-                if quantity == 1:
-                    scaled = data.registers[0] / scale
-                    self.__logger.debug(
-                        f'From register: {reg_address} read: {data.registers} '
-                        f'scale: {scale} scaled: {scaled} ')
-                    return scaled
-                if quantity == 2:
-                    int32 = self.concat_2int16_to_int32(reg1=data.registers[0],
-                                                        reg2=data.registers[1])
-                    scaled = int32 / scale
-                    self.__logger.debug(
-                        f'From register: {reg_address} read: {data.registers} '
-                        f'int32: {int32} scale: {scale} scaled: {scaled} ')
-                    return scaled
+                self.__logger.debug(f'From register: {reg_address} read: {data.registers}')
                 return data.registers
             else:
                 self.__logger.error(f'Received error response from {reg_address}')
-                return 'null'
+                return None
+
+    def process_registers(self, registers: list[int],
+                          quantity: int,
+                          properties: VisioModbusProperties) -> float or str:
+        """ Perform casting to desired type and scale"""
+        if registers is None:
+            return 'null'
+
+        if properties.data_type == 'BOOL' and quantity == 1:  # bit
+            # TODO: Group bits into one request for BOOL
+            value = cast_to_bit(register=registers, bit=properties.bit)
+        elif quantity == 1:  # expected only: int16 | uint16
+            value = registers[0]
+        elif properties.data_type == 'FLOAT' and quantity == 2:  # float32
+            value = round(
+                cast_2_registers(registers=registers,
+                                 byteorder='>', wordorder='<',
+                                 type_name=properties.data_type),
+                ndigits=6)
+        elif (properties.data_type == 'INT' or  # int32 | uint32
+              properties.data_type == 'UINT') and quantity == 2:
+            value = cast_2_registers(registers=registers,
+                                     byteorder='<', wordorder='>',
+                                     type_name=properties.data_type)
+        else:
+            raise NotImplementedError('What to do with that type and quantity '
+                                      'not yet defined')
+        scaled = value / properties.scale
+
+        self.__logger.debug(
+            f'Registers: {registers} Casted: {value} '
+            f'scale: {properties.scale} scaled: {scaled} ')
+        return scaled
 
     def poll(self, objects: list[ModbusObject]) -> None:
         """ Read objects from registers in Modbus Device.
@@ -192,11 +200,14 @@ class ModbusDevice(Thread):
             self.__convert_to_bacnet_properties(
                 device_id=self.id,
                 obj=obj,
-                value=self.read(
-                    cmd_code=obj.func_read,
-                    reg_address=obj.address,
+                value=self.process_registers(
+                    registers=self.read(
+                        cmd_code=obj.func_read,
+                        reg_address=obj.address,
+                        quantity=obj.quantity),
                     quantity=obj.quantity,
-                    scale=obj.scale))) for obj in objects]
+                    properties=obj.properties)
+            )) for obj in objects]
 
         self.__put_device_end_to_verifier()
 

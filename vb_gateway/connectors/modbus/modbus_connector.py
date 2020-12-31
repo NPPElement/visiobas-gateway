@@ -11,7 +11,7 @@ from vb_gateway.connectors.bacnet.obj_property import ObjProperty
 from vb_gateway.connectors.bacnet.obj_type import ObjType
 from vb_gateway.connectors.base_connector import Connector
 from vb_gateway.connectors.modbus.device import ModbusDevice
-from vb_gateway.connectors.modbus.object import ModbusObject
+from vb_gateway.connectors.modbus.object import ModbusObject, VisioModbusProperties
 from vb_gateway.connectors.utils import read_address_cache
 from vb_gateway.utility.utility import get_file_logger
 
@@ -80,7 +80,7 @@ class ModbusConnector(Thread, Connector):
                 self.__stop_devices(devices_id=irrelevant_devices_id)
 
             try:  # Requesting objects and their types from the server
-                # FIXME: move to client?
+                # FIXME: move to client
                 devices_objects = self.get_devices_objects(
                     devices_id=tuple(self.__address_cache.keys()),
                     obj_types=self.__object_types_to_request)
@@ -250,13 +250,19 @@ class ModbusConnector(Thread, Connector):
 
                     property_list = obj[str(ObjProperty.propertyList.id)]
                     if property_list is not None:
-                        address, quantity, func_read, scale = self.parse_modbus_properties(
+                        address, quantity, func_read, props = self.extract_properties(
                             property_list=property_list)
 
-                        modbus_obj = ModbusObject(type=obj_type, id=obj_id, name=obj_name,
-                                                  address=address, quantity=quantity,
+                        modbus_obj = ModbusObject(type=obj_type,
+                                                  id=obj_id,
+                                                  name=obj_name,
+
+                                                  address=address,
+                                                  quantity=quantity,
                                                   func_read=func_read,
-                                                  scale=scale)
+
+                                                  properties=props
+                                                  )
                         devices_objects[dev_id].add(modbus_obj)
                     else:
                         self.__logger.warning(f'{ObjProperty.propertyList} is: '
@@ -266,15 +272,29 @@ class ModbusConnector(Thread, Connector):
         return devices_objects
 
     @staticmethod
-    def parse_modbus_properties(property_list: str) -> tuple[int, int, int, int]:
+    def extract_properties(property_list: str
+                           ) -> tuple[int, int, int, VisioModbusProperties]:
         try:
             modbus_properties = loads(property_list)['modbus']
 
-            address = modbus_properties['address']
-            quantity = modbus_properties['quantity']
+            address = int(modbus_properties['address'])
+            quantity = int(modbus_properties['quantity'])
             func_read = int(modbus_properties['functionRead'][-2:])
-            scale = modbus_properties.get('scale', 1)
+
+            scale = int(modbus_properties.get('scale', 1))
+            data_type = modbus_properties['dataType']
+            data_length = int(modbus_properties['dataLength'])
+            byte_order = '<' if quantity == 1 else '>'
+
+            bit = int(modbus_properties['bit']) if data_type == 'BOOL' else None,
+
+            properties = VisioModbusProperties(scale=scale,
+                                               data_type=data_type,
+                                               data_length=data_length,
+                                               byte_order=byte_order,
+                                               bit=bit
+                                               )
         except KeyError as e:
             raise e
         else:
-            return address, quantity, func_read, scale
+            return address, quantity, func_read, properties

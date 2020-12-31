@@ -6,8 +6,8 @@ from vb_gateway.gateway.visio_gateway import VisioGateway
 # from vb_gateway.utility.for_test import get_test_cfg
 from vb_gateway.utility.utility import read_cfg_from_env
 
-LOGGER_FORMAT = '%(levelname)-8s [%(asctime)s] [%(threadName)s] %(name)s - ' \
-                '(%(filename)s).%(funcName)s(%(lineno)d): %(message)s'
+LOGGER_FORMAT = ('%(levelname)-8s [%(asctime)s] [%(threadName)s] %(name)s - '
+                 '(%(filename)s).%(funcName)s(%(lineno)d): %(message)s')
 
 
 def main():
