@@ -3,14 +3,15 @@ from pathlib import Path
 from threading import Thread
 from time import sleep, time
 
-from BAC0.core.io.IOExceptions import ReadPropertyException, NoResponseFromController, \
-    UnknownObjectError, UnknownPropertyError, ReadPropertyMultipleException
+from BAC0.core.io.IOExceptions import (ReadPropertyException,
+                                       NoResponseFromController,
+                                       UnknownObjectError,
+                                       UnknownPropertyError,
+                                       ReadPropertyMultipleException)
 
-from vb_gateway.connectors.bacnet.obj_property import ObjProperty
-from vb_gateway.connectors.bacnet.obj_type import ObjType
-from vb_gateway.connectors.bacnet.object import BACnetObject
-from vb_gateway.connectors.utils import get_fault_obj_properties
-from vb_gateway.utility.utility import get_file_logger
+from vb_gateway.connectors import get_fault_obj_properties
+from vb_gateway.connectors.bacnet import ObjProperty, ObjType, BACnetObject
+from vb_gateway.logs import get_file_logger
 
 
 class BACnetDevice(Thread):
@@ -37,7 +38,7 @@ class BACnetDevice(Thread):
         log_file_path = base_path / f'logs/{self.id}.log'
 
         self.__logger = get_file_logger(logger_name=f'{self}',
-                                        file_size_bytes=50_000_000,
+                                        size_bytes=50_000_000,
                                         file_path=log_file_path)
 
         self.setName(name=f'{self}-Thread')

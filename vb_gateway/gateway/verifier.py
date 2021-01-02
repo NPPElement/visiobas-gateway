@@ -1,12 +1,17 @@
-from multiprocessing import Process
-from multiprocessing import SimpleQueue
+from multiprocessing import Process, SimpleQueue
 from pathlib import Path
 
 from bacpypes.basetypes import PriorityArray
 
-from vb_gateway.connectors.bacnet.obj_property import ObjProperty
-from vb_gateway.connectors.bacnet.status_flags import StatusFlags
-from vb_gateway.utility.utility import get_file_logger
+from vb_gateway.connectors.bacnet import ObjProperty, StatusFlags
+from vb_gateway.logs import get_file_logger
+
+_base_path = Path(__file__).resolve().parent.parent
+_log_file_path = _base_path / f'logs/{__name__}.log'
+
+_log = get_file_logger(logger_name=__name__,
+                       size_bytes=50_000_000,
+                       file_path=_log_file_path)
 
 
 class BACnetVerifier(Process):
@@ -16,13 +21,6 @@ class BACnetVerifier(Process):
         super().__init__(daemon=True)
 
         self.__config = config
-
-        base_path = Path(__file__).resolve().parent.parent
-        log_file_path = base_path / f'logs/{__name__}.log'
-
-        self.__logger = get_file_logger(logger_name=f'{self}',
-                                        file_size_bytes=50_000_000,
-                                        file_path=log_file_path)
 
         self.__protocols_queue = protocols_queue
         self.__http_queue = http_queue
@@ -42,7 +40,7 @@ class BACnetVerifier(Process):
         return 'BACnetVerifier'
 
     def run(self):
-        self.__logger.info(f'{self} Starting ...')
+        _log.info(f'{self} Starting ...')
         while self.__active:
             try:
                 protocols_data = self.__protocols_queue.get()
@@ -53,8 +51,8 @@ class BACnetVerifier(Process):
                     # This means that the collected information on the device with
                     # that id must be sent to the http server.
                     device_id = protocols_data
-                    self.__logger.debug('Received signal to send collected data about '
-                                        f'Device[{device_id}] to HTTP server')
+                    _log.debug('Received signal to send collected data about '
+                               f'Device[{device_id}] to HTTP server')
                     self.__http_send_to_server(device_id=device_id)
 
                 elif protocols_data and isinstance(protocols_data, dict):
@@ -64,26 +62,26 @@ class BACnetVerifier(Process):
                     device_id = obj_properties.pop(ObjProperty.deviceId)
                     obj_name = obj_properties.pop(ObjProperty.objectName)
 
-                    self.__logger.debug(f'For Device [{device_id}] '
-                                        f'received properties: {obj_properties}')
+                    _log.debug(f'For Device [{device_id}] '
+                               f'received properties: {obj_properties}')
 
                     # verifying all properties of the object
                     verified_object_properties = self.verify(obj_properties=obj_properties)
-                    self.__logger.debug(
+                    _log.debug(
                         f'Verified properties: {verified_object_properties}')
 
                     # representing all properties of the object as string
                     str_verified_obj_properties = self.convert_properties_to_str(
                         verified_object_properties)
-                    self.__logger.debug('Verified properties '
-                                        f'as str: {str_verified_obj_properties}')
+                    _log.debug('Verified properties '
+                               f'as str: {str_verified_obj_properties}')
 
                     # Sending verified object string into clients
                     self.send_verified_str(
                         device_id=device_id,
                         obj_name=obj_name,
                         verified_str=str_verified_obj_properties)
-                    self.__logger.debug(
+                    _log.debug(
                         '==================================================')
                 else:
                     raise TypeError(f'Object of unexpected type provided: '
@@ -93,14 +91,14 @@ class BACnetVerifier(Process):
                                     'Or provide <dict> with ObjProperties.')
 
             except TypeError as e:
-                self.__logger.error(f'Verifying type error: {e}', exc_info=True)
+                _log.error(f'Verifying type error: {e}', exc_info=True)
             except KeyError as e:
-                self.__logger.error(f'Verifying key error: {e}', exc_info=True)
+                _log.error(f'Verifying key error: {e}', exc_info=True)
             except Exception as e:
-                self.__logger.error(f'Verifying error: {e}', exc_info=True)
+                _log.error(f'Verifying error: {e}', exc_info=True)
 
         else:
-            self.__logger.info(f'{self} stopped.')
+            _log.info(f'{self} stopped.')
 
     # todo: make reliability Enum
     # todo: implement reliability concatenation
@@ -263,7 +261,7 @@ class BACnetVerifier(Process):
             If MQTT enable send data to broker
         """
         if self.__http_enable:
-            self.__logger.debug('Collecting verified str to http storage')
+            _log.debug('Collecting verified str to http storage')
             self.__http_collect_str(device_id=device_id, verified_str=verified_str)
         if self.__mqtt_enable:
             self.__mqtt_send_to_broker(obj_name=obj_name, verified_str=verified_str)
@@ -284,7 +282,7 @@ class BACnetVerifier(Process):
             device_str = ';'.join((*self.__http_storage.pop(device_id), ''))
             self.__http_queue.put((device_id, device_str))
         except Exception as e:
-            self.__logger.error(f'HTTP Sending Error: {e}', exc_info=True)
+            _log.error(f'HTTP Sending Error: {e}', exc_info=True)
 
     def __mqtt_send_to_broker(self, obj_name: str, verified_str: str) -> None:
         """ Send verified strings to MQTT broker

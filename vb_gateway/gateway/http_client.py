@@ -6,21 +6,19 @@ from time import sleep
 
 from aiohttp import ClientResponse, ClientConnectorError, ClientSession
 
-from vb_gateway.connectors.bacnet.obj_property import ObjProperty
-from vb_gateway.connectors.bacnet.obj_type import ObjType
-from vb_gateway.utility.utility import get_file_logger
+from vb_gateway.connectors.bacnet import ObjProperty, ObjType
+from vb_gateway.logs import get_file_logger
+
+_base_path = Path(__file__).resolve().parent.parent
+_log_file_path = _base_path / f'logs/{__name__}.log'
+_log = get_file_logger(logger_name=__name__,
+                       size_bytes=50_000_000,
+                       file_path=_log_file_path)
 
 
 class VisioHTTPClient(Thread):
     def __init__(self, gateway, verifier_queue: SimpleQueue, config: dict):
         super().__init__()
-
-        base_path = Path(__file__).resolve().parent.parent
-        log_file_path = base_path / f'logs/{__name__}.log'
-
-        self.__logger = get_file_logger(logger_name=f'{self}',
-                                        file_size_bytes=50_000_000,
-                                        file_path=log_file_path)
 
         self.setName(name=f'{self}-Thread')
         self.setDaemon(True)
@@ -62,7 +60,7 @@ class VisioHTTPClient(Thread):
         # self.__bearer_token = None
         # self.__auth_user_id = None
 
-        self.__logger.info(f'{self} starting ...')
+        _log.info(f'{self} starting ...')
         self.__stopped = False
         self.start()
 
@@ -75,13 +73,13 @@ class VisioHTTPClient(Thread):
             if self.__connected:  # IF AUTHORIZED
                 try:
                     device_id, device_str = self.__verifier_queue.get()
-                    self.__logger.debug('Received data from BACnetVerifier: '
-                                        f'Device[{device_id}]')
+                    _log.debug('Received data from BACnetVerifier: '
+                               f'Device[{device_id}]')
                     # todo: refactor - use one loop
                     #   change to fire and forget
                     asyncio.run(self.rq_post_device(device_id=device_id, data=device_str))
                 except Exception as e:
-                    self.__logger.error(f"Receive'n'post device error: {e}", exc_info=True)
+                    _log.error(f"Receive'n'post device error: {e}", exc_info=True)
 
             else:  # IF NOT AUTHORIZED
                 try:
@@ -93,14 +91,14 @@ class VisioHTTPClient(Thread):
                         post_auth=self.__post_auth
                     ))
                 except ClientConnectorError as e:
-                    self.__logger.error(f'Login error: {e}'
-                                        'Sleeping 30 sec ...')  # , exc_info=True)
+                    _log.error(f'Login error: {e}'
+                               'Sleeping 30 sec ...')  # , exc_info=True)
                     sleep(30)
                 else:
                     self.__connected = True
-                    self.__logger.info('Successfully log in to the server.')
+                    _log.info('Successfully log in to the server.')
         else:
-            self.__logger.info(f'{self} stopped.')
+            _log.info(f'{self} stopped.')
 
     def __repr__(self):
         return 'VisioClient'
@@ -110,21 +108,7 @@ class VisioHTTPClient(Thread):
 
     def stop(self) -> None:
         self.__stopped = True
-        self.__logger.info(f'{self} was stopped.')
-
-    # @property
-    # def __address(self) -> str:
-    #     return f'http://{self.__get_host}:{str(self.__port)}'
-    #     # return ':'.join((self.__get_host, str(self.__port)))
-
-    # @property
-    # def get_url(self) -> str:
-    #     return 'http://' + ':'.join((self.__get_host, str(self.__port)))
-
-    # @property
-    # def post_urls(self) -> list[str, ...]:
-    #     return ['http://' + ':'.join((post_host, self.__port))
-    #             for post_host in self.__post_hosts]
+        _log.info(f'{self} was stopped.')
 
     @staticmethod
     def get_url(host: str, port: int = 8080) -> str:
@@ -136,13 +120,6 @@ class VisioHTTPClient(Thread):
             'Authorization': f"Bearer {auth_data['bearer_token']}"
         }
         return headers
-
-    # @property
-    # def __auth_headers(self) -> dict[str, str]:
-    #     headers = {
-    #         'Authorization': f'Bearer {self.__bearer_token}'
-    #     }
-    #     return headers
 
     async def login(self, get_host: str, get_auth: dict,
                     post_hosts: list[str], post_auth: dict[str, dict]) -> None:
@@ -164,7 +141,7 @@ class VisioHTTPClient(Thread):
                         post_auth[post_addr]['bearer_token'] = auth_resp[1]
                         post_auth[post_addr]['auth_user_id'] = auth_resp[2]
                     except LookupError as e:
-                        self.__logger.warning(f'Auth error: {e}', exc_info=True)
+                        _log.warning(f'Auth error: {e}', exc_info=True)
                 get_auth['user_id'] = post_auth[get_host]['user_id']
                 get_auth['bearer_token'] = post_auth[get_host]['bearer_token']
                 get_auth['auth_user_id'] = post_auth[get_host]['auth_user_id']
@@ -173,14 +150,14 @@ class VisioHTTPClient(Thread):
 
     async def __rq_login(self, addr: str, login: str, password: str,
                          session: ClientSession) -> tuple[str, str, str]:
-        self.__logger.info('Logging in to the server ...')
+        _log.info('Logging in to the server ...')
         url = f'{addr}/auth/rest/login'
         data = {
             'login': login,
             'password': password
         }
         async with session.post(url=url, json=data) as response:
-            self.__logger.debug(f'POST: {url}')
+            _log.debug(f'POST: {url}')
             data = await self.__extract_response_data(response=response)
             try:
                 user_id = data['user_id']
@@ -188,22 +165,22 @@ class VisioHTTPClient(Thread):
                 auth_user_id = data['auth_user_id']
                 return user_id, bearer_token, auth_user_id
             except TypeError as e:
-                self.__logger.error(f'Login Error! Please check login/password: {e}')
+                _log.error(f'Login Error! Please check login/password: {e}')
             # except OSError as e:
-            #     self.__logger.error(f'Login Error! Please check server availability: {e}')
+            #     _log.error(f'Login Error! Please check server availability: {e}')
 
     # async def __rq_devices(self) -> dict:
     #     """
     #     Request of all available devices from server
     #     :return: data received from the server
     #     """
-    #     self.__logger.debug('Requesting information about devices from the server ...')
+    #     _log.debug('Requesting information about devices from the server ...')
     #
     #     url = f'{self.__address}/vbas/gate/getDevices'
     #
     #     async with aiohttp.ClientSession(headers=self.__auth_headers) as session:
     #         async with session.get(url=url) as response:
-    #             self.__logger.debug(f'GET: {url}')
+    #             _log.debug(f'GET: {url}')
     #             data = await self.__extract_response_data(response=response)
     #             return data
 
@@ -222,21 +199,22 @@ class VisioHTTPClient(Thread):
 
         # :return: list of objects id, rejected by server side.
         """
-        self.__logger.debug(f'Sending collected data about device [{device_id}]')
+        _log.debug(f'Sending collected data about device [{device_id}]')
         url = f'{self.get_url(host=host, port=self.__port)}/vbas/gate/light/{device_id}'
 
         async with session.post(
                 url=url, data=data,
                 headers=self.get_auth_headers(auth_data=self.__post_auth[host])
         ) as response:
-            self.__logger.debug(f'POST: {url}\n'
-                                f'Body: {data}')
+            _log.debug(f'POST: {url}\n'
+                       f'Body: {data}')
             data = await self.__extract_response_data(response=response)
             await self.__check_rejected(device_id=device_id,
                                         data=data)
             # return data
 
-    async def __check_rejected(self, device_id: int, data: list) -> list:
+    @staticmethod
+    async def __check_rejected(device_id: int, data: list) -> list:
         """
         Inform about rejected objects.
 
@@ -246,15 +224,15 @@ class VisioHTTPClient(Thread):
         :return: list of rejected by server side.
         """
         if not data:  # all object are accepted on server side
-            self.__logger.debug(f'POST-result: Device [{device_id}] '
-                                'Server didn\'t return unaccepted objects.')
+            _log.debug(f"POST-result: Device [{device_id}] "
+                       "Server didn't return unaccepted objects.")
             return data
         else:
             rejected_objects_id = [obj[str(ObjProperty.objectIdentifier.id)] for obj in
                                    data]
-            self.__logger.warning(f'POST-result: Device [{device_id}] '
-                                  'Error processing objects on '
-                                  f'the server: {rejected_objects_id}')
+            _log.warning(f'POST-result: Device [{device_id}] '
+                         'Error processing objects on '
+                         f'the server: {rejected_objects_id}')
             # todo: What should we doing with rejected objects?
             return rejected_objects_id
 
@@ -264,8 +242,8 @@ class VisioHTTPClient(Thread):
         :param object_type:
         :return: data received from the server
         """
-        self.__logger.debug(f"Requesting information about device [{device_id}], "
-                            f"object_type: {object_type.name_dashed} from the server ...")
+        _log.debug(f"Requesting information about device [{device_id}], "
+                   f"object_type: {object_type.name_dashed} from the server ...")
 
         url = (f'{self.get_url(host=self.__get_host, port=self.__port)}/'
                f'vbas/gate/get/{device_id}/{object_type.name_dashed}')
@@ -273,15 +251,14 @@ class VisioHTTPClient(Thread):
         async with ClientSession(
                 headers=self.get_auth_headers(auth_data=self.__get_auth)) as session:
             async with session.get(url=url) as response:
-                self.__logger.debug(f'GET: {url}')
+                _log.debug(f'GET: {url}')
                 data = await self.__extract_response_data(response=response)
                 return data
 
     async def __rq_objects_for_device(
             self, device_id: int,
             object_types: tuple[ObjType]) -> dict[ObjType, list[dict]]:
-        """ Requests types of objects by device_id
-        """
+        """ Requests types of objects by device_id """
         # Create list with requests
         objects_requests = [self.__rq_device_object(device_id=device_id,
                                                     object_type=object_type) for
@@ -295,8 +272,8 @@ class VisioHTTPClient(Thread):
             zip(object_types, await asyncio.gather(*objects_requests))
             if objects
         }
-        self.__logger.debug(f'For device_id: {device_id} '
-                            'received objects')  #: {device_objects}')
+        _log.debug(f'For device_id: {device_id} '
+                   'received objects')  #: {device_objects}')
         return device_objects
 
     async def rq_devices_objects(
@@ -321,7 +298,8 @@ class VisioHTTPClient(Thread):
 
         return devices
 
-    async def __extract_response_data(self, response: ClientResponse) -> list or dict:
+    @staticmethod
+    async def __extract_response_data(response: ClientResponse) -> list or dict:
         """
         Checks the correctness of the response.
         :param response: server's response
@@ -330,12 +308,10 @@ class VisioHTTPClient(Thread):
         if response.status == 200:
             resp_json = await response.json()
             if resp_json['success']:
-                self.__logger.debug('Received information from the server.')
+                _log.debug('Received information from the server.')
                 return resp_json['data']
             else:
-                self.__logger.warning('Server returned failure response.')
-                self.__logger.info(f'{resp_json}')
-                # raise HTTPServerError
+                _log.warning('Server returned failure response.')
+                _log.info(f'{resp_json}')
         else:
-            self.__logger.warning(f'Server response status error: {response.status}')
-            # raise HTTPClientError
+            _log.warning(f'Server response status error: {response.status}')

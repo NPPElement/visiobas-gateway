@@ -7,13 +7,18 @@ from time import sleep
 
 from aiohttp.web_exceptions import HTTPServerError, HTTPClientError
 
-from vb_gateway.connectors.bacnet.obj_property import ObjProperty
-from vb_gateway.connectors.bacnet.obj_type import ObjType
-from vb_gateway.connectors.base_connector import Connector
+from vb_gateway.connectors import Connector
+from vb_gateway.connectors.bacnet import ObjProperty, ObjType
+from vb_gateway.connectors.modbus import ModbusObject, VisioModbusProperties
 from vb_gateway.connectors.modbus.device import ModbusDevice
-from vb_gateway.connectors.modbus.object import ModbusObject, VisioModbusProperties
-from vb_gateway.connectors.utils import read_address_cache
-from vb_gateway.utility.utility import get_file_logger
+from vb_gateway.logs import get_file_logger
+
+_base_path = Path(__file__).resolve().parent.parent.parent
+_log_file_path = _base_path / f'logs/{__name__}.log'
+
+_log = get_file_logger(logger_name=__name__,
+                       size_bytes=50_000_000,
+                       file_path=_log_file_path)
 
 
 class ModbusConnector(Thread, Connector):
@@ -21,13 +26,6 @@ class ModbusConnector(Thread, Connector):
                  verifier_queue: SimpleQueue,
                  config: dict):
         super().__init__()
-
-        base_path = Path(__file__).resolve().parent.parent.parent
-        log_file_path = base_path / f'logs/{__name__}.log'
-
-        self.__logger = get_file_logger(logger_name=f'{self}',
-                                        file_size_bytes=50_000_000,
-                                        file_path=log_file_path)
 
         self.__config = config
         self.default_update_period = config.get('default_update_period', 10)
@@ -66,12 +64,13 @@ class ModbusConnector(Thread, Connector):
         return 'ModbusConnector'
 
     def run(self):
-        self.__logger.info(f'{self} starting ...')
+        _log.info(f'{self} starting ...')
         while not self.__stopped:
 
-            base_dir = Path(__file__).resolve().parent.parent.parent
-            address_cache_path = base_dir / 'connectors/modbus/address_cache'
-            self.__address_cache = read_address_cache(address_cache_path=address_cache_path)
+            # base_dir = Path(__file__).resolve().parent.parent.parent
+            address_cache_path = _base_path / 'connectors/modbus/address_cache'
+            self.__address_cache = self.read_address_cache(
+                address_cache_path=address_cache_path)
 
             # stop irrelevant devices
             irrelevant_devices_id = tuple(set(self.__polling_devices.keys()) - set(
@@ -86,16 +85,16 @@ class ModbusConnector(Thread, Connector):
                     obj_types=self.__object_types_to_request)
 
                 if devices_objects:  # If received devices with objects from the server
-                    self.__logger.info('Received devices with '
-                                       f'objects: {[*devices_objects.keys()]} '
-                                       'Requesting update intervals for them ...')
+                    _log.info('Received devices with '
+                              f'objects: {[*devices_objects.keys()]} '
+                              'Requesting update intervals for them ...')
 
                     self.__update_intervals = self.get_devices_update_interval(
                         devices_id=tuple(self.__address_cache.keys()),
                         default_update_interval=self.default_update_period
                     )
-                    self.__logger.info('Received update intervals for devices.'
-                                       'Starting them ...')
+                    _log.info('Received update intervals for devices.'
+                              'Starting them ...')
 
                     # Unpack json from server to BACnetObjects class
                     devices_objects = self.unpack_objects(objects=devices_objects)
@@ -104,22 +103,22 @@ class ModbusConnector(Thread, Connector):
                     del devices_objects
 
                 else:
-                    self.__logger.error('No objects from server')
+                    _log.error('No objects from server')
                     del devices_objects
                     continue
 
             except (HTTPServerError, HTTPClientError, OSError) as e:
-                self.__logger.error('Error retrieving information about '
-                                    f'devices objects from the server: {e}')
+                _log.error('Error retrieving information about '
+                           f'devices objects from the server: {e}')
             except Exception as e:
-                self.__logger.error(f'Device update error: {e}', exc_info=True)
+                _log.error(f'Device update error: {e}', exc_info=True)
 
-            self.__logger.debug('Sleeping 1h ...')
+            _log.debug('Sleeping 1h ...')
             sleep(60 * 60)
             # FIXME REPLACE TO threading.Timer? in ThreadPoolExecutor?
 
         else:
-            self.__logger.info(f'{self} stopped.')
+            _log.info(f'{self} stopped.')
 
     def open(self) -> None:
         self.__connected = True
@@ -142,13 +141,13 @@ class ModbusConnector(Thread, Connector):
             self.__start_device(device_id=dev_id, objects=objs,
                                 update_interval=update_intervals[dev_id])
 
-        self.__logger.info('Devices updated')
+        _log.info('Devices updated')
 
     def __start_device(self, device_id: int, objects: set[ModbusObject],
                        update_interval: int) -> None:
         """ Start Modbus devise thread
         """
-        self.__logger.debug(f'Starting Device [{device_id}] ...')
+        _log.debug(f'Starting Device [{device_id}] ...')
         try:
             self.__polling_devices[device_id] = ModbusDevice(
                 verifier_queue=self.__verifier_queue,
@@ -159,30 +158,30 @@ class ModbusConnector(Thread, Connector):
                 update_period=update_interval
             )
         # except ConnectionError as e:
-        #     self.__logger.error(f'Device [{device_id}] connection error: {e}')
+        #     _log.error(f'Device [{device_id}] connection error: {e}')
         #     self.__not_connect_devices.add(device_id)
         except Exception as e:
-            self.__logger.error(f'Device [{device_id}] '
-                                f'starting error: {e}', exc_info=True)
+            _log.error(f'Device [{device_id}] '
+                       f'starting error: {e}', exc_info=True)
 
         else:
-            self.__logger.info(f'Device [{device_id}] started')
+            _log.info(f'Device [{device_id}] started')
 
     def __stop_device(self, device_id: int) -> None:
         """ Stop Modbus device thread
         """
         try:
-            self.__logger.debug(f'Device [{device_id}] stopping polling ...')
+            _log.debug(f'Device [{device_id}] stopping polling ...')
             self.__polling_devices[device_id].stop_polling()
-            self.__logger.debug(f'Device [{device_id}] stopped polling')
+            _log.debug(f'Device [{device_id}] stopped polling')
             self.__polling_devices[device_id].join()
-            self.__logger.debug(f'Device [{device_id}]-Thread stopped')
+            _log.debug(f'Device [{device_id}]-Thread stopped')
 
         except KeyError as e:
-            self.__logger.error(f'The device with id {device_id} is not running. '
-                                f'Please provide the id of the polling device: {e}')
+            _log.error(f'The device with id {device_id} is not running. '
+                       f'Please provide the id of the polling device: {e}')
         except Exception as e:
-            self.__logger.error(f'Device stopping error: {e}')
+            _log.error(f'Device stopping error: {e}')
 
     def __stop_devices(self, devices_id: tuple) -> None:
         """ Stop Modbus devices threads
@@ -192,14 +191,13 @@ class ModbusConnector(Thread, Connector):
             for dev_id in devices_id:
                 del self.__polling_devices[dev_id]
         except Exception as e:
-            self.__logger.error(f'Stopping devices error: {e}', exc_info=True)
+            _log.error(f'Stopping devices error: {e}', exc_info=True)
         else:
-            self.__logger.info(f'Modbus devices [{devices_id}] were stopping')
+            _log.info(f'Modbus devices [{devices_id}] were stopping')
 
-    def get_devices_objects(self,
-                            devices_id: tuple[int],
-                            obj_types: tuple[ObjType, ...]) -> dict[
-        int, dict[ObjType, list[dict]]]:
+    def get_devices_objects(self, devices_id: tuple[int],
+                            obj_types: tuple[ObjType, ...]
+                            ) -> dict[int, dict[ObjType, list[dict]]]:
 
         devices_objs = asyncio.run(
             self.__gateway.http_client.rq_devices_objects(devices_id=devices_id,
@@ -224,7 +222,7 @@ class ModbusConnector(Thread, Connector):
                 upd_interval = loads(prop_371)['update_interval']
                 devices_intervals[dev_id] = upd_interval
             except LookupError as e:
-                self.__logger.error(
+                _log.error(
                     f'Update interval for Device [{dev_id}] cannot be extracted: {e}')
                 devices_intervals[dev_id] = default_update_interval
 
@@ -265,9 +263,9 @@ class ModbusConnector(Thread, Connector):
                                                   )
                         devices_objects[dev_id].add(modbus_obj)
                     else:
-                        self.__logger.warning(f'{ObjProperty.propertyList} is: '
-                                              f'{property_list} for Modbus object: '
-                                              f'Device [{dev_id}] ({obj_type}, {obj_id})')
+                        _log.warning(f'{ObjProperty.propertyList} is: '
+                                     f'{property_list} for Modbus object: '
+                                     f'Device [{dev_id}] ({obj_type}, {obj_id})')
 
         return devices_objects
 

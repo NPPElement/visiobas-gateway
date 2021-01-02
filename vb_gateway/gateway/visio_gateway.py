@@ -1,7 +1,5 @@
-from json import load
 from logging import getLogger
 from multiprocessing import SimpleQueue
-from pathlib import Path
 from time import sleep
 
 from vb_gateway.connectors.bacnet.bacnet_connector import BACnetConnector
