@@ -34,7 +34,7 @@ class BACnetVerifier(Process):
         if self.__http_enable:
             self.__http_storage: dict[int, list[str]] = {}
 
-        self.start()
+        # self.start()
 
     def __repr__(self):
         return 'BACnetVerifier'
@@ -67,22 +67,19 @@ class BACnetVerifier(Process):
 
                     # verifying all properties of the object
                     verified_object_properties = self.verify(obj_properties=obj_properties)
-                    _log.debug(
-                        f'Verified properties: {verified_object_properties}')
+                    _log.debug(f'Verified properties: {verified_object_properties}')
 
                     # representing all properties of the object as string
                     str_verified_obj_properties = self.convert_properties_to_str(
                         verified_object_properties)
-                    _log.debug('Verified properties '
-                               f'as str: {str_verified_obj_properties}')
+                    _log.debug('Verified properties as str: {str_verified_obj_properties}')
 
                     # Sending verified object string into clients
                     self.send_verified_str(
                         device_id=device_id,
                         obj_name=obj_name,
                         verified_str=str_verified_obj_properties)
-                    _log.debug(
-                        '==================================================')
+                    _log.debug('==================================================')
                 else:
                     raise TypeError(f'Object of unexpected type provided: '
                                     f'{protocols_data} {type(protocols_data)}. '
@@ -255,8 +252,7 @@ class BACnetVerifier(Process):
         return ','.join([str(priority) for priority in pa])
 
     def send_verified_str(self, device_id: int,
-                          obj_name: str,
-                          verified_str: str) -> None:
+                          obj_name: str, verified_str: str) -> None:
         """ If HTTP enable, collect data in http_storage
             If MQTT enable send data to broker
         """

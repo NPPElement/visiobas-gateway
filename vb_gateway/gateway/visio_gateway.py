@@ -33,6 +33,7 @@ class VisioGateway:
         self.__verifier = BACnetVerifier(protocols_queue=self.__protocol_verifier_queue,
                                          http_queue=self.__verifier_http_queue,
                                          config=self.__config['bacnet_verifier'])
+        self.__verifier.start()
 
         self.__connectors = {
             'bacnet': BACnetConnector(

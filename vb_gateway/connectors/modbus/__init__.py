@@ -41,8 +41,7 @@ def cast_to_bit(register: list[int], bit: int) -> int:
 
 
 def cast_2_registers(registers: list[int],
-                     byteorder: str,
-                     wordorder: str,
+                     byteorder: str, wordorder: str,
                      type_name: str) -> int or float:
     """ Cast two registers to selected type"""
     decoder = BinaryPayloadDecoder.fromRegisters(
@@ -50,11 +49,12 @@ def cast_2_registers(registers: list[int],
         byteorder=byteorder,
         wordorder=wordorder
     )
-    if type_name == 'FLOAT':
-        return decoder.decode_32bit_float()
-    elif type_name == 'INT':
-        return decoder.decode_32bit_int()
-    elif type_name == 'UINT':
-        return decoder.decode_32bit_uint()
-    else:
-        raise NotImplementedError('That type not implemented yet')
+    decode_func = {
+        'INT': decoder.decode_32bit_int,
+        'UINT': decoder.decode_32bit_uint,
+        'FLOAT': decoder.decode_32bit_float
+    }
+    try:
+        return decode_func[type_name]()
+    except KeyError:
+        raise ValueError(f'Type <{type_name}> not implemented yet')
