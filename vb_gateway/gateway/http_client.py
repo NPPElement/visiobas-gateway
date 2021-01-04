@@ -91,8 +91,7 @@ class VisioHTTPClient(Thread):
                         post_auth=self.__post_auth
                     ))
                 except ClientConnectorError as e:
-                    _log.error(f'Login error: {e}'
-                               'Sleeping 30 sec ...')  # , exc_info=True)
+                    _log.error(f'Login error: {e} Sleeping 30 sec ...')  # , exc_info=True)
                     sleep(30)
                 else:
                     self.__connected = True
@@ -272,8 +271,7 @@ class VisioHTTPClient(Thread):
             zip(object_types, await asyncio.gather(*objects_requests))
             if objects
         }
-        _log.debug(f'For device_id: {device_id} '
-                   'received objects')  #: {device_objects}')
+        _log.debug(f'For device_id: {device_id} received objects')  #: {device_objects}')
         return device_objects
 
     async def rq_devices_objects(
@@ -295,7 +293,6 @@ class VisioHTTPClient(Thread):
             if device_objects
         }
         # drops devices with no objects
-
         return devices
 
     @staticmethod

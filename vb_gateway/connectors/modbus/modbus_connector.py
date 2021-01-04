@@ -22,6 +22,11 @@ _log = get_file_logger(logger_name=__name__,
 
 
 class ModbusConnector(Thread, Connector):
+    __slots__ = ('__config', 'default_update_period', '__gateway', '__verifier_queue',
+                 '__connected', '__stopped', '__object_types_to_request',
+                 '__address_cache', '__polling_devices', '__update_intervals'
+                 )
+
     def __init__(self, gateway,
                  verifier_queue: SimpleQueue,
                  config: dict):
@@ -40,16 +45,9 @@ class ModbusConnector(Thread, Connector):
         self.__stopped = False
 
         self.__object_types_to_request = (
-            ObjType.ANALOG_INPUT,
-            ObjType.ANALOG_OUTPUT,
-            ObjType.ANALOG_VALUE,
-
-            ObjType.BINARY_INPUT,
-            ObjType.BINARY_OUTPUT,
-            ObjType.BINARY_VALUE,
-
-            ObjType.MULTI_STATE_INPUT,
-            ObjType.MULTI_STATE_OUTPUT,
+            ObjType.ANALOG_INPUT, ObjType.ANALOG_OUTPUT, ObjType.ANALOG_VALUE,
+            ObjType.BINARY_INPUT, ObjType.BINARY_OUTPUT, ObjType.BINARY_VALUE,
+            ObjType.MULTI_STATE_INPUT, ObjType.MULTI_STATE_OUTPUT,
             ObjType.MULTI_STATE_VALUE,
         )
 
@@ -161,8 +159,7 @@ class ModbusConnector(Thread, Connector):
         #     _log.error(f'Device [{device_id}] connection error: {e}')
         #     self.__not_connect_devices.add(device_id)
         except Exception as e:
-            _log.error(f'Device [{device_id}] '
-                       f'starting error: {e}', exc_info=True)
+            _log.error(f'Device [{device_id}] starting error: {e}', exc_info=True)
 
         else:
             _log.info(f'Device [{device_id}] started')
@@ -201,14 +198,14 @@ class ModbusConnector(Thread, Connector):
 
         devices_objs = asyncio.run(
             self.__gateway.http_client.rq_devices_objects(devices_id=devices_id,
-                                                          obj_types=obj_types))
+                                                          obj_types=obj_types
+                                                          ))
         return devices_objs
 
     def get_devices_update_interval(self, devices_id: tuple[int],
                                     default_update_interval: int = 10) -> dict[int, int]:
         """ Receive update intervals for devices via http client
         """
-
         device_objs = asyncio.run(self.__gateway.http_client.rq_devices_objects(
             devices_id=devices_id,
             obj_types=(ObjType.DEVICE,)
