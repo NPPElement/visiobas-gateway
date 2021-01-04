@@ -72,7 +72,7 @@ class BACnetVerifier(Process):
                     # representing all properties of the object as string
                     str_verified_obj_properties = self.convert_properties_to_str(
                         verified_object_properties)
-                    _log.debug('Verified properties as str: {str_verified_obj_properties}')
+                    _log.debug(f'Verified properties as str: {str_verified_obj_properties}')
 
                     # Sending verified object string into clients
                     self.send_verified_str(

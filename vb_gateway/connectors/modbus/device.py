@@ -14,6 +14,11 @@ from vb_gateway.logs import get_file_logger
 
 
 class ModbusDevice(Thread):
+    __slots__ = ('id', 'address', 'port', 'update_period', '__logger',
+                 '__client', '__available_functions',
+                 '__connector', '__verifier_queue',
+                 '__polling', 'objects')
+
     def __init__(self,
                  verifier_queue: SimpleQueue,
                  connector,
@@ -22,11 +27,6 @@ class ModbusDevice(Thread):
                  objects: set[ModbusObject],
                  update_period: int = 10):
         super().__init__()
-
-        __slots__ = ('id', 'address', 'port', 'update_period', '__logger',
-                     '__client', '__available_functions',
-                     '__connector', '__verifier_queue',
-                     '__polling', 'objects')
 
         self.id = device_id
         self.address, self.port = address.split(sep=':', maxsplit=1)

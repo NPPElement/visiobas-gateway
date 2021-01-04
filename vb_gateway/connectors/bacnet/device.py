@@ -15,6 +15,13 @@ from vb_gateway.logs import get_file_logger
 
 
 class BACnetDevice(Thread):
+    __slots__ = ('id', 'update_period', '__logger', '__connector', '__verifier_queue',
+                 'address', 'network', 'support_rpm', 'not_support_rpm',
+                 '__BI_AI_MI_AC', '__BI_AI_MI_AC_properties',
+                 '__BO_BV_AO_AV_MV_MO', '__BO_BV_AO_AV_MV_MO_properties',
+                 '__active', '__polling'
+                 )
+
     def __init__(self,
                  verifier_queue: SimpleQueue,
                  connector,
@@ -24,12 +31,6 @@ class BACnetDevice(Thread):
                  objects: set[BACnetObject],
                  update_period: int = 10):
         super().__init__()
-
-        __slots__ = ('id', 'update_period', '__logger', '__connector', '__verifier_queue',
-                     'address', 'network', 'support_rpm', 'not_support_rpm',
-                     '__BI_AI_MI_AC', '__BI_AI_MI_AC_properties',
-                     '__BO_BV_AO_AV_MV_MO', '__BO_BV_AO_AV_MV_MO_properties',
-                     '__active', '__polling')
 
         self.id = device_id
         self.update_period = update_period

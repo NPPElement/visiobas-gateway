@@ -281,7 +281,11 @@ class ModbusConnector(Thread, Connector):
 
             scale = int(modbus_properties.get('scale', 1))
             data_type = modbus_properties['dataType']
-            data_length = int(modbus_properties['dataLength'])
+            data_length = int(modbus_properties.get('dataLength', None))
+
+            if data_length is None:
+                data_length = 1 if data_type == 'BOOL' else quantity * 16
+
             byte_order = '<' if quantity == 1 else '>'
 
             bit = int(modbus_properties['bit']) if data_type == 'BOOL' else None,

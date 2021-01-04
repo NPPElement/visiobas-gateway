@@ -3,6 +3,9 @@ from typing import NamedTuple, Sequence
 
 
 class StatusFlags:
+
+    __slots__ = ('in_alarm', 'fault', 'overriden', 'out_of_service')
+
     def __init__(self, status_flags: list = None):
         if status_flags is None:
             self.in_alarm: bool = False
