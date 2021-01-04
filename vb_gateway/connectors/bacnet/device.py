@@ -17,8 +17,6 @@ from vb_gateway.logs import get_file_logger
 class BACnetDevice(Thread):
     __slots__ = ('id', 'update_period', '__logger', '__connector', '__verifier_queue',
                  'address', 'network', 'support_rpm', 'not_support_rpm',
-                 '__BI_AI_MI_AC', '__BI_AI_MI_AC_properties',
-                 '__BO_BV_AO_AV_MV_MO', '__BO_BV_AO_AV_MV_MO_properties',
                  '__active', '__polling'
                  )
 
@@ -53,30 +51,6 @@ class BACnetDevice(Thread):
 
         self.support_rpm: set[BACnetObject] = objects
         self.not_support_rpm: set[BACnetObject] = set()
-
-        # TODO: move to connector:
-        self.__BI_AI_MI_AC = {
-            ObjType.BINARY_INPUT,
-            ObjType.ANALOG_INPUT,
-            ObjType.MULTI_STATE_INPUT,
-        }
-
-        self.__BI_AI_MI_AC_properties = [
-            ObjProperty.presentValue,
-            ObjProperty.statusFlags,
-        ]
-
-        self.__BO_BV_AO_AV_MV_MO = {
-            ObjType.BINARY_OUTPUT, ObjType.BINARY_VALUE,
-            ObjType.ANALOG_OUTPUT, ObjType.ANALOG_VALUE,
-            ObjType.MULTI_STATE_VALUE, ObjType.MULTI_STATE_OUTPUT
-        }
-
-        self.__BO_BV_AO_AV_MV_MO_properties = [
-            ObjProperty.presentValue,
-            ObjProperty.statusFlags,
-            ObjProperty.priorityArray
-        ]
 
         # self.__objects_per_rpm = 25
         # todo: Should we use one RPM for several objects?
@@ -298,20 +272,9 @@ class BACnetDevice(Thread):
             ObjProperty.objectIdentifier: obj.id,
         }
         try:
-            if obj.type in self.__BI_AI_MI_AC:
-                values = self.read_property_multiple(
-                    obj=obj,
-                    properties=self.__BI_AI_MI_AC_properties)
-
-            elif obj.type in self.__BO_BV_AO_AV_MV_MO:
-                values = self.read_property_multiple(
-                    obj=obj,
-                    properties=self.__BO_BV_AO_AV_MV_MO_properties)
-
-            else:
-                raise NotImplementedError(
-                    'Now implemented only 9 types. Please provide one of: '
-                    f'{[*self.__BI_AI_MI_AC, *self.__BO_BV_AO_AV_MV_MO]}')
+            values = self.read_property_multiple(obj=obj,
+                                                 properties=obj.type.properties
+                                                 )
 
         except ReadPropertyMultipleException as e:
             self.__logger.error(f'Read Error: {e}')
@@ -329,18 +292,9 @@ class BACnetDevice(Thread):
         }
 
         try:
-            if obj.type in self.__BI_AI_MI_AC:
-                values = self.__simulate_rpm(
-                    obj=obj,
-                    properties=self.__BI_AI_MI_AC_properties)
-            elif obj.type in self.__BO_BV_AO_AV_MV_MO:
-                values = self.__simulate_rpm(
-                    obj=obj,
-                    properties=self.__BO_BV_AO_AV_MV_MO_properties)
-            else:
-                raise NotImplementedError(
-                    'Now implemented only 9 types. Please provide one of: '
-                    f'{[*self.__BI_AI_MI_AC, *self.__BO_BV_AO_AV_MV_MO]}')
+            values = self.__simulate_rpm(obj=obj,
+                                         properties=obj.type.properties
+                                         )
 
         except NoResponseFromController as e:
             self.__logger.error(f'No response error: {e}')
@@ -354,13 +308,12 @@ class BACnetDevice(Thread):
         except (ReadPropertyException, TypeError) as e:
             self.__logger.error(f'RP error: {e}')
             values = get_fault_obj_properties(reliability='rp-error')
-
         except Exception as e:
             self.__logger.error(f'Read Error: {e}', exc_info=True)
             values = get_fault_obj_properties(reliability='error')
-
-        properties.update(values)
-        return properties
+        finally:
+            properties.update(values)
+            return properties
 
     def __put_device_end_to_verifier(self) -> None:
         """ device_id in queue means that device polled.

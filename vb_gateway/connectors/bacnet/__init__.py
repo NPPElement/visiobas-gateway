@@ -3,7 +3,6 @@ from typing import NamedTuple, Sequence
 
 
 class StatusFlags:
-
     __slots__ = ('in_alarm', 'fault', 'overriden', 'out_of_service')
 
     def __init__(self, status_flags: list = None):
@@ -108,7 +107,7 @@ class ObjType(Enum):
     GRAPHIC = "graphic", -1
 
     def __repr__(self):
-        return f'ObjectType.{self.name}'
+        return f'ObjType.{self.name}'
 
     @property
     def id(self):
@@ -121,6 +120,26 @@ class ObjType(Enum):
     @property
     def name_dashed(self):
         return self.value[0]
+
+    @property
+    def properties(self):
+        if self in {ObjType.BINARY_INPUT,
+                    ObjType.ANALOG_INPUT,
+                    ObjType.MULTI_STATE_INPUT
+                    }:
+            return (ObjProperty.presentValue,
+                    ObjProperty.statusFlags
+                    )
+        elif self in {ObjType.BINARY_OUTPUT, ObjType.BINARY_VALUE,
+                      ObjType.ANALOG_OUTPUT, ObjType.ANALOG_VALUE,
+                      ObjType.MULTI_STATE_VALUE, ObjType.MULTI_STATE_OUTPUT
+                      }:
+            return (ObjProperty.presentValue,
+                    ObjProperty.statusFlags,
+                    ObjProperty.priorityArray
+                    )
+        else:
+            raise NotImplementedError(f'Properties for type {self} not yet defined')
 
 
 class BACnetObject(NamedTuple):
