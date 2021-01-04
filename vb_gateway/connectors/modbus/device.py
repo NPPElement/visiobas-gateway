@@ -124,7 +124,7 @@ class ModbusDevice(Thread):
                 5: client.write_coil,
                 6: client.write_register,
                 15: client.write_coils,
-                16: client.write_registers,
+                16: client.write_registers
             }
             self.__logger.info(f'{self} client initialized')
 
@@ -166,10 +166,16 @@ class ModbusDevice(Thread):
         if registers is None:
             return 'null'
 
-        if properties.data_type == 'BOOL' and quantity == 1:  # bit
+        if (properties.data_type == 'BOOL' and
+                quantity == 1 and properties.data_length == 1):
+            # bool: 1bit
             # TODO: Group bits into one request for BOOL
             value = cast_to_bit(register=registers, bit=properties.bit)
-        elif quantity == 1:  # expected only: int16 | uint16
+        elif (properties.data_type == 'BOOL' and
+              quantity == 1 and properties.data_length == 16):
+            # bool: 16bit
+            value = int(bool(registers[0]))
+        elif quantity == 1:  # expected only: int16 | uint16 |  todo: BYTE?!
             value = registers[0]
         elif properties.data_type == 'FLOAT' and quantity == 2:  # float32
             value = round(
