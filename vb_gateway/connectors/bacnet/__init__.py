@@ -1,5 +1,5 @@
 from enum import Enum, unique
-from typing import NamedTuple
+from typing import NamedTuple, Sequence
 
 
 class StatusFlags:
@@ -10,16 +10,27 @@ class StatusFlags:
             self.overriden: bool = False
             self.out_of_service: bool = False
 
-        elif isinstance(status_flags, list) and len(status_flags) == 4:
+        elif isinstance(status_flags, Sequence) and len(status_flags) == 4:
             self.in_alarm, self.fault, self.overriden, self.out_of_service = [bool(flag) for
                                                                               flag in
                                                                               status_flags]
+        elif isinstance(status_flags, StatusFlags):
+            self.in_alarm = status_flags.in_alarm
+            self.fault: bool = status_flags.fault
+            self.overriden: bool = status_flags.overriden
+            self.out_of_service: bool = status_flags.out_of_service
+
         else:
-            raise ValueError('Please, provide list with 4 flags.'
+            raise ValueError('Please, provide <list> with 4 flags or'
                              f'Provided: {status_flags} {type(status_flags)}')
 
+    def __eq__(self, other):
+        if isinstance(self, StatusFlags) and isinstance(other, StatusFlags):
+            return self.as_binary == other.as_binary
+        return False
+
     def __repr__(self):
-        """Uses to convert into number by binary coding"""
+        """ Uses to convert into number by binary coding"""
         return str(int(''.join([str(int(self.out_of_service)),
                                 str(int(self.overriden)),
                                 str(int(self.fault)),
@@ -40,13 +51,25 @@ class StatusFlags:
             out_of_service: bool = None
             ) -> None:
         if in_alarm is not None:
-            self.in_alarm = in_alarm
+            if isinstance(in_alarm, bool):
+                self.in_alarm = in_alarm
+            else:
+                raise ValueError(f'Please provide bool value. Provided: {in_alarm}')
         if fault is not None:
-            self.fault = fault
+            if isinstance(fault, bool):
+                self.fault = fault
+            else:
+                raise ValueError(f'Please provide bool value. Provided: {fault}')
         if overriden is not None:
-            self.overriden = overriden
+            if isinstance(overriden, bool):
+                self.overriden = overriden
+            else:
+                raise ValueError(f'Please provide bool value. Provided: {overriden}')
         if out_of_service is not None:
-            self.out_of_service = out_of_service
+            if isinstance(out_of_service, bool):
+                self.out_of_service = out_of_service
+            else:
+                raise ValueError(f'Please provide bool value. Provided: {out_of_service}')
 
 
 class ObjType(Enum):

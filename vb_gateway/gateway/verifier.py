@@ -137,7 +137,7 @@ class BACnetVerifier(Process):
         # ):  # Extra check for better readability.
 
         if pv == 'null':
-            sf = properties.get(ObjProperty.statusFlags, StatusFlags([0, 0, 0, 0]))
+            sf = properties.get(ObjProperty.statusFlags, StatusFlags())
             sf.set(fault=True)
             properties.update({
                 ObjProperty.presentValue: 'null',
@@ -146,7 +146,7 @@ class BACnetVerifier(Process):
                 # reliability sets as 65 earlier in BACnetObject if obj is unknown
             })
         elif pv == float('inf'):
-            sf = properties.get(ObjProperty.statusFlags, StatusFlags([0, 0, 0, 0]))
+            sf = properties.get(ObjProperty.statusFlags, StatusFlags())
             sf.set(fault=True)
             properties.update({
                 ObjProperty.presentValue: 'null',
@@ -154,7 +154,7 @@ class BACnetVerifier(Process):
                 ObjProperty.reliability: 2
             })
         elif pv == float('-inf'):
-            sf = properties.get(ObjProperty.statusFlags, StatusFlags([0, 0, 0, 0]))
+            sf = properties.get(ObjProperty.statusFlags, StatusFlags())
             sf.set(fault=True)
             properties.update({
                 ObjProperty.presentValue: 'null',
@@ -162,7 +162,7 @@ class BACnetVerifier(Process):
                 ObjProperty.reliability: 3
             })
         elif isinstance(pv, str) and not pv.strip():
-            sf = properties.get(ObjProperty.statusFlags, StatusFlags([0, 0, 0, 0]))
+            sf = properties.get(ObjProperty.statusFlags, StatusFlags())
             sf.set(fault=True)
             properties.update({
                 ObjProperty.presentValue: 'null',
@@ -190,6 +190,9 @@ class BACnetVerifier(Process):
         # todo: move priorities into Enum
         manual_life_safety = 9
         automatic_life_safety = 10
+        override_priorities = {manual_life_safety,
+                               automatic_life_safety
+                               }
 
         for i in range(1, pa_size + 1):
             priority = pa.value[i]
@@ -198,8 +201,8 @@ class BACnetVerifier(Process):
                 priorities.append('')
             else:
                 priorities.append(round(float(value[0])))
-                if i == manual_life_safety or i == automatic_life_safety:
-                    sf = properties.get(ObjProperty.statusFlags, StatusFlags([0, 0, 0, 0]))
+                if i in override_priorities:
+                    sf = properties.get(ObjProperty.statusFlags, StatusFlags())
                     sf.set(overriden=True)
                     properties[ObjProperty.statusFlags] = sf
 
