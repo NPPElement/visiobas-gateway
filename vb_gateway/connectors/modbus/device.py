@@ -166,31 +166,35 @@ class ModbusDevice(Thread):
         if registers is None:
             return 'null'
 
-        if (properties.data_type == 'BOOL' and
-                quantity == 1 and properties.data_length == 1):
+        if (properties.data_type == 'BOOL' and quantity == 1 and
+                properties.data_length == 1 and isinstance(properties.bit, int)):
             # bool: 1bit
             # TODO: Group bits into one request for BOOL
             value = cast_to_bit(register=registers, bit=properties.bit)
-        elif (properties.data_type == 'BOOL' and
-              quantity == 1 and properties.data_length == 16):
+
+        elif (properties.data_type == 'BOOL' and quantity == 1 and
+              properties.data_length == 16):
             # bool: 16bit
             value = int(bool(registers[0]))
-        elif quantity == 1:  # expected only: int16 | uint16 |  todo: BYTE?!
+
+        elif quantity == 1 and properties.data_length == 16:
+            # expected only: int16 | uint16 |  fixme: BYTE?
             value = registers[0]
-        elif properties.data_type == 'FLOAT' and quantity == 2:  # float32
-            value = round(
-                cast_2_registers(registers=registers,
-                                 byteorder='>', wordorder='<',
-                                 type_name=properties.data_type),
-                ndigits=6)
-        elif (properties.data_type == 'INT' or  # int32 | uint32
-              properties.data_type == 'UINT') and quantity == 2:
+
+        elif (properties.data_type == 'FLOAT' and
+              quantity == 2 and properties.data_length == 32):  # float32
+            value = round(cast_2_registers(registers=registers,
+                                           byteorder='>', wordorder='<',  # fixme use obj
+                                           type_name=properties.data_type),
+                          ndigits=6)
+        elif ((properties.data_type == 'INT' or properties.data_type == 'UINT') and
+              quantity == 2 and properties.data_length == 32):  # int32 | uint32
             value = cast_2_registers(registers=registers,
-                                     byteorder='<', wordorder='>',
+                                     byteorder='<', wordorder='>',  # fixme use obj
                                      type_name=properties.data_type)
         else:
-            raise NotImplementedError('What to do with that type and quantity '
-                                      'not yet defined')
+            raise NotImplementedError('What to do with that type '
+                                      f'not yet defined: {registers, quantity, properties}')
         scaled = value / properties.scale
 
         self.__logger.debug(
@@ -204,18 +208,39 @@ class ModbusDevice(Thread):
             Send convert objects into verifier.
             When all objects polled, send device_id into verifier as finish signal.
         """
-        [self.__put_data_into_verifier(
-            self.__convert_to_bacnet_properties(
-                device_id=self.id,
-                obj=obj,
-                value=self.process_registers(
-                    registers=self.read(
-                        cmd_code=obj.func_read,
-                        reg_address=obj.address,
-                        quantity=obj.quantity),
-                    quantity=obj.quantity,
-                    properties=obj.properties)
-            )) for obj in objects]
+        for obj in objects:
+            try:
+                registers = self.read(cmd_code=obj.func_read,
+                                      reg_address=obj.address,
+                                      quantity=obj.quantity
+                                      )
+                value = self.process_registers(registers=registers,
+                                               quantity=obj.quantity,
+                                               properties=obj.properties
+                                               )
+                converted_properties = self.__convert_to_bacnet_properties(
+                    device_id=self.id,
+                    obj=obj,
+                    value=value
+                )
+                self.__put_data_into_verifier(properties=converted_properties)
+
+            except Exception as e:
+                self.__logger.warning(f'Object {obj} was skipped due to an error: {e}',
+                                      exc_info=True)
+
+        # [self.__put_data_into_verifier(
+        #     self.__convert_to_bacnet_properties(
+        #         device_id=self.id,
+        #         obj=obj,
+        #         value=self.process_registers(
+        #             registers=self.read(
+        #                 cmd_code=obj.func_read,
+        #                 reg_address=obj.address,
+        #                 quantity=obj.quantity),
+        #             quantity=obj.quantity,
+        #             properties=obj.properties)
+        #     )) for obj in objects]
 
         self.__put_device_end_to_verifier()
 

@@ -57,4 +57,4 @@ def cast_2_registers(registers: list[int],
     try:
         return decode_func[type_name]()
     except KeyError:
-        raise ValueError(f'Type <{type_name}> not implemented yet')
+        raise ValueError(f'Behavior for <{type_name}> not implemented')
