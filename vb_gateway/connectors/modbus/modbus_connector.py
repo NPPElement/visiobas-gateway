@@ -279,14 +279,18 @@ class ModbusConnector(Thread, Connector):
             scale = int(modbus_properties.get('scale', 1))
             data_type = modbus_properties['dataType']
             data_length = modbus_properties.get('dataLength', None)
-
-            if data_length is None and data_type != 'BOOL':
-                data_length = quantity * 16
+            bit = modbus_properties.get('bit', None)
 
             # byte_order = '<' if quantity == 1 else '>'
             byte_order = None  # don't use now
 
-            bit = modbus_properties.get('bit', None)
+            # trying to fill the data if it is not enough
+            if data_type == 'BOOL' and bit is None and data_length is None:
+                data_length = 16
+            elif data_type == 'BOOL' and isinstance(bit, int) and data_length is None:
+                data_length = 1
+            elif data_type != 'BOOL' and data_length is None and isinstance(quantity, int):
+                data_length = quantity * 16
 
             properties = VisioModbusProperties(scale=scale,
                                                data_type=data_type,
