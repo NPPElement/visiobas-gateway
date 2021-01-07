@@ -91,7 +91,7 @@ class ModbusConnector(Thread, Connector):
                         devices_id=tuple(self.__address_cache.keys()),
                         default_update_interval=self.default_update_period
                     )
-                    _log.info('Received update intervals for devices.'
+                    _log.info('Received update intervals for devices. '
                               'Starting them ...')
 
                     # Unpack json from server to BACnetObjects class

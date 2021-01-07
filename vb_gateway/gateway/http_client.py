@@ -66,11 +66,11 @@ class VisioHTTPClient(Thread):
                                            post_servers_data=self.post_servers_data
                                            ))
                 except ClientConnectorError as e:
-                    _log.error(f'Login error: {e} Sleeping 30 sec ...')  # , exc_info=True)
+                    _log.warning(f'Login error: {e} Sleeping 30 sec ...')  # , exc_info=True)
                     sleep(30)
                 else:
                     self.__connected = True
-                    _log.info('Successfully log in to the server.')
+                    _log.info('Successfully log in to the servers.')
         else:
             _log.info(f'{self} stopped.')
 
@@ -120,9 +120,9 @@ class VisioHTTPClient(Thread):
                                           user_id=data['user_id'],
                                           auth_user_id=data['auth_user_id']
                                           )
-                _log.debug(f'Successfully authorized on {server_data}')
+                _log.info(f'Successfully authorized on {server_data}')
             except Exception as e:
-                _log.error(f'Login Error! Please check host/login/password: {e}',
+                _log.error(f'Login Error! Please check {server_data}: {e}',
                            exc_info=True)
                 raise e
 
@@ -237,7 +237,7 @@ class VisioHTTPClient(Thread):
         if response.status == 200:
             resp_json = await response.json()
             if resp_json['success']:
-                _log.debug('Received information from the server.')
+                _log.debug(f'Received information from the server: {response.url}')
                 return resp_json['data']
             else:
                 _log.warning('Server returned failure response.')

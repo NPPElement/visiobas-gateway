@@ -334,7 +334,7 @@ class BACnetConnector(Thread, Connector):
                 upd_interval = loads(prop_371)['update_interval']
                 devices_intervals[dev_id] = upd_interval
             except LookupError as e:
-                _log.error(
+                _log.warning(
                     f'Update interval for Device [{dev_id}] cannot be extracted: {e}')
                 devices_intervals[dev_id] = default_update_interval
 

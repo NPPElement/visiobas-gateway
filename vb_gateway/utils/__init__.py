@@ -2,7 +2,7 @@ from os import environ
 
 
 class VisioHTTPServerData:
-    __slots__ = ('login', 'password', 'host', 'port', 'base_url',
+    __slots__ = ('login', 'password', 'host', 'port',
                  'bearer_token', 'user_id', 'auth_user_id'
                  )
 
@@ -11,8 +11,6 @@ class VisioHTTPServerData:
         self.password = password
         self.host = host
         self.port = port
-
-        self.base_url = 'http://' + ':'.join((self.host, str(self.port)))
 
         self.bearer_token = None
         self.user_id = None
@@ -38,6 +36,10 @@ class VisioHTTPServerData:
         self.bearer_token = bearer_token
         self.user_id = user_id
         self.auth_user_id = auth_user_id
+
+    @property
+    def base_url(self) -> str:
+        return 'http://' + ':'.join((self.host, str(self.port)))
 
     @property
     def auth_payload(self) -> dict[str, str]:
@@ -76,6 +78,7 @@ def read_cfg_from_env() -> dict:
                 var_name = f'POST_{i}'
                 post_server_data = VisioHTTPServerData.read_from_env(var_name=var_name)
                 post_servers_data.append(post_server_data)
+                i += 1
 
             except EnvironmentError:
                 break
