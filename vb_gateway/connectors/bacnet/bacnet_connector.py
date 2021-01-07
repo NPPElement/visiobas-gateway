@@ -210,6 +210,7 @@ class BACnetConnector(Thread, Connector):
 
     def __close_bac0_networks(self) -> None:
         """ Close connections with BAC0 Networks"""
+
         if isinstance(self.__networks, Lite):
             self.__networks.disconnect()
         elif self.__networks and isinstance(self.__networks, dict):
@@ -219,8 +220,8 @@ class BACnetConnector(Thread, Connector):
 
     def update_devices(self, devices: dict[int, set[BACnetObject]],
                        update_intervals: dict[int, int]) -> None:
-        """ Starts BACnet devices threads
-        """
+        """ Starts BACnet devices threads """
+
         for device_id, objects in devices.items():
             if device_id in self.__polling_devices:
                 self.__stop_device(device_id=device_id)
@@ -231,8 +232,8 @@ class BACnetConnector(Thread, Connector):
 
     def __start_device(self, device_id: int, objects: set[BACnetObject],
                        update_interval: int) -> None:
-        """ Start BACnet device thread
-        """
+        """ Start BACnet device thread """
+
         _log.debug(f'Starting Device [{device_id}] ...')
         try:
             # If have one interface
@@ -277,8 +278,8 @@ class BACnetConnector(Thread, Connector):
             _log.info(f'Device [{device_id}] started')
 
     def __stop_devices(self, devices_id: tuple) -> None:
-        """ Stops BACnet Devices threads
-        """
+        """ Stops BACnet Devices threads """
+
         try:
             [self.__stop_device(device_id=device_id) for device_id in devices_id]
             for dev_id in devices_id:
@@ -290,8 +291,7 @@ class BACnetConnector(Thread, Connector):
             _log.info(f'BACnet devices [{devices_id}] were stopping')
 
     def __stop_device(self, device_id: int) -> None:
-        """ Stop device by device_id
-        """
+        """ Stop device by device_id """
         try:
             _log.debug(f'Device [{device_id}] stopping polling ...')
             self.__polling_devices[device_id].stop_polling()
@@ -307,21 +307,24 @@ class BACnetConnector(Thread, Connector):
 
     def get_devices_objects(self, devices_id: tuple[int],
                             obj_types: tuple) -> dict[int, dict[ObjType, list[dict]]]:
-        """ Requests objects for modbus connector from server via http client
-        """
+        """ Requests objects for modbus connector from server via http client """
         devices_objs = asyncio.run(
-            self.__gateway.http_client.rq_devices_objects(devices_id=devices_id,
-                                                          obj_types=obj_types))
+            self.__gateway.http_client.rq_devices_objects(
+                get_server_data=self.__gateway.http_client.get_server_data,
+                devices_id=devices_id,
+                obj_types=obj_types
+            ))
         return devices_objs
 
     def get_devices_update_interval(self, devices_id: tuple[int],
                                     default_update_interval: int) -> dict[int, int]:
-        """ Receive update intervals for devices via http client
-        """
-        device_objs = asyncio.run(self.__gateway.http_client.rq_devices_objects(
-            devices_id=devices_id,
-            obj_types=(ObjType.DEVICE,)
-        ))
+        """ Receive update intervals for devices via http client """
+        device_objs = asyncio.run(
+            self.__gateway.http_client.rq_devices_objects(
+                get_server_data=self.__gateway.http_client.get_server_data,
+                devices_id=devices_id,
+                obj_types=(ObjType.DEVICE,)
+            ))
         devices_intervals = {}
 
         # Extract update_interval from server's response

@@ -1,21 +1,89 @@
 from os import environ
 
 
+class VisioHTTPServerData:
+    __slots__ = ('login', 'password', 'host', 'port', 'base_url',
+                 'bearer_token', 'user_id', 'auth_user_id'
+                 )
+
+    def __init__(self, login: str, password: str, host: str, port: int):
+        self.login = login
+        self.password = password
+        self.host = host
+        self.port = port
+
+        self.base_url = 'http://' + ':'.join((self.host, str(self.port)))
+
+        self.bearer_token = None
+        self.user_id = None
+        self.auth_user_id = None
+
+    @classmethod
+    def read_from_env(cls, var_name: str):
+        try:
+            return cls(login=environ[f'HTTP_{var_name}_LOGIN'],
+                       password=environ[f'HTTP_{var_name}_PASSWORD'],
+                       host=environ[f'HTTP_{var_name}_HOST'],
+                       port=int(environ[f'HTTP_{var_name}_PORT'])
+                       )
+        except KeyError:
+            raise EnvironmentError("Please ensure environment variables are set to: \n"
+                                   f"'HTTP_{var_name}_HOST'\n"
+                                   f"'HTTP_{var_name}_PORT'\n"
+                                   f"'HTTP_{var_name}_LOGIN'\n"
+                                   f"'HTTP_{var_name}_PASSWORD'"
+                                   )
+
+    def set_auth_data(self, bearer_token: str, user_id: int, auth_user_id: int) -> None:
+        self.bearer_token = bearer_token
+        self.user_id = user_id
+        self.auth_user_id = auth_user_id
+
+    @property
+    def auth_payload(self) -> dict[str, str]:
+        data = {'login': self.login,
+                'password': self.password
+                }
+        return data
+
+    @property
+    def auth_headers(self) -> dict[str, str]:
+        if isinstance(self.bearer_token, str):
+            headers = {'Authorization': f'Bearer {self.bearer_token}'
+                       }
+            return headers
+
+    def __repr__(self) -> str:
+        return (f'VisioHTTPServerData(host: {self.host}, port: {self.port}, '
+                f'login: {self.login})')
+
+    def __hash__(self):
+        return hash((self.host, self.port, self.login))
+
+
 def read_cfg_from_env() -> dict:
     """
     :return: Config, read from environment variables
     """
+
     try:
+        get_server_data = VisioHTTPServerData.read_from_env(var_name='GET')
+        post_servers_data = []
+
+        i = 0
+        while True:
+            try:
+                var_name = f'POST_{i}'
+                post_server_data = VisioHTTPServerData.read_from_env(var_name=var_name)
+                post_servers_data.append(post_server_data)
+
+            except EnvironmentError:
+                break
+
         config = {
             'http': {
-                'get_host': environ['HTTP_GET_HOST'],
-                'post_hosts': [host.strip("'") for host in
-                               environ.get('HTTP_POST_HOSTS', '').split(' ')],  # todo
-                'port': int(environ.get('HTTP_PORT', 8080)),
-                'auth': {
-                    'login': environ['HTTP_AUTH_LOGIN'],
-                    'password': environ['HTTP_AUTH_PASSWORD']
-                }
+                'get_server_data': get_server_data,
+                'post_servers_data': post_servers_data
             },
             'bacnet_verifier': {
                 'http_enable': True if environ.get(
@@ -33,11 +101,12 @@ def read_cfg_from_env() -> dict:
                     environ.get('MODBUS_DEFAULT_UPDATE_PERIOD', 10))
             }
         }
-    except KeyError:
-        raise ValueError(
+    except EnvironmentError:
+        raise EnvironmentError(
             "Please ensure environment variables are set to: \n"
-            "'HTTP_GET_HOST'\n'HTTP_POST_HOSTS'\n"
-            "'HTTP_AUTH_LOGIN'\n'HTTP_AUTH_PASSWORD'\n\n"
+            "'HTTP_{server}_HOST'\n'HTTP_{server}_PORT'\n"
+            "'HTTP_{server}_LOGIN'\n'HTTP_{server}_PASSWORD'\nfor each server.\n\n"
+
             "Also you can provide optional variables: \n"
             "'HTTP_PORT' by default = 8080\n"
             "'HTTP_ENABLE' by default = FALSE\n"

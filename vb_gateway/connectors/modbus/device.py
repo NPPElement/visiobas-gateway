@@ -161,7 +161,7 @@ class ModbusDevice(Thread):
 
     def process_registers(self, registers: list[int],
                           quantity: int,
-                          properties: VisioModbusProperties) -> float or str:
+                          properties: VisioModbusProperties) -> int or float or str:
         """ Perform casting to desired type and scale"""
         if registers is None:
             return 'null'

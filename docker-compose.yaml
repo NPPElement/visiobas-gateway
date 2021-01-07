@@ -15,7 +15,7 @@ services:
     restart: always
     user: root
     env_file:
-      - http_auth.env
+      - http_config.env
 
     environment:
       - TZ=Europe/Moscow
@@ -24,15 +24,6 @@ services:
       # Logging
       - LOG_LEVEL=INFO
       - FILE_LOG_LEVEL=INFO
-
-      # Address for request information via HTTP
-      - HTTP_GET_HOST=10.21.80.9
-
-      # Addresses to post information via HTTP. Delimiter: space (' ').
-      # Now uses HTTP_GET_HOST for post to same server
-      - HTTP_POST_HOSTS='10.21.80.9 nppelement.com'
-
-      - HTTP_PORT=8080
 
       # Provide 'TRUE' or 'FALSE' for enable\disable sending data via protocol
       - HTTP_ENABLE=TRUE

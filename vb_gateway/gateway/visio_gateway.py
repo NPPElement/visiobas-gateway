@@ -21,7 +21,8 @@ class VisioGateway:
 
         self.http_client = VisioHTTPClient(gateway=self,
                                            config=self.__config['http'],
-                                           verifier_queue=self.__verifier_http_queue)
+                                           verifier_queue=self.__verifier_http_queue
+                                           )
         # self.__mqtt_broker = VisioMQTTBroker()
         sleep(1)
 
@@ -32,7 +33,8 @@ class VisioGateway:
 
         self.__verifier = BACnetVerifier(protocols_queue=self.__protocol_verifier_queue,
                                          http_queue=self.__verifier_http_queue,
-                                         config=self.__config['bacnet_verifier'])
+                                         config=self.__config['bacnet_verifier']
+                                         )
         self.__verifier.start()
 
         self.__connectors = {
