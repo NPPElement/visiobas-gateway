@@ -6,5 +6,5 @@ vb_gateway/*.log*
 *.DS_Store
 .DS_Store
 *address_cache
-http_auth.env
 http_config.env
+vb_gateway/utils/for_test.py
