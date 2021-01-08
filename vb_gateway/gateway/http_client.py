@@ -8,7 +8,7 @@ from aiohttp import ClientConnectorError, ClientSession, ClientResponse
 
 from vb_gateway.connectors.bacnet import ObjProperty, ObjType
 from vb_gateway.logs import get_file_logger
-from vb_gateway.utils import VisioHTTPServerData
+from vb_gateway.utils import VisioHTTPServerConfig
 
 _base_path = Path(__file__).resolve().parent.parent
 _log_file_path = _base_path / f'logs/{__name__}.log'
@@ -84,10 +84,10 @@ class VisioHTTPClient(Thread):
         self.__stopped = True
         _log.info(f'{self} was stopped.')
 
-    async def login(self, get_server_data: VisioHTTPServerData,
-                    post_servers_data: list[VisioHTTPServerData]) -> None:
+    async def login(self, get_server_data: VisioHTTPServerConfig,
+                    post_servers_data: list[VisioHTTPServerConfig]) -> None:
         """ Perform async auth to several servers. Set auth data. """
-
+        _log.debug(f'GET server: {get_server_data} POST servers: {post_servers_data}')
         get_in_posts = get_server_data in post_servers_data
 
         if get_in_posts:
@@ -109,7 +109,7 @@ class VisioHTTPClient(Thread):
             # to the list for sending data
             post_servers_data.append(get_server_data)
 
-    async def __rq_login(self, server_data: VisioHTTPServerData,
+    async def __rq_login(self, server_data: VisioHTTPServerConfig,
                          session: ClientSession) -> None:
         _log.info(f'Logging in to {server_data} ...')
         auth_url = server_data.base_url + '/auth/rest/login'
@@ -127,7 +127,7 @@ class VisioHTTPClient(Thread):
                            exc_info=True)
                 raise e
 
-    async def rq_post_device(self, post_servers_data: list[VisioHTTPServerData],
+    async def rq_post_device(self, post_servers_data: list[VisioHTTPServerConfig],
                              device_id: int, data) -> None:
         """ Send data to several servers asynchronously """
         async with ClientSession() as session:  # todo: session as param in future
@@ -139,7 +139,7 @@ class VisioHTTPClient(Thread):
                         server_data in post_servers_data]
             await asyncio.gather(*rq_tasks)
 
-    async def __rq_post_device(self, post_server_data: VisioHTTPServerData,
+    async def __rq_post_device(self, post_server_data: VisioHTTPServerConfig,
                                device_id: int, data, session: ClientSession) -> None:
         """ Sends the polled information about the device to the server.
         Now only inform about rejected devices.
@@ -160,7 +160,7 @@ class VisioHTTPClient(Thread):
                                         data=data)
             # return data
 
-    async def __rq_device_object(self, get_server_data: VisioHTTPServerData,
+    async def __rq_device_object(self, get_server_data: VisioHTTPServerConfig,
                                  device_id: int, object_type: ObjType,
                                  session: ClientSession) -> list[dict]:
         """ Request of all available objects by device_id and object_type
@@ -180,7 +180,7 @@ class VisioHTTPClient(Thread):
             data = await self.__extract_response_data(response=response)
             return data
 
-    async def __rq_objects_for_device(self, get_server_data: VisioHTTPServerData,
+    async def __rq_objects_for_device(self, get_server_data: VisioHTTPServerConfig,
                                       device_id: int, object_types: tuple[ObjType],
                                       session: ClientSession) -> dict[ObjType, list[dict]]:
         """ Requests types of objects by device_id """
@@ -202,7 +202,7 @@ class VisioHTTPClient(Thread):
         _log.debug(f'For device_id: {device_id} received objects')  #: {device_objects}')
         return device_objects
 
-    async def rq_devices_objects(self, get_server_data: VisioHTTPServerData,
+    async def rq_devices_objects(self, get_server_data: VisioHTTPServerConfig,
                                  devices_id: tuple[int],
                                  obj_types: tuple[ObjType]
                                  ) -> dict[int, dict[ObjType, list[dict]]]:

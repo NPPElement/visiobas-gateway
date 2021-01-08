@@ -1,8 +1,8 @@
 from os import environ
 
 
-class VisioHTTPServerData:
-    # That class allows to create only one instance for each server
+class VisioHTTPServerConfig:
+    # That class allows to create only one instance for each server's params
     _instances = {}  # keeps instances references
 
     __slots__ = ('login', 'password', 'host', 'port',
@@ -10,11 +10,12 @@ class VisioHTTPServerData:
                  )
 
     def __new__(cls, *args, **kwargs):
-        if cls._instances.get(hash(args)) is None:
-            cls._instances[hash(args)] = super().__new__(cls)
-        return cls._instances[hash(args)]
+        _hash = hash(frozenset(kwargs.items()))
+        if cls._instances.get(_hash, None) is None:
+            cls._instances[_hash] = super().__new__(cls)
+        return cls._instances[_hash]
 
-    def __init__(self, login: str, password: str, host: str, port: int):
+    def __init__(self, *, login: str, password: str, host: str, port: int):
         self.login = login
         self.password = password
         self.host = host
@@ -80,14 +81,14 @@ def read_cfg_from_env() -> dict:
     """
 
     try:
-        get_server_data = VisioHTTPServerData.read_from_env(var_name='GET')
+        get_server_data = VisioHTTPServerConfig.read_from_env(var_name='GET')
         post_servers_data = []
 
         i = 0
         while True:
             try:
                 var_name = f'POST_{i}'
-                post_server_data = VisioHTTPServerData.read_from_env(var_name=var_name)
+                post_server_data = VisioHTTPServerConfig.read_from_env(var_name=var_name)
                 post_servers_data.append(post_server_data)
                 i += 1
 
