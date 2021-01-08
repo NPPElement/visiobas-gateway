@@ -5,12 +5,20 @@ from time import time, sleep
 
 from pymodbus.client.sync import ModbusTcpClient
 
-from vb_gateway.connectors.bacnet.obj_property import ObjProperty
-from vb_gateway.connectors.modbus.object import ModbusObject
-from vb_gateway.utility.utility import get_file_logger
+from vb_gateway.connectors.bacnet import ObjProperty
+from vb_gateway.connectors.modbus import (ModbusObject,
+                                          VisioModbusProperties,
+                                          cast_to_bit,
+                                          cast_2_registers)
+from vb_gateway.logs import get_file_logger
 
 
 class ModbusDevice(Thread):
+    __slots__ = ('id', 'address', 'port', 'update_period', '__logger',
+                 '__client', '__available_functions',
+                 '__connector', '__verifier_queue',
+                 '__polling', 'objects')
+
     def __init__(self,
                  verifier_queue: SimpleQueue,
                  connector,
@@ -20,21 +28,16 @@ class ModbusDevice(Thread):
                  update_period: int = 10):
         super().__init__()
 
-        __slots__ = ('id', 'address', 'port', 'update_period', '__logger',
-                     '__client', '__available_functions',
-                     '__connector', '__verifier_queue',
-                     '__polling', 'objects')
-
         self.id = device_id
         self.address, self.port = address.split(sep=':', maxsplit=1)
         self.update_period = update_period
 
-        base_path = Path(__file__).resolve().parent.parent.parent
-        log_file_path = base_path / f'logs/{self.id}.log'
+        _base_path = Path(__file__).resolve().parent.parent.parent
+        _log_file_path = _base_path / f'logs/{self.id}.log'
 
         self.__logger = get_file_logger(logger_name=f'{self}',
-                                        file_size_bytes=50_000_000,
-                                        file_path=log_file_path)
+                                        size_bytes=50_000_000,
+                                        file_path=_log_file_path)
 
         self.__client, self.__available_functions = None, None
 
@@ -78,7 +81,7 @@ class ModbusDevice(Thread):
                         '==================================================')
 
                     if time_delta < self.update_period:
-                        waiting_time = self.update_period - time_delta
+                        waiting_time = (self.update_period - time_delta) * 0.8
                         self.__logger.debug(
                             f'{self} Sleeping {round(waiting_time, ndigits=2)} sec ...')
                         sleep(waiting_time)
@@ -121,7 +124,7 @@ class ModbusDevice(Thread):
                 5: client.write_coil,
                 6: client.write_register,
                 15: client.write_coils,
-                16: client.write_registers,
+                16: client.write_registers
             }
             self.__logger.info(f'{self} client initialized')
 
@@ -131,21 +134,8 @@ class ModbusDevice(Thread):
         else:
             return client, available_functions
 
-    @staticmethod
-    def concat_2int16_to_int32(reg1: int, reg2: int) -> int:
-        """ Concatenate two int16 into one int32
-
-            Example:
-        56352, 18669 -> 1101110000100000, 100100011101101 ->
-        1101110000100000100100011101101 -> 1846561005
-        """
-        assert isinstance(reg1, int)
-        assert isinstance(reg2, int)
-
-        return int(bin(reg1)[2:] + bin(reg2)[2:], base=2)
-
     def read(self, cmd_code: int, reg_address: int,
-             quantity: int = 1, unit=0x01, scale: int = 1):
+             quantity: int, unit=0x01) -> list[int] or None:
         """ Read data from Modbus registers
         """
         if cmd_code not in {1, 2, 3, 4}:
@@ -159,28 +149,58 @@ class ModbusDevice(Thread):
             self.__logger.error(
                 f'Read error from reg: {reg_address}, quantity: {quantity} : {e}',
                 exc_info=True)
-            return 'null'
+            return None
 
         else:
             if not data.isError():
-                if quantity == 1:
-                    scaled = data.registers[0] / scale
-                    self.__logger.debug(
-                        f'From register: {reg_address} read: {data.registers} '
-                        f'scale: {scale} scaled: {scaled} ')
-                    return scaled
-                if quantity == 2:
-                    int32 = self.concat_2int16_to_int32(reg1=data.registers[0],
-                                                        reg2=data.registers[1])
-                    scaled = int32 / scale
-                    self.__logger.debug(
-                        f'From register: {reg_address} read: {data.registers} '
-                        f'int32: {int32} scale: {scale} scaled: {scaled} ')
-                    return scaled
+                self.__logger.debug(f'From register: {reg_address} read: {data.registers}')
                 return data.registers
             else:
                 self.__logger.error(f'Received error response from {reg_address}')
-                return 'null'
+                return None
+
+    def process_registers(self, registers: list[int],
+                          quantity: int,
+                          properties: VisioModbusProperties) -> int or float or str:
+        """ Perform casting to desired type and scale"""
+        if registers is None:
+            return 'null'
+
+        if (properties.data_type == 'BOOL' and quantity == 1 and
+                properties.data_length == 1 and isinstance(properties.bit, int)):
+            # bool: 1bit
+            # TODO: Group bits into one request for BOOL
+            value = cast_to_bit(register=registers, bit=properties.bit)
+
+        elif (properties.data_type == 'BOOL' and quantity == 1 and
+              properties.data_length == 16):
+            # bool: 16bit
+            value = int(bool(registers[0]))
+
+        elif quantity == 1 and properties.data_length == 16:
+            # expected only: int16 | uint16 |  fixme: BYTE?
+            value = registers[0]
+
+        elif (properties.data_type == 'FLOAT' and
+              quantity == 2 and properties.data_length == 32):  # float32
+            value = round(cast_2_registers(registers=registers,
+                                           byteorder='>', wordorder='<',  # fixme use obj
+                                           type_name=properties.data_type),
+                          ndigits=6)
+        elif ((properties.data_type == 'INT' or properties.data_type == 'UINT') and
+              quantity == 2 and properties.data_length == 32):  # int32 | uint32
+            value = cast_2_registers(registers=registers,
+                                     byteorder='<', wordorder='>',  # fixme use obj
+                                     type_name=properties.data_type)
+        else:
+            raise NotImplementedError('What to do with that type '
+                                      f'not yet defined: {registers, quantity, properties}')
+        scaled = value / properties.scale
+
+        self.__logger.debug(
+            f'Registers: {registers} Casted: {value} '
+            f'scale: {properties.scale} scaled: {scaled} ')
+        return scaled
 
     def poll(self, objects: list[ModbusObject]) -> None:
         """ Read objects from registers in Modbus Device.
@@ -188,15 +208,39 @@ class ModbusDevice(Thread):
             Send convert objects into verifier.
             When all objects polled, send device_id into verifier as finish signal.
         """
-        [self.__put_data_into_verifier(
-            self.__convert_to_bacnet_properties(
-                device_id=self.id,
-                obj=obj,
-                value=self.read(
-                    cmd_code=obj.func_read,
-                    reg_address=obj.address,
-                    quantity=obj.quantity,
-                    scale=obj.scale))) for obj in objects]
+        for obj in objects:
+            try:
+                registers = self.read(cmd_code=obj.func_read,
+                                      reg_address=obj.address,
+                                      quantity=obj.quantity
+                                      )
+                value = self.process_registers(registers=registers,
+                                               quantity=obj.quantity,
+                                               properties=obj.properties
+                                               )
+                converted_properties = self.__convert_to_bacnet_properties(
+                    device_id=self.id,
+                    obj=obj,
+                    value=value
+                )
+                self.__put_data_into_verifier(properties=converted_properties)
+
+            except Exception as e:
+                self.__logger.warning(f'Object {obj} was skipped due to an error: {e}',
+                                      exc_info=True)
+
+        # [self.__put_data_into_verifier(
+        #     self.__convert_to_bacnet_properties(
+        #         device_id=self.id,
+        #         obj=obj,
+        #         value=self.process_registers(
+        #             registers=self.read(
+        #                 cmd_code=obj.func_read,
+        #                 reg_address=obj.address,
+        #                 quantity=obj.quantity),
+        #             quantity=obj.quantity,
+        #             properties=obj.properties)
+        #     )) for obj in objects]
 
         self.__put_device_end_to_verifier()
 

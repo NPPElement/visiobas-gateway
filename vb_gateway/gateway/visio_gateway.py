@@ -1,7 +1,5 @@
-from json import load
 from logging import getLogger
 from multiprocessing import SimpleQueue
-from pathlib import Path
 from time import sleep
 
 from vb_gateway.connectors.bacnet.bacnet_connector import BACnetConnector
@@ -23,7 +21,8 @@ class VisioGateway:
 
         self.http_client = VisioHTTPClient(gateway=self,
                                            config=self.__config['http'],
-                                           verifier_queue=self.__verifier_http_queue)
+                                           verifier_queue=self.__verifier_http_queue
+                                           )
         # self.__mqtt_broker = VisioMQTTBroker()
         sleep(1)
 
@@ -34,7 +33,9 @@ class VisioGateway:
 
         self.__verifier = BACnetVerifier(protocols_queue=self.__protocol_verifier_queue,
                                          http_queue=self.__verifier_http_queue,
-                                         config=self.__config['bacnet_verifier'])
+                                         config=self.__config['bacnet_verifier']
+                                         )
+        self.__verifier.start()
 
         self.__connectors = {
             'bacnet': BACnetConnector(
