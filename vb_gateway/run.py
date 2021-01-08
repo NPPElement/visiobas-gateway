@@ -4,8 +4,8 @@ import sys
 
 from vb_gateway.gateway.visio_gateway import VisioGateway
 from vb_gateway.logs import disable_loggers
-from vb_gateway.utils.for_test import get_test_cfg
-# from vb_gateway.utils import read_cfg_from_env
+# from vb_gateway.utils.for_test import get_test_cfg
+from vb_gateway.utils import read_cfg_from_env
 
 # Setting the VisioGateway logging level
 _LOGGER_FORMAT = ('%(levelname)-8s [%(asctime)s] [%(threadName)s] %(name)s - '
@@ -30,8 +30,8 @@ disable_loggers(loggers=_unused_loggers)
 
 
 def main():
-    # config = read_cfg_from_env()
-    config = get_test_cfg()
+    config = read_cfg_from_env()
+    # config = get_test_cfg()
 
     VisioGateway(config=config)
 
