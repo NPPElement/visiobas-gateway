@@ -6,7 +6,7 @@ from time import sleep
 
 from aiohttp import ClientConnectorError, ClientSession, ClientResponse
 
-from vb_gateway.connectors.bacnet import ObjProperty, ObjType
+from vb_gateway.connectors.bacnet import ObjType
 from vb_gateway.logs import get_file_logger
 from vb_gateway.utils import VisioHTTPServerConfig
 
@@ -32,7 +32,7 @@ class VisioHTTPClient(Thread):
         self.get_server_data = self.__config['get_server_data']
         self.post_servers_data = self.__config['post_servers_data']
 
-        # self.__session = None
+        # self.__session = None  # todo: KEEP one session in future
         self.__connected = False
 
         _log.info(f'{self} starting ...')
@@ -44,6 +44,8 @@ class VisioHTTPClient(Thread):
             Periodically requests updates from the server.
             Sends data from connectors.
         """
+        # FIXME: implement attempts to login in fail case
+
         while not self.__stopped:
             if self.__connected:  # IF AUTHORIZED
                 try:
@@ -66,7 +68,8 @@ class VisioHTTPClient(Thread):
                                            post_servers_data=self.post_servers_data
                                            ))
                 except ClientConnectorError as e:
-                    _log.warning(f'Login error: {e} Sleeping 30 sec ...')  # , exc_info=True)
+                    _log.warning(
+                        f'Login error: {e} Sleeping 30 sec ...')  # , exc_info=True)
                     sleep(30)
                 else:
                     self.__connected = True
@@ -142,11 +145,11 @@ class VisioHTTPClient(Thread):
     async def __rq_post_device(self, post_server_data: VisioHTTPServerConfig,
                                device_id: int, data, session: ClientSession) -> None:
         """ Sends the polled information about the device to the server.
-        Now only inform about rejected devices.
 
         # :return: list of objects id, rejected by server side.
         """
-        _log.debug(f'Sending collected data about device [{device_id}]')
+        # _log.debug(f'Sending collected data about [{device_id}] '
+        #            f'device to {post_server_data} ...')
         post_url = f'{post_server_data.base_url}/vbas/gate/light/{device_id}'
 
         async with session.post(url=post_url,
@@ -155,9 +158,9 @@ class VisioHTTPClient(Thread):
                                 ) as response:
             _log.debug(f'POST: {post_url}\n'
                        f'Body: {data}')
-            data = await self.__extract_response_data(response=response)
-            await self.__check_rejected(device_id=device_id,
-                                        data=data)
+            _ = await self.__extract_response_data(response=response)
+            # await self.__check_rejected(device_id=device_id,
+            #                             data=data)
             # return data
 
     async def __rq_device_object(self, get_server_data: VisioHTTPServerConfig,
@@ -168,8 +171,8 @@ class VisioHTTPClient(Thread):
         :param object_type:
         :return: data received from the server
         """
-        _log.debug(f"Requesting information about device [{device_id}], "
-                   f"object_type: {object_type.name_dashed} from the {get_server_data} ...")
+        # _log.debug(f"Requesting information about device [{device_id}], "
+        #            f"object_type: {object_type.name_dashed} from the {get_server_data} ...")
 
         get_url = (f'{get_server_data.base_url}'
                    f'/vbas/gate/get/{device_id}/{object_type.name_dashed}')
@@ -199,7 +202,7 @@ class VisioHTTPClient(Thread):
                           zip(object_types, await asyncio.gather(*objects_requests))
                           if objects
                           }
-        _log.debug(f'For device_id: {device_id} received objects')  #: {device_objects}')
+        # _log.debug(f'For device_id: {device_id} received objects')  #: {device_objects}')
         return device_objects
 
     async def rq_devices_objects(self, get_server_data: VisioHTTPServerConfig,
@@ -238,32 +241,33 @@ class VisioHTTPClient(Thread):
         if response.status == 200:
             resp_json = await response.json()
             if resp_json['success']:
-                _log.debug(f'Received information from the server: {response.url}')
+                _log.debug(f'Received successfully response from server: {response.url}')
                 return resp_json['data']
             else:
-                _log.warning('Server returned failure response.')
-                _log.info(f'{resp_json}')
+                _log.warning(f'Server returned failure response: {response.url}\n'
+                             f'{resp_json}')
         else:
-            _log.warning(f'Server response status error: {response.status}')
+            _log.warning('Server response status error: '
+                         f'[{response.status}] {response.url}')
 
-    @staticmethod
-    async def __check_rejected(device_id: int, data: list) -> list:
-        """ Inform about rejected objects.
-
-        # todo: Now the server does not always correctly return the list with errors.
-
-        :param data: polled by BACnet Device
-        # :return: list of rejected by server side.
-        """
-        if not data:  # all object are accepted on server side
-            _log.debug(f"POST-result: Device [{device_id}] "
-                       "Server didn't return unaccepted objects.")
-            return data
-        else:
-            rejected_objects_id = [obj[str(ObjProperty.objectIdentifier.id)] for
-                                   obj in data]
-            _log.warning(f'POST-result: Device [{device_id}] '
-                         'Error processing objects on '
-                         f'the server: {rejected_objects_id}')
-            # todo: What should we doing with rejected objects?
-            return rejected_objects_id
+    # @staticmethod
+    # async def __check_rejected(device_id: int, data: list) -> list:
+    #     """ Inform about rejected objects.
+    #
+    #     # todo: Now the server does not always correctly return the list with errors.
+    #
+    #     :param data: polled by BACnet Device
+    #     # :return: list of rejected by server side.
+    #     """
+    #     if not data:  # all object are accepted on server side
+    #         _log.debug(f"POST-result: Device [{device_id}] "
+    #                    "Server didn't return unaccepted objects.")
+    #         return data
+    #     else:
+    #         rejected_objects_id = [obj[str(ObjProperty.objectIdentifier.id)] for
+    #                                obj in data]
+    #         _log.warning(f'POST-result: Device [{device_id}] '
+    #                      'Error processing objects on '
+    #                      f'the server: {rejected_objects_id}')
+    #         # todo: What should we doing with rejected objects?
+    #         return rejected_objects_id
