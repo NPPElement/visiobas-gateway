@@ -58,7 +58,7 @@ class VisioHTTPClient(Thread):
                                             data=device_str
                                             ))
                 except Exception as e:
-                    _log.error(f"Receive'n'post device error: {e}", exc_info=True)
+                    _log.error(f"Receive or post device error: {e}", exc_info=True)
 
             else:  # IF NOT AUTHORIZED
                 try:
@@ -87,6 +87,7 @@ class VisioHTTPClient(Thread):
     async def login(self, get_server_data: VisioHTTPServerData,
                     post_servers_data: list[VisioHTTPServerData]) -> None:
         """ Perform async auth to several servers. Set auth data. """
+
         get_in_posts = get_server_data in post_servers_data
 
         if get_in_posts:

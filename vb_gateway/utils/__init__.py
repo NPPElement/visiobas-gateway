@@ -2,9 +2,17 @@ from os import environ
 
 
 class VisioHTTPServerData:
+    # That class allows to create only one instance for each server
+    _instances = {}  # keeps instances references
+
     __slots__ = ('login', 'password', 'host', 'port',
                  'bearer_token', 'user_id', 'auth_user_id'
                  )
+
+    def __new__(cls, *args, **kwargs):
+        if cls._instances.get(hash(args)) is None:
+            cls._instances[hash(args)] = super().__new__(cls)
+        return cls._instances[hash(args)]
 
     def __init__(self, login: str, password: str, host: str, port: int):
         self.login = login
@@ -56,11 +64,14 @@ class VisioHTTPServerData:
             return headers
 
     def __repr__(self) -> str:
-        return (f'VisioHTTPServerData(host: {self.host}, port: {self.port}, '
-                f'login: {self.login})')
+        return f'VisioHTTPServerData({self.base_url}, login: {self.login})'
 
-    def __hash__(self):
-        return hash((self.host, self.port, self.login))
+    # def __eq__(self, other):
+    #     return True if (self.login == other.login and
+    #                     self.password == other.password and
+    #                     self.host == other.host and
+    #                     self.port == other.port
+    #                     ) else False
 
 
 def read_cfg_from_env() -> dict:
