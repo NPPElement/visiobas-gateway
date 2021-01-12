@@ -2,9 +2,8 @@ venv
 .idea
 *.pyc
 vb_gateway/logs/*.log*
-vb_gateway/*.log*
 *.DS_Store
 .DS_Store
 *address_cache
-http_config.env
+*.env
 vb_gateway/utils/for_test.py

@@ -85,7 +85,8 @@ class ModbusConnector(Thread, Connector):
                 if devices_objects:  # If received devices with objects from the server
                     _log.info('Received devices with '
                               f'objects: {[*devices_objects.keys()]} '
-                              'Requesting update intervals for them ...')
+                              'Requesting update intervals for them ...'
+                              )
 
                     self.__update_intervals = self.get_devices_update_interval(
                         devices_id=tuple(self.__address_cache.keys()),

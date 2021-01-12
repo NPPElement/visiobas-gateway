@@ -5,8 +5,8 @@ class VisioHTTPServerConfig:
     # That class allows to create only one instance for each server's params
     _instances = {}  # keeps instances references
 
-    __slots__ = ('login', 'password', 'host', 'port',
-                 'bearer_token', 'user_id', 'auth_user_id'
+    __slots__ = ('__login', '__password', 'host', 'port',
+                 '__bearer_token', '__user_id', '__auth_user_id'
                  )
 
     def __new__(cls, *args, **kwargs):
@@ -16,14 +16,14 @@ class VisioHTTPServerConfig:
         return cls._instances[_hash]
 
     def __init__(self, *, login: str, password: str, host: str, port: int):
-        self.login = login
-        self.password = password
+        self.__login = login
+        self.__password = password
         self.host = host
         self.port = port
 
-        self.bearer_token = None
-        self.user_id = None
-        self.auth_user_id = None
+        self.__bearer_token = None
+        self.__user_id = None
+        self.__auth_user_id = None
 
     @classmethod
     def read_from_env(cls, var_name: str):
@@ -42,9 +42,9 @@ class VisioHTTPServerConfig:
                                    )
 
     def set_auth_data(self, bearer_token: str, user_id: int, auth_user_id: int) -> None:
-        self.bearer_token = bearer_token
-        self.user_id = user_id
-        self.auth_user_id = auth_user_id
+        self.__bearer_token = bearer_token
+        self.__user_id = user_id
+        self.__auth_user_id = auth_user_id
 
     @property
     def base_url(self) -> str:
@@ -52,20 +52,20 @@ class VisioHTTPServerConfig:
 
     @property
     def auth_payload(self) -> dict[str, str]:
-        data = {'login': self.login,
-                'password': self.password
+        data = {'login': self.__login,
+                'password': self.__password
                 }
         return data
 
     @property
     def auth_headers(self) -> dict[str, str]:
-        if isinstance(self.bearer_token, str):
-            headers = {'Authorization': f'Bearer {self.bearer_token}'
+        if isinstance(self.__bearer_token, str):
+            headers = {'Authorization': f'Bearer {self.__bearer_token}'
                        }
             return headers
 
     def __repr__(self) -> str:
-        return f'VisioHTTPServerData({self.base_url}, login: {self.login})'
+        return f'VisioHTTPServerData({self.base_url}, login: {self.__login})'
 
     # def __eq__(self, other):
     #     return True if (self.login == other.login and

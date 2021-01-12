@@ -17,7 +17,8 @@ class ModbusDevice(Thread):
     __slots__ = ('id', 'address', 'port', 'update_period', '__logger',
                  '__client', '__available_functions',
                  '__connector', '__verifier_queue',
-                 '__polling', 'objects')
+                 '__polling', 'objects'
+                 )
 
     def __init__(self,
                  verifier_queue: SimpleQueue,
@@ -114,7 +115,8 @@ class ModbusDevice(Thread):
                                      port=port,
                                      retries=5,
                                      retry_on_empty=True,
-                                     retry_on_invalid=True)
+                                     retry_on_invalid=True
+                                     )
             client.connect()
             available_functions = {
                 1: client.read_coils,
