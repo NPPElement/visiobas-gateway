@@ -9,9 +9,9 @@ from BAC0.core.io.IOExceptions import (ReadPropertyException,
                                        UnknownPropertyError,
                                        ReadPropertyMultipleException)
 
-from vb_gateway.connectors import get_fault_obj_properties
-from vb_gateway.connectors.bacnet import ObjProperty, ObjType, BACnetObject
-from vb_gateway.logs import get_file_logger
+from gateway.connectors import get_fault_obj_properties
+from gateway.connectors.bacnet import ObjProperty, ObjType, BACnetObject
+from gateway.logs import get_file_logger
 
 
 class BACnetDevice(Thread):

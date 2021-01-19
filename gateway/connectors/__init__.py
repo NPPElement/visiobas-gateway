@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from ipaddress import IPv4Address
 from pathlib import Path
 
-from vb_gateway.connectors.bacnet import ObjProperty
+from gateway.connectors.bacnet import ObjProperty
 
 
 class Connector(ABC):

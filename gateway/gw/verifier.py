@@ -3,8 +3,8 @@ from pathlib import Path
 
 from bacpypes.basetypes import PriorityArray
 
-from vb_gateway.connectors.bacnet import ObjProperty, StatusFlags
-from vb_gateway.logs import get_file_logger
+from gateway.connectors.bacnet import ObjProperty, StatusFlags
+from gateway.logs import get_file_logger
 
 _base_path = Path(__file__).resolve().parent.parent
 _log_file_path = _base_path / f'logs/{__name__}.log'

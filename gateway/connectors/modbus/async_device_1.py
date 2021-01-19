@@ -7,9 +7,9 @@ from time import time, sleep
 from pymodbus.client.asynchronous.schedulers import ASYNC_IO
 from pymodbus.client.asynchronous.tcp import AsyncModbusTCPClient
 
-from vb_gateway.connectors.bacnet import ObjProperty
-from vb_gateway.connectors.modbus import ModbusObject
-from vb_gateway.logs import get_file_logger
+from gateway.connectors.bacnet import ObjProperty
+from gateway.connectors.modbus import ModbusObject
+from gateway.logs import get_file_logger
 
 
 class ModbusDevice(Thread):

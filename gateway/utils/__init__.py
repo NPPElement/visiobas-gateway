@@ -67,13 +67,6 @@ class VisioHTTPServerConfig:
     def __repr__(self) -> str:
         return f'VisioHTTPServerData({self.base_url}, login: {self.login})'
 
-    # def __eq__(self, other):
-    #     return True if (self.login == other.login and
-    #                     self.password == other.password and
-    #                     self.host == other.host and
-    #                     self.port == other.port
-    #                     ) else False
-
 
 def read_cfg_from_env() -> dict:
     """

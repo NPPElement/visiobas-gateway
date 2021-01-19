@@ -2,10 +2,10 @@ from logging import getLogger
 from multiprocessing import SimpleQueue
 from time import sleep
 
-from vb_gateway.connectors.bacnet.bacnet_connector import BACnetConnector
-from vb_gateway.connectors.modbus.modbus_connector import ModbusConnector
-from vb_gateway.gateway.http_client import VisioHTTPClient
-from vb_gateway.gateway.verifier import BACnetVerifier
+from gateway.connectors.bacnet.bacnet_connector import BACnetConnector
+from gateway.connectors.modbus.modbus_connector import ModbusConnector
+from gateway.gw.http_client import VisioHTTPClient
+from gateway.gw.verifier import BACnetVerifier
 
 
 class VisioGateway:

@@ -7,11 +7,11 @@ from time import sleep
 
 from aiohttp.web_exceptions import HTTPServerError, HTTPClientError
 
-from vb_gateway.connectors import Connector
-from vb_gateway.connectors.bacnet import ObjProperty, ObjType
-from vb_gateway.connectors.modbus import ModbusObject, VisioModbusProperties
-from vb_gateway.connectors.modbus.device import ModbusDevice
-from vb_gateway.logs import get_file_logger
+from gateway.connectors import Connector
+from gateway.connectors.bacnet import ObjProperty, ObjType
+from gateway.connectors.modbus import ModbusObject, VisioModbusProperties
+from gateway.connectors.modbus.device import ModbusDevice
+from gateway.logs import get_file_logger
 
 _base_path = Path(__file__).resolve().parent.parent.parent
 _log_file_path = _base_path / f'logs/{__name__}.log'

@@ -1,7 +1,7 @@
 venv
 .idea
 *.pyc
-gateway/logs/*.log*
+*.log*
 *.DS_Store
 .DS_Store
 *address_cache

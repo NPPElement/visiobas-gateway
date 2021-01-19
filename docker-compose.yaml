@@ -3,7 +3,7 @@ version: "3.3"
 services:
   vb_gateway:
     build:
-      context: ./vb_gateway
+      context: ./gateway
       dockerfile: Dockerfile
     image: vb-gateway:0.0.3
     logging:
@@ -29,20 +29,12 @@ services:
       - HTTP_ENABLE=TRUE
       - MQTT_ENABLE=FALSE
 
-      # If the BACnet devices are on different networks,
-      # list here the interfaces through which the interaction is carried out.
-      # Delimiter: space (' '). Else, comment this variable.
-      # - BACNET_INTERFACES='eno1.171 eno2.176'
-
       - BACNET_DEFAULT_UPDATE_PERIOD=10
       - MODBUS_DEFAULT_UPDATE_PERIOD=10
     volumes:
-      - /opt/visiobas-gateway/vb_gateway:/vb_gateway
-      #- /home/user/visiobas-gateway/vb_gateway:/vb_gateway
-    command: python /vb_gateway/run.py
-#    networks:
-#      - eno1.171
-#      - eno2.176
+      - /opt/visiobas-gateway/gateway:/gateway
+      #- /home/user/visiobas-gateway/gateway:/gateway
+    command: python /gateway/run.py
     ports:
       - 502:502
       - 1883:1883
@@ -64,10 +56,3 @@ services:
       - 47821:47821
       - 47822:47822
       - 47823:47823
-#networks:
-#  - eno1.171
-#  - eno2.176
-#  vb_mqtt:
-#    build:
-#      context: ./vb_mqtt
-#      dockerfile: Dockerfile

@@ -5,12 +5,12 @@ from time import time, sleep
 
 from pymodbus.client.sync import ModbusTcpClient
 
-from vb_gateway.connectors.bacnet import ObjProperty
-from vb_gateway.connectors.modbus import (ModbusObject,
-                                          VisioModbusProperties,
-                                          cast_to_bit,
-                                          cast_2_registers)
-from vb_gateway.logs import get_file_logger
+from gateway.connectors.bacnet import ObjProperty
+from gateway.connectors.modbus import (ModbusObject,
+                                       VisioModbusProperties,
+                                       cast_to_bit,
+                                       cast_2_registers)
+from gateway.logs import get_file_logger
 
 
 class ModbusDevice(Thread):

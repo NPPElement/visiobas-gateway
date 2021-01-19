@@ -6,15 +6,16 @@ from time import sleep
 
 from aiohttp import ClientConnectorError, ClientSession, ClientResponse
 
-from vb_gateway.connectors.bacnet import ObjType
-from vb_gateway.logs import get_file_logger
-from vb_gateway.utils import VisioHTTPServerConfig
+from gateway.connectors.bacnet import ObjType
+from gateway.logs import get_file_logger
+from gateway.utils import VisioHTTPServerConfig
 
 _base_path = Path(__file__).resolve().parent.parent
 _log_file_path = _base_path / f'logs/{__name__}.log'
 _log = get_file_logger(logger_name=__name__,
                        size_bytes=50_000_000,
-                       file_path=_log_file_path)
+                       file_path=_log_file_path
+                       )
 
 
 class VisioHTTPClient(Thread):
@@ -67,7 +68,7 @@ class VisioHTTPClient(Thread):
                     asyncio.run(self.login(get_server_data=self.get_server_data,
                                            post_servers_data=self.post_servers_data
                                            ))
-                except ClientConnectorError as e:
+                except (ClientConnectorError, TypeError) as e:
                     _log.warning(
                         f'Login error: {e} Sleeping 30 sec ...')  # , exc_info=True)
                     sleep(30)
@@ -171,8 +172,6 @@ class VisioHTTPClient(Thread):
         :param object_type:
         :return: data received from the server
         """
-        # _log.debug(f"Requesting information about device [{device_id}], "
-        #            f"object_type: {object_type.name_dashed} from the {get_server_data} ...")
 
         get_url = (f'{get_server_data.base_url}'
                    f'/vbas/gate/get/{device_id}/{object_type.name_dashed}')
@@ -187,6 +186,7 @@ class VisioHTTPClient(Thread):
                                       device_id: int, object_types: tuple[ObjType],
                                       session: ClientSession) -> dict[ObjType, list[dict]]:
         """ Requests types of objects by device_id """
+
         # Create list with requests
         objects_requests = [self.__rq_device_object(get_server_data=get_server_data,
                                                     device_id=device_id,
