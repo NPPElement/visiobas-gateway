@@ -1,9 +1,9 @@
 venv
 .idea
 *.pyc
-vb_gateway/logs/*.log*
+gateway/logs/*.log*
 *.DS_Store
 .DS_Store
 *address_cache
 *.env
-vb_gateway/utils/for_test.py
+gateway/utils/for_test.py
