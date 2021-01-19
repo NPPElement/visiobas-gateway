@@ -110,11 +110,13 @@ class BACnetConnector(Thread, Connector):
                                             update_intervals=self.__update_intervals)
                     else:
                         _log.error('No objects from server')
+                        sleep(60 * 15)
                         continue
 
                 except (HTTPServerError, HTTPClientError, OSError) as e:
                     _log.error('Error retrieving information about '
-                               f'devices objects from the server: {e}')
+                               f'devices objects from the server: {e}'
+                               )
                 except Exception as e:
                     _log.error(f'Device update error: {e}', exc_info=True)
                 finally:
@@ -122,14 +124,13 @@ class BACnetConnector(Thread, Connector):
 
                 _log.info('Sleeping 1h ..')
                 sleep(60 * 60)
-                # FIXME REPLACE TO threading.Timer? in ThreadPoolExecutor?
+                # FIXME REPLACE TO threading.Timer?
 
             else:  # IF NOT HAVE INITIALIZED BAC0 NETWORK
                 _log.info('Initializing BAC0 network ...')
                 try:
                     self.__network = lite()
-                except (InitializationError,
-                        NetworkInterfaceException) as e:
+                except (InitializationError, NetworkInterfaceException) as e:
                     _log.error(f'Network initialization error: {e}', exc_info=True)
                     sleep(10)  # delay before next try
                 else:

@@ -102,6 +102,7 @@ class ModbusConnector(Thread, Connector):
 
                 else:
                     _log.error('No objects from server')
+                    sleep(60 * 15)
                     del devices_objects
                     continue
 
