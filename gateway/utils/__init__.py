@@ -1,3 +1,4 @@
+from hashlib import md5
 from os import environ
 
 
@@ -5,7 +6,7 @@ class VisioHTTPServerConfig:
     # That class allows to create only one instance for each server's params
     _instances = {}  # keeps instances references
 
-    __slots__ = ('login', 'password', 'host', 'port',
+    __slots__ = ('login', '__password_md5', 'host', 'port',
                  'bearer_token', 'user_id', 'auth_user_id'
                  )
 
@@ -17,7 +18,7 @@ class VisioHTTPServerConfig:
 
     def __init__(self, *, login: str, password: str, host: str, port: int):
         self.login = login
-        self.password = password
+        self.__password_md5 = md5(password.encode()).hexdigest()
         self.host = host
         self.port = port
 
@@ -53,7 +54,7 @@ class VisioHTTPServerConfig:
     @property
     def auth_payload(self) -> dict[str, str]:
         data = {'login': self.login,
-                'password': self.password
+                'password': self.__password_md5
                 }
         return data
 
