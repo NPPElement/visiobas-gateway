@@ -3,8 +3,8 @@ import unittest
 from bacpypes.basetypes import PriorityArray, PriorityValue
 from bacpypes.primitivedata import Null
 
-from vb_gateway.connectors.bacnet import ObjType, ObjProperty, StatusFlags
-from vb_gateway.gateway.verifier import BACnetVerifier
+from gateway.connectors.bacnet import ObjType, ObjProperty, StatusFlags
+from gateway.verifier import BACnetVerifier
 
 
 class TestVerify(unittest.TestCase):

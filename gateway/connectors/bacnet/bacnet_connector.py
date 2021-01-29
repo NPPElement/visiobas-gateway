@@ -1,21 +1,18 @@
 import asyncio
-from ipaddress import IPv4Interface, IPv4Address
 from json import loads
 from multiprocessing import SimpleQueue
 from pathlib import Path
 from threading import Thread
 from time import sleep
 
-import netifaces
 from BAC0 import lite
 from BAC0.core.io.IOExceptions import InitializationError, NetworkInterfaceException
-from BAC0.scripts.Lite import Lite
 from aiohttp.web_exceptions import HTTPClientError, HTTPServerError
 
-from vb_gateway.connectors import Connector
-from vb_gateway.connectors.bacnet import ObjProperty, ObjType, BACnetObject
-from vb_gateway.connectors.bacnet.device import BACnetDevice
-from vb_gateway.logs import get_file_logger
+from gateway.connectors import Connector
+from gateway.connectors.bacnet import ObjProperty, ObjType, BACnetObject
+from gateway.connectors.bacnet.device import BACnetDevice
+from gateway.logs import get_file_logger
 
 _base_path = Path(__file__).resolve().parent.parent.parent
 _log_file_path = _base_path / f'logs/{__name__}.log'
@@ -26,11 +23,11 @@ _log = get_file_logger(logger_name=__name__,
 
 
 class BACnetConnector(Thread, Connector):
-    __slots__ = ('__config', '__interfaces', '__networks',
-                 'default_update_period', '__gateway', '__verifier_queue',
-                 '__connected', '__stopped',
-                 '__types_to_request', '__address_cache',
-                 '__polling_devices', '__update_intervals'
+    __slots__ = ('_config', '__interfaces', '_network',
+                 'default_update_period', '_gateway', '_verifier_queue',
+                 '_connected', '_stopped',
+                 '_types_to_request', '_address_cache',
+                 '_polling_devices', '_update_intervals'
                  )
 
     def __init__(self, gateway,
@@ -38,32 +35,23 @@ class BACnetConnector(Thread, Connector):
                  config: dict):
         super().__init__()
 
-        self.__config = config
+        self._config = config
 
-        # If the BACnet devices are on different networks,
-        # dict with info about each interface
-        self.__interfaces = self.get_interfaces(interfaces=self.__config['interfaces']) if \
-            self.__config.get('interfaces', None) else None
-
-        # todo: init network only if we have device in this network
-        # if self.__interfaces is not None:
-        #     self.__networks = self.get_networks(interfaces=self.__interfaces)
-        # else:
-        #     self.__networks = lite()
-        self.__networks = None
+        self._network = None
 
         self.default_update_period = config.get('default_update_period', 10)
 
         self.setName(name=f'{self}-Thread')
         self.setDaemon(True)
 
-        self.__gateway = gateway
-        self.__verifier_queue = verifier_queue
+        self._gateway = gateway
+        self._verifier_queue = verifier_queue
 
-        self.__connected = False
-        self.__stopped = False
+        self._connected = False
+        self._stopped = False
 
-        self.__types_to_request = (
+        #todo move to http client
+        self._types_to_request = (
             ObjType.ANALOG_INPUT, ObjType.ANALOG_OUTPUT, ObjType.ANALOG_VALUE,
             ObjType.BINARY_INPUT, ObjType.BINARY_OUTPUT, ObjType.BINARY_VALUE,
             ObjType.MULTI_STATE_INPUT, ObjType.MULTI_STATE_OUTPUT,
@@ -71,104 +59,59 @@ class BACnetConnector(Thread, Connector):
         )
 
         # Match device_id with device_address. Example: {200: '10.21.80.12'}
-        self.__address_cache = {}
-        self.__polling_devices = {}
+        self._address_cache = {}
+        self._polling_devices = {}
 
-        self.__update_intervals = {}
-
-    @staticmethod
-    def get_interfaces(interfaces: list[str]) -> dict[str, dict]:
-        """ Inits networks for each network interface from config.
-        """
-        _interfaces = {}
-        for interface in interfaces:
-            try:
-                _interfaces[interface] = \
-                    netifaces.ifaddresses(interface)[netifaces.AF_INET][0]
-
-                addr_with_mask = IPv4Interface(
-                    '/'.join((_interfaces[interface]['addr'],
-                              _interfaces[interface]['netmask']))
-                )
-                addr, mask = str(addr_with_mask).split('/')
-
-                _interfaces[interface]['BAC0'] = lite(ip=addr, mask=mask)
-
-            except ValueError as e:
-                _log.warning(f'Cannot create network for {interface}: {e}',
-                             exc_info=True)
-            except Exception as e:
-                _log.error(f'BAC0 Network error: {e}', exc_info=True)
-        return _interfaces
-
-    def get_networks(self, interfaces: dict[str, dict]) -> dict[str, Lite] or Lite:
-        """ Init BACnet networks"""
-
-        if self.__interfaces is not None:  # have several interfaces
-            _networks = {}
-            for interface, inter_data in interfaces.items():
-                try:
-                    _networks[interface] = lite(ip=inter_data['addr'],
-                                                mask=inter_data['netmask'])
-                except (InitializationError,
-                        NetworkInterfaceException) as e:
-                    _log.warning(f'Cannot initialize BAC0 network: {e}')
-                except Exception as e:
-                    _log.error(f'BAC0 network initialize error: {e}',
-                               exc_info=True)
-                else:
-                    _log.info(f'BAC0 Network for {interface} initialized.')
-            if not _networks:
-                return lite()
-            return _networks
-        else:  # have one interface
-            return lite()
+        self._update_intervals = {}
 
     def __repr__(self):
         return 'BACnetConnector'
 
     def run(self):
         _log.info(f'{self} starting ...')
-        while not self.__stopped:
+        while not self._stopped:
 
             # base_dir = Path(__file__).resolve().parent.parent.parent
             address_cache_path = _base_path / 'connectors/bacnet/address_cache'
-            self.__address_cache = self.read_address_cache(
+            self._address_cache = self.read_address_cache(
                 address_cache_path=address_cache_path)
 
-            if len(self.__polling_devices) > 0:
+            if len(self._polling_devices) > 0:
                 # Check irrelevant devices. Stop them, if found
-                irrelevant_devices_id = tuple(set(self.__polling_devices.keys()) - set(
-                    self.__address_cache.keys()))
+                irrelevant_devices_id = tuple(set(self._polling_devices.keys()) - set(
+                    self._address_cache.keys()))
                 if irrelevant_devices_id:
                     self.__stop_devices(devices_id=irrelevant_devices_id)
 
-            if self.__networks:  # IF HAVING INITIALIZED NETWORKS
+            if self._network:  # IF HAVING INITIALIZED NETWORKS
                 try:  # Requesting objects and their types from the server
-                    # FIXME: move to client?
+                    # FIXME: move to client
                     devices_objects = self.get_devices_objects(
-                        devices_id=tuple(self.__address_cache.keys()),
-                        obj_types=self.__types_to_request)
+                        devices_id=tuple(self._address_cache.keys()),
+                        obj_types=self._types_to_request)
 
                     if devices_objects:  # If received devices with objects from the server
                         _log.info('Received devices with '
                                   f'objects: {[*devices_objects.keys()]} '
-                                  'Requesting update intervals for them ...')
+                                  'Requesting update intervals for them ...'
+                                  )
 
-                        self.__update_intervals = self.get_devices_update_interval(
-                            devices_id=tuple(self.__address_cache.keys()),
+                        self._update_intervals = self.get_devices_update_interval(
+                            devices_id=tuple(self._address_cache.keys()),
                             default_update_interval=self.default_update_period
                         )
                         _log.info('Received update intervals for devices. '
-                                  'Starting them ...')
+                                  'Starting them ...'
+                                  )
 
                         # Unpack json from server to BACnetObjects class
                         devices_objects = self.unpack_objects(objects=devices_objects)
 
                         self.update_devices(devices=devices_objects,
-                                            update_intervals=self.__update_intervals)
+                                            update_intervals=self._update_intervals)
                     else:
-                        _log.error('No objects from server')
+                        _log.warning('No objects from server')
+                        sleep(60)  # fixme
                         continue
 
                 except (HTTPServerError, HTTPClientError, OSError) as e:
@@ -186,44 +129,33 @@ class BACnetConnector(Thread, Connector):
             else:  # IF NOT HAVE INITIALIZED BAC0 NETWORK
                 _log.info('Initializing BAC0 network ...')
                 try:
-                    self.__networks = self.get_networks(interfaces=self.__interfaces)
-                except (InitializationError,
-                        NetworkInterfaceException) as e:
+                    self._network = lite()
+                except (InitializationError, NetworkInterfaceException) as e:
                     _log.error(f'Network initialization error: {e}', exc_info=True)
                     sleep(10)  # delay before next try
                 else:
                     _log.debug('BAC0 network initialized.')
         else:
-            self.__close_bac0_networks()
+            self._network.disconnect()
             _log.info(f'{self} stopped.')
 
     def open(self) -> None:
-        self.__connected = True
-        self.__stopped = False
+        self._connected = True
+        self._stopped = False
         self.start()
 
     def close(self) -> None:
-        self.__stopped = True
-        self.__connected = False
+        self._stopped = True
+        self._connected = False
 
-        self.__stop_devices(devices_id=tuple(self.__polling_devices.keys()))
-
-    def __close_bac0_networks(self) -> None:
-        """ Close connections with BAC0 Networks"""
-
-        if isinstance(self.__networks, Lite):
-            self.__networks.disconnect()
-        elif self.__networks and isinstance(self.__networks, dict):
-            for network in self.__networks.values():
-                network.disconnect()
-        _log.info('BAC0 Network(s) disconnected.')
+        self.__stop_devices(devices_id=tuple(self._polling_devices.keys()))
 
     def update_devices(self, devices: dict[int, set[BACnetObject]],
                        update_intervals: dict[int, int]) -> None:
         """ Starts BACnet devices threads """
 
         for device_id, objects in devices.items():
-            if device_id in self.__polling_devices:
+            if device_id in self._polling_devices:
                 self.__stop_device(device_id=device_id)
             self.__start_device(device_id=device_id, objects=objects,
                                 update_interval=update_intervals[device_id])
@@ -236,37 +168,12 @@ class BACnetConnector(Thread, Connector):
 
         _log.debug(f'Starting Device [{device_id}] ...')
         try:
-            # If have one interface
-            # if self.__interfaces is None and isinstance(self.__networks, Lite):
-            #     network = self.__networks
-
-            if isinstance(self.__networks, Lite):
-                network = self.__networks
-
-            # If have several interfaces
-            elif self.__interfaces and isinstance(self.__networks, dict):
-                addr, port = self.__address_cache[device_id].split(':')
-                addr = IPv4Address(addr)
-                for interface, int_prop in self.__interfaces.items():
-                    _interface = IPv4Interface('/'.join((int_prop['addr'],
-                                                         int_prop['netmask'])))
-                    if addr in _interface.network:
-                        network = self.__networks[interface]['BAC0']
-                        break
-                else:
-                    _log.warning(f'Device [{device_id}] with address: '
-                                 f'{addr} is not in any interface')
-                    raise ValueError('Device [{device_id}] with address: '
-                                     f'{addr} is not in any interface')
-            else:
-                raise NotImplementedError(f'Unexpected situation: {self.__interfaces},'
-                                          f'{self.__networks}')
-            self.__polling_devices[device_id] = BACnetDevice(
-                verifier_queue=self.__verifier_queue,
+            self._polling_devices[device_id] = BACnetDevice(
+                verifier_queue=self._verifier_queue,
                 connector=self,
-                address=self.__address_cache[device_id],
+                address=self._address_cache[device_id],
                 device_id=device_id,
-                network=network,
+                network=self._network,
                 objects=objects,
                 update_period=update_interval
             )
@@ -283,7 +190,7 @@ class BACnetConnector(Thread, Connector):
         try:
             [self.__stop_device(device_id=device_id) for device_id in devices_id]
             for dev_id in devices_id:
-                del self.__polling_devices[dev_id]
+                del self._polling_devices[dev_id]
 
         except Exception as e:
             _log.error(f'Stopping devices error: {e}', exc_info=True)
@@ -294,9 +201,9 @@ class BACnetConnector(Thread, Connector):
         """ Stop device by device_id """
         try:
             _log.debug(f'Device [{device_id}] stopping polling ...')
-            self.__polling_devices[device_id].stop_polling()
+            self._polling_devices[device_id].stop_polling()
             _log.debug(f'Device [{device_id}] stopped polling')
-            self.__polling_devices[device_id].join()
+            self._polling_devices[device_id].join()
             _log.debug(f'Device [{device_id}]-Thread stopped')
 
         except KeyError as e:
@@ -309,8 +216,8 @@ class BACnetConnector(Thread, Connector):
                             obj_types: tuple) -> dict[int, dict[ObjType, list[dict]]]:
         """ Requests objects for modbus connector from server via http client """
         devices_objs = asyncio.run(
-            self.__gateway.http_client.rq_devices_objects(
-                get_server_data=self.__gateway.http_client.get_server_data,
+            self._gateway.http_client.rq_devices_objects(
+                get_server_data=self._gateway.http_client.get_server_data,
                 devices_id=devices_id,
                 obj_types=obj_types
             ))
@@ -320,8 +227,8 @@ class BACnetConnector(Thread, Connector):
                                     default_update_interval: int) -> dict[int, int]:
         """ Receive update intervals for devices via http client """
         device_objs = asyncio.run(
-            self.__gateway.http_client.rq_devices_objects(
-                get_server_data=self.__gateway.http_client.get_server_data,
+            self._gateway.http_client.rq_devices_objects(
+                get_server_data=self._gateway.http_client.get_server_data,
                 devices_id=devices_id,
                 obj_types=(ObjType.DEVICE,)
             ))

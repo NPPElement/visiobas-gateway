@@ -3,15 +3,16 @@ from pathlib import Path
 
 from bacpypes.basetypes import PriorityArray
 
-from vb_gateway.connectors.bacnet import ObjProperty, StatusFlags
-from vb_gateway.logs import get_file_logger
+from gateway.connectors.bacnet import ObjProperty, StatusFlags
+from gateway.logs import get_file_logger
 
 _base_path = Path(__file__).resolve().parent.parent
 _log_file_path = _base_path / f'logs/{__name__}.log'
 
 _log = get_file_logger(logger_name=__name__,
                        size_bytes=50_000_000,
-                       file_path=_log_file_path)
+                       file_path=_log_file_path
+                       )
 
 
 class BACnetVerifier(Process):
@@ -20,19 +21,19 @@ class BACnetVerifier(Process):
                  config: dict):
         super().__init__(daemon=True)
 
-        self.__config = config
+        self._config = config
 
-        self.__protocols_queue = protocols_queue
-        self.__http_queue = http_queue
+        self._protocols_queue = protocols_queue
+        self._http_queue = http_queue
 
-        self.__active = True
+        self._active = True
 
-        self.__mqtt_enable = config.get('mqtt_enable', False)
-        self.__http_enable = config.get('http_enable', True)
+        self._mqtt_enable = config.get('mqtt_enable', False)
+        self._http_enable = config.get('http_enable', True)
 
         # Dict, where key - device_id, and value - list of collected verified strings
-        if self.__http_enable:
-            self.__http_storage: dict[int, list[str]] = {}
+        if self._http_enable:
+            self._http_storage: dict[int, list[str]] = {}
 
         # self.start()
 
@@ -41,9 +42,9 @@ class BACnetVerifier(Process):
 
     def run(self):
         _log.info(f'{self} Starting ...')
-        while self.__active:
+        while self._active:
             try:
-                protocols_data = self.__protocols_queue.get()
+                protocols_data = self._protocols_queue.get()
 
                 if isinstance(protocols_data, int):
                     # These are not properties. This is a signal that
@@ -259,10 +260,10 @@ class BACnetVerifier(Process):
         """ If HTTP enable, collect data in http_storage
             If MQTT enable send data to broker
         """
-        if self.__http_enable:
+        if self._http_enable:
             _log.debug('Collecting verified str to http storage')
             self.__http_collect_str(device_id=device_id, verified_str=verified_str)
-        if self.__mqtt_enable:
+        if self._mqtt_enable:
             self.__mqtt_send_to_broker(obj_name=obj_name, verified_str=verified_str)
 
     def __http_collect_str(self, device_id: int, verified_str: str) -> None:
@@ -270,16 +271,16 @@ class BACnetVerifier(Process):
             Sends collected strings from storage, when getting device_id from queue
         """
         try:
-            self.__http_storage[device_id].append(verified_str)
+            self._http_storage[device_id].append(verified_str)
         except KeyError:
-            self.__http_storage[device_id] = [verified_str]
+            self._http_storage[device_id] = [verified_str]
 
     def __http_send_to_server(self, device_id: int) -> None:
         """ Sends verified data from http_storage to HTTP server
         """
         try:
-            device_str = ';'.join((*self.__http_storage.pop(device_id), ''))
-            self.__http_queue.put((device_id, device_str))
+            device_str = ';'.join((*self._http_storage.pop(device_id), ''))
+            self._http_queue.put((device_id, device_str))
         except Exception as e:
             _log.error(f'HTTP Sending Error: {e}', exc_info=True)
 

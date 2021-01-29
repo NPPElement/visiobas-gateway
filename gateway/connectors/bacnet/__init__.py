@@ -5,6 +5,8 @@ from typing import NamedTuple, Sequence
 class StatusFlags:
     __slots__ = ('in_alarm', 'fault', 'overriden', 'out_of_service')
 
+    # FIXME: Implement singletons
+
     def __init__(self, status_flags: list = None):
         if status_flags is None:
             self.in_alarm: bool = False
@@ -33,10 +35,7 @@ class StatusFlags:
 
     def __repr__(self):
         """ Uses to convert into number by binary coding"""
-        return str(int(''.join([str(int(self.out_of_service)),
-                                str(int(self.overriden)),
-                                str(int(self.fault)),
-                                str(int(self.in_alarm))]), base=2))
+        return str(self.as_binary)
 
     @property
     def as_binary(self):
@@ -145,7 +144,10 @@ class ObjType(Enum):
 class BACnetObject(NamedTuple):
     type: ObjType
     id: int
+
     name: str
+    resolution: float = None  # todo
+    update_interval: int = None  # TODO: implement skip by update_interval
 
 
 @unique
@@ -507,3 +509,9 @@ class ObjProperty(Enum):
     @property
     def id(self):
         return self.value
+
+if __name__ == '__main__':
+# fixme
+    sf1 = StatusFlags()
+    sf2 = StatusFlags()
+    print(sf1 is sf2)

@@ -7,11 +7,11 @@ from time import sleep
 
 from aiohttp.web_exceptions import HTTPServerError, HTTPClientError
 
-from vb_gateway.connectors import Connector
-from vb_gateway.connectors.bacnet import ObjProperty, ObjType
-from vb_gateway.connectors.modbus import ModbusObject, VisioModbusProperties
-from vb_gateway.connectors.modbus.device import ModbusDevice
-from vb_gateway.logs import get_file_logger
+from gateway.connectors import Connector
+from gateway.connectors.bacnet import ObjProperty, ObjType
+from gateway.connectors.modbus import ModbusObject, VisioModbusProperties
+from gateway.connectors.modbus.device import ModbusDevice
+from gateway.logs import get_file_logger
 
 _base_path = Path(__file__).resolve().parent.parent.parent
 _log_file_path = _base_path / f'logs/{__name__}.log'
@@ -22,9 +22,9 @@ _log = get_file_logger(logger_name=__name__,
 
 
 class ModbusConnector(Thread, Connector):
-    __slots__ = ('__config', 'default_update_period', '__gateway', '__verifier_queue',
-                 '__connected', '__stopped', '__object_types_to_request',
-                 '__address_cache', '__polling_devices', '__update_intervals'
+    __slots__ = ('__config', 'default_update_period', '_gateway', '_verifier_queue',
+                 '_connected', '_stopped', '_object_types_to_request',
+                 '_address_cache', '_polling_devices', '_update_intervals'
                  )
 
     def __init__(self, gateway,
@@ -38,13 +38,14 @@ class ModbusConnector(Thread, Connector):
         self.setName(name=f'{self}-Thread')
         self.setDaemon(True)
 
-        self.__gateway = gateway
-        self.__verifier_queue = verifier_queue
+        self._gateway = gateway
+        self._verifier_queue = verifier_queue
 
-        self.__connected = False
-        self.__stopped = False
+        self._connected = False
+        self._stopped = False
 
-        self.__object_types_to_request = (
+        # todo move to http client
+        self._object_types_to_request = (
             ObjType.ANALOG_INPUT, ObjType.ANALOG_OUTPUT, ObjType.ANALOG_VALUE,
             ObjType.BINARY_INPUT, ObjType.BINARY_OUTPUT, ObjType.BINARY_VALUE,
             ObjType.MULTI_STATE_INPUT, ObjType.MULTI_STATE_OUTPUT,
@@ -52,35 +53,35 @@ class ModbusConnector(Thread, Connector):
         )
 
         # Match device_id with device_address. Example: {200: '10.21.80.12'}
-        self.__address_cache = {}
-        self.__polling_devices = {}
+        self._address_cache = {}
+        self._polling_devices = {}
         # self.__not_connect_devices: set[int, ...] = set()
 
-        self.__update_intervals = {}
+        self._update_intervals = {}
 
     def __repr__(self):
         return 'ModbusConnector'
 
     def run(self):
         _log.info(f'{self} starting ...')
-        while not self.__stopped:
+        while not self._stopped:
 
             # base_dir = Path(__file__).resolve().parent.parent.parent
             address_cache_path = _base_path / 'connectors/modbus/address_cache'
-            self.__address_cache = self.read_address_cache(
+            self._address_cache = self.read_address_cache(
                 address_cache_path=address_cache_path)
 
             # stop irrelevant devices
-            irrelevant_devices_id = tuple(set(self.__polling_devices.keys()) - set(
-                self.__address_cache.keys()))
+            irrelevant_devices_id = tuple(set(self._polling_devices.keys()) - set(
+                self._address_cache.keys()))
             if irrelevant_devices_id:
                 self.__stop_devices(devices_id=irrelevant_devices_id)
 
             try:  # Requesting objects and their types from the server
                 # FIXME: move to client
                 devices_objects = self.get_devices_objects(
-                    devices_id=tuple(self.__address_cache.keys()),
-                    obj_types=self.__object_types_to_request)
+                    devices_id=tuple(self._address_cache.keys()),
+                    obj_types=self._object_types_to_request)
 
                 if devices_objects:  # If received devices with objects from the server
                     _log.info('Received devices with '
@@ -88,8 +89,8 @@ class ModbusConnector(Thread, Connector):
                               'Requesting update intervals for them ...'
                               )
 
-                    self.__update_intervals = self.get_devices_update_interval(
-                        devices_id=tuple(self.__address_cache.keys()),
+                    self._update_intervals = self.get_devices_update_interval(
+                        devices_id=tuple(self._address_cache.keys()),
                         default_update_interval=self.default_update_period
                     )
                     _log.info('Received update intervals for devices. '
@@ -98,7 +99,7 @@ class ModbusConnector(Thread, Connector):
                     # Unpack json from server to BACnetObjects class
                     devices_objects = self.unpack_objects(objects=devices_objects)
                     self.update_devices(devices=devices_objects,
-                                        update_intervals=self.__update_intervals)
+                                        update_intervals=self._update_intervals)
                     del devices_objects
 
                 else:
@@ -120,22 +121,22 @@ class ModbusConnector(Thread, Connector):
             _log.info(f'{self} stopped.')
 
     def open(self) -> None:
-        self.__connected = True
-        self.__stopped = False
+        self._connected = True
+        self._stopped = False
         self.start()
 
     def close(self) -> None:
-        self.__stopped = True
-        self.__connected = False
+        self._stopped = True
+        self._connected = False
 
-        self.__stop_devices(devices_id=tuple(self.__polling_devices.keys()))
+        self.__stop_devices(devices_id=tuple(self._polling_devices.keys()))
 
     def update_devices(self, devices: dict[int, set[ModbusObject]],
                        update_intervals: dict[int, int]) -> None:
         """ Starts Modbus devices threads
         """
         for dev_id, objs in devices.items():
-            if dev_id in self.__polling_devices.keys():
+            if dev_id in self._polling_devices.keys():
                 self.__stop_device(device_id=dev_id)
             self.__start_device(device_id=dev_id, objects=objs,
                                 update_interval=update_intervals[dev_id])
@@ -148,10 +149,10 @@ class ModbusConnector(Thread, Connector):
         """
         _log.debug(f'Starting Device [{device_id}] ...')
         try:
-            self.__polling_devices[device_id] = ModbusDevice(
-                verifier_queue=self.__verifier_queue,
+            self._polling_devices[device_id] = ModbusDevice(
+                verifier_queue=self._verifier_queue,
                 connector=self,
-                address=self.__address_cache[device_id],
+                address=self._address_cache[device_id],
                 device_id=device_id,
                 objects=objects,
                 update_period=update_interval
@@ -170,9 +171,9 @@ class ModbusConnector(Thread, Connector):
         """
         try:
             _log.debug(f'Device [{device_id}] stopping polling ...')
-            self.__polling_devices[device_id].stop_polling()
+            self._polling_devices[device_id].stop_polling()
             _log.debug(f'Device [{device_id}] stopped polling')
-            self.__polling_devices[device_id].join()
+            self._polling_devices[device_id].join()
             _log.debug(f'Device [{device_id}]-Thread stopped')
 
         except KeyError as e:
@@ -187,7 +188,7 @@ class ModbusConnector(Thread, Connector):
         try:
             [self.__stop_device(device_id=device_id) for device_id in devices_id]
             for dev_id in devices_id:
-                del self.__polling_devices[dev_id]
+                del self._polling_devices[dev_id]
         except Exception as e:
             _log.error(f'Stopping devices error: {e}', exc_info=True)
         else:
@@ -198,8 +199,8 @@ class ModbusConnector(Thread, Connector):
                             ) -> dict[int, dict[ObjType, list[dict]]]:
 
         devices_objs = asyncio.run(
-            self.__gateway.http_client.rq_devices_objects(
-                get_server_data=self.__gateway.http_client.get_server_data,
+            self._gateway.http_client.rq_devices_objects(
+                get_server_data=self._gateway.http_client.get_server_data,
                 devices_id=devices_id,
                 obj_types=obj_types
             ))
@@ -210,8 +211,8 @@ class ModbusConnector(Thread, Connector):
         """ Receive update intervals for devices via http client
         """
         device_objs = asyncio.run(
-            self.__gateway.http_client.rq_devices_objects(
-                get_server_data=self.__gateway.http_client.get_server_data,
+            self._gateway.http_client.rq_devices_objects(
+                get_server_data=self._gateway.http_client.get_server_data,
                 devices_id=devices_id,
                 obj_types=(ObjType.DEVICE,)
             ))
