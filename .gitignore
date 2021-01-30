@@ -5,5 +5,4 @@ gateway/logs/*.log*
 *.DS_Store
 .DS_Store
 *address_cache
-*.env
-gateway/utils/for_test.py
+http_config.env

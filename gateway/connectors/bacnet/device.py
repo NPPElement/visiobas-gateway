@@ -1,5 +1,4 @@
 from multiprocessing import SimpleQueue
-from pathlib import Path
 from threading import Thread
 from time import sleep, time
 
@@ -15,10 +14,11 @@ from gateway.logs import get_file_logger
 
 
 class BACnetDevice(Thread):
-    __slots__ = ('id', 'update_period', '__logger', '__connector', '__verifier_queue',
+    __slots__ = ('id', 'update_period', '_log', '_connector', '_verifier_queue',
                  'address', 'network', 'support_rpm', 'not_support_rpm',
-                 '__active', '__polling'
+                 '_active', '_polling'
                  )
+    delay_inactive = 60  # todo move to cfg
 
     def __init__(self,
                  verifier_queue: SimpleQueue,
@@ -33,18 +33,15 @@ class BACnetDevice(Thread):
         self.id = device_id
         self.update_period = update_period
 
-        base_path = Path(__file__).resolve().parent.parent.parent
-        log_file_path = base_path / f'logs/{self.id}.log'
-
-        self.__logger = get_file_logger(logger_name=f'{self}',
-                                        size_bytes=50_000_000,
-                                        file_path=log_file_path)
+        self._log = get_file_logger(logger_name=f'{self}',
+                                    size_bytes=50_000_000
+                                    )
 
         self.setName(name=f'{self}-Thread')
         self.setDaemon(True)
 
-        self.__connector = connector
-        self.__verifier_queue = verifier_queue
+        self._connector = connector
+        self._verifier_queue = verifier_queue
 
         self.address = address
         self.network = network
@@ -55,14 +52,14 @@ class BACnetDevice(Thread):
         # self.__objects_per_rpm = 25
         # todo: Should we use one RPM for several objects?
 
-        self.__active = True
-        self.__polling = True
+        self._active = True
+        self._polling = True
 
-        self.__logger.info(f'{self} starting ...')
+        self._log.info(f'{self} starting ...')
         self.start()
 
     def __repr__(self):
-        return f'BACnetDevice [{self.id}]'
+        return f'<BACnetDevice:[{self.id}]>'
 
     def __len__(self):
         """ :return: the quantity of objects in the device received from the server
@@ -70,17 +67,17 @@ class BACnetDevice(Thread):
         return len(self.support_rpm) + len(self.not_support_rpm)
 
     def run(self):
-        while self.__polling:
-            self.__logger.debug('Polling started')
-            if self.__active:
-                self.__logger.debug(f'{self} is active')
+        while self._polling:
+            self._log.debug('Polling started')
+            if self._active:
+                self._log.debug(f'{self} is active')
                 try:
                     t0 = time()
                     self.poll()  # poll all objects
                     t1 = time()
                     time_delta = t1 - t0
 
-                    self.__logger.info(
+                    self._log.info(
                         '\n==================================================\n'
                         f'{self} ip:{self.address} polled for: '
                         f'{round(time_delta, ndigits=2)} sec.\n'
@@ -90,18 +87,18 @@ class BACnetDevice(Thread):
                         f'Not support RPM: {len(self.not_support_rpm)}\n'
                         '==================================================')
 
-                    self.__logger.info(
+                    self._log.info(
                         f'Timedelta = {time_delta}, upd_period = {self.update_period}')
                     if time_delta < self.update_period:
                         waiting_time = (self.update_period - time_delta) * 0.8
-                        self.__logger.info(
+                        self._log.info(
                             f'{self} Sleeping {round(waiting_time, ndigits=2)} sec ...')
                         sleep(waiting_time)
 
                 except Exception as e:
-                    self.__logger.error(f'Polling error: {e}', exc_info=True)
+                    self._log.error(f'Polling error: {e}', exc_info=True)
             else:  # if device inactive
-                self.__logger.debug(f'{self} is inactive')
+                self._log.debug(f'{self} is inactive')
                 try:
                     device_obj = BACnetObject(type=ObjType.DEVICE,
                                               id=self.id,
@@ -109,37 +106,34 @@ class BACnetDevice(Thread):
                     device_id = self.read_property(obj=device_obj,
                                                    prop=ObjProperty.objectIdentifier)
 
-                    self.__logger.info(f'PING: device_id: {device_id} <{type(device_id)}>')
+                    self._log.info(f'PING: device_id: {device_id} <{type(device_id)}>')
 
                     if device_id:
-                        self.__logger.debug(f'{self} setting to active ...')
-                        self.__active = True
+                        self._log.debug(f'{self} setting to active ...')
+                        self._active = True
                         continue
                 except Exception as e:
-                    self.__logger.error(f"'Ping checking' error: {e}")
+                    self._log.error(f"'Ping checking' error: {e}")
                     pass
-                # delay
-                # todo: move delay in config
-
                 # todo: close Thread and push to bacnet-connector
-                self.__logger.debug('Sleeping 60 sec ...')
-                sleep(60)
+                self._log.debug(f'Sleeping {self.delay_inactive} sec ...')
+                sleep(self.delay_inactive)
         else:
-            self.__logger.info(f'{self} stopped.')
+            self._log.info(f'{self} stopped.')
 
     def start_polling(self) -> None:
-        self.__polling = True
-        self.__logger.info('Starting polling ...')
+        self._polling = True
+        self._log.info('Starting polling ...')
         self.start()
 
     def stop_polling(self) -> None:
-        self.__polling = False
+        self._polling = False
         # self.network.disconnect()
-        self.__logger.info('Stopping polling ...')
+        self._log.info('Stopping polling ...')
 
     def set_inactive(self) -> None:
-        self.__active = False
-        self.__logger.warning(f'{self} switched to inactive.')
+        self._active = False
+        self._log.warning(f'{self} switched to inactive.')
 
         # TODO put to bacnet connector for ping checking
 
@@ -151,20 +145,20 @@ class BACnetDevice(Thread):
         for obj in self.support_rpm:
             assert isinstance(obj, BACnetObject)
 
-            self.__logger.debug(f'Polling supporting PRM {obj} ...')
+            self._log.debug(f'Polling supporting PRM {obj} ...')
             try:
                 values = self.rpm(obj=obj)
-                self.__logger.debug(f'{obj} values: {values}')
+                self._log.debug(f'{obj} values: {values}')
             except ReadPropertyMultipleException as e:
-                self.__logger.warning(f'{obj} rpm error: {e}\n'
-                                      f'{obj} Marking as not supporting RPM ...')
+                self._log.warning(f'{obj} rpm error: {e}\n'
+                                  f'{obj} Marking as not supporting RPM ...')
                 self.not_support_rpm.add(obj)
                 # self.support_rpm.discard(obj)
 
             except Exception as e:
-                self.__logger.error(f'{obj} polling error: {e}', exc_info=True)
+                self._log.error(f'{obj} polling error: {e}', exc_info=True)
             else:
-                self.__logger.debug(f'From {obj} read: {values}. Sending to verifier ...')
+                self._log.debug(f'From {obj} read: {values}. Sending to verifier ...')
                 self.__put_data_into_verifier(properties=values)
 
         self.support_rpm.difference_update(self.not_support_rpm)
@@ -172,19 +166,19 @@ class BACnetDevice(Thread):
         for obj in self.not_support_rpm:
             assert isinstance(obj, BACnetObject)
 
-            self.__logger.debug(f'Polling not supporting PRM {obj} ...')
+            self._log.debug(f'Polling not supporting PRM {obj} ...')
             try:
                 values = self.simulate_rpm(obj=obj)
             except UnknownObjectError as e:
-                self.__logger.error(f'{obj} is unknown: {e}')
+                self._log.error(f'{obj} is unknown: {e}')
             except Exception as e:
-                self.__logger.error(f'{obj} polling error: {e}', exc_info=True)
+                self._log.error(f'{obj} polling error: {e}', exc_info=True)
             else:
-                self.__logger.debug(f'From {obj} read: {values}. Sending to verifier ...')
+                self._log.debug(f'From {obj} read: {values}. Sending to verifier ...')
                 self.__put_data_into_verifier(properties=values)
 
         # notify verifier, that device polled and should send collected objects via HTTP
-        self.__logger.debug('All objects were polled. Send device_id to verifier')
+        self._log.debug('All objects were polled. Send device_id to verifier')
         self.__put_device_end_to_verifier()
 
     def read_property(self, obj: BACnetObject, prop: ObjProperty):
@@ -203,7 +197,7 @@ class BACnetDevice(Thread):
         # except NoResponseFromController:
         #     return self.__get_fault_obj_properties(reliability='no-response')
         except Exception as e:
-            self.__logger.error(f'RP Error: {e}')
+            self._log.error(f'RP Error: {e}')
             raise e
             # return self.__get_fault_obj_properties(reliability='rp-error')
         else:
@@ -229,7 +223,7 @@ class BACnetDevice(Thread):
                       if value is not None and str(value).strip()}
 
         except Exception as e:
-            self.__logger.warning(f'RPM Error: {e}')
+            self._log.warning(f'RPM Error: {e}')
             raise ReadPropertyMultipleException(e)
         else:
             if values is not None:
@@ -244,19 +238,19 @@ class BACnetDevice(Thread):
                 response = self.read_property(obj=obj, prop=prop)
 
             except (UnknownObjectError, NoResponseFromController) as e:
-                self.__logger.warning(f'sRPM Error: {e}')
+                self._log.warning(f'sRPM Error: {e}')
                 raise e
 
             except (UnknownPropertyError, ReadPropertyException) as e:
                 if prop is ObjProperty.priorityArray:
                     continue
-                self.__logger.warning(f'sRPM Error: {e}')
+                self._log.warning(f'sRPM Error: {e}')
                 raise e
             except TypeError as e:
-                self.__logger.error(f'Type error: {e}')
+                self._log.error(f'Type error: {e}')
                 raise e
             except Exception as e:
-                self.__logger.error(f'sRPM error: {e}', exc_info=True)
+                self._log.error(f'sRPM error: {e}', exc_info=True)
 
             else:
                 values.update({prop: response})
@@ -277,7 +271,7 @@ class BACnetDevice(Thread):
                                                  )
 
         except ReadPropertyMultipleException as e:
-            self.__logger.error(f'Read Error: {e}')
+            self._log.error(f'Read Error: {e}')
             raise e
         else:
             properties.update(values)
@@ -297,19 +291,19 @@ class BACnetDevice(Thread):
                                          )
 
         except NoResponseFromController as e:
-            self.__logger.error(f'No response error: {e}')
+            self._log.error(f'No response error: {e}')
             values = get_fault_obj_properties(reliability='no-response')
         except UnknownPropertyError as e:
-            self.__logger.error(f'Unknown property error: {e}')
+            self._log.error(f'Unknown property error: {e}')
             values = get_fault_obj_properties(reliability='unknown-property')
         except UnknownObjectError as e:
-            self.__logger.error(f'Unknown object error: {e}')
+            self._log.error(f'Unknown object error: {e}')
             values = get_fault_obj_properties(reliability='unknown-object')
         except (ReadPropertyException, TypeError) as e:
-            self.__logger.error(f'RP error: {e}')
+            self._log.error(f'RP error: {e}')
             values = get_fault_obj_properties(reliability='rp-error')
         except Exception as e:
-            self.__logger.error(f'Read Error: {e}', exc_info=True)
+            self._log.error(f'Read Error: {e}', exc_info=True)
             values = get_fault_obj_properties(reliability='error')
         finally:
             properties.update(values)
@@ -319,9 +313,9 @@ class BACnetDevice(Thread):
         """ device_id in queue means that device polled.
             Should send collected objects to HTTP
         """
-        self.__verifier_queue.put(self.id)
+        self._verifier_queue.put(self.id)
 
     def __put_data_into_verifier(self, properties: dict) -> None:
         """ Send collected data about obj into BACnetVerifier
         """
-        self.__verifier_queue.put(properties)
+        self._verifier_queue.put(properties)

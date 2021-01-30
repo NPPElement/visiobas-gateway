@@ -14,15 +14,14 @@ from gateway.connectors.modbus.device import ModbusDevice
 from gateway.logs import get_file_logger
 
 _base_path = Path(__file__).resolve().parent.parent.parent
-_log_file_path = _base_path / f'logs/{__name__}.log'
 
 _log = get_file_logger(logger_name=__name__,
-                       size_bytes=50_000_000,
-                       file_path=_log_file_path)
+                       size_bytes=50_000_000
+                       )
 
 
 class ModbusConnector(Thread, Connector):
-    __slots__ = ('__config', 'default_update_period', '_gateway', '_verifier_queue',
+    __slots__ = ('_config', 'default_update_period', '_gateway', '_verifier_queue',
                  '_connected', '_stopped', '_object_types_to_request',
                  '_address_cache', '_polling_devices', '_update_intervals'
                  )
@@ -32,7 +31,7 @@ class ModbusConnector(Thread, Connector):
                  config: dict):
         super().__init__()
 
-        self.__config = config
+        self._config = config
         self.default_update_period = config.get('default_update_period', 10)
 
         self.setName(name=f'{self}-Thread')
@@ -133,13 +132,14 @@ class ModbusConnector(Thread, Connector):
 
     def update_devices(self, devices: dict[int, set[ModbusObject]],
                        update_intervals: dict[int, int]) -> None:
-        """ Starts Modbus devices threads
-        """
+        """ Starts Modbus devices threads """
+
         for dev_id, objs in devices.items():
             if dev_id in self._polling_devices.keys():
                 self.__stop_device(device_id=dev_id)
             self.__start_device(device_id=dev_id, objects=objs,
-                                update_interval=update_intervals[dev_id])
+                                update_interval=update_intervals[dev_id]
+                                )
 
         _log.info('Devices updated')
 
@@ -167,8 +167,7 @@ class ModbusConnector(Thread, Connector):
             _log.info(f'Device [{device_id}] started')
 
     def __stop_device(self, device_id: int) -> None:
-        """ Stop Modbus device thread
-        """
+        """ Stop Modbus device thread """
         try:
             _log.debug(f'Device [{device_id}] stopping polling ...')
             self._polling_devices[device_id].stop_polling()
@@ -183,8 +182,7 @@ class ModbusConnector(Thread, Connector):
             _log.error(f'Device stopping error: {e}')
 
     def __stop_devices(self, devices_id: tuple) -> None:
-        """ Stop Modbus devices threads
-        """
+        """ Stop Modbus devices threads """
         try:
             [self.__stop_device(device_id=device_id) for device_id in devices_id]
             for dev_id in devices_id:

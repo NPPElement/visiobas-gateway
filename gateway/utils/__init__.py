@@ -1,6 +1,6 @@
 from os import environ
 
-from gateway.http import VisioHTTPNode
+from gateway.http_ import VisioHTTPNode
 
 
 def read_cfg_from_env() -> dict:
@@ -47,18 +47,19 @@ def read_cfg_from_env() -> dict:
                     environ.get('MODBUS_DEFAULT_UPDATE_PERIOD', 10))
             }
         }
-    except EnvironmentError:
-        raise EnvironmentError(
-            "Please ensure environment variables are set to: \n"
-            "'HTTP_{server}_HOST'\n'HTTP_{server}_PORT'\n"
-            "'HTTP_{server}_LOGIN'\n'HTTP_{server}_PASSWORD'\nfor each server.\n\n"
-
-            "Also you can provide optional variables: \n"
-            "'HTTP_PORT' by default = 8080\n"
-            "'HTTP_ENABLE' by default = FALSE\n"
-            "'MQTT_ENABLE' by default = FALSE\n"
-            "'BACNET_DEFAULT_UPDATE_PERIOD' by default = 10\n"
-            "'MODBUS_DEFAULT_UPDATE_PERIOD' by default = 10\n"
-        )
+    except EnvironmentError as e:
+        raise e
+        # EnvironmentError(
+        #     "Please ensure environment variables are set to: \n"
+        #     "'HTTP_{server}_HOST'\n'HTTP_{server}_PORT'\n"
+        #     "'HTTP_{server}_LOGIN'\n'HTTP_{server}_PASSWORD'\nfor each server.\n\n"
+        #
+        #     "Also you can provide optional variables: \n"
+        #     "'HTTP_PORT' by default = 8080\n"
+        #     "'HTTP_ENABLE' by default = FALSE\n"
+        #     "'MQTT_ENABLE' by default = FALSE\n"
+        #     "'BACNET_DEFAULT_UPDATE_PERIOD' by default = 10\n"
+        #     "'MODBUS_DEFAULT_UPDATE_PERIOD' by default = 10\n"
+        # )
     else:
         return config

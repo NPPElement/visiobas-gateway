@@ -2,7 +2,6 @@ import asyncio
 from hashlib import md5
 from multiprocessing import SimpleQueue
 from os import environ
-from pathlib import Path
 from threading import Thread
 from time import sleep
 
@@ -11,11 +10,9 @@ import aiohttp
 from gateway.connectors.bacnet import ObjType
 from gateway.logs import get_file_logger
 
-_base_path = Path(__file__).resolve().parent.parent
-_log_file_path = _base_path / f'logs/{__name__}.log'
 _log = get_file_logger(logger_name=__name__,
-                       size_bytes=50_000_000,
-                       file_path=_log_file_path)
+                       size_bytes=50_000_000
+                       )
 
 
 class VisioHTTPConfig:
@@ -152,14 +149,12 @@ class VisioHTTPClient(Thread):
 
         self._config = config
 
-        self.get_server_data = self._config['get_server_data']
-        self.post_servers_data = self._config['post_servers_data']
+        self.get_server_data = self._config['get_node']
+        self.post_servers_data = self._config['post_nodes']
 
         # self.__session = None  # todo: KEEP one session in future
         self._is_authorized = False
         self._stopped = False
-
-        self.start()
 
     def run(self) -> None:
         """ Keeps the connection to the server.
@@ -245,7 +240,7 @@ class VisioHTTPClient(Thread):
             return successfully_authorized
 
     async def _login_node(self, node: VisioHTTPNode,
-                          session: aiohttp.ClientSession) -> bool:
+                          session) -> bool:
         """ Perform authorization to node (primary server + mirror)
         :param node: node on witch the authorization is performed
         :param session:
@@ -258,9 +253,13 @@ class VisioHTTPClient(Thread):
                                                      )
             if not is_authorized:
                 node.switch_to_mirror()
-                _ = await self._login_server(server=node.cur_server,
-                                             session=session
-                                             )
+                is_authorized = await self._login_server(server=node.cur_server,
+                                                         session=session
+                                                         )
+            if is_authorized:
+                _log.info(f'Successfully authorized on {node}')
+            else:
+                _log.warning(f'Authorization on {node} failed!')
         except Exception as e:
             _log.warning(f'Authorization error! Please check {node}: {e}',
                          exc_info=True
@@ -269,7 +268,7 @@ class VisioHTTPClient(Thread):
             return node.is_authorized
 
     async def _login_server(self, server: VisioHTTPConfig,
-                            session: aiohttp.ClientSession) -> bool:
+                            session) -> bool:
         """ Perform authorization to server
         :param server: server on which the authorization is performed
         :param session:
@@ -289,7 +288,10 @@ class VisioHTTPClient(Thread):
                                  user_id=auth_data['user_id'],
                                  auth_user_id=auth_data['auth_user_id']
                                  )
-            _log.info(f'Successfully authorized on {server}')
+            if server.is_authorized:
+                _log.info(f'Successfully authorized on {server}')
+            else:
+                _log.info(f'Authorization on {server} failed!')
 
         except aiohttp.ClientError as e:
             _log.warning(f'Authorization on {server} was failed: {e}')
@@ -303,7 +305,7 @@ class VisioHTTPClient(Thread):
             return server.is_authorized
 
     async def _rq_login(self, url: str, auth_payload: dict,
-                        session: aiohttp.ClientSession) -> list or dict:
+                        session) -> list or dict:
         async with session.post(url=url, json=auth_payload) as resp:
             _log.debug(f'POST: {resp.url}')
             # try:  # todo: need re-raise?
@@ -330,7 +332,7 @@ class VisioHTTPClient(Thread):
 
     async def __rq_post_device(self, post_server_data: VisioHTTPConfig,
                                device_id: int, data,
-                               session: aiohttp.ClientSession) -> None:
+                               session) -> None:
         """ Sends the polled information about the device to the server.
 
         # :return: list of objects id, rejected by server side.
@@ -351,7 +353,7 @@ class VisioHTTPClient(Thread):
 
     async def __rq_device_object(self, get_server_data: VisioHTTPConfig,
                                  device_id: int, object_type: ObjType,
-                                 session: aiohttp.ClientSession) -> list[dict]:
+                                 session) -> list[dict]:
         """ Request of all available objects by device_id and object_type
         :param device_id:
         :param object_type:
@@ -373,8 +375,7 @@ class VisioHTTPClient(Thread):
 
     async def __rq_objects_for_device(self, get_server_data: VisioHTTPConfig,
                                       device_id: int, object_types: tuple[ObjType],
-                                      session: aiohttp.ClientSession
-                                      ) -> dict[ObjType, list[dict]]:
+                                      session) -> dict[ObjType, list[dict]]:
         """ Requests types of objects by device_id """
 
         # Create list with requests
@@ -419,7 +420,7 @@ class VisioHTTPClient(Thread):
             return devices
 
     @staticmethod
-    async def _extract_response_data(response: aiohttp.ClientResponse) -> list or dict:
+    async def _extract_response_data(response) -> list or dict:
         """ Checks the correctness of the response.
         :param response: server's response
         :return: response['data'] field after checks

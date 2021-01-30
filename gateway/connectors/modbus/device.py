@@ -1,5 +1,4 @@
 from multiprocessing import SimpleQueue
-from pathlib import Path
 from threading import Thread
 from time import time, sleep
 
@@ -14,10 +13,10 @@ from gateway.logs import get_file_logger
 
 
 class ModbusDevice(Thread):
-    __slots__ = ('id', 'address', 'port', 'update_period', '__logger',
-                 '__client', '__available_functions',
-                 '__connector', '__verifier_queue',
-                 '__polling', 'objects'
+    __slots__ = ('id', 'address', 'port', 'update_period', '_log',
+                 '_client', '_available_functions',
+                 '_connector', '_verifier_queue',
+                 '_polling', 'objects'
                  )
 
     def __init__(self,
@@ -33,47 +32,44 @@ class ModbusDevice(Thread):
         self.address, self.port = address.split(sep=':', maxsplit=1)
         self.update_period = update_period
 
-        _base_path = Path(__file__).resolve().parent.parent.parent
-        _log_file_path = _base_path / f'logs/{self.id}.log'
+        self._log = get_file_logger(logger_name=f'{self}',
+                                    size_bytes=50_000_000
+                                    )
 
-        self.__logger = get_file_logger(logger_name=f'{self}',
-                                        size_bytes=50_000_000,
-                                        file_path=_log_file_path)
-
-        self.__client, self.__available_functions = None, None
+        self._client, self._available_functions = None, None
 
         self.setName(name=f'{self}-Thread')
         self.setDaemon(True)
 
-        self.__connector = connector
-        self.__verifier_queue = verifier_queue
+        self._connector = connector
+        self._verifier_queue = verifier_queue
 
-        self.__polling = True
+        self._polling = True
 
         self.objects: set[ModbusObject] = objects
 
-        self.__logger.info(f'{self} starting ...')
+        self._log.info(f'{self} starting ...')
         self.start()
 
     def __len__(self):
         return len(self.objects)
 
     def stop_polling(self) -> None:
-        self.__client.close()
-        self.__polling = False
-        self.__logger.info('Stopping polling ...')
+        self._client.close()
+        self._polling = False
+        self._log.info('Stopping polling ...')
 
     def run(self):
-        while self.__polling:  # and self.__client.protocol is not None:
-            if hasattr(self.__client, 'is_socket_open') and self.__client.is_socket_open():
-                self.__logger.debug('Polling started')
+        while self._polling:  # and self.__client.protocol is not None:
+            if hasattr(self._client, 'is_socket_open') and self._client.is_socket_open():
+                self._log.debug('Polling started')
                 try:
                     t0 = time()
                     self.poll(objects=list(self.objects))
                     t1 = time()
                     time_delta = t1 - t0
 
-                    self.__logger.info(
+                    self._log.info(
                         '\n==================================================\n'
                         f'{self} ip:{self.address} polled for: '
                         f'{round(time_delta, ndigits=2)} sec.\n'
@@ -83,26 +79,26 @@ class ModbusDevice(Thread):
 
                     if time_delta < self.update_period:
                         waiting_time = (self.update_period - time_delta) * 0.8
-                        self.__logger.debug(
+                        self._log.debug(
                             f'{self} Sleeping {round(waiting_time, ndigits=2)} sec ...')
                         sleep(waiting_time)
 
                 except Exception as e:
-                    self.__logger.error(f'Polling error: {e}', exc_info=True)
+                    self._log.error(f'Polling error: {e}', exc_info=True)
             else:  # client not connect
-                self.__logger.info('Connecting to client ...')
+                self._log.info('Connecting to client ...')
                 try:
-                    self.__client, self.__available_functions = self.__get_client(
+                    self._client, self._available_functions = self.__get_client(
                         address=self.address,
                         port=self.port)
                 except ConnectionError as e:
-                    self.__logger.error(f'{self} connection error: {e} '
-                                        'Sleeping 60 sec to next attempt ...')
+                    self._log.error(f'{self} connection error: {e} '
+                                    'Sleeping 60 sec to next attempt ...')
                     sleep(60)
                 except Exception as e:
-                    self.__logger.error(f'{self} initialization error: {e}', exc_info=True)
+                    self._log.error(f'{self} initialization error: {e}', exc_info=True)
         else:
-            self.__logger.info(f'{self} stopped.')
+            self._log.info(f'{self} stopped.')
 
     def __repr__(self):
         return f'ModbusDevice [{self.id}]'
@@ -128,10 +124,10 @@ class ModbusDevice(Thread):
                 15: client.write_coils,
                 16: client.write_registers
             }
-            self.__logger.info(f'{self} client initialized')
+            self._log.info(f'{self} client initialized')
 
         except Exception as e:
-            self.__logger.error(f'Modbus client init error: {e}', exc_info=True)
+            self._log.error(f'Modbus client init error: {e}', exc_info=True)
             raise ConnectionError
         else:
             return client, available_functions
@@ -144,21 +140,21 @@ class ModbusDevice(Thread):
             raise ValueError('Read functions must be one of 1..4')
 
         try:
-            data = self.__available_functions[cmd_code](address=reg_address,
-                                                        count=quantity,
-                                                        unit=unit)
+            data = self._available_functions[cmd_code](address=reg_address,
+                                                       count=quantity,
+                                                       unit=unit)
         except Exception as e:
-            self.__logger.error(
+            self._log.error(
                 f'Read error from reg: {reg_address}, quantity: {quantity} : {e}',
                 exc_info=True)
             return None
 
         else:
             if not data.isError():
-                self.__logger.debug(f'From register: {reg_address} read: {data.registers}')
+                self._log.debug(f'From register: {reg_address} read: {data.registers}')
                 return data.registers
             else:
-                self.__logger.error(f'Received error response from {reg_address}')
+                self._log.error(f'Received error response from {reg_address}')
                 return None
 
     def process_registers(self, registers: list[int],
@@ -199,7 +195,7 @@ class ModbusDevice(Thread):
                                       f'not yet defined: {registers, quantity, properties}')
         scaled = value / properties.scale
 
-        self.__logger.debug(
+        self._log.debug(
             f'Registers: {registers} Casted: {value} '
             f'scale: {properties.scale} scaled: {scaled} ')
         return scaled
@@ -228,8 +224,8 @@ class ModbusDevice(Thread):
                 self.__put_data_into_verifier(properties=converted_properties)
 
             except Exception as e:
-                self.__logger.warning(f'Object {obj} was skipped due to an error: {e}',
-                                      exc_info=True)
+                self._log.warning(f'Object {obj} was skipped due to an error: {e}',
+                                  exc_info=True)
 
         # [self.__put_data_into_verifier(
         #     self.__convert_to_bacnet_properties(
@@ -251,21 +247,20 @@ class ModbusDevice(Thread):
                                        obj: ModbusObject, value) -> dict[ObjProperty, ...]:
         """ Represent modbus register value as a bacnet object
         """
-        return {
-            ObjProperty.deviceId: device_id,
-            ObjProperty.objectName: obj.name,
-            ObjProperty.objectType: obj.type,
-            ObjProperty.objectIdentifier: obj.id,
-            ObjProperty.presentValue: value,
-        }
+        return {ObjProperty.deviceId: device_id,
+                ObjProperty.objectName: obj.name,
+                ObjProperty.objectType: obj.type,
+                ObjProperty.objectIdentifier: obj.id,
+                ObjProperty.presentValue: value,
+                }
 
     def __put_data_into_verifier(self, properties: dict) -> None:
         """ Send collected data about obj into BACnetVerifier
         """
-        self.__verifier_queue.put(properties)
+        self._verifier_queue.put(properties)
 
     def __put_device_end_to_verifier(self) -> None:
         """ device_id in queue means that device polled.
             Should send collected objects to HTTP
         """
-        self.__verifier_queue.put(self.id)
+        self._verifier_queue.put(self.id)

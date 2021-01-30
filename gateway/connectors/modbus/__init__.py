@@ -62,6 +62,8 @@ def cast_2_registers(registers: list[int],
                         'FLOAT': decoder.decode_32bit_float,
                         },
                    }
+    # TODO: UNFINISHED
+    raise NotImplementedError
     try:
         return decode_func[type_name]()
     except KeyError:

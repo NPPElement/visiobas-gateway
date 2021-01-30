@@ -15,11 +15,10 @@ from gateway.connectors.bacnet.device import BACnetDevice
 from gateway.logs import get_file_logger
 
 _base_path = Path(__file__).resolve().parent.parent.parent
-_log_file_path = _base_path / f'logs/{__name__}.log'
 
 _log = get_file_logger(logger_name=__name__,
-                       size_bytes=50_000_000,
-                       file_path=_log_file_path)
+                       size_bytes=50_000_000
+                       )
 
 
 class BACnetConnector(Thread, Connector):
@@ -50,7 +49,7 @@ class BACnetConnector(Thread, Connector):
         self._connected = False
         self._stopped = False
 
-        #todo move to http client
+        # todo move to http client
         self._types_to_request = (
             ObjType.ANALOG_INPUT, ObjType.ANALOG_OUTPUT, ObjType.ANALOG_VALUE,
             ObjType.BINARY_INPUT, ObjType.BINARY_OUTPUT, ObjType.BINARY_VALUE,

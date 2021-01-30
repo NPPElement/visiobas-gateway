@@ -1,17 +1,12 @@
 from multiprocessing import Process, SimpleQueue
-from pathlib import Path
 
 from bacpypes.basetypes import PriorityArray
 
 from gateway.connectors.bacnet import ObjProperty, StatusFlags
 from gateway.logs import get_file_logger
 
-_base_path = Path(__file__).resolve().parent.parent
-_log_file_path = _base_path / f'logs/{__name__}.log'
-
 _log = get_file_logger(logger_name=__name__,
-                       size_bytes=50_000_000,
-                       file_path=_log_file_path
+                       size_bytes=50_000_000
                        )
 
 
@@ -34,8 +29,6 @@ class BACnetVerifier(Process):
         # Dict, where key - device_id, and value - list of collected verified strings
         if self._http_enable:
             self._http_storage: dict[int, list[str]] = {}
-
-        # self.start()
 
     def __repr__(self):
         return 'BACnetVerifier'
@@ -86,7 +79,8 @@ class BACnetVerifier(Process):
                                     f'{protocols_data} {type(protocols_data)}. '
                                     'Please provide device_id <int> '
                                     'to send data into HTTP server. '
-                                    'Or provide <dict> with ObjProperties.')
+                                    'Or provide <dict> with ObjProperties.'
+                                    )
 
             except TypeError as e:
                 _log.error(f'Verifying type error: {e}', exc_info=True)
@@ -157,11 +151,10 @@ class BACnetVerifier(Process):
         elif pv == float('-inf'):
             sf = properties.get(ObjProperty.statusFlags, StatusFlags())
             sf.set(fault=True)
-            properties.update({
-                ObjProperty.presentValue: 'null',
-                ObjProperty.statusFlags: sf,
-                ObjProperty.reliability: 3
-            })
+            properties.update({ObjProperty.presentValue: 'null',
+                               ObjProperty.statusFlags: sf,
+                               ObjProperty.reliability: 3
+                               })
         elif isinstance(pv, str) and not pv.strip():
             sf = properties.get(ObjProperty.statusFlags, StatusFlags())
             sf.set(fault=True)
@@ -177,9 +170,8 @@ class BACnetVerifier(Process):
                 pv = 1
             elif pv == 'inactive':
                 pv = 0
-            properties.update({
-                ObjProperty.presentValue: pv
-            })
+            properties.update({ObjProperty.presentValue: pv
+                               })
 
     @staticmethod
     def verify_pa(pa: PriorityArray, properties: dict) -> None:

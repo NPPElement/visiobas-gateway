@@ -510,8 +510,9 @@ class ObjProperty(Enum):
     def id(self):
         return self.value
 
+
 if __name__ == '__main__':
-# fixme
+    # fixme
     sf1 = StatusFlags()
     sf2 = StatusFlags()
     print(sf1 is sf2)

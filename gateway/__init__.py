@@ -1,51 +1,57 @@
-from logging import getLogger
 from multiprocessing import SimpleQueue
+from pathlib import Path
 from time import sleep
 
+from gateway.http_ import VisioHTTPClient
 from gateway.connectors.bacnet.bacnet_connector import BACnetConnector
 from gateway.connectors.modbus.modbus_connector import ModbusConnector
-from gateway.http import VisioHTTPClient
+from gateway.logs import get_file_logger
 from gateway.verifier import BACnetVerifier
+
+_base_path = Path(__file__).resolve().parent.parent.parent
+_log_file_path = _base_path / f'logs/{__name__}.log'
+
+_log = get_file_logger(logger_name=__name__,
+                       size_bytes=50_000_000
+                       )
 
 
 class VisioGateway:
-    def __init__(self, config: dict):
+    delay_loop = 60 * 60
 
-        self.__logger = getLogger('VisioGateway')
-        self.__config = config
-        self.__stopped = False
+    def __init__(self, config: dict):
+        self._config = config  # todo check cfg
+        self._stopped = False
 
         # todo: refactor
-        self.__protocol_verifier_queue = SimpleQueue()
-        self.__verifier_http_queue = SimpleQueue()
+        self._protocol_verifier_queue = SimpleQueue()
+        self._verifier_http_queue = SimpleQueue()
 
         self.http_client = VisioHTTPClient(gateway=self,
-                                           config=self.__config['http'],
-                                           verifier_queue=self.__verifier_http_queue
+                                           config=self._config['http'],
+                                           verifier_queue=self._verifier_http_queue
                                            )
-        # self.__mqtt_broker = VisioMQTTBroker()
-        sleep(1)
+        self.verifier = BACnetVerifier(protocols_queue=self._protocol_verifier_queue,
+                                       http_queue=self._verifier_http_queue,
+                                       config=self._config['bacnet_verifier']
+                                       )
+        # self.mqtt_client =
 
         # self.__notifier = None  # todo
         # self.__statistic = None  # todo
+        self.http_client.start()
+        sleep(1)
+        self.verifier.start()
 
-        # todo check cfg
-
-        self.__verifier = BACnetVerifier(protocols_queue=self.__protocol_verifier_queue,
-                                         http_queue=self.__verifier_http_queue,
-                                         config=self.__config['bacnet_verifier']
-                                         )
-        self.__verifier.start()
-
-        self.__connectors = {
+        self._connectors = {
             'bacnet': BACnetConnector(
                 gateway=self,
-                verifier_queue=self.__protocol_verifier_queue,
-                config=self.__config['bacnet']),
+                verifier_queue=self._protocol_verifier_queue,
+                config=self._config['bacnet']),
             'modbus': ModbusConnector(
                 gateway=self,
-                verifier_queue=self.__protocol_verifier_queue,
-                config=self.__config['modbus']
+                verifier_queue=self._protocol_verifier_queue,
+                config=self._config['modbus']
             ),
             # 'xml': None
             # 'modbus_rtu': None,
@@ -54,52 +60,59 @@ class VisioGateway:
             # etc. todo
         }
 
-        self.__logger.info(f'{self} starting ...')
-        try:
-            self.__start_connectors()
-        except Exception as e:
-            self.__logger.error(f'Start connectors error: {e}', exc_info=True)
+        self.run_forever()
 
-        while not self.__stopped:
+    def run_forever(self):
+        _log.info(f'{self} starting ...')
+        try:
+            self._start_connectors()
+        except Exception as e:
+            _log.error(f'Start connectors error: {e}',
+                       exc_info=True
+                       )
+
+        while not self._stopped:
             try:
-                sleep(60 * 60)
+                sleep(self.delay_loop)
             except (KeyboardInterrupt, SystemExit):
-                self.__stop()
+                self._stop()
             except Exception as e:
-                self.__logger.error(f'Error: {e}', exc_info=True)
+                _log.error(f'Error: {e}',
+                           exc_info=True
+                           )
         else:
-            self.__logger.info(f'{self} stopped.')
+            _log.info(f'{self} stopped.')
 
     def __repr__(self):
         return 'VisioGateway'
 
-    def __stop(self):
-        self.__logger.warning('Stopping ...')
-        self.__stop_connectors()
+    def _stop(self):
+        _log.warning('Stopping ...')
+        self._stop_connectors()
 
-        self.__verifier.close()
-        self.__verifier.join()
+        self.verifier.close()
+        self.verifier.join()
 
         self.http_client.stop()
         self.http_client.join()
 
-        self.__stopped = True
+        self._stopped = True
 
-    def __start_connectors(self) -> None:
+    def _start_connectors(self) -> None:
         """ Opens connection with all connectors
         """
-        for connector in self.__connectors.values():
+        for connector in self._connectors.values():
             try:
                 connector.open()
             except Exception as e:
-                self.__logger.error(f'{connector} opening error: {e}')
+                _log.error(f'{connector} opening error: {e}')
 
-    def __stop_connectors(self) -> None:
+    def _stop_connectors(self) -> None:
         """ Closes connections with all connectors
         """
-        for connector in self.__connectors.values():
+        for connector in self._connectors.values():
             try:
                 connector.close()
                 connector.join()
             except Exception as e:
-                self.__logger.error(f'{connector} closing error: {e}')
+                _log.error(f'{connector} closing error: {e}')
