@@ -1,19 +1,107 @@
 from abc import ABC, abstractmethod
 from ipaddress import IPv4Address
+from multiprocessing import SimpleQueue
 from pathlib import Path
+from threading import Thread
 
+from gateway import get_file_logger
 from gateway.connectors.bacnet import ObjProperty
 
+_log = get_file_logger(logger_name=__name__,
+                       size_bytes=50_000_000
+                       )
 
-class Connector(ABC):
+
+class Connector(Thread, ABC):
+
+    def __init__(self, gateway, verifier_queue: SimpleQueue, config: dict):
+        super().__init__()
+        self._config = config
+        self._gateway = gateway
+        self._verifier_queue = verifier_queue
+
+        self.default_update_period = config.get('default_update_period', 10)
+
+        self.setName(name=f'{self}-Thread')
+        self.setDaemon(True)
+
+        self._connected = False
+        self._stopped = False
+
+        # Match device_id with device_address. Example: {200: '10.21.80.12'}
+        self._address_cache = {}
+        self._polling_devices = {}
+        self._update_intervals = {}
 
     @abstractmethod
-    def open(self):
+    def run(self):
         pass
 
+    def open(self) -> None:
+        self._connected = True
+        self._stopped = False
+        self.start()
+
+    def close(self) -> None:
+        self._stopped = True
+        self._connected = False
+
+        self.stop_devices(devices_id=tuple(self._polling_devices.keys()))
+
     @abstractmethod
-    def close(self):
+    def update_devices(self, devices: dict[int, set],
+                       update_intervals: dict[int, int]) -> None:
+        """Start device thread.
+        :param devices: dict - device_id: set of protocol objects
+        :param update_intervals: dict - device_id: upd_period
+        """
+
+        for device_id, objects in devices.items():
+            if device_id in self._polling_devices:
+                self.stop_device(device_id=device_id)
+            self.start_device(device_id=device_id,
+                              objs=objects,
+                              upd_interval=update_intervals[device_id]
+                              )
+        _log.info(f'Devices {[*devices.keys()]} updated')
+
+    @abstractmethod
+    def start_device(self, device_id: int, objs: set, upd_interval: int) -> None:
         pass
+
+    # todo device - use factory
+    #  use *args
+
+    @abstractmethod
+    def stop_device(self, device_id: int) -> None:
+        """Stop device by id."""
+        try:
+            _log.debug(f'Device [{device_id}] stopping polling ...')
+            self._polling_devices[device_id].stop_polling()
+            _log.debug(f'Device [{device_id}] stopped polling')
+            self._polling_devices[device_id].join()
+            _log.debug(f'Device [{device_id}]-Thread stopped')
+
+        except KeyError as e:
+            _log.error(f'The device with id {device_id} is not running. '
+                       f'Please provide the id of the polling device: {e}'
+                       )
+        except Exception as e:
+            _log.error(f'Device stopping error: {e}',
+                       exc_info=True
+                       )
+
+    def stop_devices(self, devices_id: tuple) -> None:
+        """Stop devices by id."""
+        try:  # fixme write for loop
+            [self.stop_device(device_id=device_id) for device_id in devices_id]
+            self._polling_devices = {}  # fixme incorrect!
+            _log.info(f'BACnet devices [{devices_id}] were stopping')
+
+        except Exception as e:
+            _log.error(f'Stopping devices error: {e}',
+                       exc_info=True
+                       )
 
     @abstractmethod
     def __repr__(self):

@@ -15,8 +15,32 @@ _log = get_file_logger(logger_name=__name__,
                        )
 
 
+def periodic(period: float or int):
+    def scheduler(f):
+        async def wrapper(*args, **kwargs):
+            while True:
+                # todo: how better?
+                asyncio.create_task(f(*args, **kwargs))
+                await asyncio.sleep(period)  # fixme: will be deprecate
+
+        return wrapper
+
+    return scheduler
+
+
+# TODO: example of usage:
+# @periodic(2)
+# async def do_something(*args, **kwargs):
+#     await asyncio.sleep(5)  # Do some heavy calculation
+#     print(time.time())
+#
+#
+# if __name__ == '__main__':
+#     asyncio.run(do_something('Maluzinha do papai!', secret=42))
+
+
 class VisioHTTPConfig:
-    """ Represent parameters for Visio HTTP server """
+    """Represent parameters for Visio HTTP server."""
 
     # That class allows to create only one instance for each server's params
     _instances = {}  # keeps instances references
@@ -102,7 +126,7 @@ class VisioHTTPConfig:
 
 
 class VisioHTTPNode:
-    """ Represent Visio HTTP node (primary server + mirror server) """
+    """Represent Visio HTTP node (primary server + mirror server)."""
 
     def __init__(self, main: VisioHTTPConfig, mirror: VisioHTTPConfig):
         self.primary = main
@@ -138,6 +162,10 @@ class VisioHTTPNode:
 
 
 class VisioHTTPClient(Thread):
+    """Control interactions via HTTP."""
+
+    upd_period = 60 * 60
+
     def __init__(self, gateway, verifier_queue: SimpleQueue, config: dict):
         super().__init__()
 
@@ -195,6 +223,17 @@ class VisioHTTPClient(Thread):
                                )
         else:
             _log.info(f'{self} stopped.')
+
+    @periodic(period=upd_period)
+    async def run_iteration(self) -> None:
+        """"""
+        # TODO: stop devices
+        # TODO: send all collected data
+        # TODO: logout
+        # TODO: login
+        # TODO: rq devices
+        # TODO: upd devices in connectors
+        # TODO: get from queue then send via HTTP
 
     def __repr__(self):
         return 'VisioClient'
@@ -280,10 +319,11 @@ class VisioHTTPClient(Thread):
         _log.info(f'Authorization to {server} ...')
         auth_url = server.base_url + '/auth/rest/login'
         try:
-            auth_data = await self._rq_login(url=auth_url,
-                                             auth_payload=server.auth_payload,
-                                             session=session
-                                             )
+            auth_data = await self._rq(method='POST',
+                                       url=auth_url,
+                                       json=server.auth_payload,
+                                       session=session
+                                       )
             server.set_auth_data(bearer_token=auth_data['token'],
                                  user_id=auth_data['user_id'],
                                  auth_user_id=auth_data['auth_user_id']
@@ -304,14 +344,14 @@ class VisioHTTPClient(Thread):
         finally:
             return server.is_authorized
 
-    async def _rq_login(self, url: str, auth_payload: dict,
-                        session) -> list or dict:
-        async with session.post(url=url, json=auth_payload) as resp:
-            _log.debug(f'POST: {resp.url}')
-            # try:  # todo: need re-raise?
-            return await self._extract_response_data(response=resp)
-            # except ClientError as e:
-            #     raise e
+    # async def _rq_login(self, url: str, auth_payload: dict,
+    #                     session) -> list or dict:
+    #     async with session.post(url=url, json=auth_payload) as resp:
+    #         _log.debug(f'POST: {resp.url}')
+    #         # try:
+    #         return await self._extract_response_data(response=resp)
+    #         # except ClientError as e:
+    #         #     raise e
 
     async def rq_post_device(self, post_servers_data: list[VisioHTTPConfig],
                              device_id: int, data) -> None:
@@ -351,73 +391,85 @@ class VisioHTTPClient(Thread):
             #                             data=data)
             # return data
 
-    async def __rq_device_object(self, get_server_data: VisioHTTPConfig,
-                                 device_id: int, object_type: ObjType,
-                                 session) -> list[dict]:
-        """ Request of all available objects by device_id and object_type
-        :param device_id:
-        :param object_type:
-        :return: data received from the server
-        """
-        # _log.debug(f"Requesting information about device [{device_id}], "
-        #            f"object_type: {object_type.name_dashed} from the {get_server_data} ...")
+    # async def get_devices(self, get_node: VisioHTTPNode,
+    #                       devices_id: tuple[int], obj_types: tuple[ObjType]
+    #                       ) -> dict[int, dict[ObjType, list[dict]]]:
+    #     """ Requests objects of each type for each device_id.
+    #     For each device creates a dictionary, where the key is object_type,
+    #     and the value is a dict with object properties.
+    #     """
+    #     # todo: session as param
+    #
+    #     # TODO: do we need this method?
+    #     async with aiohttp.ClientSession(
+    #             headers=get_node.cur_server.auth_headers) as session:
+    #         devices_coros = [self.__rq_objects_for_device(get_server_data=get_node,
+    #                                                       device_id=device_id,
+    #                                                       object_types=obj_types,
+    #                                                       session=session
+    #                                                       ) for device_id in devices_id]
+    #         devices = {device_id: device_objects for
+    #                    device_id, device_objects in
+    #                    zip(devices_id, await asyncio.gather(*devices_coros))
+    #                    if device_objects
+    #                    }
+    #         # drops devices with no objects
+    #         return devices
 
-        get_url = (f'{get_server_data.base_url}'
-                   f'/vbas/gate/get/{device_id}/{object_type.name_dashed}')
-        try:
-            # async with ClientSession(headers=get_server_data.auth_headers) as session:
-            async with session.get(url=get_url) as response:
-                _log.debug(f'GET: {get_url}')
-                data = await self._extract_response_data(response=response)
-                return data
-        except aiohttp.ClientError as e:
-            _log.warning(f'Error: {e}')
-
-    async def __rq_objects_for_device(self, get_server_data: VisioHTTPConfig,
-                                      device_id: int, object_types: tuple[ObjType],
-                                      session) -> dict[ObjType, list[dict]]:
-        """ Requests types of objects by device_id """
-
-        # Create list with requests
-        objects_coros = [self.__rq_device_object(get_server_data=get_server_data,
-                                                 device_id=device_id,
-                                                 object_type=object_type,
-                                                 session=session
-                                                 ) for object_type in object_types]
-
-        # Each response, if it's not empty add in dict, where key is the type of object
-        # and the value is the list with objects
-        device_objects = {obj_type: objects for
-                          obj_type, objects in
-                          zip(object_types, await asyncio.gather(*objects_coros))
-                          if objects
+    async def get_device(self, node: VisioHTTPNode,
+                         device_id: int, obj_types: tuple[ObjType],
+                         session) -> dict[ObjType, list[dict]]:
+        """Perform request objects of each types for device by id."""
+        obj_coros = [
+            self._rq(method='GET',
+                     url=(f'{node.cur_server.base_url}'
+                          f'/vbas/gate/get/{device_id}/{obj_type.name_dashed}'),
+                     session=session,
+                     headers=node.cur_server.auth_headers
+                     ) for obj_type in obj_types
+        ]
+        # objects of each type, if it's not empty, are added to the dictionary,
+        # where key is obj_type and value is list with objects
+        device_objects = {obj_type: objs for
+                          obj_type, objs in
+                          zip(obj_types, await asyncio.gather(*obj_coros))
+                          if objs
                           }
         # _log.debug(f'For device_id: {device_id} received objects')  #: {device_objects}')
         return device_objects
 
-    async def rq_devices_objects(self, get_server_data: VisioHTTPConfig,
-                                 devices_id: tuple[int],
-                                 obj_types: tuple[ObjType]
-                                 ) -> dict[int, dict[ObjType, list[dict]]]:
-        """ Requests types of objects for each device_id.
-            For each device creates a dictionary, where the key is object_type,
-            and the value is a dict with object properties.
+    # async def _rq_get_obj_type(self, get_node: VisioHTTPNode,
+    #                            device_id: int, object_type: ObjType,
+    #                            session) -> list[dict]:
+    #     """ Request of all available objects by device_id and object_type
+    #     :param device_id:
+    #     :param object_type:
+    #     :return: data received from the server
+    #     """
+    #     # _log.debug(f"Requesting information about device [{device_id}], "
+    #     #            f"object_type: {object_type.name_dashed} from the {get_server_data} ...")
+    #
+    #     get_url = (f'{get_node.cur_server.base_url}'
+    #                f'/vbas/gate/get/{device_id}/{object_type.name_dashed}'
+    #                )
+    #     try:
+    #         # async with ClientSession(headers=get_server_data.auth_headers) as session:
+    #         async with session.get(url=get_url) as response:
+    #             _log.debug(f'GET: {get_url}')
+    #             data = await self._extract_response_data(response=response)
+    #             return data
+    #     except aiohttp.ClientError as e:
+    #         _log.warning(f'Error: {e}')
+
+    async def _rq(self, method: str, url: str, session, **kwargs) -> list or dict:
+        """Perform HTTP request and check response
+        :return: extracted data
         """
-        async with aiohttp.ClientSession(headers=get_server_data.auth_headers) as session:
-            # Create list with requests
-            devices_coros = [
-                self.__rq_objects_for_device(get_server_data=get_server_data,
-                                             device_id=device_id,
-                                             object_types=obj_types,
-                                             session=session
-                                             ) for device_id in devices_id]
-            devices = {device_id: device_objects for
-                       device_id, device_objects in
-                       zip(devices_id, await asyncio.gather(*devices_coros))
-                       if device_objects
-                       }
-            # drops devices with no objects
-            return devices
+        # todo: need re-raise?
+        _log.debug(f'{method}: {url}')
+        async with session.request(method=method, url=url, **kwargs) as resp:
+            data = await self._extract_response_data(response=resp)
+            return data
 
     @staticmethod
     async def _extract_response_data(response) -> list or dict:
@@ -431,6 +483,7 @@ class VisioHTTPClient(Thread):
                 _log.debug(f'Received successfully response from server: {response.url}')
                 return resp_json['data']
             else:
+                # todo: switch to another server
                 # _log.warning(f'Server returned failure response: {response.url}\n'
                 #              f'{resp_json}')
                 raise aiohttp.ClientError(
@@ -438,6 +491,7 @@ class VisioHTTPClient(Thread):
                     f'{resp_json}'
                 )
         else:
+            # todo: switch to another server
             # _log.warning('Server response status error: '
             #              f'[{response.status}] {response.url}')
             raise aiohttp.ClientError('Server response status error: '

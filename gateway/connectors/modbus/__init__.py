@@ -9,14 +9,14 @@ class VisioModbusProperties(NamedTuple):
     scale: int  # TODO: change to 'multiplier' \ change operation in scaled value
 
     # for recalculate (A*X+B)
-    multiplier: float  # A
-    corrective: float  # B
+    # multiplier: float  # A # todo
+    # corrective: float  # B# todo
 
     data_type: str
     data_length: int  # the number of bits in which the value is stored
 
-    byte_order: str
-    word_order: str
+    # byte_order: str # todo
+    # word_order: str# todo
 
     bitmask = int
     bit: int or None = None  # TODO: change to 'bitmask'
