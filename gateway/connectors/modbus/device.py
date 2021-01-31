@@ -5,7 +5,7 @@ from time import time, sleep
 from pymodbus.client.sync import ModbusTcpClient
 
 from gateway.connectors.bacnet import ObjProperty
-from gateway.connectors.modbus import (ModbusObject,
+from gateway.connectors.modbus import (ModbusObj,
                                        VisioModbusProperties,
                                        cast_to_bit,
                                        cast_2_registers)
@@ -24,7 +24,7 @@ class ModbusDevice(Thread):
                  connector,
                  address: str,
                  device_id: int,
-                 objects: set[ModbusObject],
+                 objects: set[ModbusObj],
                  update_period: int = 10):
         super().__init__()
 
@@ -46,7 +46,7 @@ class ModbusDevice(Thread):
 
         self._polling = True
 
-        self.objects: set[ModbusObject] = objects
+        self.objects: set[ModbusObj] = objects
 
         self._log.info(f'{self} starting ...')
         self.start()
@@ -200,7 +200,7 @@ class ModbusDevice(Thread):
             f'scale: {properties.scale} scaled: {scaled} ')
         return scaled
 
-    def poll(self, objects: list[ModbusObject]) -> None:
+    def poll(self, objects: list[ModbusObj]) -> None:
         """ Read objects from registers in Modbus Device.
             Convert register values to BACnet properties.
             Send convert objects into verifier.
@@ -244,7 +244,7 @@ class ModbusDevice(Thread):
 
     @staticmethod
     def __convert_to_bacnet_properties(device_id: int,
-                                       obj: ModbusObject, value) -> dict[ObjProperty, ...]:
+                                       obj: ModbusObj, value) -> dict[ObjProperty, ...]:
         """ Represent modbus register value as a bacnet object
         """
         return {ObjProperty.deviceId: device_id,

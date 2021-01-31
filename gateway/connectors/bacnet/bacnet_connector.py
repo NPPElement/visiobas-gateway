@@ -9,7 +9,7 @@ from BAC0.core.io.IOExceptions import InitializationError, NetworkInterfaceExcep
 from aiohttp.web_exceptions import HTTPClientError, HTTPServerError
 
 from gateway.connectors import Connector
-from gateway.connectors.bacnet import ObjProperty, ObjType, BACnetObject
+from gateway.connectors.bacnet import ObjProperty, ObjType, BACnetObj
 from gateway.connectors.bacnet.device import BACnetDevice
 from gateway.logs import get_file_logger
 
@@ -24,8 +24,8 @@ class BACnetConnector(Connector):
     __slots__ = ('_config', '__interfaces', '_network',
                  'default_update_period', '_gateway', '_verifier_queue',
                  '_connected', '_stopped',
-                 '_types_to_request', '_address_cache',
-                 '_polling_devices', '_update_intervals'
+                 'obj_types_to_request', 'address_cache',
+                 'polling_devices', '_update_intervals'
                  )
 
     def __init__(self, gateway, verifier_queue: SimpleQueue, config: dict):
@@ -36,7 +36,7 @@ class BACnetConnector(Connector):
                          )
 
         # todo move to http client
-        self._types_to_request = (
+        self.obj_types_to_request = (
             ObjType.ANALOG_INPUT, ObjType.ANALOG_OUTPUT, ObjType.ANALOG_VALUE,
             ObjType.BINARY_INPUT, ObjType.BINARY_OUTPUT, ObjType.BINARY_VALUE,
             ObjType.MULTI_STATE_INPUT, ObjType.MULTI_STATE_OUTPUT,
@@ -55,9 +55,9 @@ class BACnetConnector(Connector):
             self._address_cache = self.read_address_cache(
                 address_cache_path=address_cache_path)
 
-            if len(self._polling_devices) > 0:
+            if len(self.polling_devices) > 0:
                 # Check irrelevant devices. Stop them, if found
-                irrelevant_devices_id = tuple(set(self._polling_devices.keys()) - set(
+                irrelevant_devices_id = tuple(set(self.polling_devices.keys()) - set(
                     self._address_cache.keys()))
                 if irrelevant_devices_id:
                     self.__stop_devices(devices_id=irrelevant_devices_id)
@@ -67,7 +67,7 @@ class BACnetConnector(Connector):
                     # FIXME: move to client
                     devices_objects = self.get_devices_objects(
                         devices_id=tuple(self._address_cache.keys()),
-                        obj_types=self._types_to_request)
+                        obj_types=self.obj_types_to_request)
 
                     if devices_objects:  # If received devices with objects from the server
                         _log.info('Received devices with '
@@ -118,12 +118,12 @@ class BACnetConnector(Connector):
             self._network.disconnect()
             _log.info(f'{self} stopped.')
 
-    def start_device(self, device_id: int, objs: set[BACnetObject],
+    def start_device(self, device_id: int, objs: set[BACnetObj],
                      upd_interval: int) -> None:
         """Start BACnet device thread."""
         _log.debug(f'Starting Device [{device_id}] ...')
         try:
-            self._polling_devices[device_id] = BACnetDevice(
+            self.polling_devices[device_id] = BACnetDevice(
                 verifier_queue=self._verifier_queue,
                 connector=self,
                 address=self._address_cache[device_id],
@@ -142,8 +142,8 @@ class BACnetConnector(Connector):
                             obj_types: tuple) -> dict[int, dict[ObjType, list[dict]]]:
         """ Requests objects for modbus connector from server via http client """
         devices_objs = asyncio.run(
-            self._gateway.http_client.get_device(
-                node=self._gateway.http_client.get_server_data,
+            self._gateway.http_client.upd_device(
+                node=self._gateway.http_client.get_node,
                 devices_id=devices_id,
                 obj_types=obj_types
             ))
@@ -153,8 +153,8 @@ class BACnetConnector(Connector):
                                     default_update_interval: int) -> dict[int, int]:
         """ Receive update intervals for devices via http client """
         device_objs = asyncio.run(
-            self._gateway.http_client.get_device(
-                node=self._gateway.http_client.get_server_data,
+            self._gateway.http_client.upd_device(
+                node=self._gateway.http_client.get_node,
                 devices_id=devices_id,
                 obj_types=(ObjType.DEVICE,)
             ))
@@ -180,7 +180,7 @@ class BACnetConnector(Connector):
 
     @staticmethod
     def unpack_objects(
-            objects: dict[int, dict[ObjType, list[dict]]]) -> dict[int, set[BACnetObject]]:
+            objects: dict[int, dict[ObjType, list[dict]]]) -> dict[int, set[BACnetObj]]:
         """ Makes BACnetObjects from device structure, received from the server
         """
         devices_objects = {dev_id: set() for dev_id in objects.keys()}
@@ -192,7 +192,7 @@ class BACnetConnector(Connector):
                     obj_id = obj[str(ObjProperty.objectIdentifier.id)]
                     obj_name = obj[str(ObjProperty.objectName.id)]
 
-                    bacnet_obj = BACnetObject(type=obj_type, id=obj_id, name=obj_name)
+                    bacnet_obj = BACnetObj(type=obj_type, id=obj_id, name=obj_name)
                     devices_objects[dev_id].add(bacnet_obj)
 
         return devices_objects

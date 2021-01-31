@@ -3,9 +3,10 @@ from ipaddress import IPv4Address
 from multiprocessing import SimpleQueue
 from pathlib import Path
 from threading import Thread
+from typing import Iterable
 
 from gateway import get_file_logger
-from gateway.connectors.bacnet import ObjProperty
+from gateway.connectors.bacnet import ObjProperty, ObjType, BACnetObj
 
 _log = get_file_logger(logger_name=__name__,
                        size_bytes=50_000_000
@@ -29,9 +30,15 @@ class Connector(Thread, ABC):
         self._stopped = False
 
         # Match device_id with device_address. Example: {200: '10.21.80.12'}
-        self._address_cache = {}
-        self._polling_devices = {}
+        self.address_cache = {}
+        self.polling_devices = {}
         self._update_intervals = {}
+
+        self.obj_types_to_request: Iterable[ObjType] = ()
+
+    @property
+    def address_cache_ids(self) -> Iterable:
+        return self.address_cache.keys()
 
     @abstractmethod
     def run(self):
@@ -46,7 +53,7 @@ class Connector(Thread, ABC):
         self._stopped = True
         self._connected = False
 
-        self.stop_devices(devices_id=tuple(self._polling_devices.keys()))
+        self.stop_devices(devices_id=tuple(self.polling_devices.keys()))
 
     @abstractmethod
     def update_devices(self, devices: dict[int, set],
@@ -57,7 +64,7 @@ class Connector(Thread, ABC):
         """
 
         for device_id, objects in devices.items():
-            if device_id in self._polling_devices:
+            if device_id in self.polling_devices:
                 self.stop_device(device_id=device_id)
             self.start_device(device_id=device_id,
                               objs=objects,
@@ -66,20 +73,39 @@ class Connector(Thread, ABC):
         _log.info(f'Devices {[*devices.keys()]} updated')
 
     @abstractmethod
-    def start_device(self, device_id: int, objs: set, upd_interval: int) -> None:
+    def upd_device(self, device_id: int,
+                   objs: dict[ObjType, list[dict]]) -> bool:
+        """Receive data about device form HTTP client.
+        Then parse it. After that start device thread.
+        """
+        # todo parse data
+        upd_interval, objs = self.parse_objs_data()
+
+        self.start_device(device_id=device_id,
+                          objs=objs,
+                          upd_interval=upd_interval
+                          )
+
+    @abstractmethod
+    def parse_objs_data(self, objs: dict[ObjType, list[dict]]
+                        ) -> tuple[int, set[BACnetObj]]:
+        """Extract objects data from response."""
         pass
 
-    # todo device - use factory
-    #  use *args
+    @abstractmethod
+    def start_device(self, device_id: int, objs: set[BACnetObj], upd_interval: int) -> None:
+        pass
+        # todo device - use factory
+        #  use *args
 
     @abstractmethod
     def stop_device(self, device_id: int) -> None:
         """Stop device by id."""
         try:
             _log.debug(f'Device [{device_id}] stopping polling ...')
-            self._polling_devices[device_id].stop_polling()
+            self.polling_devices[device_id].stop_polling()
             _log.debug(f'Device [{device_id}] stopped polling')
-            self._polling_devices[device_id].join()
+            self.polling_devices[device_id].join()
             _log.debug(f'Device [{device_id}]-Thread stopped')
 
         except KeyError as e:
@@ -91,17 +117,20 @@ class Connector(Thread, ABC):
                        exc_info=True
                        )
 
-    def stop_devices(self, devices_id: tuple) -> None:
+    def stop_devices(self, devices_id: Iterable) -> None:
         """Stop devices by id."""
-        try:  # fixme write for loop
-            [self.stop_device(device_id=device_id) for device_id in devices_id]
-            self._polling_devices = {}  # fixme incorrect!
-            _log.info(f'BACnet devices [{devices_id}] were stopping')
+        for dev_id in devices_id:
+            try:
+                self.stop_device(device_id=dev_id)
+                del self.polling_devices[dev_id]
+                # [self.stop_device(device_id=device_id) for device_id in devices_id]
+                # self.polling_devices = {}  # fixme incorrect!
+                _log.info(f'Device [{dev_id}] was stopped')
 
-        except Exception as e:
-            _log.error(f'Stopping devices error: {e}',
-                       exc_info=True
-                       )
+            except Exception as e:
+                _log.error(f'Stopping device error: {e}',
+                           exc_info=True
+                           )
 
     @abstractmethod
     def __repr__(self):

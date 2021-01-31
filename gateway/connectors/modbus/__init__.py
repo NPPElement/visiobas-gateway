@@ -2,7 +2,7 @@ from typing import NamedTuple
 
 from pymodbus.payload import BinaryPayloadDecoder
 
-from gateway.connectors.bacnet import BACnetObject
+from gateway.connectors.bacnet import BACnetObj
 
 
 class VisioModbusProperties(NamedTuple):
@@ -22,7 +22,7 @@ class VisioModbusProperties(NamedTuple):
     bit: int or None = None  # TODO: change to 'bitmask'
 
 
-class ModbusObject(BACnetObject):
+class ModbusObj(BACnetObj):
     address: int
     quantity: int
     func_read: int

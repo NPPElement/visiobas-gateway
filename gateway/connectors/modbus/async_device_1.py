@@ -8,7 +8,7 @@ from pymodbus.client.asynchronous.schedulers import ASYNC_IO
 from pymodbus.client.asynchronous.tcp import AsyncModbusTCPClient
 
 from gateway.connectors.bacnet import ObjProperty
-from gateway.connectors.modbus import ModbusObject
+from gateway.connectors.modbus import ModbusObj
 from gateway.logs import get_file_logger
 
 
@@ -18,7 +18,7 @@ class ModbusDevice(Thread):
                  connector,
                  address: str,
                  device_id: int,
-                 objects: set[ModbusObject],
+                 objects: set[ModbusObj],
                  update_period: int = 10):
         super().__init__()
 
@@ -48,7 +48,7 @@ class ModbusDevice(Thread):
 
         self.__polling = True
 
-        self.objects: set[ModbusObject] = objects
+        self.objects: set[ModbusObj] = objects
 
         self.__logger.info(f'{self} starting ...')
         self.start()
@@ -160,7 +160,7 @@ class ModbusDevice(Thread):
                 self.__logger.error(f'Received error response from {reg_address}')
                 return 'null'
 
-    async def poll(self, objects: list[ModbusObject]) -> None:
+    async def poll(self, objects: list[ModbusObj]) -> None:
         """ Poll all objects for Modbus Device asynchronously.
             Send objects into verifier.
             When all objects polled, send device_id into verifier as finish signal.
@@ -181,7 +181,7 @@ class ModbusDevice(Thread):
 
     @staticmethod
     def __convert_to_bacnet_properties(device_id: int,
-                                       obj: ModbusObject, value) -> dict:
+                                       obj: ModbusObj, value) -> dict:
         """ Represent modbus register value as a bacnet object
         """
         properties = {

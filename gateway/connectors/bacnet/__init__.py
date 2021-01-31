@@ -141,7 +141,7 @@ class ObjType(Enum):
             raise NotImplementedError(f'Properties for type {self} not yet defined')
 
 
-class BACnetObject(NamedTuple):
+class BACnetObj(NamedTuple):
     type: ObjType
     id: int
 

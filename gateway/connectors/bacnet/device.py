@@ -9,7 +9,7 @@ from BAC0.core.io.IOExceptions import (ReadPropertyException,
                                        ReadPropertyMultipleException)
 
 from gateway.connectors import get_fault_obj_properties
-from gateway.connectors.bacnet import ObjProperty, ObjType, BACnetObject
+from gateway.connectors.bacnet import ObjProperty, ObjType, BACnetObj
 from gateway.logs import get_file_logger
 
 
@@ -26,7 +26,7 @@ class BACnetDevice(Thread):
                  address: str,
                  device_id: int,
                  network,
-                 objects: set[BACnetObject],
+                 objects: set[BACnetObj],
                  update_period: int = 10):
         super().__init__()
 
@@ -46,8 +46,8 @@ class BACnetDevice(Thread):
         self.address = address
         self.network = network
 
-        self.support_rpm: set[BACnetObject] = objects
-        self.not_support_rpm: set[BACnetObject] = set()
+        self.support_rpm: set[BACnetObj] = objects
+        self.not_support_rpm: set[BACnetObj] = set()
 
         # self.__objects_per_rpm = 25
         # todo: Should we use one RPM for several objects?
@@ -100,12 +100,13 @@ class BACnetDevice(Thread):
             else:  # if device inactive
                 self._log.debug(f'{self} is inactive')
                 try:
-                    device_obj = BACnetObject(type=ObjType.DEVICE,
-                                              id=self.id,
-                                              name='None')
+                    device_obj = BACnetObj(type=ObjType.DEVICE,
+                                           id=self.id,
+                                           name='None'
+                                           )
                     device_id = self.read_property(obj=device_obj,
-                                                   prop=ObjProperty.objectIdentifier)
-
+                                                   prop=ObjProperty.objectIdentifier
+                                                   )
                     self._log.info(f'PING: device_id: {device_id} <{type(device_id)}>')
 
                     if device_id:
@@ -139,11 +140,11 @@ class BACnetDevice(Thread):
 
     def poll(self) -> None:
         """ Poll all object from device.
-            Send each object into verifier after answer.
+        Send each object into verifier after response by protocol.
             When all objects polled, send device_id into verifier as finish signal
         """
         for obj in self.support_rpm:
-            assert isinstance(obj, BACnetObject)
+            assert isinstance(obj, BACnetObj)
 
             self._log.debug(f'Polling supporting PRM {obj} ...')
             try:
@@ -164,7 +165,7 @@ class BACnetDevice(Thread):
         self.support_rpm.difference_update(self.not_support_rpm)
 
         for obj in self.not_support_rpm:
-            assert isinstance(obj, BACnetObject)
+            assert isinstance(obj, BACnetObj)
 
             self._log.debug(f'Polling not supporting PRM {obj} ...')
             try:
@@ -181,7 +182,7 @@ class BACnetDevice(Thread):
         self._log.debug('All objects were polled. Send device_id to verifier')
         self.__put_device_end_to_verifier()
 
-    def read_property(self, obj: BACnetObject, prop: ObjProperty):
+    def read_property(self, obj: BACnetObj, prop: ObjProperty):
         try:
             request = ' '.join([
                 self.address,
@@ -207,7 +208,7 @@ class BACnetDevice(Thread):
                 return response
             raise ReadPropertyException('Response is None')
 
-    def read_property_multiple(self, obj: BACnetObject,
+    def read_property_multiple(self, obj: BACnetObj,
                                properties: list[ObjProperty]) -> dict:
         try:
             request = ' '.join([
@@ -231,7 +232,7 @@ class BACnetDevice(Thread):
             else:
                 raise ReadPropertyMultipleException('Response is None')
 
-    def __simulate_rpm(self, obj: BACnetObject, properties: list[ObjProperty]) -> dict:
+    def __simulate_rpm(self, obj: BACnetObj, properties: list[ObjProperty]) -> dict:
         values = {}
         for prop in properties:
             try:
@@ -258,7 +259,7 @@ class BACnetDevice(Thread):
 
         return values
 
-    def rpm(self, obj: BACnetObject) -> dict:
+    def rpm(self, obj: BACnetObj) -> dict:
         properties = {
             ObjProperty.deviceId: self.id,
             ObjProperty.objectName: obj.name,
@@ -277,7 +278,7 @@ class BACnetDevice(Thread):
             properties.update(values)
             return properties
 
-    def simulate_rpm(self, obj: BACnetObject) -> dict:
+    def simulate_rpm(self, obj: BACnetObj) -> dict:
         properties = {
             ObjProperty.deviceId: self.id,
             ObjProperty.objectName: obj.name,

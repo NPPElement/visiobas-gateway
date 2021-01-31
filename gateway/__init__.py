@@ -2,9 +2,9 @@ from multiprocessing import SimpleQueue
 from pathlib import Path
 from time import sleep
 
-from gateway.http_ import VisioHTTPClient
 from gateway.connectors.bacnet.bacnet_connector import BACnetConnector
 from gateway.connectors.modbus.modbus_connector import ModbusConnector
+from gateway.http_ import VisioHTTPClient
 from gateway.logs import get_file_logger
 from gateway.verifier import BACnetVerifier
 
@@ -43,7 +43,7 @@ class VisioGateway:
         sleep(1)
         self.verifier.start()
 
-        self._connectors = {
+        self.connectors = {
             'bacnet': BACnetConnector(
                 gateway=self,
                 verifier_queue=self._protocol_verifier_queue,
@@ -99,20 +99,33 @@ class VisioGateway:
         self._stopped = True
 
     def _start_connectors(self) -> None:
-        """ Opens connection with all connectors
-        """
-        for connector in self._connectors.values():
+        """ Opens connection with connectors."""
+        for connector in self.connectors.values():
             try:
                 connector.open()
             except Exception as e:
-                _log.error(f'{connector} opening error: {e}')
+                _log.error(f'{connector} opening error: {e}',
+                           exc_info=True
+                           )
 
     def _stop_connectors(self) -> None:
-        """ Closes connections with all connectors
-        """
-        for connector in self._connectors.values():
+        """ Close connections with connectors."""
+        for connector in self.connectors.values():
             try:
                 connector.close()
                 connector.join()
             except Exception as e:
-                _log.error(f'{connector} closing error: {e}')
+                _log.error(f'{connector} closing error: {e}',
+                           exc_info=True
+                           )
+
+    def stop_devices(self) -> None:
+        """Stop devices for all connectors."""
+        for connector in self.connectors.values():
+            try:
+                # stop all polling devices
+                connector.stop_devices(devices_id=connector.polling_devices.keys())
+            except Exception as e:
+                _log.error(f'{connector} stopping devices error: {e}',
+                           exc_info=True
+                           )
