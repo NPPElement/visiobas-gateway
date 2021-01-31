@@ -8,30 +8,6 @@ _log = get_file_logger(logger_name=__name__,
                        )
 
 
-# def periodic(period: float or int):
-#     def scheduler(f):
-#         async def wrapper(*args, **kwargs):
-#             while True:
-#                 # todo: how better?
-#                 asyncio.create_task(f(*args, **kwargs))
-#                 await asyncio.sleep(period)  # fixme: will be deprecate
-#
-#         return wrapper
-#
-#     return scheduler
-
-
-# TODO: example of usage:
-# @periodic(2)
-# async def do_something(*args, **kwargs):
-#     await asyncio.sleep(5)  # Do some heavy calculation
-#     print(time.time())
-#
-#
-# if __name__ == '__main__':
-#     asyncio.run(do_something('Maluzinha do papai!', secret=42))
-
-
 class VisioHTTPConfig:
     """Represent parameters for Visio HTTP server."""
 

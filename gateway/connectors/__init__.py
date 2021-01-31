@@ -5,7 +5,7 @@ from pathlib import Path
 from threading import Thread
 from typing import Iterable
 
-from gateway import get_file_logger
+from gateway.logs import get_file_logger
 from gateway.connectors.bacnet import ObjProperty, ObjType, BACnetObj
 
 _log = get_file_logger(logger_name=__name__,

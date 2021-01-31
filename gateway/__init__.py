@@ -4,7 +4,7 @@ from time import sleep
 
 from gateway.connectors.bacnet.bacnet_connector import BACnetConnector
 from gateway.connectors.modbus.modbus_connector import ModbusConnector
-from gateway.http_ import VisioHTTPClient
+from gateway.http_.client import VisioHTTPClient
 from gateway.logs import get_file_logger
 from gateway.verifier import BACnetVerifier
 
@@ -27,22 +27,6 @@ class VisioGateway:
         self._protocol_verifier_queue = SimpleQueue()
         self._verifier_http_queue = SimpleQueue()
 
-        self.http_client = VisioHTTPClient(gateway=self,
-                                           config=self._config['http'],
-                                           verifier_queue=self._verifier_http_queue
-                                           )
-        self.verifier = BACnetVerifier(protocols_queue=self._protocol_verifier_queue,
-                                       http_queue=self._verifier_http_queue,
-                                       config=self._config['bacnet_verifier']
-                                       )
-        # self.mqtt_client =
-
-        # self.__notifier = None  # todo
-        # self.__statistic = None  # todo
-        self.http_client.start()
-        sleep(1)
-        self.verifier.start()
-
         self.connectors = {
             'bacnet': BACnetConnector(
                 gateway=self,
@@ -59,6 +43,22 @@ class VisioGateway:
             # 'mqtt': None
             # etc. todo
         }
+
+        self.http_client = VisioHTTPClient(gateway=self,
+                                           config=self._config['http'],
+                                           verifier_queue=self._verifier_http_queue
+                                           )
+        self.verifier = BACnetVerifier(protocols_queue=self._protocol_verifier_queue,
+                                       http_queue=self._verifier_http_queue,
+                                       config=self._config['bacnet_verifier']
+                                       )
+        # self.mqtt_client =
+
+        # self.__notifier = None  # todo
+        # self.__statistic = None  # todo
+        self.http_client.start()
+        sleep(1)
+        self.verifier.start()
 
         self.run_forever()
 
