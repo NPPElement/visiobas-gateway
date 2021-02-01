@@ -4,8 +4,8 @@ from os import environ
 from pathlib import Path
 
 _base_path = Path(__file__).resolve().parent.parent
-_log_fmt = ('%(levelname)-8s [%(asctime)s] [%(threadName)s] %(name)s - '
-            '(%(filename)s).%(funcName)s(%(lineno)d): %(message)s'
+_log_fmt = ('%(levelname)-8s [%(asctime)s] [%(threadName)s] %(name)s'
+            '.%(funcName)s(%(lineno)d): %(message)s'
             )
 
 

@@ -1,0 +1,14 @@
+gateway:
+  delay_update: 3600  # In seconds
+
+verifier:
+  http_enable: True
+  mqtt_enable: False
+
+connector:
+  bacnet:
+    default_upd_period: 10
+
+  modbus:
+    default_upd_period: 10
+

@@ -1,5 +1,4 @@
 from hashlib import md5
-from os import environ
 
 from gateway.logs import get_file_logger
 
@@ -75,33 +74,23 @@ class VisioHTTPConfig:
         return f'<VisioHTTPConfig: {_auth}:{self.host} [{self._login}]>'
 
     @classmethod
-    def read_from_env(cls, var_root: str):
-        """ Creates a VisioHTTPServerConfig instance based on environment variables """
-        try:
-            return cls(login=environ[f'HTTP_{var_root}_LOGIN'],
-                       password=environ[f'HTTP_{var_root}_PASSWORD'],
-                       host=environ[f'HTTP_{var_root}_HOST'],
-                       port=int(environ[f'HTTP_{var_root}_PORT']),
-                       )
-        except KeyError:
-            _log.warning(f'{cls.__name__} cannot be read form environment variables.')
-            raise EnvironmentError(
-                "Please set the server parameters in environment variables:\n"
-                f"'HTTP_{var_root}_HOST'\n"
-                f"'HTTP_{var_root}_PORT'\n"
-                f"'HTTP_{var_root}_LOGIN'\n"
-                f"'HTTP_{var_root}_PASSWORD'"
-            )
+    def create_from_dict(cls, cfg: dict):
+        """Create HTTP config for server from dict."""
+        return cls(login=cfg['login'],
+                   password=cfg['password'],
+                   host=cfg['host'],
+                   port=cfg.get('port', 8080)
+                   )
 
 
 class VisioHTTPNode:
     """Represent Visio HTTP node (primary server + mirror server)."""
 
-    def __init__(self, main: VisioHTTPConfig, mirror: VisioHTTPConfig):
-        self.primary = main
+    def __init__(self, primary: VisioHTTPConfig, mirror: VisioHTTPConfig):
+        self.primary = primary
         self.mirror = mirror
 
-        self.cur_server = main
+        self.cur_server = primary
 
     @property
     def is_authorized(self) -> bool:
@@ -116,15 +105,8 @@ class VisioHTTPNode:
         self.cur_server = self.mirror
 
     @classmethod
-    def read_from_env(cls, main_var_root: str):
-        """ Creates VisioHTTPNode, contains main and mirror server from env
-        :param main_var_root: name of environment variable for main server
-        """
-        mirror_var_root = main_var_root + '_MIRROR'
-        try:
-            return cls(main=VisioHTTPConfig.read_from_env(var_root=main_var_root),
-                       mirror=VisioHTTPConfig.read_from_env(var_root=mirror_var_root)
-                       )
-        except EnvironmentError as e:
-            _log.warning(f'{cls.__name__} cannot be read form environment variables.')
-            raise e
+    def create_from_dict(cls, cfg: dict):
+        """Create HTTP node from dict."""
+        return cls(primary=VisioHTTPConfig.create_from_dict(cfg=cfg['primary']),
+                   mirror=VisioHTTPConfig.create_from_dict(cfg=cfg['mirror'])
+                   )

@@ -152,7 +152,7 @@ class Connector(Thread, ABC):
 
     @property
     def address_cache_ids(self) -> Iterable:
-        return self.address_cache.keys()
+        return list(self.address_cache.keys())
 
     @property
     def address_cache(self) -> dict[int, str]:
@@ -188,7 +188,9 @@ class Connector(Thread, ABC):
         try:
             text = address_cache_path.read_text(encoding='utf-8')
         except FileNotFoundError as e:
-            raise e
+            _log.critical(f'Not fount address_cache file. Closing {self}')
+            self._stopped = True
+            # raise e
 
         address_cache = {}
 

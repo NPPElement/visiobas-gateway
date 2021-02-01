@@ -18,12 +18,12 @@ _log = get_file_logger(logger_name=__name__,
 
 
 class BACnetConnector(Connector):
-    __slots__ = ('_config', '__interfaces', '_network',
-                 'default_update_period', '_gateway', '_verifier_queue',
-                 '_connected', '_stopped',
-                 'obj_types_to_request', 'address_cache',
-                 'polling_devices', '_update_intervals'
-                 )
+    # __slots__ = ('_config', '__interfaces', '_network',
+    #              'default_update_period', '_gateway', '_verifier_queue',
+    #              '_connected', '_stopped',
+    #              'obj_types_to_request', 'address_cache',
+    #              'polling_devices', '_update_intervals'
+    #              )
 
     delay_bac0_init = 10
 

@@ -12,8 +12,6 @@ from gateway.connectors import Connector, ObjType
 from gateway.http_ import VisioHTTPNode, VisioHTTPConfig
 from gateway.logs import get_file_logger
 
-# from dotenv import dotenv_values, load_dotenv # todo cfg from yaml
-
 _log = get_file_logger(logger_name=__name__,
                        size_bytes=50_000_000
                        )
@@ -21,8 +19,6 @@ _log = get_file_logger(logger_name=__name__,
 
 class VisioHTTPClient(Thread):
     """Control interactions via HTTP."""
-
-    upd_period = 60 * 60
 
     def __init__(self, gateway, verifier_queue: SimpleQueue,
                  config: dict):
@@ -36,8 +32,12 @@ class VisioHTTPClient(Thread):
 
         self._config = config
 
-        self.get_node = self._config['get_node']
-        self.post_nodes = self._config['post_nodes']
+        self.get_node = VisioHTTPNode.create_from_dict(cfg=self._config['get_node'])
+
+        self.post_nodes = [
+            VisioHTTPNode.create_from_dict(cfg=list(node.values()).pop()) for node in
+            self._config['post']
+        ]
 
         # self.__session = None  # todo: KEEP one session
         self._is_authorized = False
@@ -45,14 +45,13 @@ class VisioHTTPClient(Thread):
 
     @classmethod
     def create_from_yaml(cls, gateway, verifier_queue: SimpleQueue,
-                         cfg_path: Path):
-        """Read configuration from YAML file.
-        Then create VisioHTTPClient, uses read cfg."""
+                         yaml_path: Path):
+        """Create HTTP client with configuration read from YAML file."""
         import yaml
 
-        with cfg_path.open() as cfg_file:
+        with yaml_path.open() as cfg_file:
             http_cfg = yaml.load(cfg_file, Loader=yaml.FullLoader)
-            pprint(http_cfg)  # fixme debug
+
         return cls(gateway=gateway,
                    verifier_queue=verifier_queue,
                    config=http_cfg
@@ -271,10 +270,10 @@ class VisioHTTPClient(Thread):
         if successfully_authorized:
             _log.info(f'Successfully authorized to {get_node}, {post_nodes}')
         else:
-            _log.warning(f'Authorizations failed!'
-                         f'Next attempt after {self._config["delay_attempt"]}'
+            _log.warning("Authorizations failed! Next attempt after "
+                         f"{self._config['delay']['auth_next_attempt']} seconds."
                          )
-            sleep(self._config['delay_attempt'])
+            sleep(self._config['delay']['auth_next_attempt'])
 
         return successfully_authorized
 
@@ -390,21 +389,20 @@ class VisioHTTPClient(Thread):
         if response.status == 200:
             resp_json = await response.json()
             if resp_json['success']:
-                _log.debug(f'Received successfully response from server: {response.url}')
+                _log.debug(f'Successfully response: {response.url}')
                 return resp_json['data']
             else:
                 # todo: switch to another server
                 # _log.warning(f'Server returned failure response: {response.url}\n'
                 #              f'{resp_json}')
                 raise aiohttp.ClientError(
-                    f'Server returned failure response: {response.url}\n'
-                    f'{resp_json}'
+                    f'Failure response: {response.url}\n{resp_json}'
                 )
         else:
             # todo: switch to another server
             # _log.warning('Server response status error: '
             #              f'[{response.status}] {response.url}')
-            raise aiohttp.ClientError('Server response status error: '
+            raise aiohttp.ClientError('Response status error: '
                                       f'[{response.status}] {response.url}'
                                       )
 

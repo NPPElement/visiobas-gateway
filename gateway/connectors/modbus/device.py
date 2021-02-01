@@ -32,7 +32,7 @@ class ModbusDevice(Thread):
         self.address, self.port = address.split(sep=':', maxsplit=1)
         self.update_period = update_period
 
-        self._log = get_file_logger(logger_name=f'{self}',
+        self._log = get_file_logger(logger_name=f'{device_id}',
                                     size_bytes=50_000_000
                                     )
 

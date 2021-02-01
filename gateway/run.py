@@ -1,14 +1,16 @@
 import logging
 import os
 import sys
+from pathlib import Path
 
 from gateway import VisioGateway
 from gateway.logs import disable_loggers
-from gateway.utils import read_cfg_from_env
+
+_base_path = Path(__file__).resolve().parent.parent
 
 # Setting the VisioGateway logging level
-_log_fmt = ('%(levelname)-8s [%(asctime)s] [%(threadName)s] %(name)s - '
-            '(%(filename)s).%(funcName)s(%(lineno)d): %(message)s'
+_log_fmt = ('%(levelname)-8s [%(asctime)s] [%(threadName)s] %(name)s'
+            '.%(funcName)s(%(lineno)d): %(message)s'
             )
 _log_level = os.environ.get('LOG_LEVEL', 'DEBUG')
 _log = logging.getLogger(__name__)
@@ -26,11 +28,5 @@ logging.basicConfig(format=_log_fmt,
                     )
 disable_loggers(loggers=_unused_loggers)
 
-
-def main():
-    config = read_cfg_from_env()
-    VisioGateway(config=config)
-
-
 if __name__ == '__main__':
-    main()
+    VisioGateway.create_from_yaml(yaml_path=_base_path / 'config/gateway.yaml')

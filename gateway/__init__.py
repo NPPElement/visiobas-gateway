@@ -16,13 +16,10 @@ _log = get_file_logger(logger_name=__name__,
 
 
 class VisioGateway:
-    delay_loop = 60 * 60
-
     def __init__(self, config: dict):
-        self._config = config  # todo check cfg
+        self._config = config
         self._stopped = False
 
-        # todo: refactor
         self._protocol_verifier_queue = SimpleQueue()
         self._verifier_http_queue = SimpleQueue()
 
@@ -34,12 +31,13 @@ class VisioGateway:
                 gateway=self,
                 http_queue=self._http_bacnet_queue,
                 verifier_queue=self._protocol_verifier_queue,
-                config=self._config['bacnet']),
+                config=self._config['connector']['bacnet']
+            ),
             'modbus': ModbusConnector(
                 gateway=self,
                 http_queue=self._http_modbus_queue,
                 verifier_queue=self._protocol_verifier_queue,
-                config=self._config['modbus']
+                config=self._config['connector']['modbus']
             ),
             # 'xml': None
             # 'modbus_rtu': None,
@@ -51,15 +49,15 @@ class VisioGateway:
         self.http_client = VisioHTTPClient.create_from_yaml(
             gateway=self,
             verifier_queue=self._verifier_http_queue,
-            cfg_path=_base_path / 'config/http.yaml'
+            yaml_path=_base_path / 'config/http.yaml'
         )
 
         self.verifier = BACnetVerifier(protocols_queue=self._protocol_verifier_queue,
                                        http_queue=self._verifier_http_queue,
-                                       config=self._config['bacnet_verifier']
+                                       config=self._config['verifier']
                                        )
-        # self.mqtt_client =
 
+        # self.mqtt_client =
         # self.__notifier = None  # todo
         # self.__statistic = None  # todo
         self.http_client.start()
@@ -67,6 +65,15 @@ class VisioGateway:
         self.verifier.start()
 
         self.run_forever()
+
+    @classmethod
+    def create_from_yaml(cls, yaml_path: Path):
+        """Create gateway with configuration, read from YAML file."""
+        import yaml
+
+        with yaml_path.open() as cfg_file:
+            gateway_cfg = yaml.load(cfg_file, Loader=yaml.FullLoader)
+        return cls(config=gateway_cfg)
 
     def run_forever(self):
         _log.info(f'{self} starting ...')
@@ -79,7 +86,8 @@ class VisioGateway:
 
         while not self._stopped:
             try:
-                sleep(self.delay_loop)
+                # TODO: upd modules
+                sleep(self._config.get('delay_update', 60 * 60))
             except (KeyboardInterrupt, SystemExit):
                 self._stop()
             except Exception as e:

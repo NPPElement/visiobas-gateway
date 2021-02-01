@@ -1,5 +1,5 @@
-delay: # Delays, used in HTTP
-
+delay: # Delays, used in HTTP (in seconds)
+  auth_next_attempt: 60
 
 
 get_node: # for GET requests

@@ -16,10 +16,10 @@ _log = get_file_logger(logger_name=__name__,
 
 
 class ModbusConnector(Connector):
-    __slots__ = ('_config', 'default_update_period', '_gateway', '_verifier_queue',
-                 '_connected', '_stopped', 'obj_types_to_request',
-                 'address_cache', 'polling_devices', '_update_intervals'
-                 )
+    # __slots__ = ('_config', 'default_update_period', '_gateway', '_verifier_queue',
+    #              '_connected', '_stopped', 'obj_types_to_request',
+    #              'address_cache', 'polling_devices', '_update_intervals'
+    #              )
 
     def __init__(self, gateway, http_queue: SimpleQueue,
                  verifier_queue: SimpleQueue, config: dict):
