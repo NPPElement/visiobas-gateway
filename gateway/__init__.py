@@ -8,8 +8,7 @@ from gateway.http_.client import VisioHTTPClient
 from gateway.logs import get_file_logger
 from gateway.verifier import BACnetVerifier
 
-_base_path = Path(__file__).resolve().parent.parent.parent
-_log_file_path = _base_path / f'logs/{__name__}.log'
+_base_path = Path(__file__).resolve().parent.parent
 
 _log = get_file_logger(logger_name=__name__,
                        size_bytes=50_000_000
@@ -49,12 +48,12 @@ class VisioGateway:
             # etc. todo
         }
 
-        self.http_client = VisioHTTPClient(gateway=self,
-                                           config=self._config['http'],
-                                           verifier_queue=self._verifier_http_queue,
-                                           bacnet_queue=self._http_bacnet_queue,
-                                           modbus_queue=self._http_modbus_queue
-                                           )
+        self.http_client = VisioHTTPClient.create_from_yaml(
+            gateway=self,
+            verifier_queue=self._verifier_http_queue,
+            cfg_path=_base_path / 'config/http.yaml'
+        )
+
         self.verifier = BACnetVerifier(protocols_queue=self._protocol_verifier_queue,
                                        http_queue=self._verifier_http_queue,
                                        config=self._config['bacnet_verifier']

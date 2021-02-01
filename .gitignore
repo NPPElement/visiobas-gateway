@@ -5,4 +5,4 @@ gateway/logs/*.log*
 *.DS_Store
 .DS_Store
 *address_cache
-http_config.env
+config/http.yaml

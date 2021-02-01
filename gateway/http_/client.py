@@ -1,6 +1,7 @@
 import asyncio
 from multiprocessing import SimpleQueue
 from pathlib import Path
+from pprint import pprint
 from threading import Thread
 from time import sleep
 from typing import Iterable
@@ -43,9 +44,19 @@ class VisioHTTPClient(Thread):
         self._stopped = False
 
     @classmethod
-    def create_from_cfg(cls, cfg_path: Path) -> dict:
-        """Read configuration from environment variables."""
-        # TODO use yaml cfg
+    def create_from_yaml(cls, gateway, verifier_queue: SimpleQueue,
+                         cfg_path: Path):
+        """Read configuration from YAML file.
+        Then create VisioHTTPClient, uses read cfg."""
+        import yaml
+
+        with cfg_path.open() as cfg_file:
+            http_cfg = yaml.load(cfg_file, Loader=yaml.FullLoader)
+            pprint(http_cfg)  # fixme debug
+        return cls(gateway=gateway,
+                   verifier_queue=verifier_queue,
+                   config=http_cfg
+                   )
 
     def run(self) -> None:
         """ Keeps the connection to the server.
