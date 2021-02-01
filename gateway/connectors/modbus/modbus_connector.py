@@ -76,83 +76,44 @@ class ModbusConnector(Connector):
                        exc_info=True
                        )
 
-    # TODO use in parse
-    # def get_devices_update_interval(self, devices_id: tuple[int],
-    #                                 default_update_interval: int = 10) -> dict[int, int]:
-    #     """ Receive update intervals for devices via http client
-    #     """
-    #     device_objs = asyncio.run(
-    #         self._gateway.http_client.run_update_devices_loop(
-    #             node=self._gateway.http_client.get_node,
-    #             devices_id=devices_id,
-    #             obj_types=(ObjType.DEVICE,)
-    #         ))
-    #     devices_intervals = {}
-    #
-    #     # Extract update_interval from server's response
-    #     for dev_id, obj_types in device_objs.items():
-    #         try:
-    #             prop_371 = obj_types[ObjType.DEVICE][0][str(ObjProperty.propertyList.id)]
-    #             upd_interval = loads(prop_371)['update_interval']
-    #             devices_intervals[dev_id] = upd_interval
-    #         except LookupError as e:
-    #             _log.error(
-    #                 f'Update interval for Device [{dev_id}] cannot be extracted: {e}')
-    #             devices_intervals[dev_id] = default_update_interval
-    #
-    #     # devices_intervals = {
-    #     #     dev_id: loads(obj_types[ObjType.DEVICE][0][str(ObjProperty.propertyList.id)])[
-    #     #         'update_interval'] for dev_id, obj_types in device_objs.items()
-    #     # }
-    #
-    #     return devices_intervals
-
     def parse_objs_data(self, objs_data: dict[ObjType, list[dict]]
                         ) -> tuple[int, set[BACnetObj]]:
         """"""
-        # todo: parse
+        # Extract update period
+        upd_period = self.parse_upd_period(device_obj_data=objs_data[ObjType.DEVICE])
 
-    def unpack_objects(self, objects: dict[int, dict[ObjType, list[dict]]]) -> \
-            dict[int, set[ModbusObj]]:
-        """ Makes BACnetObjects from device structure, received from the server
-        """
-        devices_objects = {dev_id: set() for dev_id in objects.keys()}
-
-        for dev_id, objs_by_types in objects.items():
-            for obj_type, objects in objs_by_types.items():
-                for obj in objects:
-                    obj_type = obj_type
+        modbus_objs = set()
+        # Create protocol objects from objs_data
+        for obj_type, objs in objs_data.items():
+            for obj in objs:
+                try:
                     obj_id = obj[str(ObjProperty.objectIdentifier.id)]
                     obj_name = obj[str(ObjProperty.objectName.id)]
 
-                    property_list = obj[str(ObjProperty.propertyList.id)]
-                    if property_list is not None:
-                        address, quantity, func_read, props = self.extract_properties(
-                            property_list=property_list)
+                    prop_list = obj[str(ObjProperty.propertyList.id)]
+                    address, quantity, func_read, props = self.parse_modbus_properties(
+                        property_list=prop_list)
+                    modbus_obj = ModbusObj(typename='ModbusObject',
+                                           type=obj_type,
+                                           id=obj_id,
+                                           name=obj_name,
 
-                        # todo: is typename correct?
-                        modbus_obj = ModbusObj(typename='ModbusObject',
-                                               type=obj_type,
-                                               id=obj_id,
-                                               name=obj_name,
+                                           address=address,
+                                           quantity=quantity,
+                                           func_read=func_read,
 
-                                               address=address,
-                                               quantity=quantity,
-                                               func_read=func_read,
-
-                                               properties=props
-                                               )
-                        devices_objects[dev_id].add(modbus_obj)
-                    else:
-                        _log.warning(f'{ObjProperty.propertyList} is: '
-                                     f'{property_list} for Modbus object: '
-                                     f'Device [{dev_id}] ({obj_type}, {obj_id})')
-
-        return devices_objects
+                                           properties=props
+                                           )
+                    modbus_objs.add(modbus_obj)
+                except (LookupError, Exception) as e:
+                    _log.warning(f'Extract object error: {e}',
+                                 exc_info=True
+                                 )
+        return upd_period, modbus_objs
 
     @staticmethod
-    def extract_properties(property_list: str
-                           ) -> tuple[int, int, int, VisioModbusProperties]:
+    def parse_modbus_properties(property_list: str
+                                ) -> tuple[int, int, int, VisioModbusProperties]:
         try:
             modbus_properties = loads(property_list)['modbus']
 
@@ -184,7 +145,8 @@ class ModbusConnector(Connector):
                                                )
             _log.debug(f'Received: {modbus_properties}\n'
                        f'Extracted properties: {properties}')
-        except KeyError as e:
+        except (LookupError, Exception) as e:
+            _log.warning('Modbus property cannot be extracted')
             raise e
         else:
             return address, quantity, func_read, properties

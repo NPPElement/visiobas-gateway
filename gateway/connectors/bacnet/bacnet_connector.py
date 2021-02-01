@@ -81,7 +81,6 @@ class BACnetConnector(Connector):
 
     def parse_objs_data(self, objs_data: dict[ObjType, list[dict]]
                         ) -> tuple[int, set[BACnetObj]]:
-        """"""
         # Extract update period
         upd_period = self.parse_upd_period(device_obj_data=objs_data[ObjType.DEVICE])
 

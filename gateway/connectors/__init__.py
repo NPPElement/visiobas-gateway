@@ -95,8 +95,8 @@ class Connector(Thread, ABC):
     def parse_upd_period(self, device_obj_data: list[dict]) -> int:
         """Extract device update period from device object."""
         try:
-            prop_371 = device_obj_data[0][str(ObjProperty.propertyList.id)]
-            upd_period = loads(prop_371)['update_interval']
+            prop_list = device_obj_data[0][str(ObjProperty.propertyList.id)]
+            upd_period = loads(prop_list)['update_interval']
         except LookupError as e:
             _log.warning(f'Update interval cannot be extracted: {e}')
             upd_period = self.default_update_interval
