@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from functools import lru_cache
 from ipaddress import IPv4Address
+from json import loads
 from multiprocessing import SimpleQueue
 from pathlib import Path
 from threading import Thread
@@ -26,8 +27,6 @@ class Connector(Thread, ABC):
         self.http_queue = http_queue
         self._verifier_queue = verifier_queue
 
-        self.default_update_period = config.get('default_update_period', 10)
-
         self.setName(name=f'{self}-Thread')
         self.setDaemon(True)
 
@@ -36,7 +35,9 @@ class Connector(Thread, ABC):
 
         self.address_cache_path = None
         self.polling_devices = {}
-        self._update_intervals = {}
+
+        # self.default_update_period = config.get('default_update_period', 10)
+        self.default_update_interval = 10
 
         self.obj_types_to_request: Iterable[ObjType] = ()
 
@@ -58,23 +59,6 @@ class Connector(Thread, ABC):
 
         # Clear the read_address_cache cache to read the updated `address_cache` file.
         self.read_address_cache.clear_cache()
-
-    # @abstractmethod
-    # def update_devices(self, devices: dict[int, set],
-    #                    update_intervals: dict[int, int]) -> None:
-    #     """Start device thread.
-    #     :param devices: dict - device_id: set of protocol objects
-    #     :param update_intervals: dict - device_id: upd_period
-    #     """
-    #
-    #     for device_id, objects in devices.items():
-    #         if device_id in self.polling_devices:
-    #             self.stop_device(device_id=device_id)
-    #         self.start_device(device_id=device_id,
-    #                           objs=objects,
-    #                           upd_interval=update_intervals[device_id]
-    #                           )
-    #     _log.info(f'Devices {[*devices.keys()]} updated')
 
     def run_update_devices_loop(self) -> None:
         """Receive data about device form HTTP client.
@@ -108,11 +92,19 @@ class Connector(Thread, ABC):
         """Extract objects data from response."""
         pass
 
+    def parse_upd_period(self, device_obj_data: list[dict]) -> int:
+        """Extract device update period from device object."""
+        try:
+            prop_371 = device_obj_data[0][str(ObjProperty.propertyList.id)]
+            upd_period = loads(prop_371)['update_interval']
+        except LookupError as e:
+            _log.warning(f'Update interval cannot be extracted: {e}')
+            upd_period = self.default_update_interval
+        return upd_period
+
     @abstractmethod
     def start_device(self, device_id: int, objs: set[BACnetObj], upd_interval: int) -> None:
         pass
-        # todo device - use factory
-        #  use *args
 
     def stop_device(self, device_id: int) -> bool:
         """Stop device by id.
@@ -147,8 +139,6 @@ class Connector(Thread, ABC):
             try:
                 self.stop_device(device_id=dev_id)
                 del self.polling_devices[dev_id]
-                # [self.stop_device(device_id=device_id) for device_id in devices_id]
-                # self.polling_devices = {}  # fixme incorrect!
                 _log.info(f'Device [{dev_id}] was stopped')
 
             except Exception as e:

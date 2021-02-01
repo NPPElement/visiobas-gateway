@@ -1,4 +1,3 @@
-import asyncio
 from json import loads
 from multiprocessing import SimpleQueue
 from pathlib import Path
@@ -31,7 +30,6 @@ class ModbusConnector(Connector):
                          config=config
                          )
 
-        # todo move to http client
         self.obj_types_to_request = (
             ObjType.ANALOG_INPUT, ObjType.ANALOG_OUTPUT, ObjType.ANALOG_VALUE,
             ObjType.BINARY_INPUT, ObjType.BINARY_OUTPUT, ObjType.BINARY_VALUE,
@@ -77,18 +75,6 @@ class ModbusConnector(Connector):
             _log.error(f'Device [{device_id}] starting error: {e}',
                        exc_info=True
                        )
-
-    def get_devices_objects(self, devices_id: tuple[int],
-                            obj_types: tuple[ObjType, ...]
-                            ) -> dict[int, dict[ObjType, list[dict]]]:
-
-        devices_objs = asyncio.run(
-            self._gateway.http_client.run_update_devices_loop(
-                node=self._gateway.http_client.get_node,
-                devices_id=devices_id,
-                obj_types=obj_types
-            ))
-        return devices_objs
 
     # TODO use in parse
     # def get_devices_update_interval(self, devices_id: tuple[int],
