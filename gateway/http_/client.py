@@ -1,5 +1,6 @@
 import asyncio
 from multiprocessing import SimpleQueue
+from pathlib import Path
 from threading import Thread
 from time import sleep
 from typing import Iterable
@@ -22,7 +23,8 @@ class VisioHTTPClient(Thread):
 
     upd_period = 60 * 60
 
-    def __init__(self, gateway, verifier_queue: SimpleQueue, config: dict):
+    def __init__(self, gateway, verifier_queue: SimpleQueue,
+                 config: dict):
         super().__init__()
 
         self.setName(name=f'{self}-Thread')
@@ -40,8 +42,10 @@ class VisioHTTPClient(Thread):
         self._is_authorized = False
         self._stopped = False
 
-    def read_cfg_from_env(self) -> dict:
+    @classmethod
+    def create_from_cfg(cls, cfg_path: Path) -> dict:
         """Read configuration from environment variables."""
+        # TODO use yaml cfg
 
     def run(self) -> None:
         """ Keeps the connection to the server.
@@ -50,12 +54,13 @@ class VisioHTTPClient(Thread):
         Sends data from connectors.
         """
         _log.info(f'{self} starting ...')
-        try:
-            asyncio.run(self.run_main_loop())
-        except Exception as e:
-            _log.error(f'Main loop error: {e}',
-                       exc_info=True
-                       )
+        while not self._stopped:
+            try:
+                asyncio.run(self.run_main_loop())
+            except Exception as e:
+                _log.error(f'Main loop error: {e}',
+                           exc_info=True
+                           )
 
     async def run_main_loop(self) -> None:
         """Main loop."""
@@ -70,36 +75,13 @@ class VisioHTTPClient(Thread):
                                      session=session
                                      )
 
-    async def update(self, session) -> None:
-        """Update authorizations and devices data."""
-        # stop devices (send all collected data)
-        self._gateway.stop_devices()  # FIXME! we shouldn't stop devices!
-
-        # if self._is_authorized:
-        #     _ = await self.logout(nodes=[self.get_node, *self.post_nodes],
-        #                           session=session
-        #                           )
-        # TODO read cfg from env / upd cfg
-
-        while not self._is_authorized:
-            self._is_authorized = await self.login(get_node=self.get_node,
-                                                   post_nodes=self.post_nodes,
-                                                   session=session
-                                                   )
-        # Request all devices then send data to connectors
-        upd_connector_coros = [
-            self.upd_connector(node=self.get_node,
-                               connector=connector,
-                               session=session
-                               ) for connector in self._gateway.connectors.values()
-        ]
-        _ = await asyncio.gather(*upd_connector_coros)
-
     async def run_post_loop(self, queue: SimpleQueue,
                             post_nodes: Iterable[VisioHTTPNode],
                             session) -> None:
         """Listen queue from verifier.
         When receive data from verifier - send it to nodes via HTTP.
+
+        Designed as an endless loop. Can be stopped from gateway thread.
         """
         _log.info('Sending loop started')
         # Loop that receive data from verifier then send it to nodes via HTTP.
@@ -134,6 +116,32 @@ class VisioHTTPClient(Thread):
         self._stopped = True
         _log.info(f'Stopping {self} ...')
 
+    async def update(self, session) -> None:
+        """Update authorizations and devices data."""
+        # stop devices (send all collected data)
+        self._gateway.stop_devices()  # FIXME! we shouldn't stop devices!
+        # todo stop sending to http storage (HTTP_ENABLE)
+
+        # if self._is_authorized:
+        #     _ = await self.logout(nodes=[self.get_node, *self.post_nodes],
+        #                           session=session
+        #                           )
+        # TODO read cfg from env / upd cfg
+
+        while not self._is_authorized:
+            self._is_authorized = await self.login(get_node=self.get_node,
+                                                   post_nodes=self.post_nodes,
+                                                   session=session
+                                                   )
+        # Request all devices then send data to connectors
+        upd_connector_coros = [
+            self.upd_connector(node=self.get_node,
+                               connector=connector,
+                               session=session
+                               ) for connector in self._gateway.connectors.values()
+        ]
+        _ = await asyncio.gather(*upd_connector_coros)
+
     async def upd_connector(self, node: VisioHTTPNode,
                             connector: Connector,
                             session) -> bool:
@@ -151,13 +159,55 @@ class VisioHTTPClient(Thread):
                                          session=session
                                          ) for dev_id in connector.address_cache_ids]
 
-            # Update device via connector contains in upd_device coroutine
             _ = await asyncio.gather(*upd_coros)
-
-            _log.info(f'{connector} was successfully updated.')
+            # todo check results
             return True
+
         except Exception as e:
             _log.error(f'Update {connector} error: {e}',
+                       exc_info=True
+                       )
+            return False
+
+    async def upd_device(self, node: VisioHTTPNode,
+                         device_id: int, obj_types: Iterable[ObjType],
+                         connector: Connector,
+                         session) -> bool:
+        """Perform request objects of each types for device by id.
+        Then resend data about device to connector.
+        :param node:
+        :param device_id:
+        :param obj_types:
+        :param connector:
+        :param session:
+        :return: is device updated successfully
+        """
+        try:
+            # add first type - device info, contains upd_interval
+            obj_types = [ObjType.DEVICE, *obj_types]
+
+            obj_coros = [
+                self._rq(method='GET',
+                         url=(f'{node.cur_server.base_url}'
+                              f'/vbas/gate/get/{device_id}/{obj_type.name_dashed}'),
+                         session=session,
+                         headers=node.cur_server.auth_headers
+                         ) for obj_type in obj_types
+            ]
+            objs_data = await asyncio.gather(*obj_coros)
+
+            # objects of each type, if it's not empty, are added to the dictionary,
+            # where key is obj_type and value is list with objects
+            objs_data = {obj_type: objs for obj_type, objs in
+                         zip(obj_types, objs_data)
+                         if objs_data
+                         }
+            # todo: IDEA TO FUTURE: can send objects to connector by small parts
+            connector.http_queue.put((device_id, objs_data))
+            return True
+
+        except Exception as e:
+            _log.error(f'Device [{device_id}] updating was failed: {e}',
                        exc_info=True
                        )
             return False
@@ -309,37 +359,6 @@ class VisioHTTPClient(Thread):
                          exc_info=True
                          )
             return False
-
-    async def upd_device(self, node: VisioHTTPNode,
-                         device_id: int, obj_types: Iterable[ObjType],
-                         connector: Connector,
-                         session) -> dict[ObjType, list[dict]]:
-        """Perform request objects of each types for device by id.
-        Then resend data about device to connector.
-        """
-        # add first type - device info, contains upd_interval
-        obj_types = [ObjType.DEVICE, *obj_types]
-
-        obj_coros = [
-            self._rq(method='GET',
-                     url=(f'{node.cur_server.base_url}'
-                          f'/vbas/gate/get/{device_id}/{obj_type.name_dashed}'),
-                     session=session,
-                     headers=node.cur_server.auth_headers
-                     ) for obj_type in obj_types
-        ]
-        objs_data = await asyncio.gather(*obj_coros)
-        # objects of each type, if it's not empty, are added to the dictionary,
-        # where key is obj_type and value is list with objects
-        device_objects = {obj_type: objs for obj_type, objs in
-                          zip(obj_types, objs_data)
-                          if objs_data
-                          }
-        connector.upd_device(device_id=device_id,
-                             objs=device_objects
-                             )
-        # _log.debug(f'For device_id: {device_id} received objects')  #: {device_objects}')
-        return device_objects
 
     async def _rq(self, method: str, url: str, session, **kwargs) -> list or dict:
         """Perform HTTP request and check response

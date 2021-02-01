@@ -27,13 +27,18 @@ class VisioGateway:
         self._protocol_verifier_queue = SimpleQueue()
         self._verifier_http_queue = SimpleQueue()
 
+        self._http_bacnet_queue = SimpleQueue()
+        self._http_modbus_queue = SimpleQueue()
+
         self.connectors = {
             'bacnet': BACnetConnector(
                 gateway=self,
+                http_queue=self._http_bacnet_queue,
                 verifier_queue=self._protocol_verifier_queue,
                 config=self._config['bacnet']),
             'modbus': ModbusConnector(
                 gateway=self,
+                http_queue=self._http_modbus_queue,
                 verifier_queue=self._protocol_verifier_queue,
                 config=self._config['modbus']
             ),
@@ -46,7 +51,9 @@ class VisioGateway:
 
         self.http_client = VisioHTTPClient(gateway=self,
                                            config=self._config['http'],
-                                           verifier_queue=self._verifier_http_queue
+                                           verifier_queue=self._verifier_http_queue,
+                                           bacnet_queue=self._http_bacnet_queue,
+                                           modbus_queue=self._http_modbus_queue
                                            )
         self.verifier = BACnetVerifier(protocols_queue=self._protocol_verifier_queue,
                                        http_queue=self._verifier_http_queue,

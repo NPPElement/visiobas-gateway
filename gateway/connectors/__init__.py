@@ -1,12 +1,13 @@
 from abc import ABC, abstractmethod
+from functools import lru_cache
 from ipaddress import IPv4Address
 from multiprocessing import SimpleQueue
 from pathlib import Path
 from threading import Thread
 from typing import Iterable
 
-from gateway.logs import get_file_logger
 from gateway.connectors.bacnet import ObjProperty, ObjType, BACnetObj
+from gateway.logs import get_file_logger
 
 _log = get_file_logger(logger_name=__name__,
                        size_bytes=50_000_000
@@ -14,11 +15,15 @@ _log = get_file_logger(logger_name=__name__,
 
 
 class Connector(Thread, ABC):
+    """Base class for all connectors."""
 
-    def __init__(self, gateway, verifier_queue: SimpleQueue, config: dict):
+    def __init__(self, gateway, http_queue: SimpleQueue,
+                 verifier_queue: SimpleQueue, config: dict):
         super().__init__()
         self._config = config
         self._gateway = gateway
+
+        self.http_queue = http_queue
         self._verifier_queue = verifier_queue
 
         self.default_update_period = config.get('default_update_period', 10)
@@ -29,16 +34,11 @@ class Connector(Thread, ABC):
         self._connected = False
         self._stopped = False
 
-        # Match device_id with device_address. Example: {200: '10.21.80.12'}
-        self.address_cache = {}
+        self.address_cache_path = None
         self.polling_devices = {}
         self._update_intervals = {}
 
         self.obj_types_to_request: Iterable[ObjType] = ()
-
-    @property
-    def address_cache_ids(self) -> Iterable:
-        return self.address_cache.keys()
 
     @abstractmethod
     def run(self):
@@ -53,41 +53,57 @@ class Connector(Thread, ABC):
         self._stopped = True
         self._connected = False
 
-        self.stop_devices(devices_id=tuple(self.polling_devices.keys()))
+        # Close all running devices
+        self.stop_devices(devices_id=self.polling_devices.keys())
 
-    @abstractmethod
-    def update_devices(self, devices: dict[int, set],
-                       update_intervals: dict[int, int]) -> None:
-        """Start device thread.
-        :param devices: dict - device_id: set of protocol objects
-        :param update_intervals: dict - device_id: upd_period
-        """
+        # Clear the read_address_cache cache to read the updated `address_cache` file.
+        self.read_address_cache.clear_cache()
 
-        for device_id, objects in devices.items():
-            if device_id in self.polling_devices:
-                self.stop_device(device_id=device_id)
-            self.start_device(device_id=device_id,
-                              objs=objects,
-                              upd_interval=update_intervals[device_id]
-                              )
-        _log.info(f'Devices {[*devices.keys()]} updated')
+    # @abstractmethod
+    # def update_devices(self, devices: dict[int, set],
+    #                    update_intervals: dict[int, int]) -> None:
+    #     """Start device thread.
+    #     :param devices: dict - device_id: set of protocol objects
+    #     :param update_intervals: dict - device_id: upd_period
+    #     """
+    #
+    #     for device_id, objects in devices.items():
+    #         if device_id in self.polling_devices:
+    #             self.stop_device(device_id=device_id)
+    #         self.start_device(device_id=device_id,
+    #                           objs=objects,
+    #                           upd_interval=update_intervals[device_id]
+    #                           )
+    #     _log.info(f'Devices {[*devices.keys()]} updated')
 
-    @abstractmethod
-    def upd_device(self, device_id: int,
-                   objs: dict[ObjType, list[dict]]) -> bool:
+    def run_update_devices_loop(self) -> None:
         """Receive data about device form HTTP client.
         Then parse it. After that start device thread.
         """
-        # todo parse data
-        upd_interval, objs = self.parse_objs_data()
+        while not self._stopped:
+            try:
+                dev_id, objs_data = self.http_queue.get()
 
-        self.start_device(device_id=device_id,
-                          objs=objs,
-                          upd_interval=upd_interval
-                          )
+                if objs_data:
+
+                    upd_interval, objs = self.parse_objs_data(objs_data=objs_data)
+
+                    is_stopped = self.stop_device(device_id=dev_id)
+                    if is_stopped:
+                        self.start_device(device_id=dev_id,
+                                          objs=objs,
+                                          upd_interval=upd_interval
+                                          )
+                else:
+                    _log.warning('No objects from HTTP.')
+                    # todo: request obj faster?
+            except Exception as e:
+                _log.error(f'Update device error: {e}',
+                           exc_info=True
+                           )
 
     @abstractmethod
-    def parse_objs_data(self, objs: dict[ObjType, list[dict]]
+    def parse_objs_data(self, objs_data: dict[ObjType, list[dict]]
                         ) -> tuple[int, set[BACnetObj]]:
         """Extract objects data from response."""
         pass
@@ -98,24 +114,32 @@ class Connector(Thread, ABC):
         # todo device - use factory
         #  use *args
 
-    @abstractmethod
-    def stop_device(self, device_id: int) -> None:
-        """Stop device by id."""
+    def stop_device(self, device_id: int) -> bool:
+        """Stop device by id.
+
+        todo: devices must be a threads and implement stop_polling() method
+
+        :param device_id:
+        :return: is device closed
+        """
         try:
             _log.debug(f'Device [{device_id}] stopping polling ...')
             self.polling_devices[device_id].stop_polling()
             _log.debug(f'Device [{device_id}] stopped polling')
             self.polling_devices[device_id].join()
             _log.debug(f'Device [{device_id}]-Thread stopped')
+            return True
 
         except KeyError as e:
             _log.error(f'The device with id {device_id} is not running. '
                        f'Please provide the id of the polling device: {e}'
                        )
+            return True
         except Exception as e:
             _log.error(f'Device stopping error: {e}',
                        exc_info=True
                        )
+            return False
 
     def stop_devices(self, devices_id: Iterable) -> None:
         """Stop devices by id."""
@@ -136,19 +160,28 @@ class Connector(Thread, ABC):
     def __repr__(self):
         pass
 
-    @abstractmethod
-    def get_devices_objects(self, devices_id: list, obj_types: list):
-        pass
+    @property
+    def address_cache_ids(self) -> Iterable:
+        return self.address_cache.keys()
 
-    @staticmethod
-    def read_address_cache(address_cache_path: Path) -> dict[int, str]:
-        """ Updates address_cache file
+    @property
+    def address_cache(self) -> dict[int, str]:
+        """Match device_id with device_address.
 
-            Parse text file format of address_cache.
-            Add information about devices
+        :return: Example: {200: '10.21.80.12:47808'}
+        """
+        return self.read_address_cache(address_cache_path=self.address_cache_path
+                                       )
 
-            Example of address_cache format:
+    @lru_cache(maxsize=1)
+    def read_address_cache(self, address_cache_path: Path) -> dict[int, str]:
+        """Updates address_cache file.
+        Caches the read result. Therefore, the cache must be cleared on update.
 
+        Parse text file format of address_cache.
+        Add information about devices
+
+        Example of address_cache format:
             ;Device   MAC (hex)            SNET  SADR (hex)           APDU
             ;-------- -------------------- ----- -------------------- ----
               200     0A:15:50:0C:BA:C0    0     00                   480
@@ -158,6 +191,9 @@ class Connector(Thread, ABC):
               600     0A:15:50:10:BA:C0    0     00                   480
             ;
             ; Total Devices: 5
+
+        :return: Example:
+            200: '10.21.80.200:47808'
         """
         try:
             text = address_cache_path.read_text(encoding='utf-8')
