@@ -2,7 +2,7 @@ from multiprocessing import Process, SimpleQueue
 
 from bacpypes.basetypes import PriorityArray
 
-from gateway.connectors.bacnet import ObjProperty, StatusFlags
+from gateway.connectors.bacnet.bacnet_objs import ObjProperty, StatusFlags
 from gateway.logs import get_file_logger
 
 _log = get_file_logger(logger_name=__name__,

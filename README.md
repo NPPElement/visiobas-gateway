@@ -60,9 +60,9 @@ cd visiobas-gateway
 ```
 
 ## Setting
-To configure it, you need to edit the file `docker-compose.yaml`.
-HTTP's settings must be specified in the `http_config.env`.
-HTTP's settings file template [here](https://github.com/NPPElement/visiobas-gateway/blob/develop/http_config.env.template).
+Configuration can be changed in files `config/http.yaml` and `config/gateway.yaml`.
+
+For `config/http.yaml` a fill template is available: `config/template-http.yaml`.
 
 
 ## Launch
@@ -122,9 +122,10 @@ sudo systemctl daemon-reload
 sudo systemctl restart docker
 ```
 
-## Level
-You can change the logging level in the `docker-compose.yaml` file.
-You can choose one of the following levels: `DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL`
+## Logging level
+The logging level can be changed in the `docker-compose.yaml` file.
+
+The following levels can be specified: `DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL`
 
 ## License
 GPL-3.0 License

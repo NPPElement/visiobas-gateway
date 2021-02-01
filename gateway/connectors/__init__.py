@@ -188,8 +188,8 @@ class Connector(Thread, ABC):
         try:
             text = address_cache_path.read_text(encoding='utf-8')
         except FileNotFoundError as e:
-            _log.critical(f'Not fount address_cache file. Closing {self}')
-            self._stopped = True
+            _log.critical(f'Not found address_cache file. Closing {self}')
+            self._stopped = True  # fixme?
             # raise e
 
         address_cache = {}

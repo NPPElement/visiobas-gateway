@@ -1,7 +1,6 @@
 import asyncio
 from multiprocessing import SimpleQueue
 from pathlib import Path
-from pprint import pprint
 from threading import Thread
 from time import sleep
 from typing import Iterable

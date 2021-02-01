@@ -2,8 +2,8 @@ from multiprocessing import SimpleQueue
 from pathlib import Path
 from time import sleep
 
-from gateway.connectors.bacnet.bacnet_connector import BACnetConnector
-from gateway.connectors.modbus.modbus_connector import ModbusConnector
+from gateway.connectors.bacnet import BACnetConnector
+from gateway.connectors.modbus import ModbusConnector
 from gateway.http_.client import VisioHTTPClient
 from gateway.logs import get_file_logger
 from gateway.verifier import BACnetVerifier
