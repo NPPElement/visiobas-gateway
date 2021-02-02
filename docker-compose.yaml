@@ -3,11 +3,11 @@ version: "3.3"
 services:
   vb_gateway:
     build:
-      context: visiobas-gateway
+      context: .
       dockerfile: Dockerfile
     image: visiobas-gateway:0.1.0
-    logging:
-      driver: none
+    #logging:
+      #driver: none
     #      driver: "json-file"
     #      options:
     #        max-file: 3
@@ -24,7 +24,7 @@ services:
     volumes:
       #- /opt/visiobas-gateway:/visiobas-gateway
       - /home/user/visiobas-gateway:/visiobas-gateway
-    command: python gateway/run.py
+    command: python run.py
 
     ports:
       - 502:502
