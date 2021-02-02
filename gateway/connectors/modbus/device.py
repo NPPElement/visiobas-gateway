@@ -219,32 +219,17 @@ class ModbusDevice(Thread):
                     obj=obj,
                     value=value
                 )
-                self.__put_data_into_verifier(properties=converted_properties)
+                self._put_data_into_verifier(properties=converted_properties)
 
             except Exception as e:
                 self._log.warning(f'Object {obj} was skipped due to an error: {e}',
                                   exc_info=True)
-
-        # [self.__put_data_into_verifier(
-        #     self.__convert_to_bacnet_properties(
-        #         device_id=self.id,
-        #         obj=obj,
-        #         value=self.process_registers(
-        #             registers=self.read(
-        #                 cmd_code=obj.func_read,
-        #                 reg_address=obj.address,
-        #                 quantity=obj.quantity),
-        #             quantity=obj.quantity,
-        #             properties=obj.properties)
-        #     )) for obj in objects]
-
-        self.__put_device_end_to_verifier()
+        self._put_device_end_to_verifier()
 
     @staticmethod
     def __convert_to_bacnet_properties(device_id: int,
                                        obj: ModbusObj, value) -> dict[ObjProperty, ...]:
-        """ Represent modbus register value as a bacnet object
-        """
+        """Represent modbus register value as a bacnet object."""
         return {ObjProperty.deviceId: device_id,
                 ObjProperty.objectName: obj.name,
                 ObjProperty.objectType: obj.type,
@@ -252,11 +237,11 @@ class ModbusDevice(Thread):
                 ObjProperty.presentValue: value,
                 }
 
-    def __put_data_into_verifier(self, properties: dict) -> None:
+    def _put_data_into_verifier(self, properties: dict) -> None:
         """Send collected data about obj into BACnetVerifier."""
         self._verifier_queue.put(properties)
 
-    def __put_device_end_to_verifier(self) -> None:
+    def _put_device_end_to_verifier(self) -> None:
         """device_id in queue means that device polled.
         Should send collected objects to HTTP
         """

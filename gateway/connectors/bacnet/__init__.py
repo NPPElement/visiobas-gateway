@@ -65,7 +65,7 @@ class BACnetConnector(Connector):
                     self._network = lite()
                     _log.info('BAC0 network initialized.')
 
-                except (InitializationError, NetworkInterfaceException) as e:
+                except (InitializationError, NetworkInterfaceException, Exception) as e:
                     _log.error(f'Network initialization error: {e}',
                                exc_info=True
                                )
@@ -97,16 +97,6 @@ class BACnetConnector(Connector):
                 except LookupError:
                     _log.warning('Extract object error.')
         return upd_period, bacnet_objs
-
-    # def parse_upd_period(self, device_obj_data: list[dict]) -> int:
-    #     """Extract device update period from device object."""
-    #     try:
-    #         prop_list = device_obj_data[0][str(ObjProperty.propertyList.id)]
-    #         upd_period = loads(prop_list)['update_interval']
-    #     except LookupError as e:
-    #         _log.warning(f'Update interval cannot be extracted: {e}')
-    #         upd_period = self.default_upd_period
-    #     return upd_period
 
     def start_device(self, device_id: int, objs: set[BACnetObj],
                      upd_interval: int) -> None:

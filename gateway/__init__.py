@@ -1,3 +1,4 @@
+import atexit
 from multiprocessing import SimpleQueue
 from pathlib import Path
 from time import sleep
@@ -100,6 +101,7 @@ class VisioGateway:
     def __repr__(self) -> str:
         return self.__class__.__name__
 
+    @atexit.register
     def _stop(self):
         _log.warning('Stopping ...')
         self._stop_connectors()

@@ -31,7 +31,7 @@ class BACnetDevice(Thread):
                  update_period: int):
         super().__init__()
 
-        #todo config
+        # todo config
 
         self.id = device_id
         self.update_period = update_period
@@ -121,7 +121,7 @@ class BACnetDevice(Thread):
                     pass
                 # todo: close Thread and push to bacnet-connector
                 self._log.debug(f'Sleeping {self.delay_inactive} sec ...')
-                sleep(self.delay_inactive) # todo from cfg
+                sleep(self.delay_inactive)  # todo from cfg
         else:
             self._log.info(f'{self} stopped.')
 
@@ -142,7 +142,7 @@ class BACnetDevice(Thread):
     def poll(self) -> None:
         """ Poll all object from device.
         Send each object into verifier after response by protocol.
-            When all objects polled, send device_id into verifier as finish signal
+        When all objects polled, send device_id into verifier as finish signal
         """
         for obj in self.support_rpm:
             assert isinstance(obj, BACnetObj)
@@ -161,7 +161,7 @@ class BACnetDevice(Thread):
                 self._log.error(f'{obj} polling error: {e}', exc_info=True)
             else:
                 self._log.debug(f'From {obj} read: {values}. Sending to verifier ...')
-                self.__put_data_into_verifier(properties=values)
+                self._put_data_into_verifier(properties=values)
 
         self.support_rpm.difference_update(self.not_support_rpm)
 
@@ -177,11 +177,11 @@ class BACnetDevice(Thread):
                 self._log.error(f'{obj} polling error: {e}', exc_info=True)
             else:
                 self._log.debug(f'From {obj} read: {values}. Sending to verifier ...')
-                self.__put_data_into_verifier(properties=values)
+                self._put_data_into_verifier(properties=values)
 
         # notify verifier, that device polled and should send collected objects via HTTP
         self._log.debug('All objects were polled. Send device_id to verifier')
-        self.__put_device_end_to_verifier()
+        self._put_device_end_to_verifier()
 
     def read_property(self, obj: BACnetObj, prop: ObjProperty):
         try:
@@ -212,12 +212,11 @@ class BACnetDevice(Thread):
     def read_property_multiple(self, obj: BACnetObj,
                                properties: list[ObjProperty]) -> dict:
         try:
-            request = ' '.join([
-                self.address,
-                obj.type.name,
-                str(obj.id),
-                *[prop.name for prop in properties]
-            ])
+            request = ' '.join([self.address,
+                                obj.type.name,
+                                str(obj.id),
+                                *[prop.name for prop in properties]
+                                ])
             response = self.network.readMultiple(request)
 
             # check values for None and empty strings
@@ -286,7 +285,6 @@ class BACnetDevice(Thread):
             ObjProperty.objectType: obj.type,
             ObjProperty.objectIdentifier: obj.id,
         }
-
         try:
             values = self.__simulate_rpm(obj=obj,
                                          properties=obj.type.properties
@@ -311,12 +309,12 @@ class BACnetDevice(Thread):
             properties.update(values)
             return properties
 
-    def __put_device_end_to_verifier(self) -> None:
+    def _put_device_end_to_verifier(self) -> None:
         """device_id in queue means that device polled.
-        Should send collected objects to HTTP
+        Should send collected objects to HTTP.
         """
         self._verifier_queue.put(self.id)
 
-    def __put_data_into_verifier(self, properties: dict) -> None:
+    def _put_data_into_verifier(self, properties: dict) -> None:
         """Send collected data about obj into BACnetVerifier."""
         self._verifier_queue.put(properties)

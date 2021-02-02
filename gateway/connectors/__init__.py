@@ -1,3 +1,4 @@
+import atexit
 from abc import ABC, abstractmethod
 from functools import lru_cache
 from ipaddress import IPv4Address
@@ -49,6 +50,7 @@ class Connector(Thread, ABC):
         self._stopped = False
         self.start()
 
+    @atexit.register
     def close(self) -> None:
         self._stopped = True
         self._connected = False

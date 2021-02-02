@@ -30,15 +30,14 @@ class ModbusConnector(Connector):
                          config=config
                          )
 
+        self.address_cache_path = _base_path / 'connectors/modbus/address_cache'
+
         self.obj_types_to_request = (
             ObjType.ANALOG_INPUT, ObjType.ANALOG_OUTPUT, ObjType.ANALOG_VALUE,
             ObjType.BINARY_INPUT, ObjType.BINARY_OUTPUT, ObjType.BINARY_VALUE,
             ObjType.MULTI_STATE_INPUT, ObjType.MULTI_STATE_OUTPUT,
             ObjType.MULTI_STATE_VALUE,
         )
-
-    # def __repr__(self):
-    #     return 'ModbusConnector'
 
     def run(self):
         _log.info(f'{self} starting ...')
@@ -110,16 +109,6 @@ class ModbusConnector(Connector):
                                  exc_info=True
                                  )
         return upd_period, modbus_objs
-
-    # def parse_upd_period(self, device_obj_data: list[dict]) -> int:
-    #     """Extract device update period from device object."""
-    #     try:
-    #         prop_list = device_obj_data[0][str(ObjProperty.propertyList.id)]
-    #         upd_period = loads(prop_list)['update_interval']
-    #     except LookupError as e:
-    #         _log.warning(f'Update interval cannot be extracted: {e}')
-    #         upd_period = self.default_update_interval
-    #     return upd_period
 
     @staticmethod
     def parse_modbus_properties(property_list: str
