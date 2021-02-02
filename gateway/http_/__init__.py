@@ -51,6 +51,13 @@ class VisioHTTPConfig:
 
         self.is_authorized = True
 
+    # def delete_auth_data(self) -> None:
+    #     self._bearer_token = None
+    #     self._user_id = None
+    #     self._auth_user_id = None
+    #
+    #     self.is_authorized = False
+
     @property
     def base_url(self) -> str:
         return 'http://' + ':'.join((self.host, str(self.port)))

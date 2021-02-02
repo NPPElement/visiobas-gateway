@@ -1,4 +1,5 @@
 import asyncio
+import atexit
 from multiprocessing import SimpleQueue
 from pathlib import Path
 from threading import Thread
@@ -19,6 +20,8 @@ _log = get_file_logger(logger_name=__name__,
 
 class VisioHTTPClient(Thread):
     """Control interactions via HTTP."""
+
+    _timeout = aiohttp.ClientTimeout(total=60)
 
     def __init__(self, gateway, verifier_queue: SimpleQueue,
                  config: dict):
@@ -51,6 +54,7 @@ class VisioHTTPClient(Thread):
 
         with yaml_path.open() as cfg_file:
             http_cfg = yaml.load(cfg_file, Loader=yaml.FullLoader)
+            _log.info(f'Creating {cls.__name__} from {yaml_path} ...')
 
         return cls(gateway=gateway,
                    verifier_queue=verifier_queue,
@@ -67,6 +71,7 @@ class VisioHTTPClient(Thread):
         while not self._stopped:
             try:
                 asyncio.run(self.run_main_loop())
+                _log.info('Stop main loop')
             except Exception as e:
                 _log.error(f'Main loop error: {e}',
                            exc_info=True
@@ -74,7 +79,8 @@ class VisioHTTPClient(Thread):
 
     async def run_main_loop(self) -> None:
         """Main loop."""
-        async with aiohttp.ClientSession() as session:  # todo keep one session
+        async with aiohttp.ClientSession(timeout=self._timeout) as session:
+            # todo keep one session
 
             # Authorize to nodes. Request data then give it to connectors.
             await self.update(session=session)
@@ -84,6 +90,12 @@ class VisioHTTPClient(Thread):
                                      post_nodes=self.post_nodes,
                                      session=session
                                      )
+            # _log.info('LOGOUT!!!')
+            # while self._is_authorized:
+            #     self._is_authorized = not await self.logout(
+            #         nodes=[self.get_node, *self.post_nodes],
+            #         session=session
+            #     )
 
     async def run_post_loop(self, queue: SimpleQueue,
                             post_nodes: Iterable[VisioHTTPNode],
@@ -112,19 +124,22 @@ class VisioHTTPClient(Thread):
                            exc_info=True
                            )
         else:  # received stop signal
-            while self._is_authorized:
-                self._is_authorized = not await self.logout(
-                    nodes=[self.get_node, *self.post_nodes],
-                    session=session
-                )
+            # while self._is_authorized:
+            #     self._is_authorized = not await self.logout(
+            #         nodes=[self.get_node, *self.post_nodes],
+            #         session=session
+            #     )
             _log.info(f'{self} stopped.')
 
-    def __repr__(self):
-        return 'VisioHTTPClient'
+    def __repr__(self) -> str:
+        return self.__class__.__name__
 
     def stop(self) -> None:
         self._stopped = True
         _log.info(f'Stopping {self} ...')
+        asyncio.run(
+            self.logout(nodes=[self.get_node, *self.post_nodes])
+        )
 
     async def update(self, session) -> None:
         """Update authorizations and devices data."""
@@ -162,6 +177,9 @@ class VisioHTTPClient(Thread):
             _ = await asyncio.gather(*upd_coros)
             # todo check results
             return True
+
+        except AttributeError as e:
+            _log.warning(f"Connector not updated: cannot read 'address_cache' : {e}")
 
         except Exception as e:
             _log.error(f'Update {connector} error: {e}',
@@ -212,29 +230,36 @@ class VisioHTTPClient(Thread):
                        )
             return False
 
+    @atexit.register
     async def logout(self, nodes: Iterable[VisioHTTPNode],
-                     session) -> bool:
+                     #session
+                     ) -> bool:
         """Perform log out from all nodes.
         :param nodes:
-        :param session:
+        #:param session:
         :return: is logout successful
         """
-        logout_url = '/vdesk/secure/logout'  # todo move to class attr?
-        _log.debug(f'Logout from: {nodes} ...')
-        try:
-            logout_coros = [self._rq(method='GET',
-                                     url=node.cur_server.base_url + logout_url,
-                                     session=session,
-                                     headers=node.cur_server.auth_headers
-                                     ) for node in nodes]
-            res = await asyncio.gather(*logout_coros)
-            _log.info(f'Successful logout from {nodes}: {res}')
-            return True
-        except Exception as e:
-            _log.warning(f'Logout was failed: {e}',
-                         exc_info=True
-                         )
-            return False
+        logout_url = '/auth/secure/logout'  # todo move to class attr?
+        _log.debug(f'Logging out from: {nodes} ...')
+        async with aiohttp.ClientSession(timeout=self._timeout) as session:
+            try:
+                logout_coros = [self._rq(method='GET',
+                                         url=node.cur_server.base_url + logout_url,
+                                         session=session,
+                                         headers=node.cur_server.auth_headers
+                                         ) for node in nodes]
+                res = await asyncio.gather(*logout_coros)
+
+                # # clean auth data
+                # [node.cur_server.delete_auth_data() for node in nodes]
+
+                _log.info(f'Logout from {nodes}: {res}')
+                return True
+            except Exception as e:
+                _log.warning(f'Logout was failed: {e}',
+                             exc_info=True
+                             )
+                return False
 
     async def login(self, get_node: VisioHTTPNode,
                     post_nodes: Iterable[VisioHTTPNode],
@@ -298,7 +323,7 @@ class VisioHTTPClient(Thread):
 
     async def _login_server(self, server: VisioHTTPConfig,
                             session) -> bool:
-        """ Perform authorization to server
+        """Perform authorization to server.
         :param server: server on which the authorization is performed
         :param session:
         :return: is server authorized
@@ -377,25 +402,31 @@ class VisioHTTPClient(Thread):
         :param response: server's response
         :return: response['data'] field after checks
         """
+        response.raise_for_status()
+
         if response.status == 200:
+            response.raise_for_status()
             resp_json = await response.json()
             if resp_json['success']:
                 _log.debug(f'Successfully response: {response.url}')
-                return resp_json['data']
+                try:
+                    return resp_json['data']
+                except LookupError as e:
+                    # fixme
+                    _log.warning(f'Extracting failed (most likely in logout): {e}',
+                                 # exc_info=True
+                                 )
             else:
-                # todo: switch to another server
-                # _log.warning(f'Server returned failure response: {response.url}\n'
-                #              f'{resp_json}')
                 raise aiohttp.ClientError(
                     f'Failure response: {response.url}\n{resp_json}'
                 )
-        else:
-            # todo: switch to another server
-            # _log.warning('Server response status error: '
-            #              f'[{response.status}] {response.url}')
-            raise aiohttp.ClientError('Response status error: '
-                                      f'[{response.status}] {response.url}'
-                                      )
+        # else:
+        #     # todo: switch to another server
+        #     # _log.warning('Server response status error: '
+        #     #              f'[{response.status}] {response.url}')
+        #     raise aiohttp.ClientError('Response status: '
+        #                               f'[{response.status}] {response.url}'
+        #                               )
 
     # @staticmethod
     # async def __check_rejected(device_id: int, data: list) -> list:
