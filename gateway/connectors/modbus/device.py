@@ -121,12 +121,12 @@ class ModbusDevice(Thread):
                 15: client.write_coils,
                 16: client.write_registers
             }
-            self._log.info(f'{self} client initialized')
 
         except Exception as e:
             self._log.error(f'Modbus client init error: {e}', exc_info=True)
             raise ConnectionError
         else:
+            self._log.info(f'{self} client initialized')
             return client, available_functions
 
     def read(self, cmd_code: int, reg_address: int,

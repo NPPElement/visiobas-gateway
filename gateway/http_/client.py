@@ -128,16 +128,6 @@ class VisioHTTPClient(Thread):
 
     async def update(self, session) -> None:
         """Update authorizations and devices data."""
-        # stop devices (send all collected data)
-        self._gateway.stop_devices()  # FIXME! we shouldn't stop devices!
-        # todo stop sending to http storage (HTTP_ENABLE)
-
-        # if self._is_authorized:
-        #     _ = await self.logout(nodes=[self.get_node, *self.post_nodes],
-        #                           session=session
-        #                           )
-        # TODO read cfg from env / upd cfg
-
         while not self._is_authorized:
             self._is_authorized = await self.login(get_node=self.get_node,
                                                    post_nodes=self.post_nodes,
@@ -237,7 +227,8 @@ class VisioHTTPClient(Thread):
                                      session=session,
                                      headers=node.cur_server.auth_headers
                                      ) for node in nodes]
-            _ = await asyncio.gather(*logout_coros)
+            res = await asyncio.gather(*logout_coros)
+            _log.info(f'Successful logout from {nodes}: {res}')
             return True
         except Exception as e:
             _log.warning(f'Logout was failed: {e}',

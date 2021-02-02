@@ -1,6 +1,7 @@
 import atexit
 from multiprocessing import SimpleQueue
 from pathlib import Path
+from pprint import pprint
 from time import sleep
 
 from gateway.connectors.bacnet import BACnetConnector
@@ -27,45 +28,48 @@ class VisioGateway:
         self._http_bacnet_queue = SimpleQueue()
         self._http_modbus_queue = SimpleQueue()
 
+        # Device updates in connectors are HTTP client initiated.
+        # Connectors are not closed on update.
+        # Therefore, they are created once when the gateway is created.
         self.connectors = {
-            'bacnet': BACnetConnector(
-                gateway=self,
-                http_queue=self._http_bacnet_queue,
-                verifier_queue=self._protocol_verifier_queue,
-                config=self._config['connector']['bacnet']
-            ),
-            'modbus': ModbusConnector(
-                gateway=self,
-                http_queue=self._http_modbus_queue,
-                verifier_queue=self._protocol_verifier_queue,
-                config=self._config['connector']['modbus']
-            ),
-            # 'xml': None
+            'bacnet': BACnetConnector(gateway=self,
+                                      http_queue=self._http_bacnet_queue,
+                                      verifier_queue=self._protocol_verifier_queue,
+                                      config=self._config['connector']['bacnet']
+                                      ),
+            'modbus': ModbusConnector(gateway=self,
+                                      http_queue=self._http_modbus_queue,
+                                      verifier_queue=self._protocol_verifier_queue,
+                                      config=self._config['connector']['modbus']
+                                      ),
+            # 'xml': None todo
             # 'modbus_rtu': None,
             # 'knx_ip': None,
             # 'mqtt': None
-            # etc. todo
+            # etc.
         }
+        # Open connectors
+        [connector.open() for connector in self.connectors.values()]
 
-        self.http_client = VisioHTTPClient.create_from_yaml(
-            gateway=self,
-            verifier_queue=self._verifier_http_queue,
-            yaml_path=_base_path / 'config/http.yaml'
-        )
+        # HTTP client updatable. Re-created inside the main loop
+        self.http_client = None
 
+        # The verifier does not need to be updated, so
+        # it runs once when the gateway starts.
         self.verifier = BACnetVerifier(protocols_queue=self._protocol_verifier_queue,
                                        http_queue=self._verifier_http_queue,
                                        config=self._config['verifier']
                                        )
-
-        # self.mqtt_client =
-        # self.__notifier = None  # todo
-        # self.__statistic = None  # todo
-        self.http_client.start()
-        sleep(1)
         self.verifier.start()
 
-        self.run_forever()
+        # self.mqtt_client = None # todo
+        # self.__notifier = None  # todo
+        # self.__statistic = None  # todo
+
+        self.run_main_loop()
+
+    def __repr__(self) -> str:
+        return self.__class__.__name__
 
     @classmethod
     def create_from_yaml(cls, yaml_path: Path):
@@ -73,36 +77,39 @@ class VisioGateway:
         import yaml
 
         with yaml_path.open() as cfg_file:
-            gateway_cfg = yaml.load(cfg_file, Loader=yaml.FullLoader)
-        return cls(config=gateway_cfg)
+            cfg = yaml.load(cfg_file, Loader=yaml.FullLoader)
+        return cls(config=cfg)
 
-    def run_forever(self):
+    def run_main_loop(self):
+        """Main loop of gateway."""
         _log.info(f'{self} starting ...')
-        try:
-            self._start_connectors()
-        except Exception as e:
-            _log.error(f'Start connectors error: {e}',
-                       exc_info=True
-                       )
 
         while not self._stopped:
             try:
-                # TODO: upd modules
-                sleep(self._config.get('update_period', 60 * 60))
-            except (KeyboardInterrupt, SystemExit):
+                self.http_client = VisioHTTPClient.create_from_yaml(
+                    gateway=self,
+                    verifier_queue=self._verifier_http_queue,
+                    yaml_path=_base_path / 'config/http.yaml'
+                )
+                self.http_client.start()
+
+                update_period = self._config['gateway'].get('update_period', 60 * 60)
+                _log.info(f'{self} sleep: {update_period} sec ...')
+                sleep(update_period)
+
+                self.http_client.stop()
+
+            except (KeyboardInterrupt, SystemExit, Exception) as e:
                 self._stop()
-            except Exception as e:
                 _log.error(f'Error: {e}',
                            exc_info=True
                            )
         else:
             _log.info(f'{self} stopped.')
 
-    def __repr__(self) -> str:
-        return self.__class__.__name__
-
     @atexit.register
     def _stop(self):
+        """Stop gateway modules in right order."""
         _log.warning('Stopping ...')
         self._stop_connectors()
 
@@ -114,16 +121,6 @@ class VisioGateway:
 
         self._stopped = True
 
-    def _start_connectors(self) -> None:
-        """ Opens connection with connectors."""
-        for connector in self.connectors.values():
-            try:
-                connector.open()
-            except Exception as e:
-                _log.error(f'{connector} opening error: {e}',
-                           exc_info=True
-                           )
-
     def _stop_connectors(self) -> None:
         """ Close connections with connectors."""
         for connector in self.connectors.values():
@@ -132,16 +129,5 @@ class VisioGateway:
                 connector.join()
             except Exception as e:
                 _log.error(f'{connector} closing error: {e}',
-                           exc_info=True
-                           )
-
-    def stop_devices(self) -> None:
-        """Stop devices for all connectors."""
-        for connector in self.connectors.values():
-            try:
-                # stop all polling devices
-                connector.stop_devices(devices_id=connector.polling_devices.keys())
-            except Exception as e:
-                _log.error(f'{connector} stopping devices error: {e}',
                            exc_info=True
                            )
