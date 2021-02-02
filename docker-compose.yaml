@@ -3,7 +3,7 @@ version: "3.3"
 services:
   vb_gateway:
     build:
-      context: gateway
+      context: . #gateway
       dockerfile: Dockerfile
     image: visiobas-gateway:0.1.0
     logging:
@@ -14,7 +14,6 @@ services:
     #        max-size: 50m
     restart: always
     user: root
-
     environment:
       - TZ=Europe/Moscow
       - PYTHONPATH=/
@@ -22,11 +21,10 @@ services:
       # Logging
       - LOG_LEVEL=INFO
       - FILE_LOG_LEVEL=INFO
-
     volumes:
-      - /opt/visiobas-gateway/gateway:/gateway
-      #- /home/user/visiobas-gateway/gateway:/gateway
-    command: python /gateway/run.py
+      - /opt/visiobas-gateway:/visiobas-gateway
+      #- /home/user/visiobas-gateway:/visiobas-gateway
+    command: python visiobas-gateway/gateway/run.py
 
     ports:
       - 502:502

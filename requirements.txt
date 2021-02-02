@@ -1,7 +1,7 @@
 aiohttp==3.7.3
 async-timeout==3.0.1
 attrs==20.3.0
-BAC0==20.11.21
+BAC0==21.1.28
 bacpypes==0.18.3
 certifi==2020.12.5
 chardet==4.0.0
