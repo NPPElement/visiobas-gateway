@@ -3,7 +3,12 @@
 It is an application for polling devices using various protocols and transmitting data to the visiobas system.
 
 ## Installation
-### - Install Docker
+
+#### For install developing branch:
+```
+sudo git clone --single-branch --branch develop https://github.com/NPPElement/visiobas-gateway
+```
+### Install Docker
 ```
 sudo apt update
 ```

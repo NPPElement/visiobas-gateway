@@ -382,7 +382,7 @@ class VisioHTTPClient(Thread):
                                    ) for node in nodes
                           ]
             _ = await asyncio.gather(*post_coros)
-            _log.debug(f'Successfully sent [{device_id}]to {nodes}')
+            _log.debug(f'Successfully sent [{device_id}] to {nodes}')
             return True
         except Exception as e:
             _log.warning(f'Sending device error: {e}',

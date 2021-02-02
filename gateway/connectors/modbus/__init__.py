@@ -92,8 +92,7 @@ class ModbusConnector(Connector):
                     prop_list = obj[str(ObjProperty.propertyList.id)]
                     address, quantity, func_read, props = self.parse_modbus_properties(
                         property_list=prop_list)
-                    modbus_obj = ModbusObj(typename='ModbusObject',
-                                           type=obj_type,
+                    modbus_obj = ModbusObj(type=obj_type,
                                            id=obj_id,
                                            name=obj_name,
 

@@ -2,7 +2,7 @@ from typing import NamedTuple
 
 from pymodbus.payload import BinaryPayloadDecoder
 
-from gateway.models.bacnet import BACnetObj
+from gateway.models.bacnet import ObjType
 
 
 class VisioModbusProperties(NamedTuple):
@@ -22,7 +22,11 @@ class VisioModbusProperties(NamedTuple):
     bit: int or None = None  # TODO: change to 'bitmask'
 
 
-class ModbusObj(BACnetObj):
+class ModbusObj(NamedTuple):
+    type: ObjType
+    id: int
+    name: str
+
     address: int
     quantity: int
     func_read: int
@@ -67,3 +71,19 @@ def cast_to_bit(register: list[int], bit: int) -> int:
 #         return decode_func[type_name]()
 #     except KeyError:
 #         raise ValueError(f'Behavior for <{type_name}> not implemented')
+
+
+if __name__ == '__main__':
+    o = ModbusObj(
+        type=ObjType.BINARY_OUTPUT,
+        id=13,
+        name='obj_name',
+
+        address=14,
+        quantity=1,
+        func_read=3,
+
+        properties=VisioModbusProperties(
+            scale=1, data_type='UINT', data_length=16,
+        )
+    )
