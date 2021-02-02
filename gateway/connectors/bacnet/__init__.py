@@ -6,9 +6,9 @@ from BAC0 import lite
 from BAC0.core.io.IOExceptions import InitializationError, NetworkInterfaceException
 
 from gateway.connectors import Connector
-from gateway.connectors.bacnet.bacnet_objs import ObjProperty, ObjType, BACnetObj
 from gateway.connectors.bacnet.device import BACnetDevice
 from gateway.logs import get_file_logger
+from gateway.models.bacnet import ObjType, BACnetObj, ObjProperty
 
 _base_path = Path(__file__).resolve().parent.parent.parent
 
@@ -25,8 +25,6 @@ class BACnetConnector(Connector):
     #              'polling_devices', '_update_intervals'
     #              )
 
-    delay_bac0_init = 10
-
     def __init__(self, gateway, http_queue: SimpleQueue,
                  verifier_queue: SimpleQueue, config: dict):
 
@@ -42,12 +40,10 @@ class BACnetConnector(Connector):
         self.obj_types_to_request = (
             ObjType.ANALOG_INPUT, ObjType.ANALOG_OUTPUT, ObjType.ANALOG_VALUE,
             ObjType.BINARY_INPUT, ObjType.BINARY_OUTPUT, ObjType.BINARY_VALUE,
-            ObjType.MULTI_STATE_INPUT, ObjType.MULTI_STATE_OUTPUT,
+            ObjType.MULTI_STATE_INPUT,
+            ObjType.MULTI_STATE_OUTPUT,
             ObjType.MULTI_STATE_VALUE,
         )
-
-    def __repr__(self):
-        return 'BACnetConnector'
 
     def run(self):
         _log.info(f'{self} starting ...')
@@ -73,7 +69,8 @@ class BACnetConnector(Connector):
                     _log.error(f'Network initialization error: {e}',
                                exc_info=True
                                )
-                    sleep(self.delay_bac0_init)  # delay before next try
+                    # delay before next try
+                    sleep(self._config.get('delay_bac0_attempt', 30))
 
         else:
             self._network.disconnect()
@@ -100,6 +97,16 @@ class BACnetConnector(Connector):
                 except LookupError:
                     _log.warning('Extract object error.')
         return upd_period, bacnet_objs
+
+    # def parse_upd_period(self, device_obj_data: list[dict]) -> int:
+    #     """Extract device update period from device object."""
+    #     try:
+    #         prop_list = device_obj_data[0][str(ObjProperty.propertyList.id)]
+    #         upd_period = loads(prop_list)['update_interval']
+    #     except LookupError as e:
+    #         _log.warning(f'Update interval cannot be extracted: {e}')
+    #         upd_period = self.default_upd_period
+    #     return upd_period
 
     def start_device(self, device_id: int, objs: set[BACnetObj],
                      upd_interval: int) -> None:

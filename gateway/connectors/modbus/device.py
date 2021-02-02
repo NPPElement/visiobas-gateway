@@ -5,11 +5,9 @@ from time import time, sleep
 from pymodbus.client.sync import ModbusTcpClient
 
 from gateway.connectors.bacnet import ObjProperty
-from gateway.connectors.modbus import (ModbusObj,
-                                       VisioModbusProperties,
-                                       cast_to_bit,
-                                       cast_2_registers)
 from gateway.logs import get_file_logger
+from gateway.models.modbus import ModbusObj, VisioModbusProperties, cast_to_bit, \
+    cast_2_registers
 
 
 class ModbusDevice(Thread):
@@ -255,12 +253,11 @@ class ModbusDevice(Thread):
                 }
 
     def __put_data_into_verifier(self, properties: dict) -> None:
-        """ Send collected data about obj into BACnetVerifier
-        """
+        """Send collected data about obj into BACnetVerifier."""
         self._verifier_queue.put(properties)
 
     def __put_device_end_to_verifier(self) -> None:
-        """ device_id in queue means that device polled.
-            Should send collected objects to HTTP
+        """device_id in queue means that device polled.
+        Should send collected objects to HTTP
         """
         self._verifier_queue.put(self.id)

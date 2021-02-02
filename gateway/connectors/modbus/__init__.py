@@ -3,10 +3,10 @@ from multiprocessing import SimpleQueue
 from pathlib import Path
 
 from gateway.connectors import Connector
-from gateway.connectors.bacnet import ObjProperty, ObjType, BACnetObj
-from gateway.connectors.modbus.modbus_objs import ModbusObj, VisioModbusProperties
 from gateway.connectors.modbus.device import ModbusDevice
 from gateway.logs import get_file_logger
+from gateway.models.bacnet import ObjType, ObjProperty
+from gateway.models.modbus import ModbusObj, VisioModbusProperties
 
 _base_path = Path(__file__).resolve().parent.parent.parent
 
@@ -37,8 +37,8 @@ class ModbusConnector(Connector):
             ObjType.MULTI_STATE_VALUE,
         )
 
-    def __repr__(self):
-        return 'ModbusConnector'
+    # def __repr__(self):
+    #     return 'ModbusConnector'
 
     def run(self):
         _log.info(f'{self} starting ...')
@@ -77,7 +77,7 @@ class ModbusConnector(Connector):
                        )
 
     def parse_objs_data(self, objs_data: dict[ObjType, list[dict]]
-                        ) -> tuple[int, set[BACnetObj]]:
+                        ) -> tuple[int, set[ModbusObj]]:
         """"""
         # Extract update period
         upd_period = self.parse_upd_period(device_obj_data=objs_data[ObjType.DEVICE])
@@ -111,6 +111,16 @@ class ModbusConnector(Connector):
                                  )
         return upd_period, modbus_objs
 
+    # def parse_upd_period(self, device_obj_data: list[dict]) -> int:
+    #     """Extract device update period from device object."""
+    #     try:
+    #         prop_list = device_obj_data[0][str(ObjProperty.propertyList.id)]
+    #         upd_period = loads(prop_list)['update_interval']
+    #     except LookupError as e:
+    #         _log.warning(f'Update interval cannot be extracted: {e}')
+    #         upd_period = self.default_update_interval
+    #     return upd_period
+
     @staticmethod
     def parse_modbus_properties(property_list: str
                                 ) -> tuple[int, int, int, VisioModbusProperties]:
@@ -137,6 +147,8 @@ class ModbusConnector(Connector):
             elif data_type != 'BOOL' and data_length is None and isinstance(quantity, int):
                 data_length = quantity * 16
 
+            # FIXME
+            raise NotImplementedError
             properties = VisioModbusProperties(scale=scale,
                                                data_type=data_type,
                                                data_length=data_length,

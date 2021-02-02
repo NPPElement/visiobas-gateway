@@ -1,13 +1,17 @@
+# All periods in seconds.
+
 gateway:
-  delay_update: 3600  # In seconds
+  update_period: 3600
 
 verifier:
-  http_enable: True
-  mqtt_enable: False
+  http_enable: true
+  mqtt_enable: false
 
 connector:
   bacnet:
     default_upd_period: 10
+    delay_bac0_attempt: 30
+    # delay_inactive: 60 todo
 
   modbus:
     default_upd_period: 10

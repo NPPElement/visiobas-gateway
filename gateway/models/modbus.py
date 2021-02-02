@@ -2,7 +2,7 @@ from typing import NamedTuple
 
 from pymodbus.payload import BinaryPayloadDecoder
 
-from gateway.connectors.bacnet import BACnetObj
+from gateway.models.bacnet import BACnetObj
 
 
 class VisioModbusProperties(NamedTuple):

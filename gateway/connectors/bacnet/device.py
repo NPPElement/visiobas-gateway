@@ -6,11 +6,12 @@ from BAC0.core.io.IOExceptions import (ReadPropertyException,
                                        NoResponseFromController,
                                        UnknownObjectError,
                                        UnknownPropertyError,
-                                       ReadPropertyMultipleException)
+                                       ReadPropertyMultipleException
+                                       )
 
-from gateway.connectors import get_fault_obj_properties
-from gateway.connectors.bacnet import ObjProperty, ObjType, BACnetObj
 from gateway.logs import get_file_logger
+from gateway.models.bacnet import BACnetObj, ObjType, ObjProperty
+from gateway.utils import get_fault_obj_properties
 
 
 class BACnetDevice(Thread):
@@ -27,8 +28,10 @@ class BACnetDevice(Thread):
                  device_id: int,
                  network,
                  objects: set[BACnetObj],
-                 update_period: int = 10):
+                 update_period: int):
         super().__init__()
+
+        #todo config
 
         self.id = device_id
         self.update_period = update_period
@@ -59,7 +62,7 @@ class BACnetDevice(Thread):
         self.start()
 
     def __repr__(self):
-        return f'<BACnetDevice:[{self.id}]>'
+        return f'<{self.__class__.__name__}:[{self.id}]>'
 
     def __len__(self):
         """ :return: the quantity of objects in the device received from the server
@@ -118,7 +121,7 @@ class BACnetDevice(Thread):
                     pass
                 # todo: close Thread and push to bacnet-connector
                 self._log.debug(f'Sleeping {self.delay_inactive} sec ...')
-                sleep(self.delay_inactive)
+                sleep(self.delay_inactive) # todo from cfg
         else:
             self._log.info(f'{self} stopped.')
 
@@ -129,13 +132,11 @@ class BACnetDevice(Thread):
 
     def stop_polling(self) -> None:
         self._polling = False
-        # self.network.disconnect()
         self._log.info('Stopping polling ...')
 
     def set_inactive(self) -> None:
         self._active = False
         self._log.warning(f'{self} switched to inactive.')
-
         # TODO put to bacnet connector for ping checking
 
     def poll(self) -> None:
@@ -311,12 +312,11 @@ class BACnetDevice(Thread):
             return properties
 
     def __put_device_end_to_verifier(self) -> None:
-        """ device_id in queue means that device polled.
-            Should send collected objects to HTTP
+        """device_id in queue means that device polled.
+        Should send collected objects to HTTP
         """
         self._verifier_queue.put(self.id)
 
     def __put_data_into_verifier(self, properties: dict) -> None:
-        """ Send collected data about obj into BACnetVerifier
-        """
+        """Send collected data about obj into BACnetVerifier."""
         self._verifier_queue.put(properties)

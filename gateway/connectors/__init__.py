@@ -7,8 +7,8 @@ from pathlib import Path
 from threading import Thread
 from typing import Iterable
 
-from gateway.connectors.bacnet import ObjProperty, ObjType, BACnetObj
 from gateway.logs import get_file_logger
+from gateway.models.bacnet import ObjType, BACnetObj, ObjProperty
 
 _log = get_file_logger(logger_name=__name__,
                        size_bytes=50_000_000
@@ -36,8 +36,7 @@ class Connector(Thread, ABC):
         self.address_cache_path = None
         self.polling_devices = {}
 
-        # self.default_update_period = config.get('default_update_period', 10)
-        self.default_update_interval = 10
+        self.default_upd_period = config.get('default_upd_period', 10)
 
         self.obj_types_to_request: Iterable[ObjType] = ()
 
@@ -92,6 +91,7 @@ class Connector(Thread, ABC):
         """Extract objects data from response."""
         pass
 
+    # @abstractmethod
     def parse_upd_period(self, device_obj_data: list[dict]) -> int:
         """Extract device update period from device object."""
         try:
@@ -99,7 +99,7 @@ class Connector(Thread, ABC):
             upd_period = loads(prop_list)['update_interval']
         except LookupError as e:
             _log.warning(f'Update interval cannot be extracted: {e}')
-            upd_period = self.default_update_interval
+            upd_period = self.default_upd_period
         return upd_period
 
     @abstractmethod
@@ -133,7 +133,7 @@ class Connector(Thread, ABC):
                        )
             return False
 
-    def stop_devices(self, devices_id: Iterable) -> None:
+    def stop_devices(self, devices_id: Iterable[int]) -> None:
         """Stop devices by id."""
         for dev_id in devices_id:
             try:
@@ -146,12 +146,11 @@ class Connector(Thread, ABC):
                            exc_info=True
                            )
 
-    @abstractmethod
-    def __repr__(self):
-        pass
+    def __repr__(self) -> str:
+        return self.__class__.__name__
 
     @property
-    def address_cache_ids(self) -> Iterable:
+    def address_cache_ids(self) -> Iterable[int]:
         return list(self.address_cache.keys())
 
     @property
@@ -186,44 +185,32 @@ class Connector(Thread, ABC):
             200: '10.21.80.200:47808'
         """
         try:
+            address_cache = {}
+
             text = address_cache_path.read_text(encoding='utf-8')
-        except FileNotFoundError as e:
-            _log.critical(f'Not found address_cache file. Closing {self}')
-            self._stopped = True  # fixme?
+            for line in text.split('\n'):
+                trimmed = line.strip()
+                if not trimmed.startswith(';') and trimmed:
+                    try:
+                        device_id, mac, _, _, apdu = trimmed.split(maxsplit=4)
+                        # In mac we have ip-address host:port in hex
+                        device_id = int(device_id)
+                        addr1, addr2, addr3, addr4, port1, port2 = mac.rsplit(':',
+                                                                              maxsplit=5)
+                        addr = IPv4Address('.'.join((
+                            str(int(addr1, base=16)),
+                            str(int(addr2, base=16)),
+                            str(int(addr3, base=16)),
+                            str(int(addr4, base=16)))))
+                        port = int(port1 + port2, base=16)
+                        address_cache[device_id] = ':'.join((str(addr), str(port)))
+                    except ValueError:
+                        continue
+            return address_cache
+
+        except Exception as e:
+            _log.critical(f'Read address_cache error: {e} '
+                          # f'Closing {self}'
+                          )
+            # self.close()  # fixme?
             # raise e
-
-        address_cache = {}
-
-        for line in text.split('\n'):
-            trimmed = line.strip()
-            if not trimmed.startswith(';') and trimmed:
-                try:
-                    device_id, mac, _, _, apdu = trimmed.split(maxsplit=4)
-                    # In mac we have ip-address host:port in hex
-                    device_id = int(device_id)
-                    addr1, addr2, addr3, addr4, port1, port2 = mac.rsplit(':', maxsplit=5)
-                    addr = IPv4Address('.'.join((
-                        str(int(addr1, base=16)),
-                        str(int(addr2, base=16)),
-                        str(int(addr3, base=16)),
-                        str(int(addr4, base=16)))))
-                    port = int(port1 + port2, base=16)
-                    address_cache[device_id] = ':'.join((str(addr), str(port)))
-                except ValueError:
-                    continue
-        return address_cache
-
-
-def get_fault_obj_properties(reliability: int or str,
-                             pv='null',
-                             sf: list = None) -> dict:
-    """ Returns properties for unknown objects
-    """
-    if sf is None:
-        sf = [0, 1, 0, 0]
-    return {
-        ObjProperty.presentValue: pv,
-        ObjProperty.statusFlags: sf,
-        ObjProperty.reliability: reliability
-        #  todo: make reliability class as Enum
-    }

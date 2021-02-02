@@ -1,3 +1,7 @@
+# FIXME: OLD VERSION OF ASYNC DEVICE
+#  maybe will helpful after fix in asyncio modbus client in pymodbus
+
+
 import asyncio
 from multiprocessing import SimpleQueue
 from pathlib import Path

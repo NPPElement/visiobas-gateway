@@ -2,8 +2,8 @@ from multiprocessing import Process, SimpleQueue
 
 from bacpypes.basetypes import PriorityArray
 
-from gateway.connectors.bacnet.bacnet_objs import ObjProperty, StatusFlags
 from gateway.logs import get_file_logger
+from gateway.models.bacnet import ObjProperty, StatusFlags
 
 _log = get_file_logger(logger_name=__name__,
                        size_bytes=50_000_000
@@ -30,8 +30,8 @@ class BACnetVerifier(Process):
         if self._http_enable:
             self._http_storage: dict[int, list[str]] = {}
 
-    def __repr__(self):
-        return 'BACnetVerifier'
+    def __repr__(self) -> str:
+        return self.__class__.__name__
 
     def run(self):
         _log.info(f'{self} Starting ...')

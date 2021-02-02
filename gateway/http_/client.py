@@ -7,7 +7,8 @@ from typing import Iterable
 
 import aiohttp
 
-from gateway.connectors import Connector, ObjType
+from gateway.connectors import Connector
+from gateway.connectors.bacnet import ObjType
 from gateway.http_ import VisioHTTPNode, VisioHTTPConfig
 from gateway.logs import get_file_logger
 

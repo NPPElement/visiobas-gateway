@@ -87,7 +87,7 @@ class VisioGateway:
         while not self._stopped:
             try:
                 # TODO: upd modules
-                sleep(self._config.get('delay_update', 60 * 60))
+                sleep(self._config.get('update_period', 60 * 60))
             except (KeyboardInterrupt, SystemExit):
                 self._stop()
             except Exception as e:
@@ -97,8 +97,8 @@ class VisioGateway:
         else:
             _log.info(f'{self} stopped.')
 
-    def __repr__(self):
-        return 'VisioGateway'
+    def __repr__(self) -> str:
+        return self.__class__.__name__
 
     def _stop(self):
         _log.warning('Stopping ...')
