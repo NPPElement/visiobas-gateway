@@ -4,7 +4,6 @@ attrs==20.3.0
 BAC0==21.1.28
 bacpypes==0.18.3
 certifi==2020.12.5
-chardet==4.0.0
 idna==3.1
 multidict==5.1.0
 pymodbus==2.4.0
