@@ -137,7 +137,6 @@ class ModbusConnector(Connector):
                 data_length = quantity * 16
 
             # FIXME
-            raise NotImplementedError
             properties = VisioModbusProperties(scale=scale,
                                                data_type=data_type,
                                                data_length=data_length,

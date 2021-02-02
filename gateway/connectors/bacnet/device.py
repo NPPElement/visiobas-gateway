@@ -62,7 +62,7 @@ class BACnetDevice(Thread):
         self.start()
 
     def __repr__(self):
-        return f'<{self.__class__.__name__}:[{self.id}]>'
+        return f'{self.__class__.__name__}:[{self.id}]'
 
     def __len__(self):
         """ :return: the quantity of objects in the device received from the server

@@ -6,8 +6,7 @@ from pymodbus.client.sync import ModbusTcpClient
 
 from gateway.connectors.bacnet import ObjProperty
 from gateway.logs import get_file_logger
-from gateway.models.modbus import ModbusObj, VisioModbusProperties, cast_to_bit, \
-    cast_2_registers
+from gateway.models.modbus import ModbusObj, VisioModbusProperties, cast_to_bit
 
 
 class ModbusDevice(Thread):
@@ -99,7 +98,7 @@ class ModbusDevice(Thread):
             self._log.info(f'{self} stopped.')
 
     def __repr__(self):
-        return f'ModbusDevice [{self.id}]'
+        return f'{self.__class__.__name__}[{self.id}]'
 
     def __get_client(self, address: str, port: int) -> tuple:
         """ Initialize modbus client
@@ -177,17 +176,18 @@ class ModbusDevice(Thread):
             # expected only: int16 | uint16 |  fixme: BYTE?
             value = registers[0]
 
-        elif (properties.data_type == 'FLOAT' and
-              quantity == 2 and properties.data_length == 32):  # float32
-            value = round(cast_2_registers(registers=registers,
-                                           byteorder='>', wordorder='<',  # fixme use obj
-                                           type_name=properties.data_type),
-                          ndigits=6)
-        elif ((properties.data_type == 'INT' or properties.data_type == 'UINT') and
-              quantity == 2 and properties.data_length == 32):  # int32 | uint32
-            value = cast_2_registers(registers=registers,
-                                     byteorder='<', wordorder='>',  # fixme use obj
-                                     type_name=properties.data_type)
+        # todo
+        # elif (properties.data_type == 'FLOAT' and
+        #       quantity == 2 and properties.data_length == 32):  # float32
+        #     value = round(cast_2_registers(registers=registers,
+        #                                    byteorder='>', wordorder='<',  # fixme use obj
+        #                                    type_name=properties.data_type),
+        #                   ndigits=6)
+        # elif ((properties.data_type == 'INT' or properties.data_type == 'UINT') and
+        #       quantity == 2 and properties.data_length == 32):  # int32 | uint32
+        #     value = cast_2_registers(registers=registers,
+        #                              byteorder='<', wordorder='>',  # fixme use obj
+        #                              type_name=properties.data_type)
         else:
             raise NotImplementedError('What to do with that type '
                                       f'not yet defined: {registers, quantity, properties}')
