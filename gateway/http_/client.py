@@ -232,7 +232,7 @@ class VisioHTTPClient(Thread):
 
     @atexit.register
     async def logout(self, nodes: Iterable[VisioHTTPNode],
-                     #session
+                     # session
                      ) -> bool:
         """Perform log out from all nodes.
         :param nodes:
@@ -255,10 +255,14 @@ class VisioHTTPClient(Thread):
 
                 _log.info(f'Logout from {nodes}: {res}')
                 return True
+
+            except aiohttp.ClientResponseError as e:
+                _log.warning(f'Logout was failed: {e}')
+                return False
             except Exception as e:
-                _log.warning(f'Logout was failed: {e}',
-                             exc_info=True
-                             )
+                _log.error(f'Logout error: {e}',
+                           exc_info=True
+                           )
                 return False
 
     async def login(self, get_node: VisioHTTPNode,
@@ -346,10 +350,10 @@ class VisioHTTPClient(Thread):
             if server.is_authorized:
                 _log.info(f'Successfully authorized on {server}')
             else:
-                _log.info(f'Authorization on {server} failed!')
+                _log.info(f'Failed authorization to: {server}')
 
         except aiohttp.ClientError as e:
-            _log.warning(f'Authorization on {server} was failed: {e}')
+            _log.warning(f'Failed authorization to {server}: {e}')
             # raise e
         except Exception as e:
             _log.error(f'Authorization error! Please check {server}: {e}',
