@@ -35,7 +35,7 @@ class VisioHTTPClient(Thread):
         # Temp case for modbus testing:  FIXME
         self._test_modbus = test_modbus
         if self._test_modbus:
-            self.run_main_loop = self.run_test_modbus_loop
+            self.run_main_loop = self.run_modbus_simulation_loop
         # --------------------------------------------------------------
 
         self._gateway = gateway
@@ -449,7 +449,7 @@ class VisioHTTPClient(Thread):
     #         # todo: What should we doing with rejected objects?
     #         return rejected_objects_id
 
-    async def run_test_modbus_loop(self):
+    async def run_modbus_simulation_loop(self):
         """Loop for modbus simulation."""
         # fixme Isn't loop.
         _log.critical(f'Starting {self} in modbus simulation mode.')
@@ -471,13 +471,17 @@ class VisioHTTPClient(Thread):
                                                            post_nodes=self.post_nodes,
                                                            session=session
                                                            )
+
+                # The queue from the connector is read by the modbus simulation server.
                 is_updated = await self.upd_connector(node=self.get_node,
                                                       connector=modbus_connector,
                                                       session=session
                                                       )
                 _log.critical(f'Modbus device sent to modbus server: {is_updated}')
 
-                # self._verifier_queue.put('END')
+                # fixme: expected only one device in address_cache
+                device_address = list(modbus_connector.address_cache.values()).pop()
+                self._verifier_queue.put(device_address)
 
                 self._stopped = True
                 _log.info(f'Stopping {self} ...')

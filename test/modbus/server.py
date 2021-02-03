@@ -36,20 +36,40 @@ class ModbusSimulationServer(Thread):
         runs an asynchronous server, simulating the operation of this device.
         """
         _log.debug(f'Starting {self} ...')
-        device_reg_values = self.run_getting_loop()  # Now gets only one device
-        sleep(10)
+
+        # fixme: Now gets only one device
+        device_address, device_reg_values = self.run_getting_loop()
+
+        address, port = device_address.split(':', maxsplit=1)
+
+        sleep(5)
         _log.debug(f'Received device data: {device_reg_values}')
 
-        asyncio.run(self.run_server(hr_values=device_reg_values))
+        asyncio.run(
+            self.run_server(address=address,
+                            port=port,
+                            hr_values=device_reg_values
+                            )
+        )
 
     def run_getting_loop(self) -> dict[int, int]:
 
         # Now gets only one device, then return his data.
         while not self._stopped:
             try:
-                dev_id, objs_data = self._getting_queue.get()
-                reg_values = self.parse_registers_values(objs_data=objs_data)
-                return reg_values
+                data = self._getting_queue.get()
+                _log.debug(f'Received from queue: {len(data)}')
+
+                if isinstance(data, tuple):
+                    dev_id, objs_data = data
+                    reg_values = self.parse_registers_values(objs_data=objs_data)
+                    # return reg_values
+
+                if isinstance(data, str):
+                    # dev_address, dev_port = data.split(':', maxsplit=1)
+                    # fixme: expected only one device in address_cache
+
+                    return data, reg_values
 
             except Exception as e:
                 _log.error(f'Received device error: {e}',
@@ -76,7 +96,9 @@ class ModbusSimulationServer(Thread):
         return {i: i for i in range(666)}
 
     @staticmethod
-    async def run_server(hr_values: dict[int, int]) -> None:
+    async def run_server(address: str, port: int,
+                         hr_values: dict[int, int]) -> None:
+        """Simulation loop."""
 
         hr_block = ModbusSparseDataBlock(hr_values)
         store = ModbusSlaveContext(hr=hr_block,
@@ -90,6 +112,9 @@ class ModbusSimulationServer(Thread):
         identity.ProductName = 'Modbus Simulation'
         identity.ModelName = 'Modbus Simulation'
         identity.MajorMinorRevision = '0.0.1'
-        await StartTcpServer(context, identity=identity, address=("0.0.0.0", 5020),
+
+        _log.info('Simulation server starting ...')
+        await StartTcpServer(context, identity=identity, address=(address, port),
                              allow_reuse_address=True,
-                             defer_start=False)
+                             defer_start=False
+                             )

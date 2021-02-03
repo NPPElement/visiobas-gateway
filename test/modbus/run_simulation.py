@@ -25,6 +25,7 @@ _base_path = Path(__file__).resolve().parent.parent.parent
 
 # TODO: Please ensure that address_cache have only one device record!
 if __name__ == '__main__':
+    _run_delay = 60 * 5
     http_modbus_queue = SimpleQueue()
     # The queue is not for the verifier!
     # Used to transfer data from http to modbus server.
@@ -39,4 +40,7 @@ if __name__ == '__main__':
 
     modbus_server.start()
     http_client.start()
-    sleep(60)
+
+    while True:
+        _log.debug(f'Sleep: {_run_delay} sec')
+        sleep(_run_delay)

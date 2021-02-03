@@ -49,7 +49,7 @@ client.connect()
 
 _log.info("Write to a holding register and read back")
 # rq = client.write_register(1, 10, unit=UNIT)
-rr = client.read_holding_registers(0, 10, unit=UNIT)
+rr = client.read_holding_registers(0, 33, unit=UNIT)
 # assert (not rq.isError())  # test that we are not an error
 # assert (rr.registers[0] == 10)  # test the expected value
 _log.info(f'{rr} isError:{rr.isError()} registers:{rr.registers}')
