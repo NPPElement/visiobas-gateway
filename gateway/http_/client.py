@@ -24,7 +24,16 @@ class VisioHTTPClient(Thread):
     _timeout = aiohttp.ClientTimeout(total=60)
 
     def __init__(self, gateway, verifier_queue: SimpleQueue,
-                 config: dict):
+                 config: dict,
+                 test_modbus: bool = False):
+
+        # --------------------------------------------------------------
+        # Temp case for modbus testing:  FIXME
+        self._test_modbus = test_modbus
+        if self._test_modbus:
+            self.run_main_loop = self.run_test_modbus_loop
+        # --------------------------------------------------------------
+
         super().__init__()
 
         self.setName(name=f'{self}-Thread')
@@ -42,13 +51,13 @@ class VisioHTTPClient(Thread):
             self._config['post']
         ]
 
-        # self.__session = None  # todo: KEEP one session
+        # self.session = None  # todo: KEEP one session
         self._is_authorized = False
         self._stopped = False
 
     @classmethod
     def create_from_yaml(cls, gateway, verifier_queue: SimpleQueue,
-                         yaml_path: Path):
+                         yaml_path: Path, test_modbus: bool = False):
         """Create HTTP client with configuration read from YAML file."""
         import yaml
 
@@ -58,16 +67,14 @@ class VisioHTTPClient(Thread):
 
         return cls(gateway=gateway,
                    verifier_queue=verifier_queue,
-                   config=http_cfg
+                   config=http_cfg,
+                   test_modbus=test_modbus
                    )
 
     def run(self) -> None:
-        """ Keeps the connection to the server.
-        todo: Periodically update authorization (1h)
-        todo: Periodically requests updates from the server. (1h)
-        Sends data from connectors.
-        """
+        """Start async run_main_loop."""
         _log.info(f'{self} starting ...')
+
         while not self._stopped:
             try:
                 asyncio.run(self.run_main_loop())
@@ -453,3 +460,39 @@ class VisioHTTPClient(Thread):
     #                      f'the server: {rejected_objects_id}')
     #         # todo: What should we doing with rejected objects?
     #         return rejected_objects_id
+
+    async def run_test_modbus_loop(self):
+        """Loop for modbus test."""
+        try:
+            from gateway.connectors.modbus import ModbusConnector
+            # Only for address_cache.
+            # Does not start normally. Therefore parameters can be skipped.
+
+            # The queue is not for the verifier!
+            # Used to transfer data from http to modbus server.
+
+            # No queue is specified for the verifier.
+            modbus_connector = ModbusConnector(gateway='',
+                                               http_queue=self._verifier_queue,
+                                               verifier_queue=None,
+                                               config=None
+                                               )
+            async with aiohttp.ClientSession(timeout=self._timeout) as session:
+                while not self._is_authorized:
+                    self._is_authorized = await self.login(get_node=self.get_node,
+                                                           post_nodes=self.post_nodes,
+                                                           session=session
+                                                           )
+                is_updated = await self.upd_connector(node=self.get_node,
+                                                      connector=modbus_connector,
+                                                      session=session
+                                                      )
+                _log.critical(f'Modbus devices sent to modbus server: {is_updated}')
+
+                self._verifier_queue.put('END')
+                self.stop()
+
+        except Exception as e:
+            _log.warning(f'Test modbus loop error: {e}',
+                         exc_info=True
+                         )

@@ -1,7 +1,6 @@
 import atexit
 from multiprocessing import SimpleQueue
 from pathlib import Path
-from pprint import pprint
 from time import sleep
 
 from gateway.connectors.bacnet import BACnetConnector

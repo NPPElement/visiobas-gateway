@@ -159,12 +159,12 @@ class Connector(Thread, ABC):
     def address_cache(self) -> dict[int, str]:
         """Match device_id with device_address.
 
-        :return: Example: {200: '10.21.80.12:47808'}
+        :return: Example: {200: '10.21.80.12:47808', ...}
         """
         return self.read_address_cache(address_cache_path=self.address_cache_path
                                        )
 
-    @lru_cache(maxsize=1)
+    @lru_cache(maxsize=2)
     def read_address_cache(self, address_cache_path: Path) -> dict[int, str]:
         """Updates address_cache file.
         Caches the read result. Therefore, the cache must be cleared on update.
