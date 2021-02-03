@@ -1,4 +1,4 @@
-import atexit
+# import atexit
 from abc import ABC, abstractmethod
 from functools import lru_cache
 from ipaddress import IPv4Address
@@ -19,13 +19,13 @@ _log = get_file_logger(logger_name=__name__,
 class Connector(Thread, ABC):
     """Base class for all connectors."""
 
-    def __init__(self, gateway, http_queue: SimpleQueue,
+    def __init__(self, gateway, getting_queue: SimpleQueue,
                  verifier_queue: SimpleQueue, config: dict):
         super().__init__()
         self._config = config
         self._gateway = gateway
 
-        self.http_queue = http_queue
+        self.getting_queue = getting_queue
         self._verifier_queue = verifier_queue
 
         self.setName(name=f'{self}-Thread')
@@ -50,7 +50,7 @@ class Connector(Thread, ABC):
         self._stopped = False
         self.start()
 
-    @atexit.register
+    # @atexit.register
     def close(self) -> None:
         self._stopped = True
         self._connected = False
@@ -61,13 +61,13 @@ class Connector(Thread, ABC):
         # Clear the read_address_cache cache to read the updated `address_cache` file.
         self.read_address_cache.clear_cache()
 
-    def run_update_devices_loop(self) -> None:
+    def run_getting_devices_loop(self) -> None:
         """Receive data about device form HTTP client.
         Then parse it. After that start device thread.
         """
         while not self._stopped:
             try:
-                dev_id, objs_data = self.http_queue.get()
+                dev_id, objs_data = self.getting_queue.get()
 
                 if objs_data:
 

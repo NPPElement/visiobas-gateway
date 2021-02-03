@@ -8,7 +8,7 @@ from gateway.logs import disable_loggers
 
 _base_path = Path(__file__).resolve().parent
 
-# Setting the VisioGateway logging level
+# Set logging
 _log_fmt = ('%(levelname)-8s [%(asctime)s] [%(threadName)s] %(name)s'
             '.%(funcName)s(%(lineno)d): %(message)s'
             )

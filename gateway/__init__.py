@@ -1,4 +1,4 @@
-import atexit
+# import atexit
 from multiprocessing import SimpleQueue
 from pathlib import Path
 from time import sleep
@@ -32,12 +32,12 @@ class VisioGateway:
         # Therefore, they are created once when the gateway is created.
         self.connectors = {
             'bacnet': BACnetConnector(gateway=self,
-                                      http_queue=self._http_bacnet_queue,
+                                      getting_queue=self._http_bacnet_queue,
                                       verifier_queue=self._protocol_verifier_queue,
                                       config=self._config['connector']['bacnet']
                                       ),
             'modbus': ModbusConnector(gateway=self,
-                                      http_queue=self._http_modbus_queue,
+                                      getting_queue=self._http_modbus_queue,
                                       verifier_queue=self._protocol_verifier_queue,
                                       config=self._config['connector']['modbus']
                                       ),
@@ -106,7 +106,7 @@ class VisioGateway:
         else:
             _log.info(f'{self} stopped.')
 
-    @atexit.register
+    # @atexit.register
     def _stop(self):
         """Stop gateway modules in right order."""
         _log.warning('Stopping ...')

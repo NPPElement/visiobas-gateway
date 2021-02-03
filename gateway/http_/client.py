@@ -1,5 +1,5 @@
 import asyncio
-import atexit
+# import atexit
 from multiprocessing import SimpleQueue
 from pathlib import Path
 from threading import Thread
@@ -26,6 +26,10 @@ class VisioHTTPClient(Thread):
     def __init__(self, gateway, verifier_queue: SimpleQueue,
                  config: dict,
                  test_modbus: bool = False):
+        super().__init__()
+
+        self.setName(name=f'{self}-Thread')
+        self.setDaemon(True)
 
         # --------------------------------------------------------------
         # Temp case for modbus testing:  FIXME
@@ -33,11 +37,6 @@ class VisioHTTPClient(Thread):
         if self._test_modbus:
             self.run_main_loop = self.run_test_modbus_loop
         # --------------------------------------------------------------
-
-        super().__init__()
-
-        self.setName(name=f'{self}-Thread')
-        self.setDaemon(True)
 
         self._gateway = gateway
         self._verifier_queue = verifier_queue
@@ -78,7 +77,6 @@ class VisioHTTPClient(Thread):
         while not self._stopped:
             try:
                 asyncio.run(self.run_main_loop())
-                _log.info('Stop main loop')
             except Exception as e:
                 _log.error(f'Main loop error: {e}',
                            exc_info=True
@@ -97,12 +95,6 @@ class VisioHTTPClient(Thread):
                                      post_nodes=self.post_nodes,
                                      session=session
                                      )
-            # _log.info('LOGOUT!!!')
-            # while self._is_authorized:
-            #     self._is_authorized = not await self.logout(
-            #         nodes=[self.get_node, *self.post_nodes],
-            #         session=session
-            #     )
 
     async def run_post_loop(self, queue: SimpleQueue,
                             post_nodes: Iterable[VisioHTTPNode],
@@ -131,11 +123,6 @@ class VisioHTTPClient(Thread):
                            exc_info=True
                            )
         else:  # received stop signal
-            # while self._is_authorized:
-            #     self._is_authorized = not await self.logout(
-            #         nodes=[self.get_node, *self.post_nodes],
-            #         session=session
-            #     )
             _log.info(f'{self} stopped.')
 
     def __repr__(self) -> str:
@@ -171,7 +158,7 @@ class VisioHTTPClient(Thread):
         :param node:
         :param connector:
         :param session:
-        :return: was update successful
+        :return: is update successful
         """
         try:
             upd_coros = [self.upd_device(node=node,
@@ -187,6 +174,7 @@ class VisioHTTPClient(Thread):
 
         except AttributeError as e:
             _log.warning(f"Connector not updated: cannot read 'address_cache' : {e}")
+            return False
 
         except Exception as e:
             _log.error(f'Update {connector} error: {e}',
@@ -228,7 +216,7 @@ class VisioHTTPClient(Thread):
                          if objs_data
                          }
             # todo: IDEA TO FUTURE: can send objects to connector by small parts
-            connector.http_queue.put((device_id, objs_data))
+            connector.getting_queue.put((device_id, objs_data))
             return True
 
         except Exception as e:
@@ -237,7 +225,7 @@ class VisioHTTPClient(Thread):
                        )
             return False
 
-    @atexit.register
+    # @atexit.register
     async def logout(self, nodes: Iterable[VisioHTTPNode],
                      # session
                      ) -> bool:
@@ -462,20 +450,20 @@ class VisioHTTPClient(Thread):
     #         return rejected_objects_id
 
     async def run_test_modbus_loop(self):
-        """Loop for modbus test."""
+        """Loop for modbus simulation."""
+        # fixme Isn't loop.
+        _log.critical(f'Starting {self} in modbus simulation mode.')
         try:
             from gateway.connectors.modbus import ModbusConnector
-            # Only for address_cache.
             # Does not start normally. Therefore parameters can be skipped.
 
             # The queue is not for the verifier!
             # Used to transfer data from http to modbus server.
-
-            # No queue is specified for the verifier.
+            # No queue for verifier.
             modbus_connector = ModbusConnector(gateway='',
-                                               http_queue=self._verifier_queue,
+                                               getting_queue=self._verifier_queue,
                                                verifier_queue=None,
-                                               config=None
+                                               config={}
                                                )
             async with aiohttp.ClientSession(timeout=self._timeout) as session:
                 while not self._is_authorized:
@@ -487,10 +475,13 @@ class VisioHTTPClient(Thread):
                                                       connector=modbus_connector,
                                                       session=session
                                                       )
-                _log.critical(f'Modbus devices sent to modbus server: {is_updated}')
+                _log.critical(f'Modbus device sent to modbus server: {is_updated}')
 
-                self._verifier_queue.put('END')
-                self.stop()
+                # self._verifier_queue.put('END')
+
+                self._stopped = True
+                _log.info(f'Stopping {self} ...')
+                await self.logout(nodes=[self.get_node, *self.post_nodes])
 
         except Exception as e:
             _log.warning(f'Test modbus loop error: {e}',

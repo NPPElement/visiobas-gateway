@@ -21,11 +21,11 @@ class ModbusConnector(Connector):
     #              'address_cache', 'polling_devices', '_update_intervals'
     #              )
 
-    def __init__(self, gateway, http_queue: SimpleQueue,
+    def __init__(self, gateway, getting_queue: SimpleQueue,
                  verifier_queue: SimpleQueue, config: dict):
 
         super().__init__(gateway=gateway,
-                         http_queue=http_queue,
+                         getting_queue=getting_queue,
                          verifier_queue=verifier_queue,
                          config=config
                          )
@@ -45,7 +45,7 @@ class ModbusConnector(Connector):
             try:
                 # Requesting objects and their types from the server.
                 # Then stop received device (if need) and start updated.
-                self.run_update_devices_loop()
+                self.run_getting_devices_loop()
             except Exception as e:
                 _log.error(f'Device update error: {e}',
                            exc_info=True

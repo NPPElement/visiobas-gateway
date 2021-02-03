@@ -6,3 +6,4 @@ gateway/logs/*.log*
 .DS_Store
 *address_cache
 config/http.yaml
+config/test-modbus-http.yaml
