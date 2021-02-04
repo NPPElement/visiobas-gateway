@@ -8,8 +8,8 @@ from pymodbus.datastore import ModbusSparseDataBlock
 from pymodbus.device import ModbusDeviceIdentification
 from pymodbus.server.async_io import StartTcpServer
 
+from gateway.models.bacnet import ObjType, ObjProperty
 from logs import get_file_logger
-from gateway.models.bacnet import ObjType
 
 _log = get_file_logger(logger_name=__name__,
                        size_bytes=50_000_000
@@ -40,16 +40,16 @@ class ModbusSimulationServer(Thread):
         # fixme: Now gets only one device
         device_address, device_reg_values = self.run_getting_loop()
 
-        address, port = device_address.split(':', maxsplit=1)
+        # address, port = device_address.split(':', maxsplit=1)
 
         sleep(5)
         _log.debug(f'Received device data: {device_reg_values}')
 
         asyncio.run(
-            self.run_server(address=address,
-                            port=port,
-                            hr_values=device_reg_values
-                            )
+            self.run_server(  # address=address,
+                # port=port,
+                hr_values=device_reg_values
+            )
         )
 
     def run_getting_loop(self) -> dict[int, int]:
@@ -58,7 +58,7 @@ class ModbusSimulationServer(Thread):
         while not self._stopped:
             try:
                 data = self._getting_queue.get()
-                _log.debug(f'Received from queue: {len(data)}')
+                # _log.debug(f'Received from queue: {data}')
 
                 if isinstance(data, tuple):
                     dev_id, objs_data = data
@@ -79,25 +79,36 @@ class ModbusSimulationServer(Thread):
     @staticmethod
     def parse_registers_values(objs_data: dict[ObjType, list[dict]]
                                ) -> dict[int, int or float]:
+        from json import loads
 
-        # reg_values = {}
-        #
-        # for obj_type, obj_data in objs_data.items():
-        #     for obj in obj_data:
-        #         try:
-        #             pv = obj[str(ObjProperty.presentValue.id)]
-        #             address = obj[str(ObjProperty.propertyList.id)]['modbus']['address']
-        #             reg_values[address] = pv
-        #         except Exception as e:
-        #             _log.warning(f'Failed extraction for {obj_type} '
-        #                          f'{obj[str(ObjProperty.objectIdentifier.id)]}: {e}'
-        #                          )
-        # return reg_values
-        return {i: i for i in range(666)}
+        objs_data.pop(ObjType.DEVICE)
+
+        reg_values = {}
+
+        for obj_type, obj_data in objs_data.items():
+            for obj in obj_data:
+                try:
+                    pv = obj[str(ObjProperty.presentValue.id)]
+                    if pv == 'acive':
+                        pv = 1
+                    elif pv == 'inactive':
+                        pv = 0
+
+                    modbus_props = loads(obj[str(ObjProperty.propertyList.id)])['modbus']
+                    address = modbus_props['address']
+                    reg_values[address] = pv
+
+                except Exception as e:
+                    _log.warning(f'Failed extraction for {obj_type} '
+                                 f'{obj[str(ObjProperty.objectIdentifier.id)]}: {e}',
+                                 # exc_info=True
+                                 )
+        return reg_values
+        # return {i: i for i in range(666)}
 
     @staticmethod
-    async def run_server(address: str, port: int,
-                         hr_values: dict[int, int]) -> None:
+    async def run_server(  # address: str, port: int,
+            hr_values: dict[int, int]) -> None:
         """Simulation loop."""
 
         hr_block = ModbusSparseDataBlock(hr_values)
@@ -114,7 +125,8 @@ class ModbusSimulationServer(Thread):
         identity.MajorMinorRevision = '0.0.1'
 
         _log.info('Simulation server starting ...')
-        await StartTcpServer(context, identity=identity, address=(address, port),
+        await StartTcpServer(context, identity=identity, address=('0.0.0.0', 5020),
+                             # address, port),
                              allow_reuse_address=True,
                              defer_start=False
                              )

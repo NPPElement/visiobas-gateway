@@ -1,0 +1,49 @@
+version: "3.3"
+
+services:
+  vb_modbus_simulation:
+    build:
+      context: .
+      dockerfile: .../Dockerfile
+    image: visiobas-modbus-simulation:0.0.1
+    #logging:
+      #driver: none
+    #      driver: "json-file"
+    #      options:
+    #        max-file: 3
+    #        max-size: 50m
+    restart: always
+    user: root
+    environment:
+      - TZ=Europe/Moscow
+      - PYTHONPATH=/
+
+      # Logging
+      - LOG_LEVEL=DEBUG
+      - FILE_LOG_LEVEL=DEBUG
+    volumes:
+      #- /opt/visiobas-gateway:/visiobas-gateway
+      - /home/user/visiobas-gateway:/visiobas-gateway
+    command: python test/modbus/run_simulation.py
+
+    ports:
+      - 502:502
+      - 1883:1883
+      - 8080:8080
+      - 8883:8883
+      - 47808:47808
+      - 47809:47809
+      - 47810:47810
+      - 47811:47811
+      - 47812:47812
+      - 47813:47813
+      - 47814:47814
+      - 47815:47815
+      - 47816:47816
+      - 47817:47817
+      - 47818:47818
+      - 47819:47819
+      - 47820:47820
+      - 47821:47821
+      - 47822:47822
+      - 47823:47823

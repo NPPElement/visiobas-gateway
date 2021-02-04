@@ -81,7 +81,7 @@ class Connector(Thread, ABC):
                                           )
                 else:
                     _log.warning('No objects from HTTP.')
-                    # todo: request obj faster?
+                    # should we request obj faster?
             except Exception as e:
                 _log.error(f'Update device error: {e}',
                            exc_info=True
@@ -214,5 +214,5 @@ class Connector(Thread, ABC):
             _log.critical(f'Read address_cache error: {e} '
                           # f'Closing {self}'
                           )
-            # self.close()  # fixme?
+            # self.close()  # fixme
             # raise e

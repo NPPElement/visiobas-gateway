@@ -41,7 +41,7 @@ class VisioGateway:
                                       verifier_queue=self._protocol_verifier_queue,
                                       config=self._config['connector']['modbus']
                                       ),
-            # 'xml': None todo
+            # 'xml': None
             # 'modbus_rtu': None,
             # 'knx_ip': None,
             # 'mqtt': None
