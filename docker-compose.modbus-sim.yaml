@@ -4,7 +4,7 @@ services:
   vb_modbus_simulation:
     build:
       context: .
-      dockerfile: .../Dockerfile
+      dockerfile: Dockerfile
     image: visiobas-modbus-simulation:0.0.1
     #logging:
       #driver: none
@@ -24,7 +24,7 @@ services:
     volumes:
       #- /opt/visiobas-gateway:/visiobas-gateway
       - /home/user/visiobas-gateway:/visiobas-gateway
-    command: python test/modbus/run_simulation.py
+    command: python run_simulation.py
 
     ports:
       - 502:502

@@ -20,8 +20,7 @@ logging.basicConfig(format=_log_fmt,
                     stream=sys.stdout,
                     )
 
-_base_path = Path(__file__).resolve().parent.parent.parent
-
+_base_path = Path(__file__).resolve().parent
 
 # TODO: Please ensure that address_cache have only one device record!
 if __name__ == '__main__':
