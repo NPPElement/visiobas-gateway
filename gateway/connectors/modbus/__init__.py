@@ -4,7 +4,7 @@ from pathlib import Path
 
 from gateway.connectors import Connector
 from gateway.connectors.modbus.device import ModbusDevice
-from gateway.logs import get_file_logger
+from logs import get_file_logger
 from gateway.models.bacnet import ObjType, ObjProperty
 from gateway.models.modbus import ModbusObj, VisioModbusProperties
 

@@ -13,7 +13,7 @@ from pymodbus.client.asynchronous.tcp import AsyncModbusTCPClient
 
 from gateway.connectors.bacnet import ObjProperty
 from gateway.connectors.modbus import ModbusObj
-from gateway.logs import get_file_logger
+from logs import get_file_logger
 
 
 class ModbusDevice(Thread):

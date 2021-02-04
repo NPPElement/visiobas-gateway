@@ -7,7 +7,7 @@ from BAC0.core.io.IOExceptions import InitializationError, NetworkInterfaceExcep
 
 from gateway.connectors import Connector
 from gateway.connectors.bacnet.device import BACnetDevice
-from gateway.logs import get_file_logger
+from logs import get_file_logger
 from gateway.models.bacnet import ObjType, BACnetObj, ObjProperty
 
 _base_path = Path(__file__).resolve().parent.parent.parent

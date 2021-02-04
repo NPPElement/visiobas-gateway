@@ -11,7 +11,7 @@ import aiohttp
 from gateway.connectors import Connector
 from gateway.connectors.bacnet import ObjType
 from gateway.http_ import VisioHTTPNode, VisioHTTPConfig
-from gateway.logs import get_file_logger
+from logs import get_file_logger
 
 _log = get_file_logger(logger_name=__name__,
                        size_bytes=50_000_000

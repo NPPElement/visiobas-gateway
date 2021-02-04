@@ -1,6 +1,6 @@
 from hashlib import md5
 
-from gateway.logs import get_file_logger
+from logs import get_file_logger
 
 _log = get_file_logger(logger_name=__name__,
                        size_bytes=50_000_000

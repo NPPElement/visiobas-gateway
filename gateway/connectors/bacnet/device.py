@@ -9,7 +9,7 @@ from BAC0.core.io.IOExceptions import (ReadPropertyException,
                                        ReadPropertyMultipleException
                                        )
 
-from gateway.logs import get_file_logger
+from logs import get_file_logger
 from gateway.models.bacnet import BACnetObj, ObjType, ObjProperty
 from gateway.utils import get_fault_obj_properties
 
