@@ -1,0 +1,4 @@
+host: host.com
+port: 1883
+username: username
+password: password
