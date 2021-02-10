@@ -4,8 +4,8 @@ gateway:
   update_period: 3600
 
 verifier:
-  http_enable: true
-  mqtt_enable: false
+  http_enable: false
+  mqtt_enable: true
 
 connector:
   bacnet:

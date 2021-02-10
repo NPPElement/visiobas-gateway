@@ -14,7 +14,7 @@ class TestVerify(unittest.TestCase):
             "mqtt_enable": False
         }
         self.verifier = BACnetVerifier(protocols_queue=None,
-                                       http_queue=None,
+                                       send_queue=None,
                                        config=config
                                        )
 

@@ -516,3 +516,6 @@ if __name__ == '__main__':
     sf1 = StatusFlags()
     sf2 = StatusFlags()
     print(sf1 is sf2)
+
+    bac_obj = BACnetObj(type=ObjType.DEVICE, id=13, name='rec')
+    print(bac_obj)

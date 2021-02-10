@@ -12,23 +12,28 @@ _log = get_file_logger(logger_name=__name__,
 
 class BACnetVerifier(Process):
     def __init__(self, protocols_queue: SimpleQueue,
-                 http_queue: SimpleQueue,
+                 send_queue: SimpleQueue,
                  config: dict):
         super().__init__(daemon=True)
-
         self._config = config
-
-        self._protocols_queue = protocols_queue
-        self._http_queue = http_queue
-
-        self._active = True
-
         self._mqtt_enable = config.get('mqtt_enable', False)
         self._http_enable = config.get('http_enable', True)
 
-        # Dict, where key - device_id, and value - list of collected verified strings
+        self._protocols_queue = protocols_queue
+
+        self._active = True
+
         if self._http_enable:
+            # Dict, where key - device_id,
+            # value - list of collected verified strings
             self._http_storage: dict[int, list[str]] = {}
+            self._http_queue = send_queue
+
+        elif self._mqtt_enable:
+            self._mqtt_queue = send_queue
+
+        else:
+            raise NotImplementedError('Select sending via HTTP ot MQTT')
 
     def __repr__(self) -> str:
         return self.__class__.__name__
@@ -255,8 +260,8 @@ class BACnetVerifier(Process):
         if self._http_enable:
             _log.debug('Collecting verified str to http storage')
             self.__http_collect_str(device_id=device_id, verified_str=verified_str)
-        if self._mqtt_enable:
-            self.__mqtt_send_to_broker(obj_name=obj_name, verified_str=verified_str)
+        elif self._mqtt_enable:
+            self._send_via_mqtt(obj_name=obj_name, verified_str=verified_str)
 
     def __http_collect_str(self, device_id: int, verified_str: str) -> None:
         """ Collect verified strings into into storage.
@@ -276,9 +281,7 @@ class BACnetVerifier(Process):
         except Exception as e:
             _log.error(f'HTTP Sending Error: {e}', exc_info=True)
 
-    def __mqtt_send_to_broker(self, obj_name: str, verified_str: str) -> None:
-        """ Send verified strings to MQTT broker
-        """
+    def _send_via_mqtt(self, obj_name: str, verified_str: str) -> None:
+        """Send verified string to MQTT broker via queue."""
         topic = obj_name.replace(':', '/').replace('.', '/')
-        # ...
-        raise NotImplementedError
+        self._mqtt_queue.put((topic, verified_str))

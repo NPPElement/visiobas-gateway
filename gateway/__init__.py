@@ -6,8 +6,9 @@ from time import sleep
 from gateway.connectors.bacnet import BACnetConnector
 from gateway.connectors.modbus import ModbusConnector
 from gateway.http_.client import VisioHTTPClient
-from logs import get_file_logger
+from gateway.mqtt import VisioMQTTClient
 from gateway.verifier import BACnetVerifier
+from logs import get_file_logger
 
 _base_path = Path(__file__).resolve().parent.parent
 
@@ -22,7 +23,7 @@ class VisioGateway:
         self._stopped = False
 
         self._protocol_verifier_queue = SimpleQueue()
-        self._verifier_http_queue = SimpleQueue()
+        self._verifier_client_queue = SimpleQueue()
 
         self._http_bacnet_queue = SimpleQueue()
         self._http_modbus_queue = SimpleQueue()
@@ -53,10 +54,17 @@ class VisioGateway:
         # HTTP client updatable. Re-created inside the main loop
         self.http_client = None
 
+        self.mqtt_client = VisioMQTTClient.create_from_yaml(
+            gateway=self,
+            getting_queue=self._verifier_client_queue,
+            yaml_path=_base_path / 'config/mqtt.yaml'
+        )
+        self.mqtt_client.start()
+
         # The verifier does not need to be updated, so
         # it runs once when the gateway starts.
         self.verifier = BACnetVerifier(protocols_queue=self._protocol_verifier_queue,
-                                       http_queue=self._verifier_http_queue,
+                                       send_queue=self._verifier_client_queue,
                                        config=self._config['verifier']
                                        )
         self.verifier.start()
@@ -87,7 +95,7 @@ class VisioGateway:
             try:
                 self.http_client = VisioHTTPClient.create_from_yaml(
                     gateway=self,
-                    verifier_queue=self._verifier_http_queue,
+                    getting_queue=self._verifier_client_queue,
                     yaml_path=_base_path / 'config/http.yaml'
                 )
                 self.http_client.start()
@@ -95,7 +103,6 @@ class VisioGateway:
                 update_period = self._config['gateway'].get('update_period', 60 * 60)
                 _log.info(f'{self} sleep: {update_period} sec ...')
                 sleep(update_period)
-
                 self.http_client.stop()
 
             except (KeyboardInterrupt, SystemExit, Exception) as e:

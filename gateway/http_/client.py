@@ -23,13 +23,16 @@ class VisioHTTPClient(Thread):
 
     _timeout = aiohttp.ClientTimeout(total=60)
 
-    def __init__(self, gateway, verifier_queue: SimpleQueue,
+    def __init__(self, gateway, getting_queue: SimpleQueue,
                  config: dict,
                  test_modbus: bool = False):
         super().__init__()
-
         self.setName(name=f'{self}-Thread')
         self.setDaemon(True)
+
+        self._gateway = gateway
+        self._getting_queue = getting_queue
+        self._config = config
 
         # --------------------------------------------------------------
         # Temp case for modbus testing:  FIXME
@@ -38,10 +41,16 @@ class VisioHTTPClient(Thread):
             self.run_main_loop = self.run_modbus_simulation_loop
         # --------------------------------------------------------------
 
-        self._gateway = gateway
-        self._verifier_queue = verifier_queue
-
-        self._config = config
+        # Set send loop
+        if self._config['send_by'].get('http', False):
+            self.run_send_loop = self.run_http_post_loop
+        elif self._config['send_by'].get('websocket', False):
+            self.run_send_loop = self.run_ws_send_loop
+        else:
+            raise ValueError("Please choose the method of sending in "
+                             "file 'config/http.yaml'. "
+                             "Implemented sending via http or websocket."
+                             )
 
         self.get_node = VisioHTTPNode.create_from_dict(cfg=self._config['get_node'])
 
@@ -55,7 +64,7 @@ class VisioHTTPClient(Thread):
         self._stopped = False
 
     @classmethod
-    def create_from_yaml(cls, gateway, verifier_queue: SimpleQueue,
+    def create_from_yaml(cls, gateway, getting_queue: SimpleQueue,
                          yaml_path: Path, test_modbus: bool = False):
         """Create HTTP client with configuration read from YAML file."""
         import yaml
@@ -65,7 +74,7 @@ class VisioHTTPClient(Thread):
             _log.info(f'Creating {cls.__name__} from {yaml_path} ...')
 
         return cls(gateway=gateway,
-                   verifier_queue=verifier_queue,
+                   getting_queue=getting_queue,
                    config=http_cfg,
                    test_modbus=test_modbus
                    )
@@ -90,21 +99,25 @@ class VisioHTTPClient(Thread):
             # Authorize to nodes. Request data then give it to connectors.
             await self.update(session=session)
 
-            # Receive data from verifier, then send it via HTTP
-            await self.run_post_loop(queue=self._verifier_queue,
-                                     post_nodes=self.post_nodes,
-                                     session=session
-                                     )
+            await self.logout(nodes=[self.get_node, *self.post_nodes])
+            while not self._stopped:
+                sleep(30)
 
-    async def run_post_loop(self, queue: SimpleQueue,
-                            post_nodes: Iterable[VisioHTTPNode],
-                            session) -> None:
+            # Receive data from verifier, then send it via HTTP or websocket
+            # await self.run_http_post_loop(queue=self._getting_queue,
+            #                               post_nodes=self.post_nodes,
+            #                               session=session
+            #                               )
+
+    async def run_http_post_loop(self, queue: SimpleQueue,
+                                 post_nodes: Iterable[VisioHTTPNode],
+                                 session) -> None:
         """Listen queue from verifier.
         When receive data from verifier - send it to nodes via HTTP.
 
         Designed as an endless loop. Can be stopped from gateway thread.
         """
-        _log.info('Sending loop started')
+        _log.info('Sending via HTTP loop started')
         # Loop that receive data from verifier then send it to nodes via HTTP.
         while not self._stopped:
             try:
@@ -112,14 +125,35 @@ class VisioHTTPClient(Thread):
                 _log.debug('Received data from BACnetVerifier: '
                            f'Device[{device_id}]'
                            )
-                # todo: change to fire and forget
+                # todo: change to fire and forget?
                 _ = await self.post_device(nodes=post_nodes,
                                            device_id=device_id,
                                            data=device_str,
                                            session=session
                                            )
             except Exception as e:
-                _log.error(f"Receive or post device error: {e}",
+                _log.error(f"Receive or post error: {e}",
+                           exc_info=True
+                           )
+        else:  # received stop signal
+            _log.info(f'{self} stopped.')
+
+    async def run_ws_send_loop(self, queue: SimpleQueue,
+                               post_nodes: Iterable[VisioHTTPNode],
+                               session) -> None:
+        """Listen queue from verifier.
+        When receive data from verifier - send it to nodes via websocket.
+
+        Designed as an endless loop. Can be stopped from gateway thread.
+        """
+        _log.info('Sending via websocket loop started')
+        # Loop that receive data from verifier then send it to nodes via websocket.
+        while not self._stopped:
+            try:
+                raise NotImplementedError  # todo
+
+            except Exception as e:
+                _log.error(f'Receive or send device error: {e}',
                            exc_info=True
                            )
         else:  # received stop signal
@@ -386,7 +420,7 @@ class VisioHTTPClient(Thread):
             return False
 
     async def _rq(self, method: str, url: str, session, **kwargs) -> list or dict:
-        """Perform HTTP request and check response
+        """Perform HTTP request and check response.
         :return: extracted data
         """
         # todo: need re-raise?
@@ -461,7 +495,7 @@ class VisioHTTPClient(Thread):
             # Used to transfer data from http to modbus server.
             # No queue for verifier.
             modbus_connector = ModbusConnector(gateway='',
-                                               getting_queue=self._verifier_queue,
+                                               getting_queue=self._getting_queue,
                                                verifier_queue=None,
                                                config={}
                                                )
@@ -481,7 +515,7 @@ class VisioHTTPClient(Thread):
 
                 # fixme: expected only one device in address_cache
                 device_address = list(modbus_connector.address_cache.values()).pop()
-                self._verifier_queue.put(device_address)
+                self._getting_queue.put(device_address)
 
                 self._stopped = True
                 _log.info(f'Stopping {self} ...')

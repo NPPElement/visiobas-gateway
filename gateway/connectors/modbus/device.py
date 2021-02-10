@@ -214,7 +214,7 @@ class ModbusDevice(Thread):
                                                quantity=obj.quantity,
                                                properties=obj.properties
                                                )
-                converted_properties = self.__convert_to_bacnet_properties(
+                converted_properties = self._add_bacnet_properties(
                     device_id=self.id,
                     obj=obj,
                     value=value
@@ -227,8 +227,8 @@ class ModbusDevice(Thread):
         self._put_device_end_to_verifier()
 
     @staticmethod
-    def __convert_to_bacnet_properties(device_id: int,
-                                       obj: ModbusObj, value) -> dict[ObjProperty, ...]:
+    def _add_bacnet_properties(device_id: int,
+                               obj: ModbusObj, value) -> dict[ObjProperty, ...]:
         """Represent modbus register value as a bacnet object."""
         return {ObjProperty.deviceId: device_id,
                 ObjProperty.objectName: obj.name,

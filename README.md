@@ -2,6 +2,10 @@
 
 It is an application for polling devices using various protocols and transmitting data to the visiobas system.
 
+
+#### Visiobas-Modbus-Simulation
+To start simulation of modbus devices use `docker-compose.modbus-sim.yaml`
+
 ## Installation
 
 #### For install developing branch:
