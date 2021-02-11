@@ -21,7 +21,7 @@ _log = get_file_logger(logger_name=__name__,
 class VisioHTTPClient(Thread):
     """Control interactions via HTTP."""
 
-    _timeout = aiohttp.ClientTimeout(total=60)
+    # _timeout = aiohttp.ClientTimeout(total=60) in __init__
 
     def __init__(self, gateway, getting_queue: SimpleQueue,
                  config: dict,
@@ -34,6 +34,8 @@ class VisioHTTPClient(Thread):
         self._getting_queue = getting_queue
         self._config = config
 
+        self._timeout = aiohttp.ClientTimeout(total=self._config.get('timeout', 60))
+
         # --------------------------------------------------------------
         # Temp case for modbus testing:  FIXME
         self._test_modbus = test_modbus
@@ -42,15 +44,15 @@ class VisioHTTPClient(Thread):
         # --------------------------------------------------------------
 
         # Set send loop
-        if self._config['send_by'].get('http', False):
-            self.run_send_loop = self.run_http_post_loop
-        elif self._config['send_by'].get('websocket', False):
-            self.run_send_loop = self.run_ws_send_loop
-        else:
-            raise ValueError("Please choose the method of sending in "
-                             "file 'config/http.yaml'. "
-                             "Implemented sending via http or websocket."
-                             )
+        # if self._config['send_by'].get('http', False):
+        self.run_send_loop = self.run_http_post_loop
+        # elif self._config['send_by'].get('websocket', False):
+        #     self.run_send_loop = self.run_ws_send_loop
+        # else:
+        #     raise ValueError("Please choose the method of sending in "
+        #                      "file 'config/http.yaml'. "
+        #                      "Implemented sending via http or websocket."
+        #                      )
 
         self.get_node = VisioHTTPNode.create_from_dict(cfg=self._config['get_node'])
 
@@ -59,9 +61,12 @@ class VisioHTTPClient(Thread):
             self._config['post']
         ]
 
-        # self.session = None  # todo: KEEP one session
+        # self.session = None  # todo: keep one session?
         self._is_authorized = False
         self._stopped = False
+
+    def __repr__(self) -> str:
+        return self.__class__.__name__
 
     @classmethod
     def create_from_yaml(cls, gateway, getting_queue: SimpleQueue,
@@ -99,15 +104,11 @@ class VisioHTTPClient(Thread):
             # Authorize to nodes. Request data then give it to connectors.
             await self.update(session=session)
 
-            await self.logout(nodes=[self.get_node, *self.post_nodes])
-            while not self._stopped:
-                sleep(30)
-
             # Receive data from verifier, then send it via HTTP or websocket
-            # await self.run_http_post_loop(queue=self._getting_queue,
-            #                               post_nodes=self.post_nodes,
-            #                               session=session
-            #                               )
+            await self.run_send_loop(queue=self._getting_queue,
+                                     post_nodes=self.post_nodes,
+                                     session=session
+                                     )
 
     async def run_http_post_loop(self, queue: SimpleQueue,
                                  post_nodes: Iterable[VisioHTTPNode],
@@ -158,9 +159,6 @@ class VisioHTTPClient(Thread):
                            )
         else:  # received stop signal
             _log.info(f'{self} stopped.')
-
-    def __repr__(self) -> str:
-        return self.__class__.__name__
 
     def stop(self) -> None:
         self._stopped = True

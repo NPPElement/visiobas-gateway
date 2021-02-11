@@ -23,7 +23,8 @@ class VisioGateway:
         self._stopped = False
 
         self._protocol_verifier_queue = SimpleQueue()
-        self._verifier_client_queue = SimpleQueue()
+        self._verifier_http_queue = SimpleQueue()
+        self._verifier_mqtt_queue = SimpleQueue()
 
         self._http_bacnet_queue = SimpleQueue()
         self._http_modbus_queue = SimpleQueue()
@@ -56,7 +57,7 @@ class VisioGateway:
 
         self.mqtt_client = VisioMQTTClient.create_from_yaml(
             gateway=self,
-            getting_queue=self._verifier_client_queue,
+            getting_queue=self._verifier_mqtt_queue,
             yaml_path=_base_path / 'config/mqtt.yaml'
         )
         self.mqtt_client.start()
@@ -64,7 +65,8 @@ class VisioGateway:
         # The verifier does not need to be updated, so
         # it runs once when the gateway starts.
         self.verifier = BACnetVerifier(protocols_queue=self._protocol_verifier_queue,
-                                       send_queue=self._verifier_client_queue,
+                                       http_queue=self._verifier_http_queue,
+                                       mqtt_queue=self._verifier_mqtt_queue,
                                        config=self._config['verifier']
                                        )
         self.verifier.start()
@@ -95,7 +97,7 @@ class VisioGateway:
             try:
                 self.http_client = VisioHTTPClient.create_from_yaml(
                     gateway=self,
-                    getting_queue=self._verifier_client_queue,
+                    getting_queue=self._verifier_http_queue,
                     yaml_path=_base_path / 'config/http.yaml'
                 )
                 self.http_client.start()

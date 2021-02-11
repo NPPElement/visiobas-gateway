@@ -1,9 +1,10 @@
 from multiprocessing import Process, SimpleQueue
+from typing import Any
 
 from bacpypes.basetypes import PriorityArray
 
-from logs import get_file_logger
 from gateway.models.bacnet import ObjProperty, StatusFlags
+from logs import get_file_logger
 
 _log = get_file_logger(logger_name=__name__,
                        size_bytes=50_000_000
@@ -12,28 +13,31 @@ _log = get_file_logger(logger_name=__name__,
 
 class BACnetVerifier(Process):
     def __init__(self, protocols_queue: SimpleQueue,
-                 send_queue: SimpleQueue,
+                 http_queue: SimpleQueue,
+                 mqtt_queue: SimpleQueue,
                  config: dict):
         super().__init__(daemon=True)
         self._config = config
-        self._mqtt_enable = config.get('mqtt_enable', False)
-        self._http_enable = config.get('http_enable', True)
+        # self._mqtt_enable = config.get('mqtt_enable', False)
+        # self._http_enable = config.get('http_enable', True)
 
         self._protocols_queue = protocols_queue
+        self._http_queue = http_queue
+        self._mqtt_queue = mqtt_queue
 
         self._active = True
 
-        if self._http_enable:
-            # Dict, where key - device_id,
-            # value - list of collected verified strings
-            self._http_storage: dict[int, list[str]] = {}
-            self._http_queue = send_queue
-
-        elif self._mqtt_enable:
-            self._mqtt_queue = send_queue
-
-        else:
-            raise NotImplementedError('Select sending via HTTP ot MQTT')
+        # if self._http_enable:
+        #     # Dict, where key - device_id,
+        #     # value - list of collected verified strings
+        self._http_storage: dict[int, list[str]] = {}
+        #     self._http_queue = send_queue
+        #
+        # elif self._mqtt_enable:
+        #     self._mqtt_queue = send_queue
+        #
+        # else:
+        #     raise NotImplementedError('Select sending via HTTP ot MQTT')
 
     def __repr__(self) -> str:
         return self.__class__.__name__
@@ -65,19 +69,19 @@ class BACnetVerifier(Process):
                                f'received properties: {obj_properties}')
 
                     # verifying all properties of the object
-                    verified_object_properties = self.verify(obj_properties=obj_properties)
-                    _log.debug(f'Verified properties: {verified_object_properties}')
+                    verified_obj_properties = self.verify(obj_properties=obj_properties)
+                    _log.debug(f'Verified properties: {verified_obj_properties}')
 
                     # representing all properties of the object as string
-                    str_verified_obj_properties = self.convert_properties_to_str(
-                        verified_object_properties)
-                    _log.debug(f'Verified properties as str: {str_verified_obj_properties}')
+                    # todo fixme
+                    # str_verified_obj_properties = self._to_str(verified_obj_properties)
+                    # _log.debug(f'Verified properties as str: {str_verified_obj_properties}')
 
                     # Sending verified object string into clients
-                    self.send_verified_str(
-                        device_id=device_id,
-                        obj_name=obj_name,
-                        verified_str=str_verified_obj_properties)
+                    self.send_properties(device_id=device_id,
+                                         obj_name=obj_name,
+                                         properties=verified_obj_properties
+                                         )
                     _log.debug('==================================================')
                 else:
                     raise TypeError(f'Object of unexpected type provided: '
@@ -148,11 +152,10 @@ class BACnetVerifier(Process):
         elif pv == float('inf'):
             sf = properties.get(ObjProperty.statusFlags, StatusFlags())
             sf.set(fault=True)
-            properties.update({
-                ObjProperty.presentValue: 'null',
-                ObjProperty.statusFlags: sf,
-                ObjProperty.reliability: 2
-            })
+            properties.update({ObjProperty.presentValue: 'null',
+                               ObjProperty.statusFlags: sf,
+                               ObjProperty.reliability: 2
+                               })
         elif pv == float('-inf'):
             sf = properties.get(ObjProperty.statusFlags, StatusFlags())
             sf.set(fault=True)
@@ -180,8 +183,7 @@ class BACnetVerifier(Process):
 
     @staticmethod
     def verify_pa(pa: PriorityArray, properties: dict) -> None:
-        """ Extract priorityArray into a tuple
-        """
+        """Convert priorityArray to tuple."""
         pa_size = pa.value[0]
         priorities = []
 
@@ -206,71 +208,66 @@ class BACnetVerifier(Process):
 
         properties[ObjProperty.priorityArray] = tuple(priorities)
 
-    # @staticmethod
-    def convert_properties_to_str(self, verified_objects_properties: dict) -> str:
+    @staticmethod
+    def _to_str_http(properties: dict[ObjProperty, Any]) -> str:
+        """Convert properties with statusFlags != 0 to str, for send via HTTP."""
+
+        def convert_pa_to_str(pa: tuple) -> str:
+            """Convert priority array tuple to str like ,,,,,,,,40.5,,,,,,49.2,
+            """
+            return ','.join([str(priority) for priority in pa])
+
         try:
-            general_properties_str = ' '.join((
-                str(verified_objects_properties[ObjProperty.objectIdentifier]),
-                str(verified_objects_properties[ObjProperty.objectType].id),
-                str(verified_objects_properties[ObjProperty.presentValue])
-            ))
+            general_properties_str = '{0} {1} {2}'.format(
+                properties[ObjProperty.objectIdentifier],
+                properties[ObjProperty.objectType].id,
+                properties[ObjProperty.presentValue]
+            )
 
-            if ObjProperty.priorityArray in verified_objects_properties:
-                pa_str = self.convert_pa_to_str(
-                    verified_objects_properties[ObjProperty.priorityArray])
-                pa_sf_str = ' '.join((
-                    pa_str,
-                    str(verified_objects_properties[ObjProperty.statusFlags])
-                ))
-                general_properties_str = ' '.join((general_properties_str, pa_sf_str))
-                return general_properties_str
+            if ObjProperty.priorityArray in properties:
+                pa_str = convert_pa_to_str(properties[ObjProperty.priorityArray])
+                pa_sf_str = '{0} {1}'.format(pa_str, properties[ObjProperty.statusFlags])
+
+                general_properties_str += ' ' + pa_sf_str
+                # return general_properties_str
             else:
-                # statusFlags converts to binary value at __repr__ method
-                sf_str = str(verified_objects_properties[ObjProperty.statusFlags])
-                general_properties_str = ' '.join((general_properties_str, sf_str))
+                general_properties_str += ' {0}'.format(
+                    properties[ObjProperty.statusFlags]
+                )
 
-                if ObjProperty.reliability in verified_objects_properties:
-                    reliability_str = str(
-                        verified_objects_properties[ObjProperty.reliability])
-                    general_properties_str = ' '.join((
-                        general_properties_str,
-                        reliability_str
-                    ))
+            if ObjProperty.reliability in properties:
+                general_properties_str += ' {0}'.format(
+                    properties[ObjProperty.reliability]
+                )
 
-                # if ObjProperty.outOfService in verified_objects_properties:
-                #     ...
-
-                return general_properties_str
+            # if ObjProperty.outOfService in verified_objects_properties:
+            #     ...
+            return general_properties_str
 
         except KeyError:
             raise KeyError('Please provide all required properties. '
-                           f'Properties received: {verified_objects_properties}')
+                           f'Properties received: {properties}')
 
-    @staticmethod
-    def convert_pa_to_str(pa: tuple) -> str:
-        """ Converts priority array tuple to str like ,,,,,,,,40.5,,,,,,49.2,
-        """
-        return ','.join([str(priority) for priority in pa])
+    def send_properties(self, device_id: int,
+                        obj_name: str, properties: dict[ObjProperty, Any]) -> None:
+        """"""
+        if properties[ObjProperty.statusFlags] == 0:
+            self._send_via_mqtt(device_id=device_id,
+                                obj_name=obj_name,
+                                properties=properties
+                                )
+        else:
+            self._collect_str_http(device_id=device_id, properties=properties)
 
-    def send_verified_str(self, device_id: int,
-                          obj_name: str, verified_str: str) -> None:
-        """ If HTTP enable, collect data in http_storage
-            If MQTT enable send data to broker
-        """
-        if self._http_enable:
-            _log.debug('Collecting verified str to http storage')
-            self.__http_collect_str(device_id=device_id, verified_str=verified_str)
-        elif self._mqtt_enable:
-            self._send_via_mqtt(obj_name=obj_name, verified_str=verified_str)
-
-    def __http_collect_str(self, device_id: int, verified_str: str) -> None:
-        """ Collect verified strings into into storage.
-            Sends collected strings from storage, when getting device_id from queue
+    def _collect_str_http(self, device_id: int,
+                          properties: dict[ObjProperty, Any]) -> None:
+        """Collect verified strings into storage.
+        Sends collected strings from storage, when getting device_id from queue
         """
         try:
-            self._http_storage[device_id].append(verified_str)
+            self._http_storage[device_id].append(properties)
         except KeyError:
-            self._http_storage[device_id] = [verified_str]
+            self._http_storage[device_id] = [properties]
 
     def __http_send_to_server(self, device_id: int) -> None:
         """ Sends verified data from http_storage to HTTP server
@@ -281,7 +278,24 @@ class BACnetVerifier(Process):
         except Exception as e:
             _log.error(f'HTTP Sending Error: {e}', exc_info=True)
 
-    def _send_via_mqtt(self, obj_name: str, verified_str: str) -> None:
+    def _send_via_mqtt(self, device_id: int, obj_name: str,
+                       properties: dict[ObjProperty, Any]) -> None:
         """Send verified string to MQTT broker via queue."""
         topic = obj_name.replace(':', '/').replace('.', '/')
-        self._mqtt_queue.put((topic, verified_str))
+        payload = self._to_str_mqtt(device_id=device_id,
+                                    properties=properties
+                                    )
+        self._mqtt_queue.put((topic, payload))
+
+    @staticmethod
+    def _to_str_mqtt(device_id: int, properties: dict[ObjProperty, Any]) -> str:
+        """Convert properties with statusFlags == 0 to str, for send via MQTT."""
+        if properties[ObjProperty.statusFlags].as_binary != 0:
+            raise ValueError('Sending via MQTT only objs with statusFlags == 0')
+
+        return '{0} {1} {2} {3} {4}'.format(device_id,
+                                            properties[ObjProperty.objectIdentifier],
+                                            properties[ObjProperty.objectType].id,
+                                            properties[ObjProperty.presentValue],
+                                            str(properties[ObjProperty.statusFlags])
+                                            )

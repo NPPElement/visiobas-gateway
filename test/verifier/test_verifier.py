@@ -3,19 +3,16 @@ import unittest
 from bacpypes.basetypes import PriorityArray, PriorityValue
 from bacpypes.primitivedata import Null
 
-from gateway.connectors.bacnet import ObjType, ObjProperty, StatusFlags
+from gateway.models.bacnet import ObjType, ObjProperty, StatusFlags
 from gateway.verifier import BACnetVerifier
 
 
 class TestVerify(unittest.TestCase):
     def setUp(self) -> None:
-        config = {
-            "http_enable": False,
-            "mqtt_enable": False
-        }
         self.verifier = BACnetVerifier(protocols_queue=None,
-                                       send_queue=None,
-                                       config=config
+                                       http_queue=None,
+                                       mqtt_queue=None,
+                                       config={}
                                        )
 
     def tearDown(self) -> None:

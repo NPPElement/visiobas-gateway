@@ -31,6 +31,9 @@ class VisioMQTTClient(Thread):
         self._username = self._config['username']
         self._password = self._config['password']
 
+        self._qos = self._config.get('qos', 0)
+        self._retain = self._config.get('retain', True)
+
         self._stopped = False
         self._connected = False
 
@@ -45,11 +48,6 @@ class VisioMQTTClient(Thread):
         self._client = mqtt.Client(client_id='', transport='tcp')  # create new instance
         # self._client.enable_logger()  # logger=logger
         self._client.username_pw_set(username=self._username, password=self._password)
-
-        # self.__client.subscribe(topic='Site/TP-1673/Controller1/')
-        # self.__client.publish(topic="Site/TP-1673/Controller1/",
-        #                       payload='OFF',
-        #                       )  # publish
 
         # Set up external MQTT broker callbacks
         self._client.on_connect = self._on_connect_cb
@@ -76,7 +74,7 @@ class VisioMQTTClient(Thread):
                    )
 
     def run(self):
-        """"""
+        """Main loop."""
         while not self._stopped:  # not self._connected and
             if self._connected:
                 self._run_publish_loop(queue=self._getting_queue)
@@ -102,11 +100,12 @@ class VisioMQTTClient(Thread):
         while not self._stopped:
             try:
                 topic, data = queue.get()
-                _log.debug(f'Received: {topic}:{data}')
+                _log.debug(f'Received: {topic}: {data}')
 
                 self.publish(payload=data,
                              topic=topic,
-                             qos=2
+                             qos=self._qos,
+                             retain=self._retain
                              )
             except Exception as e:
                 _log.error(f"Receive-publish error: {e}",
@@ -135,10 +134,11 @@ class VisioMQTTClient(Thread):
         self._connected = False
         self._client.loop_stop()
 
-    def publish(self, payload: str, topic: str, qos: int):
+    def publish(self, payload: str, topic: str, qos: int, retain: bool):
         return self._client.publish(topic=topic,
                                     payload=payload,
-                                    qos=qos
+                                    qos=qos,
+                                    retain=retain
                                     )
 
     def _on_publish_cb(self, client, userdata, mid):

@@ -467,16 +467,23 @@ class StatusFlags:
                              f'Provided: {status_flags} {type(status_flags)}')
 
     def __eq__(self, other):
-        if isinstance(self, StatusFlags) and isinstance(other, StatusFlags):
+        if isinstance(other, StatusFlags):  # isinstance(self, StatusFlags) and
             return self.as_binary == other.as_binary
+        elif isinstance(other, int):  # isinstance(self, StatusFlags) and
+            return self.as_binary == other
+        elif isinstance(other, str):
+            try:
+                return self.as_binary == int(other)
+            except ValueError:
+                return False
         return False
 
-    def __repr__(self):
-        """ Uses to convert into number by binary coding"""
+    def __repr__(self) -> str:
+        """Convert statusFlags to number by binary coding."""
         return str(self.as_binary)
 
     @property
-    def as_binary(self):
+    def as_binary(self) -> int:
         return int(''.join([str(int(self.out_of_service)),
                             str(int(self.overriden)),
                             str(int(self.fault)),
