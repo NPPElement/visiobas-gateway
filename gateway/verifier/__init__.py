@@ -56,7 +56,7 @@ class BACnetVerifier(Process):
                     device_id = protocols_data
                     _log.debug('Received signal to send collected data about '
                                f'Device[{device_id}] to HTTP server')
-                    self.__http_send_to_server(device_id=device_id)
+                    self._send_via_http(device_id=device_id)
 
                 elif protocols_data and isinstance(protocols_data, dict):
                     # Received data about object from the BACnet/Modbus-Connectors
@@ -208,9 +208,63 @@ class BACnetVerifier(Process):
 
         properties[ObjProperty.priorityArray] = tuple(priorities)
 
+    def send_properties(self, device_id: int,
+                        obj_name: str, properties: dict[ObjProperty, Any]) -> None:
+        """"""
+        if properties[ObjProperty.statusFlags] == 0:
+            self._send_via_mqtt(device_id=device_id,
+                                obj_name=obj_name,
+                                properties=properties
+                                )
+        else:
+            self._collect_str_http(device_id=device_id, properties=properties)
+
+    def _collect_str_http(self, device_id: int,
+                          properties: dict[ObjProperty, Any]) -> None:
+        """Collect verified strings into storage.
+        Sends collected strings from storage, when getting device_id from queue.
+        """
+        properties_str = self._to_str_http(properties=properties)
+        try:
+            self._http_storage[device_id].append(properties_str)
+        except KeyError:
+            self._http_storage[device_id] = [properties_str]
+
+    def _send_via_http(self, device_id: int) -> None:
+        """Send verified string from http_storage via HTTP."""
+        try:
+            device_str = ';'.join((*self._http_storage.pop(device_id), ''))
+            self._http_queue.put((device_id, device_str))
+        except Exception as e:
+            _log.error(f'HTTP Sending Error: {e}', exc_info=True)
+
+    def _send_via_mqtt(self, device_id: int, obj_name: str,
+                       properties: dict[ObjProperty, Any]) -> None:
+        """Send verified string via MQTT."""
+        topic = obj_name.replace(':', '/').replace('.', '/')
+        payload = self._to_str_mqtt(device_id=device_id,
+                                    properties=properties
+                                    )
+        self._mqtt_queue.put((topic, payload))
+
+    @staticmethod
+    def _to_str_mqtt(device_id: int, properties: dict[ObjProperty, Any]) -> str:
+        """Convert properties with statusFlags == 0 to str, for send via MQTT."""
+        if properties[ObjProperty.statusFlags].as_binary != 0:
+            raise ValueError('Sending via MQTT only objs with statusFlags == 0')
+
+        return '{0} {1} {2} {3} {4}'.format(device_id,
+                                            properties[ObjProperty.objectIdentifier],
+                                            properties[ObjProperty.objectType].id,
+                                            properties[ObjProperty.presentValue],
+                                            properties[ObjProperty.statusFlags]
+                                            )
+
     @staticmethod
     def _to_str_http(properties: dict[ObjProperty, Any]) -> str:
         """Convert properties with statusFlags != 0 to str, for send via HTTP."""
+        if properties[ObjProperty.statusFlags].as_binary == 0:
+            raise ValueError('Sending via HTTP only objs with statusFlags != 0')
 
         def convert_pa_to_str(pa: tuple) -> str:
             """Convert priority array tuple to str like ,,,,,,,,40.5,,,,,,49.2,
@@ -247,55 +301,3 @@ class BACnetVerifier(Process):
         except KeyError:
             raise KeyError('Please provide all required properties. '
                            f'Properties received: {properties}')
-
-    def send_properties(self, device_id: int,
-                        obj_name: str, properties: dict[ObjProperty, Any]) -> None:
-        """"""
-        if properties[ObjProperty.statusFlags] == 0:
-            self._send_via_mqtt(device_id=device_id,
-                                obj_name=obj_name,
-                                properties=properties
-                                )
-        else:
-            self._collect_str_http(device_id=device_id, properties=properties)
-
-    def _collect_str_http(self, device_id: int,
-                          properties: dict[ObjProperty, Any]) -> None:
-        """Collect verified strings into storage.
-        Sends collected strings from storage, when getting device_id from queue
-        """
-        try:
-            self._http_storage[device_id].append(properties)
-        except KeyError:
-            self._http_storage[device_id] = [properties]
-
-    def __http_send_to_server(self, device_id: int) -> None:
-        """ Sends verified data from http_storage to HTTP server
-        """
-        try:
-            device_str = ';'.join((*self._http_storage.pop(device_id), ''))
-            self._http_queue.put((device_id, device_str))
-        except Exception as e:
-            _log.error(f'HTTP Sending Error: {e}', exc_info=True)
-
-    def _send_via_mqtt(self, device_id: int, obj_name: str,
-                       properties: dict[ObjProperty, Any]) -> None:
-        """Send verified string to MQTT broker via queue."""
-        topic = obj_name.replace(':', '/').replace('.', '/')
-        payload = self._to_str_mqtt(device_id=device_id,
-                                    properties=properties
-                                    )
-        self._mqtt_queue.put((topic, payload))
-
-    @staticmethod
-    def _to_str_mqtt(device_id: int, properties: dict[ObjProperty, Any]) -> str:
-        """Convert properties with statusFlags == 0 to str, for send via MQTT."""
-        if properties[ObjProperty.statusFlags].as_binary != 0:
-            raise ValueError('Sending via MQTT only objs with statusFlags == 0')
-
-        return '{0} {1} {2} {3} {4}'.format(device_id,
-                                            properties[ObjProperty.objectIdentifier],
-                                            properties[ObjProperty.objectType].id,
-                                            properties[ObjProperty.presentValue],
-                                            str(properties[ObjProperty.statusFlags])
-                                            )

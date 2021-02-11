@@ -100,6 +100,22 @@ class TestToStr(unittest.TestCase):
                 res = self.verifier._to_str_http(properties=case)
                 self.assertEqual(res, exp)
 
+    def test_wrongs_sf_mqtt_http(self):
+        dev_id = 0
+        case_mqtt = {ObjProperty.objectIdentifier: 1,
+                     ObjProperty.objectType: ObjType.ANALOG_VALUE,
+                     ObjProperty.presentValue: 3,
+                     ObjProperty.statusFlags: StatusFlags([0, 0, 1, 0])
+                     }
+        case_http = {ObjProperty.objectIdentifier: 2,
+                     ObjProperty.objectType: ObjType.BINARY_INPUT,
+                     ObjProperty.presentValue: 4,
+                     ObjProperty.statusFlags: StatusFlags([0, 0, 0, 0])
+                     }
+
+        self.assertRaises(ValueError, self.verifier._to_str_mqtt, dev_id, case_mqtt)
+        self.assertRaises(ValueError, self.verifier._to_str_http, case_http)
+
 
 if __name__ == '__main__':
     unittest.main()

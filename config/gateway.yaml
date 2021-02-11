@@ -3,7 +3,7 @@
 gateway:
   update_period: 3600
 
-#verifier:
+verifier:
 #  http_enable: false
 #  mqtt_enable: true
 
