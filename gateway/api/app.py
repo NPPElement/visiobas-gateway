@@ -67,4 +67,5 @@ class VisioGatewayApi(Thread):
 
 if __name__ == '__main__':
     api = VisioGatewayApi(gateway=None,
-                          config={'host': 'localhost', 'port': 7070})
+                          config={'host': 'localhost', 'port': 7070}
+                          )

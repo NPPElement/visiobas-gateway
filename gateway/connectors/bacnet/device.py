@@ -191,7 +191,7 @@ class BACnetDevice(Thread):
                 str(obj.id),
                 prop.name
             ])
-            response = self.network.read(request)
+            response = self.network._modbus_read(request)
         # except UnknownPropertyError:
         #     return self.__get_fault_obj_properties(reliability='unknown-property')
         # except UnknownObjectError:
