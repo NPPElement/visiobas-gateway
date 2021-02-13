@@ -7,6 +7,10 @@ verifier:
 #  http_enable: false
 #  mqtt_enable: true
 
+api:
+  host: localhost
+  port: 7070
+
 connector:
   bacnet:
     default_upd_period: 10

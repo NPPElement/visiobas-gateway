@@ -3,6 +3,7 @@ from multiprocessing import SimpleQueue
 from pathlib import Path
 from time import sleep
 
+from gateway.api.app import VisioGatewayApi
 from gateway.connectors.bacnet import BACnetConnector
 from gateway.connectors.modbus import ModbusConnector
 from gateway.http_.client import VisioHTTPClient
@@ -12,9 +13,7 @@ from logs import get_file_logger
 
 _base_path = Path(__file__).resolve().parent.parent
 
-_log = get_file_logger(logger_name=__name__,
-                       size_bytes=50_000_000
-                       )
+_log = get_file_logger(logger_name=__name__)
 
 
 class VisioGateway:
@@ -70,6 +69,9 @@ class VisioGateway:
                                        config=self._config['verifier']
                                        )
         self.verifier.start()
+
+        self.api = VisioGatewayApi(gateway=self,
+                                   config=self._config['api'])
 
         # self.mqtt_client = None # todo
         # self.__notifier = None  # todo

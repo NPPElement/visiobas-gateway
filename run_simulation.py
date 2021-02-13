@@ -6,7 +6,7 @@ from pathlib import Path
 from time import sleep
 
 from gateway.http_.client import VisioHTTPClient
-from test.modbus.server import ModbusSimulationServer
+from tests.modbus.server import ModbusSimulationServer
 
 # Set logging
 _log_fmt = ('%(levelname)-8s [%(asctime)s] [%(threadName)s] %(name)s'

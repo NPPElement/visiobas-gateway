@@ -5,7 +5,7 @@ from time import sleep
 from BAC0 import lite
 from BAC0.core.io.IOExceptions import InitializationError, NetworkInterfaceException
 
-from gateway.connectors import Connector
+from gateway.connectors import BaseConnector
 from gateway.connectors.bacnet.device import BACnetDevice
 from logs import get_file_logger
 from gateway.models.bacnet import ObjType, BACnetObj, ObjProperty
@@ -17,7 +17,7 @@ _log = get_file_logger(logger_name=__name__,
                        )
 
 
-class BACnetConnector(Connector):
+class BACnetConnector(BaseConnector):
     # __slots__ = ('_config', '__interfaces', '_network',
     #              'default_update_period', '_gateway', '_verifier_queue',
     #              '_connected', '_stopped',

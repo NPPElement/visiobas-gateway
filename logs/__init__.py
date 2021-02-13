@@ -7,9 +7,11 @@ _base_path = Path(__file__).resolve().parent.parent
 _log_fmt = ('%(levelname)-8s [%(asctime)s] [%(threadName)s] %(name)s'
             '.%(funcName)s(%(lineno)d): %(message)s'
             )
+_MEGABYTE = 1024 ** 2
+_log_size = 50 * _MEGABYTE
 
 
-def get_file_logger(logger_name: str, size_bytes: int,
+def get_file_logger(logger_name: str, size_bytes: int = _log_size,
                     log_format: str = None) -> Logger:
     log_level = environ.get('FILE_LOG_LEVEL', 'DEBUG')
 

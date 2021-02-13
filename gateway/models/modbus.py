@@ -2,10 +2,15 @@ from typing import NamedTuple
 
 from pymodbus.payload import BinaryPayloadDecoder
 
-from gateway.models.bacnet import ObjType
+from gateway.models.bacnet import ObjType, ObjProperty
 
 
 class VisioModbusProperties(NamedTuple):
+    address: int
+    quantity: int
+    func_read: int
+    func_write: int
+
     scale: int  # TODO: change to 'multiplier' \ change operation in scaled value
 
     # for recalculate (A*X+B)
@@ -21,17 +26,69 @@ class VisioModbusProperties(NamedTuple):
     # bitmask = int todo
     bit: int or None = None  # TODO: change to 'bitmask'
 
+    @classmethod
+    def create_from_json(cls, property_list: str):
+        from json import loads
+
+        modbus_properties = loads(property_list)['modbus']
+
+        address = int(modbus_properties['address'])
+        quantity = int(modbus_properties['quantity'])
+        func_read = int(modbus_properties['functionRead'][-2:])
+        func_write = int(modbus_properties.get('functionWrite', 6)[-2:])
+
+        scale = int(modbus_properties.get('scale', 1))
+        data_type = modbus_properties['dataType']
+        data_length = modbus_properties.get('dataLength')
+        bit = modbus_properties.get('bit')
+
+        # byte_order = '<' if quantity == 1 else '>'
+        # byte_order = None  # don't use now # todo
+
+        # trying to fill the data if it is not enough FIXME
+        if data_type == 'BOOL' and bit is None and data_length is None:
+            data_length = 16
+        elif data_type == 'BOOL' and isinstance(bit, int) and data_length is None:
+            data_length = 1
+        elif data_type != 'BOOL' and data_length is None and isinstance(quantity, int):
+            data_length = quantity * 16
+
+        return cls(address=address,
+                   quantity=quantity,
+                   func_read=func_read,
+                   func_write=func_write,
+                   scale=scale,
+                   data_type=data_type,
+                   data_length=data_length,
+                   bit=bit
+                   )
+
 
 class ModbusObj(NamedTuple):
     type: ObjType
     id: int
     name: str
-
-    address: int
-    quantity: int
-    func_read: int
+    # upd_period: int
 
     properties: VisioModbusProperties
+
+    @classmethod
+    def create_from_dict(cls, obj_type: ObjType, obj_props: dict):
+        # FIXME: make convertation obj type from props (int)
+
+        obj_id = obj_props[str(ObjProperty.objectIdentifier.id)]
+        obj_name = obj_props[str(ObjProperty.objectName.id)]
+
+        prop_list = obj_props[str(ObjProperty.propertyList.id)]
+
+        vb_props = VisioModbusProperties.create_from_json(
+            property_list=prop_list)
+
+        return cls(type=obj_type,
+                   id=obj_id,
+                   name=obj_name,
+                   properties=vb_props
+                   )
 
 
 def cast_to_bit(register: list[int], bit: int) -> int:
@@ -74,16 +131,32 @@ def cast_to_bit(register: list[int], bit: int) -> int:
 
 
 if __name__ == '__main__':
-    o = ModbusObj(
-        type=ObjType.BINARY_OUTPUT,
-        id=13,
-        name='obj_name',
+    obj1 = ModbusObj(type=ObjType.BINARY_OUTPUT,
+                     id=1,
+                     name='',
+                     properties=VisioModbusProperties(
+                         address=1,
+                         quantity=1,
+                         func_read=3,
+                         func_write=6,
+                         scale=1,
+                         data_type='INT',
+                         data_length=16,
+                         bit=None
+                     ))
 
-        address=14,
-        quantity=1,
-        func_read=3,
+    obj2 = ModbusObj(type=ObjType.BINARY_OUTPUT,
+                     id=1,
+                     name='',
+                     properties=VisioModbusProperties(
+                         address=1,
+                         quantity=1,
+                         func_read=3,
+                         func_write=6,
+                         scale=1,
+                         data_type='INT',
+                         data_length=16,
+                         bit=None
+                     ))
+    print(hash(obj1) == hash((ObjType.BINARY_OUTPUT, 1)))
 
-        properties=VisioModbusProperties(
-            scale=1, data_type='UINT', data_length=16,
-        )
-    )

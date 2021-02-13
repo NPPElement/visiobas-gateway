@@ -1,7 +1,10 @@
 aiohttp==3.7.3
 BAC0==21.2.5
-netifaces==0.10.9
 bacpypes==0.18.3
 pymodbus==2.4.0
-PyYAML==5.4.1
 paho-mqtt~=1.5.1
+aiomisc~=11.1.11
+setuptools~=53.0.0
+marshmallow~=3.10.0
+PyYAML==5.4.1
+netifaces==0.10.9

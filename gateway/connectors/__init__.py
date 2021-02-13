@@ -8,28 +8,26 @@ from pathlib import Path
 from threading import Thread
 from typing import Iterable
 
-from logs import get_file_logger
 from gateway.models.bacnet import ObjType, BACnetObj, ObjProperty
+from logs import get_file_logger
 
-_log = get_file_logger(logger_name=__name__,
-                       size_bytes=50_000_000
-                       )
+_log = get_file_logger(logger_name=__name__)
 
 
-class Connector(Thread, ABC):
+class BaseConnector(Thread, ABC):
     """Base class for all connectors."""
 
     def __init__(self, gateway, getting_queue: SimpleQueue,
                  verifier_queue: SimpleQueue, config: dict):
         super().__init__()
+        self.setName(name=f'{self}-Thread')
+        self.setDaemon(True)
+
         self._config = config
         self._gateway = gateway
 
         self.getting_queue = getting_queue
         self._verifier_queue = verifier_queue
-
-        self.setName(name=f'{self}-Thread')
-        self.setDaemon(True)
 
         self._connected = False
         self._stopped = False
@@ -72,13 +70,15 @@ class Connector(Thread, ABC):
                 if objs_data:
 
                     upd_interval, objs = self.parse_objs_data(objs_data=objs_data)
-
-                    is_stopped = self.stop_device(device_id=dev_id)
-                    if is_stopped:
-                        self.start_device(device_id=dev_id,
-                                          objs=objs,
-                                          upd_interval=upd_interval
-                                          )
+                    try:
+                        is_stopped = self.stop_device(device_id=dev_id)
+                    except KeyError:
+                        pass
+                    # if is_stopped:
+                    self.start_device(device_id=dev_id,
+                                      objs=objs,
+                                      upd_interval=upd_interval
+                                      )
                 else:
                     _log.warning('No objects from HTTP.')
                     # should we request obj faster?
@@ -93,7 +93,6 @@ class Connector(Thread, ABC):
         """Extract objects data from response."""
         pass
 
-    # @abstractmethod
     def parse_upd_period(self, device_obj_data: list[dict]) -> int:
         """Extract device update period from device object."""
         try:

@@ -5,8 +5,8 @@ from time import time, sleep
 from pymodbus.client.sync import ModbusTcpClient
 
 from gateway.connectors.bacnet import ObjProperty
-from logs import get_file_logger
 from gateway.models.modbus import ModbusObj, VisioModbusProperties, cast_to_bit
+from logs import get_file_logger
 
 
 class ModbusDevice(Thread):
@@ -15,6 +15,9 @@ class ModbusDevice(Thread):
                  '_connector', '_verifier_queue',
                  '_polling', 'objects'
                  )
+
+    update_period_factor = 0.8
+    before_next_client_attempt = 60
 
     def __init__(self,
                  verifier_queue: SimpleQueue,
@@ -29,9 +32,7 @@ class ModbusDevice(Thread):
         self.address, self.port = address.split(sep=':', maxsplit=1)
         self.update_period = update_period
 
-        self._log = get_file_logger(logger_name=f'{device_id}',
-                                    size_bytes=50_000_000
-                                    )
+        self._log = get_file_logger(logger_name=f'{device_id}')
 
         self._client, self._available_functions = None, None
 
@@ -48,7 +49,10 @@ class ModbusDevice(Thread):
         self._log.info(f'{self} starting ...')
         self.start()
 
-    def __len__(self):
+    def __repr__(self) -> str:
+        return f'{self.__class__.__name__}[{self.id}]'
+
+    def __len__(self) -> int:
         return len(self.objects)
 
     def stop_polling(self) -> None:
@@ -75,7 +79,8 @@ class ModbusDevice(Thread):
                         '==================================================')
 
                     if time_delta < self.update_period:
-                        waiting_time = (self.update_period - time_delta) * 0.8
+                        waiting_time = (self.update_period - time_delta) * \
+                                       self.update_period_factor
                         self._log.debug(
                             f'{self} Sleeping {round(waiting_time, ndigits=2)} sec ...')
                         sleep(waiting_time)
@@ -85,22 +90,21 @@ class ModbusDevice(Thread):
             else:  # client not connect
                 self._log.info('Connecting to client ...')
                 try:
-                    self._client, self._available_functions = self.__get_client(
+                    self._client, self._available_functions = self._get_client(
                         address=self.address,
                         port=self.port)
                 except ConnectionError as e:
                     self._log.error(f'{self} connection error: {e} '
-                                    'Sleeping 60 sec to next attempt ...')
-                    sleep(60)
+                                    'Sleeping 60 sec before next attempt ...')
+                    sleep(self.before_next_client_attempt)
                 except Exception as e:
-                    self._log.error(f'{self} initialization error: {e}', exc_info=True)
+                    self._log.error(f'{self} initialization error: {e}',
+                                    exc_info=True
+                                    )
         else:
             self._log.info(f'{self} stopped.')
 
-    def __repr__(self):
-        return f'{self.__class__.__name__}[{self.id}]'
-
-    def __get_client(self, address: str, port: int) -> tuple:
+    def _get_client(self, address: str, port: int) -> tuple:
         """ Initialize modbus client
         """
         try:
@@ -116,43 +120,64 @@ class ModbusDevice(Thread):
                 2: client.read_discrete_inputs,
                 3: client.read_holding_registers,
                 4: client.read_input_registers,
+
                 5: client.write_coil,
                 6: client.write_register,
                 15: client.write_coils,
                 16: client.write_registers
             }
-
-        except Exception as e:
-            self._log.error(f'Modbus client init error: {e}', exc_info=True)
-            raise ConnectionError
-        else:
             self._log.info(f'{self} client initialized')
             return client, available_functions
 
-    def read(self, cmd_code: int, reg_address: int,
-             quantity: int, unit=0x01) -> list[int] or None:
-        """ Read data from Modbus registers
-        """
-        if cmd_code not in {1, 2, 3, 4}:
-            raise ValueError('Read functions must be one of 1..4')
-
-        try:
-            data = self._available_functions[cmd_code](address=reg_address,
-                                                       count=quantity,
-                                                       unit=unit)
         except Exception as e:
-            self._log.error(
-                f'Read error from reg: {reg_address}, quantity: {quantity} : {e}',
-                exc_info=True)
-            return None
+            self._log.error(f'Modbus client init error: {e}', exc_info=True)
+            raise e
 
+    def read(self, cmd_code: int, reg_address: int,
+             quantity: int, unit=0x01) -> list:  # or None:
+        """Read data from Modbus registers."""
+        read_cmd_codes = {1, 2, 3, 4}
+        if cmd_code not in read_cmd_codes:
+            raise ValueError(f'Read functions must be one of {read_cmd_codes}')
+
+        # try:  # todo: do we need re-raise??
+        data = self._available_functions[cmd_code](address=reg_address,
+                                                   count=quantity,
+                                                   unit=unit
+                                                   )
+        if not data.isError():
+            self._log.debug(
+                f'Successfully read: {reg_address}({quantity}): {data.registers}')
+            return data.registers
         else:
-            if not data.isError():
-                self._log.debug(f'From register: {reg_address} read: {data.registers}')
-                return data.registers
-            else:
-                self._log.error(f'Received error response from {reg_address}')
-                return None
+            self._log.warning(f'Read failed: {data}')
+            raise data
+
+            # return None
+        # except Exception as e:
+        #     self._log.error(
+        #         f'Read error from reg: {reg_address}, quantity: {quantity} : {e}',
+        #         exc_info=True
+        #     )
+        #     # todo: raise error
+        #     return None
+
+    def write(self, cmd_code: int, reg_address: int,
+              values, unit=0x01) -> None:
+        """Write data to Modbus registers."""
+        write_cmd_codes = {5, 6, 15, 16}
+        if cmd_code not in write_cmd_codes:
+            raise ValueError(f'Read functions must be one of {write_cmd_codes}')
+
+        rq = self._available_functions[cmd_code](reg_address,
+                                                 values,
+                                                 unit=unit
+                                                 )
+        if not rq.isError():
+            self._log.debug(f'Successfully write: {reg_address}: {values}')
+        else:
+            self._log.warning(f'Write failed: {rq}')
+            raise rq
 
     def process_registers(self, registers: list[int],
                           quantity: int,
@@ -222,8 +247,11 @@ class ModbusDevice(Thread):
                 self._put_data_into_verifier(properties=converted_properties)
 
             except Exception as e:
-                self._log.warning(f'Object {obj} was skipped due to an error: {e}',
-                                  exc_info=True)
+                self._log.warning(f'Read from {obj} error: {e}',
+                                  exc_info=True
+                                  )
+                # todo: except read errors and add to reliability
+                # todo: put obj data to verifier
         self._put_device_end_to_verifier()
 
     @staticmethod

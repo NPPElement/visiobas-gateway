@@ -8,7 +8,7 @@ from typing import Iterable
 
 import aiohttp
 
-from gateway.connectors import Connector
+from gateway.connectors import BaseConnector
 from gateway.connectors.bacnet import ObjType
 from gateway.http_ import VisioHTTPNode, VisioHTTPConfig
 from logs import get_file_logger
@@ -184,7 +184,7 @@ class VisioHTTPClient(Thread):
         _ = await asyncio.gather(*upd_connector_coros)
 
     async def upd_connector(self, node: VisioHTTPNode,
-                            connector: Connector,
+                            connector: BaseConnector,
                             session) -> bool:
         """Update all devices into connector.
         :param node:
@@ -216,7 +216,7 @@ class VisioHTTPClient(Thread):
 
     async def upd_device(self, node: VisioHTTPNode,
                          device_id: int, obj_types: Iterable[ObjType],
-                         connector: Connector,
+                         connector: BaseConnector,
                          session) -> bool:
         """Perform request objects of each types for device by id.
         Then resend data about device to connector.
