@@ -5,16 +5,14 @@ from time import sleep
 from BAC0 import lite
 from BAC0.core.io.IOExceptions import InitializationError, NetworkInterfaceException
 
-from gateway.connectors import BaseConnector
-from gateway.connectors.bacnet.device import BACnetDevice
+from gateway.connector import BaseConnector
+from gateway.connector.bacnet.device import BACnetDevice
 from logs import get_file_logger
 from gateway.models.bacnet import ObjType, BACnetObj, ObjProperty
 
 _base_path = Path(__file__).resolve().parent.parent.parent
 
-_log = get_file_logger(logger_name=__name__,
-                       size_bytes=50_000_000
-                       )
+_log = get_file_logger(logger_name=__name__)
 
 
 class BACnetConnector(BaseConnector):
@@ -35,7 +33,7 @@ class BACnetConnector(BaseConnector):
                          )
         self._network = None
 
-        self.address_cache_path = _base_path / 'connectors/bacnet/address_cache'
+        self.address_cache_path = _base_path / 'connector/bacnet/address_cache'
 
         self.obj_types_to_request = (
             ObjType.ANALOG_INPUT, ObjType.ANALOG_OUTPUT, ObjType.ANALOG_VALUE,

@@ -1,8 +1,8 @@
 from multiprocessing import SimpleQueue
 from pathlib import Path
 
-from gateway.connectors import BaseConnector
-from gateway.connectors.modbus.device import ModbusDevice
+from gateway.connector import BaseConnector
+from gateway.connector.modbus.device import ModbusDevice
 from gateway.models.bacnet import ObjType
 from gateway.models.modbus import ModbusObj
 from logs import get_file_logger
@@ -27,7 +27,7 @@ class ModbusConnector(BaseConnector):
                          config=config
                          )
 
-        self.address_cache_path = _base_path / 'connectors/modbus/address_cache'
+        self.address_cache_path = _base_path / 'connector/modbus/address_cache'
 
         self.obj_types_to_request = (
             ObjType.ANALOG_INPUT, ObjType.ANALOG_OUTPUT, ObjType.ANALOG_VALUE,

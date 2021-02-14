@@ -3,9 +3,9 @@ from multiprocessing import SimpleQueue
 from pathlib import Path
 from time import sleep
 
-from gateway.api.app import VisioGatewayApi
-from gateway.connectors.bacnet import BACnetConnector
-from gateway.connectors.modbus import ModbusConnector
+from gateway.api import VisioGatewayApi
+from gateway.connector.bacnet import BACnetConnector
+from gateway.connector.modbus import ModbusConnector
 from gateway.http_.client import VisioHTTPClient
 from gateway.mqtt import VisioMQTTClient
 from gateway.verifier import BACnetVerifier
@@ -71,7 +71,9 @@ class VisioGateway:
         self.verifier.start()
 
         self.api = VisioGatewayApi(gateway=self,
-                                   config=self._config['api'])
+                                   config=self._config['api']
+                                   )
+        self.api.run()
 
         # self.mqtt_client = None # todo
         # self.__notifier = None  # todo

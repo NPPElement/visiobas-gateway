@@ -3,7 +3,7 @@ from typing import Any
 from aiohttp.web_exceptions import HTTPBadGateway
 
 from gateway.api.handlers.base import BaseView
-from gateway.connectors.modbus import ModbusDevice
+from gateway.connector.modbus import ModbusDevice
 from gateway.models.modbus import ModbusObj
 
 

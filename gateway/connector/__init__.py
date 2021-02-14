@@ -124,9 +124,9 @@ class BaseConnector(Thread, ABC):
             return True
 
         except KeyError as e:
-            _log.error(f'The device with id {device_id} is not running. '
-                       f'Please provide the id of the polling device: {e}'
-                       )
+            _log.warning(f"Device [{device_id}] isn't running. "
+                         f"Please provide the id of the polling device: {e}"
+                         )
             return True
         except Exception as e:
             _log.error(f'Device stopping error: {e}',

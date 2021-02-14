@@ -8,8 +8,8 @@ from typing import Iterable
 
 import aiohttp
 
-from gateway.connectors import BaseConnector
-from gateway.connectors.bacnet import ObjType
+from gateway.connector import BaseConnector
+from gateway.connector.bacnet import ObjType
 from gateway.http_ import VisioHTTPNode, VisioHTTPConfig
 from logs import get_file_logger
 
@@ -486,7 +486,7 @@ class VisioHTTPClient(Thread):
         # fixme Isn't loop.
         _log.critical(f'Starting {self} in modbus simulation mode.')
         try:
-            from gateway.connectors.modbus import ModbusConnector
+            from gateway.connector.modbus import ModbusConnector
             # Does not start normally. Therefore parameters can be skipped.
 
             # The queue is not for the verifier!

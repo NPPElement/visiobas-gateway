@@ -4,7 +4,7 @@ from time import time, sleep
 
 from pymodbus.client.sync import ModbusTcpClient
 
-from gateway.connectors.bacnet import ObjProperty
+from gateway.connector.bacnet import ObjProperty
 from gateway.models.modbus import ModbusObj, VisioModbusProperties, cast_to_bit
 from logs import get_file_logger
 

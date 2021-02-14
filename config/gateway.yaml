@@ -11,6 +11,8 @@ api:
   host: localhost
   port: 7070
 
+  sleep_period: 60
+
 connector:
   bacnet:
     default_upd_period: 10
