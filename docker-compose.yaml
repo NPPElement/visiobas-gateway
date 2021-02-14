@@ -5,7 +5,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: visiobas-gateway:0.1.0
+    image: visiobas-gateway:0.1.1
     #logging:
       #driver: none
     #      driver: "json-file"
@@ -24,7 +24,7 @@ services:
     volumes:
       #- /opt/visiobas-gateway:/visiobas-gateway
       - /home/user/visiobas-gateway:/visiobas-gateway
-    command: python run.py
+    command: python -OO __main__.py
 
     ports:
       - 502:502
