@@ -231,12 +231,12 @@ class ModbusDevice(Thread):
         """
         for obj in objects:
             try:
-                registers = self.read(cmd_code=obj.func_read,
-                                      reg_address=obj.address,
-                                      quantity=obj.quantity
+                registers = self.read(cmd_code=obj.properties.func_read,
+                                      reg_address=obj.properties.address,
+                                      quantity=obj.properties.quantity
                                       )
                 value = self.process_registers(registers=registers,
-                                               quantity=obj.quantity,
+                                               quantity=obj.properties.quantity,
                                                properties=obj.properties
                                                )
                 converted_properties = self._add_bacnet_properties(
