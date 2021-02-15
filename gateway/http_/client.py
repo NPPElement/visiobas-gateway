@@ -2,7 +2,6 @@ import asyncio
 # import atexit
 from multiprocessing import SimpleQueue
 from pathlib import Path
-# from threading import Thread
 from threading import Thread
 from time import sleep
 from typing import Iterable

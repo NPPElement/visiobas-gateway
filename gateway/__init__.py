@@ -91,7 +91,7 @@ class VisioGateway:
 
         )
 
-        with entrypoint(*services, pool_size=2) as loop:
+        with entrypoint(*services) as loop:
             loop.run_forever()
 
         # t = threading.Thread(target=VisioGatewayApi, args=(self,
