@@ -2,7 +2,7 @@ import logging
 from typing import Any
 
 from aiohttp.web_app import Application
-from aiohttp_apispec import setup_aiohttp_apispec
+# from aiohttp_apispec import setup_aiohttp_apispec
 from aiomisc import entrypoint
 from aiomisc.log import basic_config
 from aiomisc.service.aiohttp import AIOHTTPService
@@ -69,9 +69,9 @@ class VisioGatewayApi(AIOHTTPService):
             app.router.add_route('*', handler.URL_PATH, handler)
 
         # Swagger docs
-        setup_aiohttp_apispec(app=app, title='Gateway API', swagger_path='/',
-                              error_callback=None
-                              )
+        # setup_aiohttp_apispec(app=app, title='Gateway API', swagger_path='/',
+        #                       error_callback=None
+        #                       )
         return app
 
     # async def start(self, app: Application, host: str, port: int) -> None:
