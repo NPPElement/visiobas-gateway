@@ -2,9 +2,7 @@ from hashlib import md5
 
 from logs import get_file_logger
 
-_log = get_file_logger(logger_name=__name__,
-                       size_bytes=50_000_000
-                       )
+_log = get_file_logger(logger_name=__name__)
 
 
 class VisioHTTPConfig:

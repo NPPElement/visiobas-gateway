@@ -1,7 +1,8 @@
 # import atexit
 from multiprocessing import SimpleQueue
 from pathlib import Path
-from time import sleep
+
+from aiomisc import entrypoint
 
 from gateway.api import VisioGatewayApi
 from gateway.connector.bacnet import BACnetConnector
@@ -52,7 +53,7 @@ class VisioGateway:
         [connector.open() for connector in self.connectors.values()]
 
         # HTTP client updatable. Re-created inside the main loop
-        self.http_client = None
+        # self.http_client = None
 
         self.mqtt_client = VisioMQTTClient.create_from_yaml(
             gateway=self,
@@ -70,16 +71,44 @@ class VisioGateway:
                                        )
         self.verifier.start()
 
-        self.api = VisioGatewayApi(gateway=self,
-                                   config=self._config['api']
-                                   )
-        self.api.run()
+        self.http_client = VisioHTTPClient.create_from_yaml(
+            gateway=self,
+            getting_queue=self._verifier_http_queue,
+            yaml_path=_base_path / 'config/http.yaml'
+        )
+        self.http_client.start()
 
-        # self.mqtt_client = None # todo
+        services = (
+            VisioGatewayApi(gateway=self,
+                            host=self._config['api'].get('host', 'localhost'),
+                            port=self._config['api'].get('port', 7070)
+                            ),
+            # FIXME: why doesn't work?
+            # VisioHTTPClient.create_from_yaml(gateway=self,
+            #                                  getting_queue=self._verifier_http_queue,
+            #                                  yaml_path=_base_path / 'config/http.yaml'
+            #                                  ),
+
+        )
+
+        with entrypoint(*services, pool_size=2) as loop:
+            loop.run_forever()
+
+        # t = threading.Thread(target=VisioGatewayApi, args=(self,
+        #                                                    self._config['api']
+        #                                                    ))
+        # t.start()
+
+        # self.api = VisioGatewayApi(gateway=self,
+        #                            config=self._config['api']
+        #                            )
+        # self.api.run()
+
         # self.__notifier = None  # todo
         # self.__statistic = None  # todo
 
-        self.run_main_loop()
+        # self.run_main_loop()
+        # sleep(40)
 
     def __repr__(self) -> str:
         return self.__class__.__name__
@@ -93,31 +122,31 @@ class VisioGateway:
             cfg = yaml.load(cfg_file, Loader=yaml.FullLoader)
         return cls(config=cfg)
 
-    def run_main_loop(self):
-        """Main loop of gateway."""
-        _log.info(f'{self} starting ...')
-
-        while not self._stopped:
-            try:
-                self.http_client = VisioHTTPClient.create_from_yaml(
-                    gateway=self,
-                    getting_queue=self._verifier_http_queue,
-                    yaml_path=_base_path / 'config/http.yaml'
-                )
-                self.http_client.start()
-
-                update_period = self._config['gateway'].get('update_period', 60 * 60)
-                _log.info(f'{self} sleep: {update_period} sec ...')
-                sleep(update_period)
-                self.http_client.stop()
-
-            except (KeyboardInterrupt, SystemExit, Exception) as e:
-                self._stop()
-                _log.error(f'Error: {e}',
-                           exc_info=True
-                           )
-        else:
-            _log.info(f'{self} stopped.')
+    # def run_main_loop(self):
+    #     """Main loop of gateway."""
+    #     _log.info(f'{self} starting ...')
+    #
+    #     while not self._stopped:
+    #         try:
+    #             self.http_client = VisioHTTPClient.create_from_yaml(
+    #                 gateway=self,
+    #                 getting_queue=self._verifier_http_queue,
+    #                 yaml_path=_base_path / 'config/http.yaml'
+    #             )
+    #             self.http_client.start()
+    #
+    #             update_period = self._config['gateway'].get('update_period', 60 * 60)
+    #             _log.info(f'{self} sleep: {update_period} sec ...')
+    #             sleep(update_period)
+    #             self.http_client.stop()
+    #
+    #         except (KeyboardInterrupt, SystemExit, Exception) as e:
+    #             self._stop()
+    #             _log.error(f'Error: {e}',
+    #                        exc_info=True
+    #                        )
+    #     else:
+    #         _log.info(f'{self} stopped.')
 
     # @atexit.register
     def _stop(self):
@@ -128,8 +157,8 @@ class VisioGateway:
         self.verifier.close()
         self.verifier.join()
 
-        self.http_client.stop()
-        self.http_client.join()
+        # self.http_client.stop()
+        # self.http_client.join()
 
         self._stopped = True
 

@@ -30,6 +30,7 @@ logging.basicConfig(format=_log_fmt,
                     level=_log_level,
                     stream=sys.stdout,
                     )
+
 disable_loggers(loggers=_unused_loggers)
 
 if __name__ == '__main__':
