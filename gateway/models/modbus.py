@@ -35,7 +35,7 @@ class VisioModbusProperties(NamedTuple):
         address = int(modbus_properties['address'])
         quantity = int(modbus_properties['quantity'])
         func_read = int(modbus_properties['functionRead'][-2:])
-        func_write = int(modbus_properties.get('functionWrite', 6)[-2:])
+        func_write = int(modbus_properties.get('functionWrite', '0x06')[-2:])
 
         scale = int(modbus_properties.get('scale', 1))
         data_type = modbus_properties['dataType']
