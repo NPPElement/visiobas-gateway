@@ -2,9 +2,9 @@ from http import HTTPStatus
 
 from aiohttp.web_exceptions import HTTPBadGateway
 from aiohttp.web_response import json_response
-# from aiohttp_apispec import docs, request_schema, response_schema
+from aiohttp_apispec import docs, request_schema, response_schema
 
-# from gateway.api.schema import JsonRPCSchema, JsonRPCPostResponseSchema
+from gateway.api.schema import JsonRPCSchema, JsonRPCPostResponseSchema
 from .base_modbus import BaseModbusView
 
 
@@ -21,9 +21,9 @@ class JsonRPCView(BaseModbusView):
     def value(self) -> int:
         return int(self.request.match_info.get('params').get('value'))
 
-    # @docs(summary='Device control with writing control.')
-    # @request_schema(JsonRPCSchema())
-    # @response_schema(JsonRPCPostResponseSchema, code=HTTPStatus.OK.value)
+    @docs(summary='Device control with writing control.')
+    @request_schema(JsonRPCSchema())
+    @response_schema(JsonRPCPostResponseSchema, code=HTTPStatus.OK.value)
     async def post(self):
         device = self.get_device()
         obj = self.get_obj(device=device)

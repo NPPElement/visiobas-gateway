@@ -8,3 +8,7 @@ setuptools~=53.0.0
 marshmallow~=3.10.0
 PyYAML==5.4.1
 netifaces==0.10.9
+aiohttp-apispec==2.2.1
+
+
+
