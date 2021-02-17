@@ -1,10 +1,8 @@
-http://127.0.0.1:7070
-
 curl -X GET http://127.0.0.1:7070/api/property/35/2/1/2
 
 curl --header "Content-Type: application/json" \
   --request POST \
-  --data '{"jsonrpc":"2.0","method":"writeSetPoint","params":{"device_id":"35","object_type":"2","object_id":"1","property":"85","priority":"10","index":"-1","tag":"9","value":"1"},"id":""}' \
+  --data '{"jsonrpc":"2.0","method":"writeSetPoint","params":{"device_id":"35","object_type":"2","object_id":"1","property":"85","priority":"10","index":"-1","tag":"9","value":"40"},"id":""}' \
   http://127.0.0.1:7070/json-rpc
 
 
@@ -13,6 +11,21 @@ curl --header "Content-Type: application/json" \
 # Visiobas-Gateway
 
 It is an application for polling devices using various protocols and transmitting data to the visiobas system.
+
+
+# API
+Swagger docs available on http://127.0.0.1:7070/
+
+```
+curl -X GET http://127.0.0.1:7070/api/property/35/2/1/2
+```
+
+```
+curl --header "Content-Type: application/json" \
+  --request POST \
+  --data '{"jsonrpc":"2.0","method":"writeSetPoint","params":{"device_id":"35","object_type":"2","object_id":"1","property":"85","priority":"10","index":"-1","tag":"9","value":"40"},"id":""}' \
+  http://127.0.0.1:7070/json-rpc
+```
 
 ## Installation
 

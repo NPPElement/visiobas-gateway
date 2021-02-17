@@ -4,12 +4,12 @@ from aiohttp.web_response import json_response
 from aiohttp_apispec import docs
 
 from logs import get_file_logger
-from .base_modbus import BaseModbusView
+from .mixin_modbus import ModbusMixin
 
 _log = get_file_logger(logger_name=__name__)
 
 
-class ModbusPropertyView(BaseModbusView):
+class ModbusPropertyView(ModbusMixin):
     URL_PATH = (r'/api/property/{device_id:\d+}/{object_type:\d+}/'
                 r'{object_id:\d+}/{property:\d+}')
 
@@ -31,12 +31,12 @@ class ModbusPropertyView(BaseModbusView):
 
     @docs(summary='Read property from object of device.')
     async def get(self):
-        device = self.get_device()
-        obj = self.get_obj(device=device)
+        device = self.get_device(dev_id=self.device_id)
+        obj = self.get_obj(device=device, obj_type=self.object_type, obj_id=self.object_id)
 
         value = self._modbus_read(obj=obj,
                                   device=device
                                   )
         return json_response({'value': value},
-                             status=HTTPStatus.OK
+                             status=HTTPStatus.OK.value
                              )

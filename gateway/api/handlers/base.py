@@ -11,42 +11,28 @@ class BaseView(View):
     def gateway(self):  # -> VisioGateway
         return self.request.app['gateway']
 
-    @property
-    def device_id(self) -> int:
-        return int(self.request.match_info.get('params').get('device_id'))
-
-    @property
-    def object_type(self) -> int:
-        return int(self.request.match_info.get('params').get('object_type'))
-
-    @property
-    def object_id(self) -> int:
-        return int(self.request.match_info.get('params').get('object_id'))
-
-    @property
-    def property_(self) -> int:
-        return int(self.request.match_info.get('params').get('property'))
-
-    def get_device(self):  # ->  Device
+    def get_device(self, dev_id: int):  # ->  Device
         """Returns device's thread (for interactions with object)."""
         try:
             for con in self.gateway.connectors.values():
-                if self.device_id in con.polling_devices:
-                    return con.polling_devices[self.device_id]
-            raise HTTPNotFound(reason=f'Device id {self.device_id} not polling.')
+                if dev_id in con.polling_devices:
+                    return con.polling_devices[dev_id]
+            raise HTTPNotFound(reason=f'Device id {dev_id} not polling.')
         except AttributeError as e:
             _log.error(f'Error: {e}',
                        exc_info=True
                        )
-            raise HTTPNotFound(reason=f'Invalid gateway {self.gateway} {type(self.gateway)}')
+            raise HTTPNotFound(
+                reason=f'Invalid gateway {self.gateway} {type(self.gateway)}')
 
-    def get_obj(self, device):  # -> ModbusObj
+    @staticmethod
+    def get_obj(device, obj_type: int, obj_id: int):  # -> ModbusObj
         """Returns protocol's object."""
         try:
             for obj in device.objects:
-                if obj.type.id == self.object_type and obj.id == self.object_id:
+                if obj.type.id == obj_type and obj.id == obj_id:
                     return obj
-            raise HTTPNotFound(reason=f'Object type {self.object_type} id:{self.object_id} '
+            raise HTTPNotFound(reason=f'Object type {obj_type} id:{obj_id} '
                                       f'not polling at {device}.')
         except AttributeError as e:
             _log.error(f'Error: {e}',

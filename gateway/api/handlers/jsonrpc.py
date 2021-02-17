@@ -6,39 +6,36 @@ from aiohttp_apispec import docs, request_schema, response_schema
 
 from gateway.api.schema import JsonRPCSchema, JsonRPCPostResponseSchema
 from logs import get_file_logger
-from .base_modbus import BaseModbusView
+from .mixin_modbus import ModbusMixin
 
 _log = get_file_logger(logger_name=__name__)
 
 
-class JsonRPCView(BaseModbusView):
+class JsonRPCView(ModbusMixin):
     URL_PATH = r'/json-rpc'
-
-    # TODO
-
-    @property
-    def priority(self):
-        return int(self.request.match_info.get('params').get('priority'))
-
-    @property
-    def value(self) -> int:
-        return int(self.request.match_info.get('params').get('value'))
 
     @docs(summary='Device control with writing control.')
     @request_schema(JsonRPCSchema())
     @response_schema(JsonRPCPostResponseSchema, code=HTTPStatus.OK.value)
     async def post(self):
-        device = self.get_device()
-        obj = self.get_obj(device=device)
+        body = await self.request.json()
+        dev_id = int(body.get('params').get('device_id'))
+        obj_type = int(body.get('params').get('object_type'))
+        obj_id = int(body.get('params').get('object_id'))
+        value_str = body.get('params').get('value')
+        value = float(value_str) if '.' in value_str else int(value_str)
 
-        self._modbus_write(value=self.value,
+        device = self.get_device(dev_id=dev_id)
+        obj = self.get_obj(device=device, obj_type=obj_type, obj_id=obj_id)
+
+        self._modbus_write(value=value,
                            obj=obj,
                            device=device
                            )
-        value = self._modbus_read(obj=obj,
-                                  device=device
-                                  )
-        if value == self.value:
+        rvalue = self._modbus_read(obj=obj,
+                                   device=device
+                                   )
+        if value == rvalue:
             return json_response({'success': True},
                                  status=HTTPStatus.OK.value
                                  )

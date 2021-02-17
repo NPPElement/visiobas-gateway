@@ -10,7 +10,7 @@ from logs import get_file_logger
 _log = get_file_logger(logger_name=__name__)
 
 
-class BaseModbusView(BaseView):
+class ModbusMixin(BaseView):
     @staticmethod
     def _modbus_read(obj: ModbusObj, device: ModbusDevice) -> Any:
 
