@@ -13,6 +13,18 @@ class ModbusPropertyView(BaseModbusView):
     URL_PATH = (r'/api/property/{device_id:\d+}/{object_type:\d+}/'
                 r'{object_id:\d+}/{property:\d+}')
 
+    @property
+    def object_type(self) -> int:
+        return int(self.request.match_info.get('object_type'))
+
+    @property
+    def object_id(self) -> int:
+        return int(self.request.match_info.get('object_id'))
+
+    @property
+    def property_(self) -> int:
+        return int(self.request.match_info.get('property'))
+
     @docs(summary='Read property from object of device.')
     async def get(self):
         device = self.get_device()
