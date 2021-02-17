@@ -1,6 +1,10 @@
 from aiohttp.web_exceptions import HTTPNotFound
 from aiohttp.web_urldispatcher import View
 
+from logs import get_file_logger
+
+_log = get_file_logger(logger_name=__name__)
+
 
 class BaseView(View):
     @property
@@ -30,7 +34,10 @@ class BaseView(View):
                 if self.device_id in con.polling_devices:
                     return con.polling_devices[self.device_id]
             raise HTTPNotFound(reason=f'Device id {self.device_id} not polling.')
-        except AttributeError:
+        except AttributeError as e:
+            _log.error(f'Error: {e}',
+                       exc_info=True
+                       )
             raise HTTPNotFound(reason=f'Invalid gateway {self.gateway} {type(self.gateway)}')
 
     def get_obj(self, device):  # -> ModbusObj
@@ -41,5 +48,8 @@ class BaseView(View):
                     return obj
             raise HTTPNotFound(reason=f'Object type {self.object_type} id:{self.object_id} '
                                       f'not polling at {device}.')
-        except AttributeError:
+        except AttributeError as e:
+            _log.error(f'Error: {e}',
+                       exc_info=True
+                       )
             raise HTTPNotFound(reason=f'Invalid device {device}:{type(device)}')

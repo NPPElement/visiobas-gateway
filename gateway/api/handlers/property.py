@@ -3,7 +3,10 @@ from http import HTTPStatus
 from aiohttp.web_response import json_response
 from aiohttp_apispec import docs
 
+from logs import get_file_logger
 from .base_modbus import BaseModbusView
+
+_log = get_file_logger(logger_name=__name__)
 
 
 class ModbusPropertyView(BaseModbusView):

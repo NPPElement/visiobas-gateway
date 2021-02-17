@@ -315,9 +315,9 @@ class VisioHTTPClient(Thread):
             _log.info(f'Successfully authorized to {get_node}, {post_nodes}')
         else:
             _log.warning("Authorizations failed! Next attempt after "
-                         f"{self._config['delay']['auth_next_attempt']} seconds."
+                         f"{self._config['interval']['next_attempt']} seconds."
                          )
-            sleep(self._config['delay']['auth_next_attempt'])
+            sleep(self._config['interval']['next_attempt'])
 
         return successfully_authorized
 

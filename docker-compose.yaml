@@ -26,6 +26,8 @@ services:
       - /home/user/visiobas-gateway:/visiobas-gateway
     command: python -OO __main__.py
 
+    network_mode: host
+
     ports:
       - 502:502
       - 1883:1883

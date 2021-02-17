@@ -5,7 +5,10 @@ from aiohttp.web_response import json_response
 from aiohttp_apispec import docs, request_schema, response_schema
 
 from gateway.api.schema import JsonRPCSchema, JsonRPCPostResponseSchema
+from logs import get_file_logger
 from .base_modbus import BaseModbusView
+
+_log = get_file_logger(logger_name=__name__)
 
 
 class JsonRPCView(BaseModbusView):
