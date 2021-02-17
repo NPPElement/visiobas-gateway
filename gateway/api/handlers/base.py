@@ -13,7 +13,7 @@ class BaseView(View):
 
     @property
     def device_id(self) -> int:
-        return int(self.request.match_info.get('device_id'))
+        return int(self.request.match_info.get('params').get('device_id'))
 
     @property
     def object_type(self) -> int:

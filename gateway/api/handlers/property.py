@@ -14,6 +14,10 @@ class ModbusPropertyView(BaseModbusView):
                 r'{object_id:\d+}/{property:\d+}')
 
     @property
+    def device_id(self) -> int:
+        return int(self.request.match_info.get('device_id'))
+
+    @property
     def object_type(self) -> int:
         return int(self.request.match_info.get('object_type'))
 
