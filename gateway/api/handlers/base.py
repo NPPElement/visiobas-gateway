@@ -30,7 +30,7 @@ class BaseView(View):
     def get_device(self):  # ->  Device
         """Returns device's thread (for interactions with object)."""
         try:
-            for con in self.gateway.connectors:
+            for con in self.gateway.connectors.values():
                 if self.device_id in con.polling_devices:
                     return con.polling_devices[self.device_id]
             raise HTTPNotFound(reason=f'Device id {self.device_id} not polling.')
