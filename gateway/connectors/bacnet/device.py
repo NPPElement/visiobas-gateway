@@ -9,9 +9,9 @@ from BAC0.core.io.IOExceptions import (ReadPropertyException,
                                        ReadPropertyMultipleException
                                        )
 
-from logs import get_file_logger
-from gateway.models.bacnet import BACnetObj, ObjType, ObjProperty
+from gateway.models import BACnetObj, ObjType, ObjProperty
 from gateway.utils import get_fault_obj_properties
+from logs import get_file_logger
 
 
 class BACnetDevice(Thread):
@@ -30,18 +30,15 @@ class BACnetDevice(Thread):
                  objects: set[BACnetObj],
                  update_period: int):
         super().__init__()
+        self.setName(name=f'{self}-Thread')
+        self.setDaemon(True)
 
         # todo config
 
         self.id = device_id
         self.update_period = update_period
 
-        self._log = get_file_logger(logger_name=f'{device_id}',
-                                    size_bytes=50_000_000
-                                    )
-
-        self.setName(name=f'{self}-Thread')
-        self.setDaemon(True)
+        self._log = get_file_logger(logger_name=f'{device_id}')
 
         self._connector = connector
         self._verifier_queue = verifier_queue

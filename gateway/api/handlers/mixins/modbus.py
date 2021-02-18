@@ -2,9 +2,9 @@ from typing import Any
 
 from aiohttp.web_exceptions import HTTPBadGateway
 
-from gateway.api.handlers.base import BaseView
-from gateway.connector.modbus import ModbusDevice
-from gateway.models.modbus import ModbusObj
+from gateway.api.handlers import BaseView
+from gateway.connectors import ModbusDevice
+from gateway.models import ModbusObj
 from logs import get_file_logger
 
 _log = get_file_logger(logger_name=__name__)
@@ -25,7 +25,7 @@ class ModbusMixin(BaseView):
             _log.error(f'Error: {e}',
                        exc_info=True
                        )
-            return HTTPBadGateway
+            return HTTPBadGateway(reason=str(e))
 
         if obj.properties.quantity == 1:
             return registers.pop()
@@ -40,7 +40,7 @@ class ModbusMixin(BaseView):
         :return: is write requests successful
         """
         if not isinstance(device, ModbusDevice):
-            raise HTTPBadGateway
+            raise HTTPBadGateway(reason="Isn't modbus device")
 
         try:
             device.write(cmd_code=obj.properties.func_write,
@@ -51,4 +51,4 @@ class ModbusMixin(BaseView):
             _log.error(f'Error: {e}',
                        exc_info=True
                        )
-            raise HTTPBadGateway
+            raise HTTPBadGateway(reason=str(e))

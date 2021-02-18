@@ -3,8 +3,8 @@ from http import HTTPStatus
 from aiohttp.web_response import json_response
 from aiohttp_apispec import docs
 
+from gateway.api.handlers import ModbusMixin
 from logs import get_file_logger
-from .mixin_modbus import ModbusMixin
 
 _log = get_file_logger(logger_name=__name__)
 

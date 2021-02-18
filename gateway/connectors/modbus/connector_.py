@@ -1,11 +1,10 @@
 from multiprocessing import SimpleQueue
 from pathlib import Path
 
-from gateway.connector import BaseConnector
-from gateway.connector.modbus.device import ModbusDevice
-from gateway.models.bacnet import ObjType
-from gateway.models.modbus import ModbusObj
+from gateway.models import ObjType, ModbusObj
 from logs import get_file_logger
+from .device import ModbusDevice
+from ..base_connector import BaseConnector
 
 _base_path = Path(__file__).resolve().parent.parent.parent
 
@@ -29,12 +28,13 @@ class ModbusConnector(BaseConnector):
 
         self.address_cache_path = _base_path / 'connector/modbus/address_cache'
 
-        self.obj_types_to_request = (
-            ObjType.ANALOG_INPUT, ObjType.ANALOG_OUTPUT, ObjType.ANALOG_VALUE,
-            ObjType.BINARY_INPUT, ObjType.BINARY_OUTPUT, ObjType.BINARY_VALUE,
-            ObjType.MULTI_STATE_INPUT, ObjType.MULTI_STATE_OUTPUT,
-            ObjType.MULTI_STATE_VALUE,
-        )
+        self.obj_types_to_request = (ObjType.ANALOG_INPUT, ObjType.ANALOG_OUTPUT,
+                                     ObjType.ANALOG_VALUE,
+                                     ObjType.BINARY_INPUT, ObjType.BINARY_OUTPUT,
+                                     ObjType.BINARY_VALUE,
+                                     ObjType.MULTI_STATE_INPUT, ObjType.MULTI_STATE_OUTPUT,
+                                     ObjType.MULTI_STATE_VALUE,
+                                     )
 
     def run(self):
         _log.info(f'{self} starting ...')

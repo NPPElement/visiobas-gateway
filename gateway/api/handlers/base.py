@@ -11,7 +11,7 @@ class BaseView(View):
     def gateway(self):  # -> VisioGateway
         return self.request.app['gateway']
 
-    def get_device(self, dev_id: int):  # ->  Device
+    def get_device(self, dev_id: int):  # ->  Device(Thread)
         """Returns device's thread (for interactions with object)."""
         try:
             for con in self.gateway.connectors.values():
@@ -26,7 +26,7 @@ class BaseView(View):
                 reason=f'Invalid gateway {self.gateway} {type(self.gateway)}')
 
     @staticmethod
-    def get_obj(device, obj_type: int, obj_id: int):  # -> ModbusObj
+    def get_obj(device, obj_type: int, obj_id: int):  # -> ProtocolObj
         """Returns protocol's object."""
         try:
             for obj in device.objects:

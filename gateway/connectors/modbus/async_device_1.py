@@ -11,8 +11,8 @@ from time import time, sleep
 from pymodbus.client.asynchronous.schedulers import ASYNC_IO
 from pymodbus.client.asynchronous.tcp import AsyncModbusTCPClient
 
-from gateway.connector.bacnet import ObjProperty
-from gateway.connector.modbus import ModbusObj
+from gateway.connectors.bacnet import ObjProperty
+from gateway.connectors.modbus import ModbusObj
 from logs import get_file_logger
 
 

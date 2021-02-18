@@ -1,12 +1,11 @@
 from hashlib import md5
 
-from logs import get_file_logger
-
-_log = get_file_logger(logger_name=__name__)
-
 
 class VisioHTTPConfig:
-    """Represent parameters for Visio HTTP server."""
+    """
+    Represent parameters for Visio HTTP server.
+    Singleton.
+    """
 
     # That class allows to create only one instance for each server's params
     _instances = {}  # keeps instances references
@@ -79,39 +78,10 @@ class VisioHTTPConfig:
         return f'<{self.__class__.__name__}: {_auth}:{self.host} [{self._login}]>'
 
     @classmethod
-    def create_from_dict(cls, cfg: dict):
+    def from_dict(cls, cfg: dict):
         """Create HTTP config for server from dict."""
         return cls(login=cfg['login'],
                    password=cfg['password'],
                    host=cfg['host'],
                    port=cfg.get('port', 8080)
-                   )
-
-
-class VisioHTTPNode:
-    """Represent Visio HTTP node (primary server + mirror server)."""
-
-    def __init__(self, primary: VisioHTTPConfig, mirror: VisioHTTPConfig):
-        self.primary = primary
-        self.mirror = mirror
-
-        self.cur_server = primary
-
-    @property
-    def is_authorized(self) -> bool:
-        return self.cur_server.is_authorized
-
-    def __repr__(self) -> str:
-        _is_authorized = f'Authorized' if self.is_authorized else 'Unauthorized'
-        return f'<{self.__class__.__name__}: {_is_authorized}: {self.cur_server}>'
-
-    def switch_to_mirror(self) -> None:
-        """ Switches communication to mirror if the primary server is unavailable """
-        self.cur_server = self.mirror
-
-    @classmethod
-    def create_from_dict(cls, cfg: dict):
-        """Create HTTP node from dict."""
-        return cls(primary=VisioHTTPConfig.create_from_dict(cfg=cfg['primary']),
-                   mirror=VisioHTTPConfig.create_from_dict(cfg=cfg['mirror'])
                    )

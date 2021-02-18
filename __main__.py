@@ -34,4 +34,4 @@ logging.basicConfig(format=_log_fmt,
 disable_loggers(loggers=_unused_loggers)
 
 if __name__ == '__main__':
-    VisioGateway.create_from_yaml(yaml_path=_base_path / 'config/gateway.yaml')
+    VisioGateway.from_yaml(yaml_path=_base_path / 'config/gateway.yaml')

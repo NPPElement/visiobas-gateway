@@ -9,10 +9,11 @@ from typing import Iterable
 import aiohttp
 from aiomisc import awaitable
 
-from gateway.connector import BaseConnector
-from gateway.connector.bacnet import ObjType
-from gateway.http_ import VisioHTTPNode, VisioHTTPConfig
+from gateway.connectors import BaseConnector
+from gateway.models import ObjType
 from logs import get_file_logger
+from .http_config import VisioHTTPConfig
+from .http_node import VisioHTTPNode
 
 _log = get_file_logger(logger_name=__name__)
 
@@ -39,10 +40,10 @@ class VisioHTTPClient(Thread):
 
         self.run_send_loop = self.run_http_post_loop
 
-        self.get_node = VisioHTTPNode.create_from_dict(cfg=self._config['get_node'])
+        self.get_node = VisioHTTPNode.from_dict(cfg=self._config['get_node'])
 
         self.post_nodes = [
-            VisioHTTPNode.create_from_dict(cfg=list(node.values()).pop()) for node in
+            VisioHTTPNode.from_dict(cfg=list(node.values()).pop()) for node in
             self._config['post']
         ]
 

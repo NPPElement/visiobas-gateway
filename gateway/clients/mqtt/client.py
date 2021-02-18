@@ -7,9 +7,7 @@ import paho.mqtt.client as mqtt
 
 from logs import get_file_logger
 
-_log = get_file_logger(logger_name=__name__,
-                       size_bytes=50_000_000
-                       )
+_log = get_file_logger(logger_name=__name__)
 
 
 class VisioMQTTClient(Thread):
@@ -142,7 +140,7 @@ class VisioMQTTClient(Thread):
                                     )
 
     def _on_publish_cb(self, client, userdata, mid):
-        #_log.debug(f'Published: {client} {userdata} {mid}')
+        # _log.debug(f'Published: {client} {userdata} {mid}')
         pass
 
     def _on_connect_cb(self, client, userdata, flags, rc, properties=None):

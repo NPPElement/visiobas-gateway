@@ -4,8 +4,8 @@ from time import time, sleep
 
 from pymodbus.client.sync import ModbusTcpClient
 
-from gateway.connector.bacnet import ObjProperty
-from gateway.models.modbus import ModbusObj, VisioModbusProperties, cast_to_bit
+from gateway.models import ModbusObj, VisioModbusProperties, ObjProperty
+from gateway.utils import cast_to_bit
 from logs import get_file_logger
 
 
@@ -27,6 +27,8 @@ class ModbusDevice(Thread):
                  objects: set[ModbusObj],
                  update_period: int = 10):
         super().__init__()
+        self.setName(name=f'{self}-Thread')
+        self.setDaemon(True)
 
         self.id = device_id
         self.address, self.port = address.split(sep=':', maxsplit=1)
@@ -35,9 +37,6 @@ class ModbusDevice(Thread):
         self._log = get_file_logger(logger_name=f'{device_id}')
 
         self._client, self._available_functions = None, None
-
-        self.setName(name=f'{self}-Thread')
-        self.setDaemon(True)
 
         self._connector = connector
         self._verifier_queue = verifier_queue
@@ -86,7 +85,9 @@ class ModbusDevice(Thread):
                         sleep(waiting_time)
 
                 except Exception as e:
-                    self._log.error(f'Polling error: {e}', exc_info=True)
+                    self._log.error(f'Polling error: {e}',
+                                    exc_info=True
+                                    )
             else:  # client not connect
                 self._log.info('Connecting to client ...')
                 try:
@@ -134,7 +135,7 @@ class ModbusDevice(Thread):
             raise e
 
     def read(self, cmd_code: int, reg_address: int,
-             quantity: int, unit=0x01) -> list:  # or None:
+             quantity: int, unit=0x01) -> list:
         """Read data from Modbus registers."""
         read_cmd_codes = {1, 2, 3, 4}
         if cmd_code not in read_cmd_codes:
@@ -152,15 +153,6 @@ class ModbusDevice(Thread):
         else:
             self._log.warning(f'Read failed: {data}')
             raise data
-
-            # return None
-        # except Exception as e:
-        #     self._log.error(
-        #         f'Read error from reg: {reg_address}, quantity: {quantity} : {e}',
-        #         exc_info=True
-        #     )
-        #     # todo: raise error
-        #     return None
 
     def write(self, cmd_code: int, reg_address: int,
               values, unit=0x01) -> None:
