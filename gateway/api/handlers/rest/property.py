@@ -1,16 +1,17 @@
 from http import HTTPStatus
 
 from aiohttp.web_response import json_response
-from aiohttp_apispec import docs
+from aiohttp_apispec import docs, response_schema
 
-from gateway.api.handlers import ModbusMixin
 from logs import get_file_logger
+from ...handlers import ModbusRWMixin, BaseView
+from ...schema import JsonRPCPostResponseSchema
 
 _log = get_file_logger(logger_name=__name__)
 
 
-class ModbusPropertyView(ModbusMixin):
-    URL_PATH = (r'/api/property/{device_id:\d+}/{object_type:\d+}/'
+class ModbusPropertyView(BaseView, ModbusRWMixin):
+    URL_PATH = (r'/api/v1/property/{device_id:\d+}/{object_type:\d+}/'
                 r'{object_id:\d+}/{property:\d+}')
 
     @property
@@ -34,9 +35,46 @@ class ModbusPropertyView(ModbusMixin):
         device = self.get_device(dev_id=self.device_id)
         obj = self.get_obj(device=device, obj_type=self.object_type, obj_id=self.object_id)
 
-        value = self._modbus_read(obj=obj,
-                                  device=device
-                                  )
+        value = self.read_modbus(obj=obj,
+                                 device=device
+                                 )
         return json_response({'value': value},
                              status=HTTPStatus.OK.value
                              )
+
+    @response_schema(JsonRPCPostResponseSchema, code=HTTPStatus.OK.value)
+    async def post(self):
+        device = self.get_device(dev_id=self.device_id)
+        obj = self.get_obj(device=device, obj_type=self.object_type, obj_id=self.object_id)
+
+        body = await self.request.json()
+
+        value = body.get('value')
+        property_ = body.get('property')
+
+        if property_ is not 85:
+            return json_response({'success': False,
+                                  'msg': 'For now, only the presentValue(85) '
+                                         'property is supported.'
+                                  },
+                                 status=HTTPStatus.NOT_IMPLEMENTED.value
+                                 )
+
+        self.write_modbus(value=value,
+                          obj=obj,
+                          device=device
+                          )
+        rvalue = self.read_modbus(obj=obj,
+                                  device=device
+                                  )
+        if value == rvalue:
+            return json_response({'success': True},
+                                 status=HTTPStatus.OK.value
+                                 )
+        else:
+            return json_response({'success': False,
+                                  'msg': 'The read value does not match the written one. '
+                                         f'Written: {value} Read: {rvalue}'
+                                  },
+                                 status=HTTPStatus.BAD_GATEWAY.value
+                                 )

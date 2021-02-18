@@ -1,18 +1,17 @@
 from http import HTTPStatus
 
-from aiohttp.web_exceptions import HTTPBadGateway
 from aiohttp.web_response import json_response
 from aiohttp_apispec import docs, request_schema, response_schema
 
-from gateway.api.handlers.mixins import ModbusMixin
-
-from gateway.api.schema import JsonRPCSchema, JsonRPCPostResponseSchema
 from logs import get_file_logger
+from ..mixins import ModbusRWMixin
+from ...handlers import BaseView
+from ...schema import JsonRPCSchema, JsonRPCPostResponseSchema
 
 _log = get_file_logger(logger_name=__name__)
 
 
-class JsonRPCView(ModbusMixin):
+class JsonRPCView(BaseView, ModbusRWMixin):
     URL_PATH = r'/json-rpc'
 
     @docs(summary='Device control with writing control.')
@@ -29,16 +28,21 @@ class JsonRPCView(ModbusMixin):
         device = self.get_device(dev_id=dev_id)
         obj = self.get_obj(device=device, obj_type=obj_type, obj_id=obj_id)
 
-        self._modbus_write(value=value,
-                           obj=obj,
-                           device=device
-                           )
-        rvalue = self._modbus_read(obj=obj,
-                                   device=device
-                                   )
+        self.write_modbus(value=value,
+                          obj=obj,
+                          device=device
+                          )
+        rvalue = self.read_modbus(obj=obj,
+                                  device=device
+                                  )
         if value == rvalue:
             return json_response({'success': True},
                                  status=HTTPStatus.OK.value
                                  )
         else:
-            raise HTTPBadGateway
+            return json_response({'success': False,
+                                  'msg': 'The read value does not match the written one. '
+                                         f'Written: {value} Read: {rvalue}'
+                                  },
+                                 status=HTTPStatus.BAD_GATEWAY.value
+                                 )

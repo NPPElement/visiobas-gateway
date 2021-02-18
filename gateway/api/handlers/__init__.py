@@ -1,6 +1,6 @@
 from .base import BaseView
 from .jsonrpc import JsonRPCView
-from .mixins import ModbusMixin
+from .mixins import ModbusRWMixin
 from .rest import ModbusPropertyView
 
 HANDLERS = (JsonRPCView,
@@ -8,7 +8,7 @@ HANDLERS = (JsonRPCView,
             )
 
 __all__ = ('BaseView',
-           'ModbusMixin',
+           'ModbusRWMixin',
            'JsonRPCView',
            'ModbusPropertyView',
            'HANDLERS'

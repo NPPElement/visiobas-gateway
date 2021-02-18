@@ -1,4 +1,4 @@
-from .modbus import ModbusMixin
+from .modbus import ModbusRWMixin
 
-__all__ = ('ModbusMixin',
+__all__ = ('ModbusRWMixin',
            )
