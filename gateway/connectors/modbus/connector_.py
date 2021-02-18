@@ -26,7 +26,7 @@ class ModbusConnector(BaseConnector):
                          config=config
                          )
 
-        self.address_cache_path = _base_path / 'connector/modbus/address_cache'
+        self.address_cache_path = _base_path / 'connectors/modbus/address_cache'
 
         self.obj_types_to_request = (ObjType.ANALOG_INPUT, ObjType.ANALOG_OUTPUT,
                                      ObjType.ANALOG_VALUE,

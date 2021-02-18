@@ -33,7 +33,7 @@ class BACnetConnector(BaseConnector):
                          )
         self._network = None
 
-        self.address_cache_path = _base_path / 'connector/bacnet/address_cache'
+        self.address_cache_path = _base_path / 'connectors/bacnet/address_cache'
 
         self.obj_types_to_request = (ObjType.ANALOG_INPUT, ObjType.ANALOG_OUTPUT,
                                      ObjType.ANALOG_VALUE,
