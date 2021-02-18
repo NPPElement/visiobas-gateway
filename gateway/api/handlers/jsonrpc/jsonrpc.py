@@ -14,7 +14,7 @@ _log = get_file_logger(logger_name=__name__)
 class JsonRPCView(BaseView, ModbusRWMixin):
     URL_PATH = r'/json-rpc'
 
-    @docs(summary='Device control with writing control.')
+    @docs(summary='Write property to device object with check.')
     @request_schema(JsonRPCSchema())
     @response_schema(JsonRPCPostResponseSchema, code=HTTPStatus.OK.value)
     async def post(self):

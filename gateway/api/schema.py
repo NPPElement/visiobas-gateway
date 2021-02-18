@@ -45,8 +45,8 @@ class ParamsSchema(Schema):
                    strict=True, required=True)
     index = Int()
     tag = Int()
-    value = Field( #validate=OneOf([Int, Float, Str]),
-                  required=True)
+    value = Field(  # validate=OneOf([Int, Float, Str]),
+        required=True)
 
     # device_id = Str(validate=Regexp(regex='\d{1,7}'), required=True)
     # object_type = Str(validate=Regexp(regex='[0-33]'), required=True)
@@ -66,3 +66,7 @@ class JsonRPCSchema(Schema):
 
 class JsonRPCPostResponseSchema(Schema):
     success = Bool(required=True)
+
+
+class WriteResultSchema(Schema):
+    value = Field(required=True)

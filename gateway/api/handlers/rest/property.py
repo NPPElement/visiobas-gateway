@@ -5,7 +5,7 @@ from aiohttp_apispec import docs, response_schema
 
 from logs import get_file_logger
 from ...handlers import ModbusRWMixin, BaseView
-from ...schema import JsonRPCPostResponseSchema
+from ...schema import JsonRPCPostResponseSchema, WriteResultSchema
 
 _log = get_file_logger(logger_name=__name__)
 
@@ -30,7 +30,8 @@ class ModbusPropertyView(BaseView, ModbusRWMixin):
     def property_(self) -> int:
         return int(self.request.match_info.get('property'))
 
-    @docs(summary='Read property from object of device.')
+    @docs(summary='Read property from device object.')
+    @response_schema(schema=WriteResultSchema, code=200)
     async def get(self):
         device = self.get_device(dev_id=self.device_id)
         obj = self.get_obj(device=device, obj_type=self.object_type, obj_id=self.object_id)
@@ -42,7 +43,8 @@ class ModbusPropertyView(BaseView, ModbusRWMixin):
                              status=HTTPStatus.OK.value
                              )
 
-    @response_schema(JsonRPCPostResponseSchema, code=HTTPStatus.OK.value)
+    @docs(summary='Write property to device object with check.')
+    @response_schema(schema=JsonRPCPostResponseSchema, code=HTTPStatus.OK.value)
     async def post(self):
         device = self.get_device(dev_id=self.device_id)
         obj = self.get_obj(device=device, obj_type=self.object_type, obj_id=self.object_id)
