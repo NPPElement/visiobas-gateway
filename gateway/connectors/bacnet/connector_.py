@@ -6,13 +6,13 @@ from BAC0 import lite
 from BAC0.core.io.IOExceptions import InitializationError, NetworkInterfaceException
 
 from gateway.models import ObjType, BACnetObj
-from gateway.utils import get_file_logger
 from .device import BACnetDevice
 from ..base_connector import BaseConnector
 
 _base_path = Path(__file__).resolve().parent.parent.parent
 
 from logging import getLogger
+
 _log = getLogger(__name__)
 
 

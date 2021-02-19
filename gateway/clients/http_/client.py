@@ -1,4 +1,5 @@
 import asyncio
+from logging import getLogger
 # import atexit
 from multiprocessing import SimpleQueue
 from pathlib import Path
@@ -11,11 +12,9 @@ from aiomisc import awaitable
 
 from gateway.connectors import BaseConnector
 from gateway.models import ObjType
-from gateway.utils import get_file_logger
 from .http_config import VisioHTTPConfig
 from .http_node import VisioHTTPNode
 
-from logging import getLogger
 _log = getLogger(__name__)
 
 _base_path = Path(__file__).resolve().parent.parent.parent

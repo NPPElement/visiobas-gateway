@@ -1,12 +1,11 @@
+from logging import getLogger
 from typing import Any
 
 from aiohttp.web_exceptions import HTTPBadGateway
 
 from gateway.connectors import ModbusDevice
 from gateway.models import ModbusObj
-from gateway.utils import get_file_logger
 
-from logging import getLogger
 _log = getLogger(__name__)
 
 

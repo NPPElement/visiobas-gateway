@@ -1,11 +1,10 @@
+from logging import getLogger
 from multiprocessing import Process, SimpleQueue
 
 from bacpypes.basetypes import PriorityArray
 
 from gateway.models import ObjProperty, StatusFlags
-from gateway.utils import get_file_logger
 
-from logging import getLogger
 _log = getLogger(__name__)
 
 

@@ -1,13 +1,12 @@
 from http import HTTPStatus
+from logging import getLogger
 
 from aiohttp.web_response import json_response
 from aiohttp_apispec import docs, response_schema
 
-from gateway.utils import get_file_logger
 from ...handlers import ModbusRWMixin, BaseView
 from ...schema import JsonRPCPostResponseSchema, WriteResultSchema
 
-from logging import getLogger
 _log = getLogger(__name__)
 
 

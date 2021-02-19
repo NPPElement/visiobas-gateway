@@ -1,13 +1,11 @@
 import time
+from logging import getLogger
 from multiprocessing import SimpleQueue
 from pathlib import Path
 from threading import Thread
 
 import paho.mqtt.client as mqtt
 
-from gateway.utils import get_file_logger
-
-from logging import getLogger
 _log = getLogger(__name__)
 
 

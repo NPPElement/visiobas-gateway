@@ -3,15 +3,14 @@ from abc import ABC, abstractmethod
 from functools import lru_cache
 from ipaddress import IPv4Address
 from json import loads
+from logging import getLogger
 from multiprocessing import SimpleQueue
 from pathlib import Path
 from threading import Thread
 from typing import Iterable
 
 from gateway.models import ObjType, BACnetObj, ObjProperty
-from gateway.utils import get_file_logger
 
-from logging import getLogger
 _log = getLogger(__name__)
 
 
