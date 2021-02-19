@@ -30,12 +30,12 @@ class BACnetDevice(Thread):
                  objects: set[BACnetObj],
                  update_period: int):
         super().__init__()
+        self.id = device_id
         self.setName(name=f'{self}-Thread')
         self.setDaemon(True)
 
         # todo config
 
-        self.id = device_id
         self.update_period = update_period
 
         self._log = get_file_logger(logger_name=f'{device_id}')

@@ -27,10 +27,10 @@ class ModbusDevice(Thread):
                  objects: set[ModbusObj],
                  update_period: int = 10):
         super().__init__()
+        self.id = device_id
         self.setName(name=f'{self}-Thread')
         self.setDaemon(True)
 
-        self.id = device_id
         self.address, self.port = address.split(sep=':', maxsplit=1)
         self.update_period = update_period
 
