@@ -5,7 +5,7 @@ from time import time, sleep
 from pymodbus.client.sync import ModbusTcpClient
 
 from gateway.models import ModbusObj, VisioModbusProperties, ObjProperty
-from gateway.utils import cast_to_bit
+from gateway.utils import cast_to_bit, cast_2_registers
 from logs import get_file_logger
 
 
@@ -194,12 +194,15 @@ class ModbusDevice(Thread):
             value = registers[0]
 
         # todo
-        # elif (properties.data_type == 'FLOAT' and
-        #       quantity == 2 and properties.data_length == 32):  # float32
-        #     value = round(cast_2_registers(registers=registers,
-        #                                    byteorder='>', wordorder='<',  # fixme use obj
-        #                                    type_name=properties.data_type),
-        #                   ndigits=6)
+        elif (properties.data_type == 'FLOAT' and
+              quantity == 2 and properties.data_length == 32):  # float32
+            value = round(cast_2_registers(registers=registers,
+                                           data_len=properties.data_length,
+                                           byteorder='>', wordorder='<',  # fixme use obj
+                                           type_name=properties.data_type
+                                           ),
+                          ndigits=6)
+
         # elif ((properties.data_type == 'INT' or properties.data_type == 'UINT') and
         #       quantity == 2 and properties.data_length == 32):  # int32 | uint32
         #     value = cast_2_registers(registers=registers,

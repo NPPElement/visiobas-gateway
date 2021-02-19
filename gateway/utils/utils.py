@@ -32,26 +32,28 @@ def cast_to_bit(register: list[int], bit: int) -> int:
     bits = [*second, *first]
     return int(bits[bit])
 
-# def cast_2_registers(registers: list[int],
-#                      byteorder: str, wordorder: str,
-#                      type_name: str) -> int or float:
-#     """ Cast two registers to selected type"""
-#     decoder = BinaryPayloadDecoder.fromRegisters(
-#         registers=registers,
-#         byteorder=byteorder,
-#         wordorder=wordorder
-#     )
-#     decode_func = {16: {'INT': decoder.decode_16bit_int,
-#                         'UINT': decoder.decode_16bit_uint,
-#                         'FLOAT': decoder.decode_16bit_float,
-#                         },
-#                    32: {'INT': decoder.decode_32bit_int,
-#                         'UINT': decoder.decode_32bit_uint,
-#                         'FLOAT': decoder.decode_32bit_float,
-#                         },
-#                    }
-#     # TODO: UNFINISHED
-#     try:
-#         return decode_func[type_name]()
-#     except KeyError:
-#         raise ValueError(f'Behavior for <{type_name}> not implemented')
+
+def cast_2_registers(registers: list[int],
+                     data_len: int,
+                     byteorder: str, wordorder: str,
+                     type_name: str) -> int or float:
+    """ Cast two registers to selected type"""
+    decoder = BinaryPayloadDecoder.fromRegisters(
+        registers=registers,
+        byteorder=byteorder,
+        wordorder=wordorder
+    )
+    decode_func = {16: {'INT': decoder.decode_16bit_int,
+                        'UINT': decoder.decode_16bit_uint,
+                        'FLOAT': decoder.decode_16bit_float,
+                        },
+                   32: {'INT': decoder.decode_32bit_int,
+                        'UINT': decoder.decode_32bit_uint,
+                        'FLOAT': decoder.decode_32bit_float,
+                        },
+                   }
+    # TODO: UNFINISHED
+    try:
+        return decode_func[data_len][type_name]()
+    except KeyError:
+        raise ValueError(f'Behavior for <{type_name}> not implemented')
