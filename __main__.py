@@ -24,7 +24,8 @@ _unused_loggers = ('BAC0_Root.BAC0.scripts.Base.Base',
                    'pymodbus.client.sync',
                    'pymodbus.transaction',
                    'pymodbus.framer.socket_framer',
-                   'pymodbus.factory'
+                   'pymodbus.factory',
+                   'pymodbus.payload'
                    )
 logging.basicConfig(format=_log_fmt,
                     level=_log_level,

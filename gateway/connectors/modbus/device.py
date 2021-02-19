@@ -147,8 +147,12 @@ class ModbusDevice(Thread):
                                                    unit=unit
                                                    )
         if not data.isError():
-            self._log.debug(
-                f'Successfully read: {reg_address}({quantity}): {data.registers}')
+            self._log.debug('Successfully read',
+                            extra={'cmd_code': cmd_code,
+                                   'address': reg_address,
+                                   'quantity': data.registers
+                                   }
+                            )
             return data.registers
         else:
             self._log.warning(f'Read failed: {data}')
@@ -213,9 +217,14 @@ class ModbusDevice(Thread):
                                       f'not yet defined: {registers, quantity, properties}')
         scaled = value / properties.scale
 
-        self._log.debug(
-            f'Registers: {registers} Casted: {value} '
-            f'scale: {properties.scale} scaled: {scaled} ')
+        self._log.debug('Processed',
+                        extra={'registers': registers,
+                               'quantity': quantity,
+                               'properties': properties,
+                               'cast value': value,
+                               'scaled': scaled,
+                               }
+                        )
         return scaled
 
     def poll(self, objects: list[ModbusObj]) -> None:
