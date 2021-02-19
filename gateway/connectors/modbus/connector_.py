@@ -8,7 +8,8 @@ from ..base_connector import BaseConnector
 
 _base_path = Path(__file__).resolve().parent.parent.parent
 
-_log = get_file_logger(logger_name=__name__)
+from logging import getLogger
+_log = getLogger(__name__)
 
 
 class ModbusConnector(BaseConnector):

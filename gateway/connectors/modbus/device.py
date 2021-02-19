@@ -1,3 +1,4 @@
+from logging import getLogger
 from multiprocessing import SimpleQueue
 from threading import Thread
 from time import time, sleep
@@ -5,7 +6,9 @@ from time import time, sleep
 from pymodbus.client.sync import ModbusTcpClient
 
 from gateway.models import ModbusObj, VisioModbusProperties, ObjProperty
-from gateway.utils import cast_to_bit, cast_2_registers, get_file_logger
+from gateway.utils import cast_to_bit, cast_2_registers
+
+_log = getLogger(__name__)
 
 
 class ModbusDevice(Thread):
