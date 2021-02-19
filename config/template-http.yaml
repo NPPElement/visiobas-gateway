@@ -1,5 +1,12 @@
-delay: # Delays, used in HTTP (in seconds)
-  auth_next_attempt: 60
+interval: # Delays, used in HTTP (in seconds)
+  update: 3600
+  next_attempt: 60
+
+
+#send_by:  # One method must be selected at the same time
+#  http: true
+#  websocket: false
+timeout: 30
 
 
 get_node: # for GET requests
