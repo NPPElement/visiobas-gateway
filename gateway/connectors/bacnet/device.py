@@ -1,3 +1,4 @@
+from logging import getLogger
 from multiprocessing import SimpleQueue
 from threading import Thread
 from time import sleep, time
@@ -11,7 +12,7 @@ from BAC0.core.io.IOExceptions import (ReadPropertyException,
 
 from gateway.models import BACnetObj, ObjType, ObjProperty
 from gateway.utils import get_fault_obj_properties
-from logging import getLogger
+
 _log = getLogger(__name__)
 
 
