@@ -9,7 +9,7 @@ from threading import Thread
 from typing import Iterable
 
 from gateway.models import ObjType, BACnetObj, ObjProperty
-from logs import get_file_logger
+from gateway.utils import get_file_logger
 
 _log = get_file_logger(logger_name=__name__)
 

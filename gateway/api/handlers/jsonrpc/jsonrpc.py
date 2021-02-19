@@ -3,7 +3,7 @@ from http import HTTPStatus
 from aiohttp.web_response import json_response
 from aiohttp_apispec import docs, request_schema, response_schema
 
-from logs import get_file_logger
+from gateway.utils import get_file_logger
 from ..mixins import ModbusRWMixin
 from ...handlers import BaseView
 from ...schema import JsonRPCSchema, JsonRPCPostResponseSchema

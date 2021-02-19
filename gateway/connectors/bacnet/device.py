@@ -11,7 +11,7 @@ from BAC0.core.io.IOExceptions import (ReadPropertyException,
 
 from gateway.models import BACnetObj, ObjType, ObjProperty
 from gateway.utils import get_fault_obj_properties
-from logs import get_file_logger
+from gateway.utils import get_file_logger
 
 
 class BACnetDevice(Thread):

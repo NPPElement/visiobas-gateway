@@ -4,7 +4,7 @@ from aiohttp.web_exceptions import HTTPBadGateway
 
 from gateway.connectors import ModbusDevice
 from gateway.models import ModbusObj
-from logs import get_file_logger
+from gateway.utils import get_file_logger
 
 _log = get_file_logger(logger_name=__name__)
 

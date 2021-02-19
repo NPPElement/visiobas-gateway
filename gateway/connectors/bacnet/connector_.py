@@ -6,7 +6,7 @@ from BAC0 import lite
 from BAC0.core.io.IOExceptions import InitializationError, NetworkInterfaceException
 
 from gateway.models import ObjType, BACnetObj
-from logs import get_file_logger
+from gateway.utils import get_file_logger
 from .device import BACnetDevice
 from ..base_connector import BaseConnector
 

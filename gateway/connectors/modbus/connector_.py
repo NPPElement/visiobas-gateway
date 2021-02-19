@@ -2,7 +2,7 @@ from multiprocessing import SimpleQueue
 from pathlib import Path
 
 from gateway.models import ObjType, ModbusObj
-from logs import get_file_logger
+from gateway.utils import get_file_logger
 from .device import ModbusDevice
 from ..base_connector import BaseConnector
 

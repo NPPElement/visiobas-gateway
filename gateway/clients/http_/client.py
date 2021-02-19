@@ -11,7 +11,7 @@ from aiomisc import awaitable
 
 from gateway.connectors import BaseConnector
 from gateway.models import ObjType
-from logs import get_file_logger
+from gateway.utils import get_file_logger
 from .http_config import VisioHTTPConfig
 from .http_node import VisioHTTPNode
 
@@ -315,16 +315,17 @@ class VisioHTTPClient(Thread):
         if successfully_authorized:
             _log.info(f'Successfully authorized to {get_node}, {post_nodes}')
         else:
-            _log.warning("Authorizations failed! Next attempt after "
-                         f"{self._config['interval']['next_attempt']} seconds."
+            next_attempt = self._config['interval']['next_attempt']
+            _log.warning("Failed authorizations! Next attempt after "
+                         f"{next_attempt} seconds."
                          )
-            sleep(self._config['interval']['next_attempt'])
+            sleep(next_attempt)
 
         return successfully_authorized
 
     async def _login_node(self, node: VisioHTTPNode,
                           session) -> bool:
-        """ Perform authorization to node (primary server + mirror)
+        """Perform authorization to node (primary server + mirror)
         :param node: node on witch the authorization is performed
         :param session:
         :return: is node authorized
@@ -342,7 +343,7 @@ class VisioHTTPClient(Thread):
             if is_authorized:
                 _log.info(f'Successfully authorized on {node}')
             else:
-                _log.warning(f'Authorization on {node} failed!')
+                _log.warning(f'Failed authorization on {node}')
         except Exception as e:
             _log.warning(f'Authorization error! Please check {node}: {e}',
                          exc_info=True

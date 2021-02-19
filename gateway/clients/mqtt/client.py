@@ -5,7 +5,7 @@ from threading import Thread
 
 import paho.mqtt.client as mqtt
 
-from logs import get_file_logger
+from gateway.utils import get_file_logger
 
 _log = get_file_logger(logger_name=__name__)
 

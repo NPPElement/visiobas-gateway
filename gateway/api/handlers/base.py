@@ -1,7 +1,7 @@
 from aiohttp.web_exceptions import HTTPNotFound
 from aiohttp.web_urldispatcher import View
 
-from logs import get_file_logger
+from gateway.utils import get_file_logger
 
 _log = get_file_logger(logger_name=__name__)
 

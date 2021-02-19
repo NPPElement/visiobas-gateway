@@ -6,7 +6,7 @@ from aiomisc import entrypoint
 from aiomisc.log import basic_config
 from aiomisc.service.aiohttp import AIOHTTPService
 
-from logs import get_file_logger
+from gateway.utils import get_file_logger
 from .handlers import HANDLERS
 
 _log = get_file_logger(logger_name=__name__)
