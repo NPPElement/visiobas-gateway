@@ -4,7 +4,7 @@ import sys
 from pathlib import Path
 
 from gateway import VisioGateway
-from logs import disable_loggers
+from gateway.utils import disable_loggers
 
 _base_path = Path(__file__).resolve().parent
 
