@@ -8,8 +8,6 @@ from pymodbus.client.sync import ModbusTcpClient
 from gateway.models import ModbusObj, VisioModbusProperties, ObjProperty
 from gateway.utils import cast_to_bit, cast_2_registers
 
-_log = getLogger(__name__)
-
 
 class ModbusDevice(Thread):
     __slots__ = ('id', 'address', 'port', 'update_period', '_log',
@@ -36,7 +34,7 @@ class ModbusDevice(Thread):
         self.address, self.port = address.split(sep=':', maxsplit=1)
         self.update_period = update_period
 
-        self._log = get_file_logger(logger_name=f'{device_id}')
+        self._log = getLogger(name=f'{device_id}')
 
         self._client, self._available_functions = None, None
 

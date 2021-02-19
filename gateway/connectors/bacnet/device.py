@@ -13,8 +13,6 @@ from BAC0.core.io.IOExceptions import (ReadPropertyException,
 from gateway.models import BACnetObj, ObjType, ObjProperty
 from gateway.utils import get_fault_obj_properties
 
-_log = getLogger(__name__)
-
 
 class BACnetDevice(Thread):
     __slots__ = ('id', 'update_period', '_log', '_connector', '_verifier_queue',
@@ -40,7 +38,7 @@ class BACnetDevice(Thread):
 
         self.update_period = update_period
 
-        self._log = get_file_logger(logger_name=f'{device_id}')
+        self._log = getLogger(name=f'{device_id}')
 
         self._connector = connector
         self._verifier_queue = verifier_queue
