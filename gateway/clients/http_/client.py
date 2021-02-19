@@ -361,7 +361,9 @@ class VisioHTTPClient(Thread):
         if server.is_authorized:
             return True
 
-        _log.info(f'Authorization to {server} ...')
+        _log.info(f'Authorization to {server}...',
+                  #extra={'server': server}
+                  )
         auth_url = server.base_url + '/auth/rest/login'
         try:
             auth_data = await self._rq(method='POST',
@@ -374,18 +376,22 @@ class VisioHTTPClient(Thread):
                                  auth_user_id=auth_data['auth_user_id']
                                  )
             if server.is_authorized:
-                _log.info(f'Successfully authorized on {server}')
+                _log.info(f'Successful authorization to {server}',
+                          #extra={'server': server}
+                          )
             else:
-                _log.info(f'Failed authorization to: {server}')
-
+                _log.warning(f'Failed authorization to {server}',
+                             # extra={'server': server}
+                             )
         except aiohttp.ClientError as e:
-            _log.warning(f'Failed authorization to {server}: {e}')
-            # raise e
+            _log.warning(f'Failed authorization to {server}: {e}',
+                         # extra={'server': server}
+                         )
         except Exception as e:
-            _log.error(f'Authorization error! Please check {server}: {e}',
+            _log.error(f'Authorization to {server} error: {e}',
+                       # extra={'server': server},
                        exc_info=True
                        )
-            # raise e
         finally:
             return server.is_authorized
 

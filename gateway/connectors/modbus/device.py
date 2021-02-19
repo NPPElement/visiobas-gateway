@@ -147,11 +147,12 @@ class ModbusDevice(Thread):
                                                    unit=unit
                                                    )
         if not data.isError():
-            self._log.debug('Successfully read',
-                            extra={'cmd_code': cmd_code,
-                                   'address': reg_address,
-                                   'quantity': data.registers
-                                   }
+            self._log.debug(f'Successful reading cmd_code={cmd_code} address={reg_address} '
+                            f'quantity={quantity} registers={data.registers}'
+                            # extra={'cmd_code': cmd_code,
+                            #        'address': reg_address,
+                            #        'quantity': data.registers
+                            #        }
                             )
             return data.registers
         else:
@@ -217,13 +218,14 @@ class ModbusDevice(Thread):
                                       f'not yet defined: {registers, quantity, properties}')
         scaled = value / properties.scale
 
-        self._log.debug('Processed',
-                        extra={'registers': registers,
-                               'quantity': quantity,
-                               'properties': properties,
-                               'cast value': value,
-                               'scaled': scaled,
-                               }
+        self._log.debug(f'Processed registers={registers} quantity={quantity} '
+                        f'properties={properties} cast_value={value} scaled_value={scaled}',
+                        # extra={'registers': registers,
+                        #        'quantity': quantity,
+                        #        'properties': properties,
+                        #        'cast value': value,
+                        #        'scaled': scaled,
+                        #        }
                         )
         return scaled
 
