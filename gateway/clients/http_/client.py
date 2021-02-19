@@ -15,7 +15,8 @@ from gateway.utils import get_file_logger
 from .http_config import VisioHTTPConfig
 from .http_node import VisioHTTPNode
 
-_log = get_file_logger(logger_name=__name__)
+from logging import getLogger
+_log = getLogger(__name__)
 
 _base_path = Path(__file__).resolve().parent.parent.parent
 

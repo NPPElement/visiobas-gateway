@@ -9,7 +9,8 @@ from aiomisc.service.aiohttp import AIOHTTPService
 from gateway.utils import get_file_logger
 from .handlers import HANDLERS
 
-_log = get_file_logger(logger_name=__name__)
+from logging import getLogger
+_log = getLogger(__name__)
 
 
 class VisioGatewayApiService(AIOHTTPService):

@@ -8,11 +8,11 @@ from gateway.api import VisioGatewayApiService
 from gateway.clients import VisioHTTPClient, VisioMQTTClient
 from gateway.connectors import BACnetConnector, ModbusConnector
 from gateway.verifier import BACnetVerifier
-from gateway.utils import get_file_logger
 
 _base_path = Path(__file__).resolve().parent.parent
+from logging import getLogger
 
-_log = get_file_logger(logger_name=__name__)
+_log = getLogger(__name__)
 
 
 class VisioGateway:

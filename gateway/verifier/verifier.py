@@ -5,7 +5,8 @@ from bacpypes.basetypes import PriorityArray
 from gateway.models import ObjProperty, StatusFlags
 from gateway.utils import get_file_logger
 
-_log = get_file_logger(logger_name=__name__)
+from logging import getLogger
+_log = getLogger(__name__)
 
 
 class BACnetVerifier(Process):

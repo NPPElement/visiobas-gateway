@@ -1,5 +1,6 @@
 from http import HTTPStatus
 
+
 from aiohttp.web_response import json_response
 from aiohttp_apispec import docs, request_schema, response_schema
 
@@ -8,7 +9,8 @@ from ..mixins import ModbusRWMixin
 from ...handlers import BaseView
 from ...schema import JsonRPCSchema, JsonRPCPostResponseSchema
 
-_log = get_file_logger(logger_name=__name__)
+from logging import getLogger
+_log = getLogger(__name__)
 
 
 class JsonRPCView(BaseView, ModbusRWMixin):
