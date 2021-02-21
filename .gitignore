@@ -1,9 +1,14 @@
 venv
 .idea
+
+visiobas_gateway.egg-info
+dist
+
 *.pyc
 logs/*.log*
 *.DS_Store
 .DS_Store
+
 *address_cache
 config/http.yaml
 config/mqtt.yaml
