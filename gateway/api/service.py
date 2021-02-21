@@ -26,7 +26,7 @@ class VisioGatewayApiService(AIOHTTPService):
         """Creates an instance of the application, ready to run."""
         _log.debug('Creating app ...')
 
-        basic_config(level=logging.DEBUG, buffered=True)
+        # basic_config(level=logging.DEBUG, buffered=True)
 
         app = Application()
         app['gateway'] = self._gateway

@@ -1,5 +1,9 @@
 version: "3.7"
 
+networks:
+  backend:
+    driver: bridge
+
 services:
   vb_gateway:
     container_name: gateway
@@ -7,12 +11,12 @@ services:
       context: .
       dockerfile: Dockerfile
     image: visiobas-gateway:0.1.2
-    #logging:
-      #driver: none
-    #      driver: "json-file"
-    #      options:
-    #        max-file: 3
-    #        max-size: 50m
+    logging:
+      driver: none
+        driver: "json-file"
+        options:
+          max-file: "2"
+          max-size: "1024k"
     restart: always
     user: root
     environment:
@@ -21,33 +25,36 @@ services:
 
       # Logging
       - LOG_LEVEL=DEBUG
-#      - FILE_LOG_LEVEL=DEBUG
+      #- FILE_LOG_LEVEL=DEBUG
     volumes:
-      #- /opt/visiobas-gateway:/visiobas-gateway
+      #- /opt/visiobas-gateway/config:/visiobas-gateway/gateway/config
+      #- /opt/visiobas-gateway/logs:/visiobas-gateway/gateway/logs
+      #- /opt/visiobas-gateway/gateway/connectors/bacnet/address_cache:/visiobas-gateway/gateway/connectors/bacnet/address_cache
+      #- /opt/visiobas-gateway/gateway/connectors/modbus/address_cache:/visiobas-gateway/gateway/connectors/modbus/address_cache
       - /home/user/visiobas-gateway:/visiobas-gateway
-    command: python -OO __main__.py
-
-    network_mode: host
-
+    # command: python -OO __main__.py
+    networks:
+      -backend
+    # network_mode: host
     ports:
-#      - 502:502
-#      - 1883:1883
+      - 502:502
+      - 1883:1883
       - 7070:7070
       - 8080:8080
-#      - 8883:8883
-#      - 47808:47808
-#      - 47809:47809
-#      - 47810:47810
-#      - 47811:47811
-#      - 47812:47812
-#      - 47813:47813
-#      - 47814:47814
-#      - 47815:47815
-#      - 47816:47816
-#      - 47817:47817
-#      - 47818:47818
-#      - 47819:47819
-#      - 47820:47820
-#      - 47821:47821
-#      - 47822:47822
-#      - 47823:47823
+      - 8883:8883
+      - 47808:47808
+      - 47809:47809
+      - 47810:47810
+      - 47811:47811
+      - 47812:47812
+      - 47813:47813
+      - 47814:47814
+      - 47815:47815
+      - 47816:47816
+      - 47817:47817
+      - 47818:47818
+      - 47819:47819
+      - 47820:47820
+      - 47821:47821
+      - 47822:47822
+      - 47823:47823
