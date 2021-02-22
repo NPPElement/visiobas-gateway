@@ -46,7 +46,7 @@ class ModbusDevice(Thread):
         self.objects: set[ModbusObj] = objects
 
         self._log.info(f'{self} starting ...')
-        self.start()
+        #self.start()
 
     def __repr__(self) -> str:
         return f'{self.__class__.__name__}[{self.id}]'

@@ -46,7 +46,7 @@ class TestVerify(unittest.TestCase):
              ObjProperty.objectIdentifier: 3,
              ObjProperty.presentValue: 3,
              ObjProperty.reliability: 3,
-             ObjProperty.statusFlags: 0
+             ObjProperty.statusFlags: 0b0000
              },
             {ObjProperty.objectType: ObjType.ANALOG_INPUT,
              ObjProperty.objectIdentifier: 4,
@@ -58,21 +58,21 @@ class TestVerify(unittest.TestCase):
         expected = (
             {ObjProperty.objectType: ObjType.ANALOG_INPUT,
              ObjProperty.objectIdentifier: 1,
-             ObjProperty.statusFlags: 0,
+             ObjProperty.statusFlags: 0b0000,
              ObjProperty.reliability: 0,
              ObjProperty.presentValue: 1,
              },
             {ObjProperty.objectType: ObjType.ANALOG_INPUT,
              ObjProperty.objectIdentifier: 2,
              ObjProperty.presentValue: 2,
-             ObjProperty.statusFlags: 0,
+             ObjProperty.statusFlags: 0b0000,
              ObjProperty.reliability: 2
              },
             {ObjProperty.objectType: ObjType.ANALOG_INPUT,
              ObjProperty.objectIdentifier: 3,
              ObjProperty.presentValue: 3,
              ObjProperty.reliability: 3,
-             ObjProperty.statusFlags: 0
+             ObjProperty.statusFlags: 0b0000
              },
             {ObjProperty.objectType: ObjType.ANALOG_INPUT,
              ObjProperty.objectIdentifier: 4,
@@ -96,20 +96,20 @@ class TestVerify(unittest.TestCase):
              ObjProperty.objectIdentifier: 2,
              ObjProperty.presentValue: 'inactive',
              ObjProperty.reliability: 2,
-             ObjProperty.statusFlags: 0
+             ObjProperty.statusFlags: 0b0000
              }
         )
         expected = (
             {ObjProperty.objectType: ObjType.BINARY_INPUT,
              ObjProperty.objectIdentifier: 1,
-             ObjProperty.statusFlags: 0,
+             ObjProperty.statusFlags: 0b0000,
              ObjProperty.reliability: 0,
              ObjProperty.presentValue: 1,
              },
             {ObjProperty.objectType: ObjType.BINARY_INPUT,
              ObjProperty.objectIdentifier: 2,
              ObjProperty.presentValue: 0,
-             ObjProperty.statusFlags: 0,
+             ObjProperty.statusFlags: 0b0000,
              ObjProperty.reliability: 2
              }
         )
@@ -123,75 +123,53 @@ class TestVerify(unittest.TestCase):
             {ObjProperty.objectType: ObjType.ANALOG_VALUE,
              ObjProperty.objectIdentifier: 1,
              ObjProperty.presentValue: 1,
-             ObjProperty.priorityArray: PriorityArray(
-                 [PriorityValue(null=Null()), PriorityValue(null=Null()),
-                  PriorityValue(null=Null()), PriorityValue(null=Null()),
-                  PriorityValue(null=Null()), PriorityValue(null=Null()),
-                  PriorityValue(null=Null()), PriorityValue(null=Null()),
-                  PriorityValue(null=Null()), PriorityValue(null=Null()),
-                  PriorityValue(null=Null()), PriorityValue(null=Null()),
-                  PriorityValue(null=Null()), PriorityValue(null=Null()),
-                  PriorityValue(null=Null()), PriorityValue(null=Null())])
+             ObjProperty.priorityArray: (None, None, None, None, None, None, None, None,
+                                         None, None, None, None, None, None, None, None,)
              },
             {ObjProperty.objectType: ObjType.MULTI_STATE_OUTPUT,
              ObjProperty.objectIdentifier: 2,
              ObjProperty.presentValue: 2.,
              ObjProperty.reliability: 2,
-             ObjProperty.priorityArray: PriorityArray(
-                 [PriorityValue(null=Null()), PriorityValue(real=2.2),
-                  PriorityValue(null=Null()), PriorityValue(null=Null()),
-                  PriorityValue(null=Null()), PriorityValue(null=Null()),
-                  PriorityValue(null=Null()), PriorityValue(null=Null()),
-                  PriorityValue(null=Null()), PriorityValue(null=Null()),
-                  PriorityValue(null=Null()), PriorityValue(null=Null()),
-                  PriorityValue(null=Null()), PriorityValue(null=Null()),
-                  PriorityValue(null=Null()), PriorityValue(null=Null())])
+             ObjProperty.priorityArray: (None, 2.2, None, None, None, None, None, None,
+                                         None, None, None, None, None, None, None, None,)
              },
             {ObjProperty.objectType: ObjType.BINARY_OUTPUT,
              ObjProperty.objectIdentifier: 3,
              ObjProperty.presentValue: 3.,
-             ObjProperty.priorityArray: PriorityArray(
-                 [PriorityValue(null=Null()), PriorityValue(null=Null()),
-                  PriorityValue(null=Null()), PriorityValue(null=Null()),
-                  PriorityValue(null=Null()), PriorityValue(null=Null()),
-                  PriorityValue(null=Null()), PriorityValue(real=3.3),
-                  PriorityValue(null=Null()), PriorityValue(null=Null()),
-                  PriorityValue(null=Null()), PriorityValue(null=Null()),
-                  PriorityValue(null=Null()), PriorityValue(null=Null()),
-                  PriorityValue(null=Null()), PriorityValue(null=Null())])
-             }
+             ObjProperty.priorityArray: (None, None, None, None, None, None, None, None,
+                                         3.3, None, None, None, None, None, None, None,)
+             },
         )
-
         expected = (
             {ObjProperty.objectType: ObjType.ANALOG_VALUE,
              ObjProperty.objectIdentifier: 1,
-             ObjProperty.statusFlags: 0,
+             ObjProperty.statusFlags: 0b0000,
              ObjProperty.reliability: 0,
              ObjProperty.presentValue: 1,
-             ObjProperty.priorityArray: ('', '', '', '', '', '', '', '',
-                                         '', '', '', '', '', '', '', '')
+             ObjProperty.priorityArray: (None, None, None, None, None, None, None, None,
+                                         None, None, None, None, None, None, None, None,)
              },
             {ObjProperty.objectType: ObjType.MULTI_STATE_OUTPUT,
              ObjProperty.objectIdentifier: 2,
              ObjProperty.presentValue: 2.,
-             ObjProperty.statusFlags: 0,
+             ObjProperty.statusFlags: 0b0000,
              ObjProperty.reliability: 2,
-             ObjProperty.priorityArray: ('', 2, '', '', '', '', '', '',
-                                         '', '', '', '', '', '', '', '')
+             ObjProperty.priorityArray: (None, 2.2, None, None, None, None, None, None,
+                                         None, None, None, None, None, None, None, None,)
              },
             {ObjProperty.objectType: ObjType.BINARY_OUTPUT,
              ObjProperty.objectIdentifier: 3,
              ObjProperty.presentValue: 3.,
-             ObjProperty.statusFlags: StatusFlag.FAULT.value,
+             ObjProperty.statusFlags: StatusFlag.OVERRIDEN.value,
              ObjProperty.reliability: 0,
-             ObjProperty.priorityArray: ('', '', '', '', '', '', '', 3,
-                                         '', '', '', '', '', '', '', '')
-             }
+             ObjProperty.priorityArray: (None, None, None, None, None, None, None, None,
+                                         3.3, None, None, None, None, None, None, None,)
+             },
         )
         for case, _expected in zip(cases, expected):
             with self.subTest(case=case):
                 _result = self.verifier.verify(obj_properties=case)
-                print(f'Res: {_result}', f"Exp: {_expected}", sep='\n')
+                # print(f'Res: {_result}', f"Exp: {_expected}", sep='\n')
                 self.assertDictEqual(_expected, _result)
 
 

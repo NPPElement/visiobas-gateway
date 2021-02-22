@@ -62,6 +62,7 @@ class ModbusConnector(BaseConnector):
                 objects=objs,
                 update_period=upd_interval
             )
+            self.polling_devices[device_id].start()
             _log.info(f'{self.polling_devices[device_id]} started')
 
         except Exception as e:

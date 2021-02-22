@@ -1,8 +1,6 @@
 from logging import getLogger
 from multiprocessing import Process, SimpleQueue
 
-from bacpypes.basetypes import PriorityArray
-
 from gateway.models import ObjProperty, StatusFlag
 
 _log = getLogger(__name__)
@@ -56,7 +54,7 @@ class BACnetVerifier(Process):
                     self._send_via_http(device_id=device_id)
 
                 elif protocols_data and isinstance(protocols_data, dict):
-                    # Received data about object from the BACnet/Modbus-Connectors
+                    # Received data about object from connectors
                     obj_properties = protocols_data
 
                     device_id = obj_properties.pop(ObjProperty.deviceId)
@@ -66,18 +64,13 @@ class BACnetVerifier(Process):
                                f'received properties: {obj_properties}')
 
                     # verifying all properties of the object
-                    verified_obj_properties = self.verify(obj_properties=obj_properties)
-                    _log.debug(f'Verified properties: {verified_obj_properties}')
-
-                    # representing all properties of the object as string
-                    # todo fixme
-                    # str_verified_obj_properties = self._to_str(verified_obj_properties)
-                    # _log.debug(f'Verified properties as str: {str_verified_obj_properties}')
+                    verified_obj_props = self.verify(obj_properties=obj_properties)
+                    _log.debug(f'Verified properties: {verified_obj_props}')
 
                     # Sending verified object string into clients
                     self.send_properties(device_id=device_id,
                                          obj_name=obj_name,
-                                         properties=verified_obj_properties
+                                         properties=verified_obj_props
                                          )
                     _log.debug('==================================================')
                 else:
@@ -102,109 +95,107 @@ class BACnetVerifier(Process):
     # todo: implement reliability concatenation
 
     def verify(self, obj_properties: dict[ObjProperty, ...]) -> dict[ObjProperty, ...]:
-        verified_properties = {
+
+        verified_props = {
             ObjProperty.objectType: obj_properties[ObjProperty.objectType],
             ObjProperty.objectIdentifier: obj_properties[ObjProperty.objectIdentifier],
         }
 
-        sf = obj_properties.get(ObjProperty.statusFlags, 0)
-        # self.verify_sf()  use if needs to verify statusFlags
-        verified_properties[ObjProperty.statusFlags] = sf
+        sf = obj_properties.get(ObjProperty.statusFlags, 0b0000)
+        # self.verify_sf()  implement if needs to verify statusFlags
+        verified_props[ObjProperty.statusFlags] = sf
 
         reliability = obj_properties.get(ObjProperty.reliability, 0)
-        # self.verify_reliability()  use if needs to verify reliability
-        verified_properties[ObjProperty.reliability] = reliability
+        # self.verify_reliability()  implement if needs to verify reliability
+        verified_props[ObjProperty.reliability] = reliability
 
-        pv = obj_properties.get(ObjProperty.presentValue, 'null')
-        self.verify_pv(pv=pv, properties=verified_properties)
-        # Verified_properties updates in verify_pv()
+        pv = obj_properties.get(ObjProperty.presentValue)
+        verified_props = self.verify_pv(pv=pv, properties=verified_props)
 
-        if ObjProperty.priorityArray in obj_properties:
-            if not obj_properties[ObjProperty.priorityArray] is None:
-                self.verify_pa(pa=obj_properties[ObjProperty.priorityArray],
-                               properties=verified_properties)
-            # Verified properties updates in verify_pa()
-            # PriorityArray represent as tuple
+        if obj_properties.get(ObjProperty.priorityArray) is not None:
+            verified_props = self.verify_pa(pa=obj_properties[ObjProperty.priorityArray],
+                                            properties=verified_props)
 
-        return verified_properties
+        return verified_props
 
     @staticmethod
-    def verify_pv(pv, properties: dict[ObjProperty, ...]) -> None:
-        # if (
-        #         pv != 'null' and
-        #         pv != float('inf') and
-        #         pv != float('-inf') and
-        #         not (isinstance(pv, str) and not pv.strip())
-        # ):  # Extra check for better readability.
+    def verify_pv(pv, properties: dict[ObjProperty, ...]) -> dict[ObjProperty, ...]:
+
+        verified_pv_props = properties.copy()
 
         if pv == 'active':
-            pv = 1
-            properties.update({ObjProperty.presentValue: pv
-                               })
+            verified_pv_props.update({ObjProperty.presentValue: 1})
         elif pv == 'inactive':
-            pv = 0
-            properties.update({ObjProperty.presentValue: pv
-                           })
-        elif pv == 'null':
-            sf = properties.get(ObjProperty.statusFlags, 0)
+            verified_pv_props.update({ObjProperty.presentValue: 0})
+
+        elif pv is None:
+            sf = verified_pv_props.get(ObjProperty.statusFlags, 0b0000)
             sf = sf | StatusFlag.FAULT.value
-            properties.update({
+            verified_pv_props.update({
                 ObjProperty.presentValue: 'null',
                 ObjProperty.statusFlags: sf,
-                ObjProperty.reliability: properties.get(ObjProperty.reliability, 7)
+                ObjProperty.reliability: verified_pv_props.get(ObjProperty.reliability, 7)
                 # reliability sets as 65 earlier in BACnetObject if obj is unknown
             })
         elif pv == float('inf'):
-            sf = properties.get(ObjProperty.statusFlags, 0)
+            sf = verified_pv_props.get(ObjProperty.statusFlags, 0b0000)
             sf = sf | StatusFlag.FAULT.value
-            properties.update({ObjProperty.presentValue: 'null',
-                               ObjProperty.statusFlags: sf,
-                               ObjProperty.reliability: 2
-                               })
+            verified_pv_props.update({ObjProperty.presentValue: 'null',
+                                      ObjProperty.statusFlags: sf,
+                                      ObjProperty.reliability: 2
+                                      })
         elif pv == float('-inf'):
-            sf = properties.get(ObjProperty.statusFlags, 0)
+            sf = verified_pv_props.get(ObjProperty.statusFlags, 0b0000)
             sf = sf | StatusFlag.FAULT.value
-            properties.update({ObjProperty.presentValue: 'null',
-                               ObjProperty.statusFlags: sf,
-                               ObjProperty.reliability: 3
-                               })
+            verified_pv_props.update({ObjProperty.presentValue: 'null',
+                                      ObjProperty.statusFlags: sf,
+                                      ObjProperty.reliability: 3
+                                      })
         elif isinstance(pv, str) and not pv.strip():
-            sf = properties.get(ObjProperty.statusFlags, 0)
+            sf = verified_pv_props.get(ObjProperty.statusFlags, 0b0000)
             sf = sf | StatusFlag.FAULT.value
-            properties.update({
+            verified_pv_props.update({
                 ObjProperty.presentValue: 'null',
                 ObjProperty.statusFlags: sf,
-                ObjProperty.reliability: properties.get(ObjProperty.reliability,
-                                                        'empty')
+                ObjProperty.reliability: verified_pv_props.get(ObjProperty.reliability,
+                                                               'empty')
                 # reliability sets as 65 earlier in BACnetObject if obj is unknown
             })
+        else:
+            verified_pv_props.update({ObjProperty.presentValue: pv})
+        return verified_pv_props
 
     @staticmethod
-    def verify_pa(pa: PriorityArray, properties: dict) -> None:
+    def verify_pa(pa: tuple, properties: dict[ObjProperty, ...]
+                  ) -> dict[ObjProperty, ...]:
         """Convert priorityArray to tuple."""
-        pa_size = pa.value[0]
-        priorities = []
+
+        verified_props = properties.copy()
+        # pa_size = pa.value[0]
+        # priorities = []
 
         # todo: move priorities into Enum
-        manual_life_safety = 9
-        automatic_life_safety = 10
+        manual_life_safety = 9 - 1
+        automatic_life_safety = 10 - 1
         override_priorities = {manual_life_safety,
                                automatic_life_safety
                                }
 
-        for i in range(1, pa_size + 1):
-            priority = pa.value[i]
-            key, value = zip(*priority.dict_contents().items())
-            if key[0] == 'null':
-                priorities.append('')
-            else:
-                priorities.append(round(float(value[0])))
-                if i in override_priorities:
-                    sf = properties.get(ObjProperty.statusFlags, 0)
-                    sf = sf | StatusFlag.OVERRIDEN.value
-                    properties[ObjProperty.statusFlags] = sf
+        # for i in range(1, pa_size + 1):
+        #     priority = pa.value[i]
+        #     key, value = zip(*priority.dict_contents().items())
+        #     if key[0] == 'null':
+        #         priorities.append('')
+        #     else:
+        #         priorities.append(round(float(value[0])))
+        for i in range(len(pa)):
+            if pa[i] is not None and i in override_priorities:
+                sf = verified_props.get(ObjProperty.statusFlags, 0b0000)
+                sf = sf | StatusFlag.OVERRIDEN.value
+                verified_props[ObjProperty.statusFlags] = sf
 
-        properties[ObjProperty.priorityArray] = tuple(priorities)
+        verified_props[ObjProperty.priorityArray] = pa
+        return verified_props
 
     def send_properties(self, device_id: int,
                         obj_name: str, properties: dict[ObjProperty, ...]) -> None:
@@ -247,8 +238,7 @@ class BACnetVerifier(Process):
     @staticmethod
     def _to_str_mqtt(device_id: int, properties: dict[ObjProperty, ...]) -> str:
         """Convert properties with statusFlags == 0 to str, for send via MQTT."""
-        if properties[ObjProperty.statusFlags] != 0:
-            raise ValueError('Sending via MQTT only objs with statusFlags == 0')
+        assert properties[ObjProperty.statusFlags] == 0
 
         return '{0} {1} {2} {3} {4}'.format(device_id,
                                             properties[ObjProperty.objectIdentifier],
@@ -260,13 +250,17 @@ class BACnetVerifier(Process):
     @staticmethod
     def _to_str_http(properties: dict[ObjProperty, ...]) -> str:
         """Convert properties with statusFlags != 0 to str, for send via HTTP."""
-        if properties[ObjProperty.statusFlags] == 0:
-            raise ValueError('Sending via HTTP only objs with statusFlags != 0')
+        assert properties[ObjProperty.statusFlags] != 0
 
         def convert_pa_to_str(pa: tuple) -> str:
-            """Convert priority array tuple to str like ,,,,,,,,40.5,,,,,,49.2,
+            """Convert priority array tuple to str.
+
+            Result example: ,,,,,,,,40.5,,,,,,49.2,
             """
-            return ','.join([str(priority) for priority in pa])
+            return ','.join(
+                ['' if priority is None else str(priority)
+                 for priority in pa]
+            )
 
         try:
             general_properties_str = '{0} {1} {2}'.format(

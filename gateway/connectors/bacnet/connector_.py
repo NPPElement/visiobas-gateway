@@ -106,6 +106,7 @@ class BACnetConnector(BaseConnector):
                 objects=objs,
                 update_period=upd_interval
             )
+            self.polling_devices[device_id].start()
             _log.info(f'Device [{device_id}] started')
         except Exception as e:
             _log.error(f'Device [{device_id}] starting error: {e}',
