@@ -1,6 +1,6 @@
 import unittest
 
-from gateway.models.bacnet import StatusFlags, ObjProperty, ObjType
+from gateway.models.bacnet import StatusFlag, ObjProperty, ObjType
 from gateway.verifier import BACnetVerifier
 
 
@@ -16,37 +16,12 @@ class TestToStr(unittest.TestCase):
     def tearDown(self) -> None:
         del self.verifier
 
-    # def test_sf_to_binary(self):
-    #     pass
-    #     # todo: refactor sf
-    # available_status_flags = (
-    #     StatusFlags([0, 0, 0, 0]),
-    #     StatusFlags([0, 0, 0, 1]),
-    #     StatusFlags([0, 0, 1, 0]),
-    #     StatusFlags([0, 0, 1, 1]),
-    #     StatusFlags([0, 1, 0, 0]),
-    #     StatusFlags([0, 1, 0, 1]),
-    #     StatusFlags([0, 1, 1, 0]),
-    #     StatusFlags([0, 1, 1, 1]),
-    #     StatusFlags([1, 0, 0, 0]),
-    #     StatusFlags([1, 0, 0, 1]),
-    #     StatusFlags([1, 0, 1, 0]),
-    #     StatusFlags([1, 0, 1, 1]),
-    #     StatusFlags([1, 1, 0, 0]),
-    #     StatusFlags([1, 1, 0, 1]),
-    #     StatusFlags([1, 1, 1, 0]),
-    #     StatusFlags([1, 1, 1, 1]),
-    # )
-    # for sf, i in zip(available_status_flags, range(15, -1, -1)):
-    #     with self.subTest(case=sf):
-    #         self.assertEqual(sf.as_binary, i)
-
     def test_to_str_mqtt(self):
         dev_id = 1
         properties = {ObjProperty.objectIdentifier: 2,
                       ObjProperty.objectType: ObjType.BINARY_INPUT,
                       ObjProperty.presentValue: 4,
-                      ObjProperty.statusFlags: StatusFlags()
+                      ObjProperty.statusFlags: 0
                       }
         expected = '1 2 3 4 0'
         self.assertEqual(expected, self.verifier._to_str_mqtt(device_id=dev_id,
@@ -58,34 +33,34 @@ class TestToStr(unittest.TestCase):
             {ObjProperty.objectIdentifier: 1,
              ObjProperty.objectType: ObjType.ANALOG_VALUE,
              ObjProperty.presentValue: 3,
-             ObjProperty.statusFlags: StatusFlags([0, 0, 1, 0])
+             ObjProperty.statusFlags: StatusFlag.OVERRIDEN.value
              },
             {ObjProperty.objectIdentifier: 2,
              ObjProperty.objectType: ObjType.BINARY_INPUT,
              ObjProperty.presentValue: 4,
-             ObjProperty.statusFlags: StatusFlags([1, 0, 1, 0]),
+             ObjProperty.statusFlags:  StatusFlag.OVERRIDEN.value | StatusFlag.IN_ALARM.value,
              ObjProperty.reliability: 'error6'
              },
             {ObjProperty.objectIdentifier: 3,
              ObjProperty.objectType: ObjType.BINARY_OUTPUT,
              ObjProperty.presentValue: 5,
-             ObjProperty.statusFlags: StatusFlags([0, 1, 1, 0]),
+             ObjProperty.statusFlags: StatusFlag.FAULT.value | StatusFlag.OVERRIDEN.value,
              ObjProperty.priorityArray: ('', '', '', '', '', '', '', '',
                                          '', '', '', '', '', '', '', '')
              },
             {ObjProperty.objectIdentifier: 4,
              ObjProperty.objectType: ObjType.BINARY_VALUE,
              ObjProperty.presentValue: 6,
-             ObjProperty.statusFlags: StatusFlags([0, 0, 0, 1]),
              ObjProperty.priorityArray: ('', '', '', 7, '', '', '', '',
-                                         '', '', '', '', '', '', '', '')
+                                         '', '', '', '', '', '', '', ''),
+             ObjProperty.statusFlags: StatusFlag.OUT_OF_SERVICE.value,
              },
             {ObjProperty.objectIdentifier: 5,
              ObjProperty.objectType: ObjType.MULTI_STATE_INPUT,  # 13
              ObjProperty.presentValue: 7,
-             ObjProperty.statusFlags: StatusFlags([1, 0, 0, 1]),
              ObjProperty.priorityArray: ('', '', '', '', '', '', '', '',
                                          '', '', '', '', '', '', 8, ''),
+             ObjProperty.statusFlags: StatusFlag.OUT_OF_SERVICE.value | StatusFlag.IN_ALARM.value,
              ObjProperty.reliability: 'error10'
              },
         )
@@ -105,12 +80,12 @@ class TestToStr(unittest.TestCase):
         case_mqtt = {ObjProperty.objectIdentifier: 1,
                      ObjProperty.objectType: ObjType.ANALOG_VALUE,
                      ObjProperty.presentValue: 3,
-                     ObjProperty.statusFlags: StatusFlags([0, 0, 1, 0])
+                     ObjProperty.statusFlags: 0b0010
                      }
         case_http = {ObjProperty.objectIdentifier: 2,
                      ObjProperty.objectType: ObjType.BINARY_INPUT,
                      ObjProperty.presentValue: 4,
-                     ObjProperty.statusFlags: StatusFlags([0, 0, 0, 0])
+                     ObjProperty.statusFlags: 0b0000
                      }
 
         self.assertRaises(ValueError, self.verifier._to_str_mqtt, dev_id, case_mqtt)

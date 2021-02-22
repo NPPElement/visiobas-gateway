@@ -1,3 +1,4 @@
+from logging import getLogger
 from multiprocessing import SimpleQueue
 from pathlib import Path
 from time import sleep
@@ -10,9 +11,6 @@ from .device import BACnetDevice
 from ..base_connector import BaseConnector
 
 _base_path = Path(__file__).resolve().parent.parent.parent
-
-from logging import getLogger
-
 _log = getLogger(__name__)
 
 

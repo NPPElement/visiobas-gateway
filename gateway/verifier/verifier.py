@@ -3,7 +3,7 @@ from multiprocessing import Process, SimpleQueue
 
 from bacpypes.basetypes import PriorityArray
 
-from gateway.models import ObjProperty, StatusFlags
+from gateway.models import ObjProperty, StatusFlag
 
 _log = getLogger(__name__)
 
@@ -107,7 +107,7 @@ class BACnetVerifier(Process):
             ObjProperty.objectIdentifier: obj_properties[ObjProperty.objectIdentifier],
         }
 
-        sf = StatusFlags(obj_properties.get(ObjProperty.statusFlags, [0, 0, 0, 0]))
+        sf = obj_properties.get(ObjProperty.statusFlags, 0)
         # self.verify_sf()  use if needs to verify statusFlags
         verified_properties[ObjProperty.statusFlags] = sf
 
@@ -137,9 +137,17 @@ class BACnetVerifier(Process):
         #         not (isinstance(pv, str) and not pv.strip())
         # ):  # Extra check for better readability.
 
-        if pv == 'null':
-            sf = properties.get(ObjProperty.statusFlags, StatusFlags())
-            sf.set(fault=True)
+        if pv == 'active':
+            pv = 1
+            properties.update({ObjProperty.presentValue: pv
+                               })
+        elif pv == 'inactive':
+            pv = 0
+            properties.update({ObjProperty.presentValue: pv
+                           })
+        elif pv == 'null':
+            sf = properties.get(ObjProperty.statusFlags, 0)
+            sf = sf | StatusFlag.FAULT.value
             properties.update({
                 ObjProperty.presentValue: 'null',
                 ObjProperty.statusFlags: sf,
@@ -147,22 +155,22 @@ class BACnetVerifier(Process):
                 # reliability sets as 65 earlier in BACnetObject if obj is unknown
             })
         elif pv == float('inf'):
-            sf = properties.get(ObjProperty.statusFlags, StatusFlags())
-            sf.set(fault=True)
+            sf = properties.get(ObjProperty.statusFlags, 0)
+            sf = sf | StatusFlag.FAULT.value
             properties.update({ObjProperty.presentValue: 'null',
                                ObjProperty.statusFlags: sf,
                                ObjProperty.reliability: 2
                                })
         elif pv == float('-inf'):
-            sf = properties.get(ObjProperty.statusFlags, StatusFlags())
-            sf.set(fault=True)
+            sf = properties.get(ObjProperty.statusFlags, 0)
+            sf = sf | StatusFlag.FAULT.value
             properties.update({ObjProperty.presentValue: 'null',
                                ObjProperty.statusFlags: sf,
                                ObjProperty.reliability: 3
                                })
         elif isinstance(pv, str) and not pv.strip():
-            sf = properties.get(ObjProperty.statusFlags, StatusFlags())
-            sf.set(fault=True)
+            sf = properties.get(ObjProperty.statusFlags, 0)
+            sf = sf | StatusFlag.FAULT.value
             properties.update({
                 ObjProperty.presentValue: 'null',
                 ObjProperty.statusFlags: sf,
@@ -170,13 +178,6 @@ class BACnetVerifier(Process):
                                                         'empty')
                 # reliability sets as 65 earlier in BACnetObject if obj is unknown
             })
-        else:  # positive case
-            if pv == 'active':
-                pv = 1
-            elif pv == 'inactive':
-                pv = 0
-            properties.update({ObjProperty.presentValue: pv
-                               })
 
     @staticmethod
     def verify_pa(pa: PriorityArray, properties: dict) -> None:
@@ -199,15 +200,14 @@ class BACnetVerifier(Process):
             else:
                 priorities.append(round(float(value[0])))
                 if i in override_priorities:
-                    sf = properties.get(ObjProperty.statusFlags, StatusFlags())
-                    sf.set(overriden=True)
+                    sf = properties.get(ObjProperty.statusFlags, 0)
+                    sf = sf | StatusFlag.OVERRIDEN.value
                     properties[ObjProperty.statusFlags] = sf
 
         properties[ObjProperty.priorityArray] = tuple(priorities)
 
     def send_properties(self, device_id: int,
                         obj_name: str, properties: dict[ObjProperty, ...]) -> None:
-        """"""
         if properties[ObjProperty.statusFlags] == 0:
             self._send_via_mqtt(device_id=device_id,
                                 obj_name=obj_name,
@@ -247,7 +247,7 @@ class BACnetVerifier(Process):
     @staticmethod
     def _to_str_mqtt(device_id: int, properties: dict[ObjProperty, ...]) -> str:
         """Convert properties with statusFlags == 0 to str, for send via MQTT."""
-        if properties[ObjProperty.statusFlags].as_binary != 0:
+        if properties[ObjProperty.statusFlags] != 0:
             raise ValueError('Sending via MQTT only objs with statusFlags == 0')
 
         return '{0} {1} {2} {3} {4}'.format(device_id,
@@ -260,7 +260,7 @@ class BACnetVerifier(Process):
     @staticmethod
     def _to_str_http(properties: dict[ObjProperty, ...]) -> str:
         """Convert properties with statusFlags != 0 to str, for send via HTTP."""
-        if properties[ObjProperty.statusFlags].as_binary == 0:
+        if properties[ObjProperty.statusFlags] == 0:
             raise ValueError('Sending via HTTP only objs with statusFlags != 0')
 
         def convert_pa_to_str(pa: tuple) -> str:

@@ -3,7 +3,7 @@ import unittest
 from bacpypes.basetypes import PriorityArray, PriorityValue
 from bacpypes.primitivedata import Null
 
-from gateway.models.bacnet import ObjType, ObjProperty, StatusFlags
+from gateway.models.bacnet import ObjType, ObjProperty, StatusFlag
 from gateway.verifier import BACnetVerifier
 
 
@@ -46,39 +46,39 @@ class TestVerify(unittest.TestCase):
              ObjProperty.objectIdentifier: 3,
              ObjProperty.presentValue: 3,
              ObjProperty.reliability: 3,
-             ObjProperty.statusFlags: StatusFlags()
+             ObjProperty.statusFlags: 0
              },
             {ObjProperty.objectType: ObjType.ANALOG_INPUT,
              ObjProperty.objectIdentifier: 4,
              ObjProperty.presentValue: 4,
              ObjProperty.reliability: 4,
-             ObjProperty.statusFlags: StatusFlags([0, 1, 0, 0])
+             ObjProperty.statusFlags: StatusFlag.OVERRIDEN.value
              }
         )
         expected = (
             {ObjProperty.objectType: ObjType.ANALOG_INPUT,
              ObjProperty.objectIdentifier: 1,
-             ObjProperty.statusFlags: StatusFlags(),
+             ObjProperty.statusFlags: 0,
              ObjProperty.reliability: 0,
              ObjProperty.presentValue: 1,
              },
             {ObjProperty.objectType: ObjType.ANALOG_INPUT,
              ObjProperty.objectIdentifier: 2,
              ObjProperty.presentValue: 2,
-             ObjProperty.statusFlags: StatusFlags(),
+             ObjProperty.statusFlags: 0,
              ObjProperty.reliability: 2
              },
             {ObjProperty.objectType: ObjType.ANALOG_INPUT,
              ObjProperty.objectIdentifier: 3,
              ObjProperty.presentValue: 3,
              ObjProperty.reliability: 3,
-             ObjProperty.statusFlags: StatusFlags()
+             ObjProperty.statusFlags: 0
              },
             {ObjProperty.objectType: ObjType.ANALOG_INPUT,
              ObjProperty.objectIdentifier: 4,
              ObjProperty.presentValue: 4,
              ObjProperty.reliability: 4,
-             ObjProperty.statusFlags: StatusFlags([0, 1, 0, 0])
+             ObjProperty.statusFlags: StatusFlag.OVERRIDEN.value
              }
         )
         for case, _expected in zip(cases, expected):
@@ -96,20 +96,20 @@ class TestVerify(unittest.TestCase):
              ObjProperty.objectIdentifier: 2,
              ObjProperty.presentValue: 'inactive',
              ObjProperty.reliability: 2,
-             ObjProperty.statusFlags: StatusFlags()
+             ObjProperty.statusFlags: 0
              }
         )
         expected = (
             {ObjProperty.objectType: ObjType.BINARY_INPUT,
              ObjProperty.objectIdentifier: 1,
-             ObjProperty.statusFlags: StatusFlags(),
+             ObjProperty.statusFlags: 0,
              ObjProperty.reliability: 0,
              ObjProperty.presentValue: 1,
              },
             {ObjProperty.objectType: ObjType.BINARY_INPUT,
              ObjProperty.objectIdentifier: 2,
              ObjProperty.presentValue: 0,
-             ObjProperty.statusFlags: StatusFlags(),
+             ObjProperty.statusFlags: 0,
              ObjProperty.reliability: 2
              }
         )
@@ -165,7 +165,7 @@ class TestVerify(unittest.TestCase):
         expected = (
             {ObjProperty.objectType: ObjType.ANALOG_VALUE,
              ObjProperty.objectIdentifier: 1,
-             ObjProperty.statusFlags: StatusFlags(),
+             ObjProperty.statusFlags: 0,
              ObjProperty.reliability: 0,
              ObjProperty.presentValue: 1,
              ObjProperty.priorityArray: ('', '', '', '', '', '', '', '',
@@ -174,7 +174,7 @@ class TestVerify(unittest.TestCase):
             {ObjProperty.objectType: ObjType.MULTI_STATE_OUTPUT,
              ObjProperty.objectIdentifier: 2,
              ObjProperty.presentValue: 2.,
-             ObjProperty.statusFlags: StatusFlags(),
+             ObjProperty.statusFlags: 0,
              ObjProperty.reliability: 2,
              ObjProperty.priorityArray: ('', 2, '', '', '', '', '', '',
                                          '', '', '', '', '', '', '', '')
@@ -182,7 +182,7 @@ class TestVerify(unittest.TestCase):
             {ObjProperty.objectType: ObjType.BINARY_OUTPUT,
              ObjProperty.objectIdentifier: 3,
              ObjProperty.presentValue: 3.,
-             ObjProperty.statusFlags: StatusFlags([0, 0, 1, 0]),
+             ObjProperty.statusFlags: StatusFlag.FAULT.value,
              ObjProperty.reliability: 0,
              ObjProperty.priorityArray: ('', '', '', '', '', '', '', 3,
                                          '', '', '', '', '', '', '', '')

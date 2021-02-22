@@ -1,9 +1,9 @@
-from .bacnet import ObjType, ObjProperty, StatusFlags, BACnetObj
+from .bacnet import ObjType, ObjProperty, StatusFlag, BACnetObj
 from .modbus import ModbusObj, VisioModbusProperties
 
 __all__ = ('ObjType',
            'ObjProperty',
-           'StatusFlags',
+           'StatusFlag',
            'BACnetObj',
            'VisioModbusProperties',
            'ModbusObj'
