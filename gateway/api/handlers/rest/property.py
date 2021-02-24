@@ -54,7 +54,7 @@ class ModbusPropertyView(BaseView, ModbusRWMixin):
         value = body.get('value')
         property_ = body.get('property')
 
-        if property_ is not 85:
+        if property_ != 85:
             return json_response({'success': False,
                                   'msg': 'For now, only the presentValue(85) '
                                          'property is supported.'
