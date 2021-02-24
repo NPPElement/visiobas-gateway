@@ -1,4 +1,5 @@
 # import atexit
+from logging import getLogger
 from multiprocessing import SimpleQueue
 from pathlib import Path
 
@@ -10,7 +11,6 @@ from gateway.connectors import BACnetConnector, ModbusConnector
 from gateway.verifier import BACnetVerifier
 
 _base_path = Path(__file__).resolve().parent.parent
-from logging import getLogger
 
 _log = getLogger(__name__)
 

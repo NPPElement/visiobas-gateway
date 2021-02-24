@@ -1,9 +1,9 @@
-from .gateway_ import VisioGateway
+from gateway.gateway_ import VisioGateway
 
 """VisioBAS IoT gateway."""
 
 __version__ = '0.1.3'
-__author__ = 'VisioBAS, Matvey Ovtsin'
+__author__ = 'VisioBAS, Ovtsin Matvey'
 __maintainer__ = __author__
 __email__ = 'mtovtsin@gmail.com'
 __url__ = '<info.visiobas.com>'

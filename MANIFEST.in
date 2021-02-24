@@ -1,3 +1,6 @@
 include requirements*.txt
 include README.md
 include LICENSE
+include gateway/config/*
+include gateway/connectors/bacnet/address_cache
+include gateway/connectors/modbus/address_cache

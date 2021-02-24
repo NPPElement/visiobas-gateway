@@ -4,7 +4,7 @@
 # from pkg_resources import parse_requirements
 from setuptools import find_packages, setup
 
-from gateway import __version__, __author__, __email__, __license__
+# from gateway import __version__, __author__, __email__, __license__
 
 # module_name = 'visiobas_gateway'
 #
@@ -27,11 +27,11 @@ from gateway import __version__, __author__, __email__, __license__
 
 
 setup(name='visiobas-gateway',
-      version=__version__,
-      author=__author__,
-      author_email=__email__,
-      license=__license__,
-      description='VisiBAS gateway for IoT.',
+      version='0.1.3',
+      author='VisioBAS, Ovtsin Matvey',
+      # author_email=__email__,
+      # license=__license__,
+      description='VisiBAS IoT gateway.',
       # long_description=open('README.md').read(),
       url='https://github.com/NPPElement/visiobas-gateway',
       # platforms='all',
