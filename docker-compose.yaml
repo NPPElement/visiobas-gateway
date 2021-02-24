@@ -1,4 +1,4 @@
-version: "3.7"
+version: "3.3"
 
 networks:
   backend:
@@ -12,11 +12,11 @@ services:
       dockerfile: Dockerfile
     image: visiobas-gateway:0.1.2
     logging:
-      driver: none
-        driver: "json-file"
-        options:
-          max-file: "2"
-          max-size: "1024k"
+      #driver: none
+      driver: "json-file"
+      options:
+        max-file: "2"
+        max-size: "1024k"
     restart: always
     user: root
     environment:
@@ -34,7 +34,7 @@ services:
       - /home/user/visiobas-gateway:/visiobas-gateway
     # command: python -OO __main__.py
     networks:
-      -backend
+      - backend
     # network_mode: host
     ports:
       - 502:502

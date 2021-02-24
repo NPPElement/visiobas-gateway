@@ -1,3 +1,5 @@
+# https://docs.docker.com/develop/develop-images/multistage-build/#use-multi-stage-builds
+
 ############### Image for building a virtual environment ################
 # Base - "heavy" image (~ 1 GB, compressed ~ 500 GB)
 FROM python:3.9 as builder
