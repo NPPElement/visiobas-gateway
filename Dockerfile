@@ -11,11 +11,10 @@ RUN python3.9 -m venv /usr/share/python3/gw \
 # Install dependencies separately for caching
 # On a subsequent build, Docker will skip this step if requirements.txt does not change
 COPY requirements.txt /mnt/
-RUN python3.9 setup.py sdist \
-    && /usr/share/python3/gw/bin/pip install -Ur /mnt/requirements.txt \
+RUN /usr/share/python3/gw/bin/pip install -Ur /mnt/requirements.txt
 
 # Copy the source distribution to the container and install it
-COPY dist/ /mnt/dist/ \
+COPY /dist/ /mnt/dist/
 RUN /usr/share/python3/gw/bin/pip install /mnt/dist/* \
     && /usr/share/python3/gw/bin/pip check
 
@@ -24,6 +23,8 @@ RUN /usr/share/python3/gw/bin/pip install /mnt/dist/* \
 # Base - "lightweight" image (~ 100 MB, compressed ~ 50 MB)
 FROM python:3.9-slim-buster as gateway
 
+LABEL maintainer="VisioBAS <info.visiobas.com>" description="VisioBAS Gateway"
+
 # IMPORTANT: the virtual environment uses absolute paths, so
 # it must be copied to the same address,
 # with which it was build in a building container.
@@ -31,10 +32,11 @@ FROM python:3.9-slim-buster as gateway
 # Copy the final virtual environment from the builder container
 COPY --from=builder /usr/share/python3/gw /usr/share/python3/gw
 
-LABEL maintainer="VisioBAS <info.visiobas.com>" description="VisioBAS Gateway"
+# Install links to use gateway commands
+RUN ln -snf /usr/share/python3/gw/bin/gateway  /usr/local/bin/
 
 # Set the default command to run when the container starts
-CMD ["__main__.py"]
+CMD ["gateway"]
 
 EXPOSE 7070 8080
 
@@ -43,8 +45,7 @@ EXPOSE 7070 8080
 #WORKDIR /visiobas-gateway
 #RUN pip install --no-cache-dir -r requirements.txt
 
-# Install links so that you can use gwlication commands
-# RUN ln -snf /usr/share/python3/gw/bin/analyzer-* /usr/local/bin/
+
 
 
 

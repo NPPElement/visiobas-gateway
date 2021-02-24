@@ -3,6 +3,8 @@ import os
 import sys
 from pathlib import Path
 
+from aiomisc.log import basic_config
+
 from gateway import VisioGateway
 from gateway.utils import disable_loggers
 
@@ -27,10 +29,15 @@ _unused_loggers = ('BAC0_Root.BAC0.scripts.Base.Base',
                    'pymodbus.factory',
                    'pymodbus.payload'
                    )
-logging.basicConfig(format=_log_fmt,
-                    level=_log_level,
-                    stream=sys.stdout,
-                    )
+# logging.basicConfig(format=_log_fmt,
+#                     level=_log_level,
+#                     stream=sys.stdout,
+#                     )
+
+basic_config(level=logging.DEBUG, buffered=True, flush_interval=2,
+             # log_format=_log_fmt,
+             stream=sys.stderr
+             )
 
 disable_loggers(loggers=_unused_loggers)
 

@@ -56,7 +56,7 @@ class VisioGateway:
         self.mqtt_client = VisioMQTTClient.create_from_yaml(
             gateway=self,
             getting_queue=self._verifier_mqtt_queue,
-            yaml_path=_base_path / 'config/mqtt.yaml'
+            yaml_path=_base_path / 'gateway/config/mqtt.yaml'
         )
         self.mqtt_client.start()
 
@@ -72,7 +72,7 @@ class VisioGateway:
         self.http_client = VisioHTTPClient.create_from_yaml(
             gateway=self,
             getting_queue=self._verifier_http_queue,
-            yaml_path=_base_path / 'config/http.yaml'
+            yaml_path=_base_path / 'gateway/config/http.yaml'
         )
         self.http_client.start()
 

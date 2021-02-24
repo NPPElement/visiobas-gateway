@@ -4,6 +4,8 @@
 # from pkg_resources import parse_requirements
 from setuptools import find_packages, setup
 
+from gateway import __version__, __author__, __email__, __license__
+
 # module_name = 'visiobas_gateway'
 #
 # # The module may not be installed yet (or a different version is installed), so
@@ -25,10 +27,10 @@ from setuptools import find_packages, setup
 
 
 setup(name='visiobas-gateway',
-      version='0.1.2',
-      author='VisioBAS, Ovtsin Matvey',
-      author_email='mtovtsin@gmail.com',
-      license='GNU General Public License v3.0',
+      version=__version__,
+      author=__author__,
+      author_email=__email__,
+      license=__license__,
       description='VisiBAS gateway for IoT.',
       # long_description=open('README.md').read(),
       url='https://github.com/NPPElement/visiobas-gateway',
@@ -54,17 +56,8 @@ setup(name='visiobas-gateway',
                         'aiohttp-apispec==2.2.1',
                         ],
       # extras_require={'dev': load_requirements('requirements.dev.txt')},
-      entry_points={
-          'console_scripts': [
-              # f-strings в setup.py не используются из-за соображений совместимости.
-              # Несмотря на то, что этот пакет требует Python 3.8, технически
-              # source distribution для него может собираться с помощью более
-              # ранних версий Python. Не стоит лишать пользователей этой
-              # возможности.
-              'visiobas-gateway = visiobas_gateway.__main__:main'
-              # '{0}-api = {0}.api.__main__:main'.format(module_name),
-              # '{0}-db = {0}.db.__main__:main'.format(module_name)
-          ]
-      },
+      entry_points={'console_scripts': ['gateway = gateway.__main__:main'
+                                        ]
+                    },
       include_package_data=True
       )

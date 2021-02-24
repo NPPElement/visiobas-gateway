@@ -362,7 +362,7 @@ class VisioHTTPClient(Thread):
             return True
 
         _log.info(f'Authorization to {server}...',
-                  #extra={'server': server}
+                  # extra={'server': server}
                   )
         auth_url = server.base_url + '/auth/rest/login'
         try:
@@ -377,7 +377,7 @@ class VisioHTTPClient(Thread):
                                  )
             if server.is_authorized:
                 _log.info(f'Successful authorization to {server}',
-                          #extra={'server': server}
+                          # extra={'server': server}
                           )
             else:
                 _log.warning(f'Failed authorization to {server}',

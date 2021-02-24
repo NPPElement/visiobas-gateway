@@ -3,6 +3,8 @@ venv
 
 visiobas_gateway.egg-info
 dist
+build
+.github
 
 *.pyc
 logs/*.log*
@@ -10,6 +12,6 @@ logs/*.log*
 .DS_Store
 
 *address_cache
-config/http.yaml
-config/mqtt.yaml
-config/test-modbus-http.yaml
+gateway/config/http.yaml
+gateway/config/mqtt.yaml
+gateway/config/test-modbus-http.yaml
