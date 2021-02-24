@@ -2,7 +2,7 @@ venv
 .idea
 
 visiobas_gateway.egg-info
-# dist
+dist
 
 *.pyc
 logs/*.log*
