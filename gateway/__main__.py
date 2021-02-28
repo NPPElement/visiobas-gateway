@@ -42,7 +42,7 @@ def main():
                  )
 
     disable_loggers(loggers=_unused_loggers)
-    VisioGateway.from_yaml(yaml_path=_base_path / 'config/gateway.yaml')
+    gw = VisioGateway.from_yaml(yaml_path=_base_path / 'config/gateway.yaml')
 
 
 if __name__ == '__main__':

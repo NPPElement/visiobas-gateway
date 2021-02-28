@@ -190,7 +190,7 @@ class VisioMQTTClient(Thread):
         msg_dct = self.api.decode(msg=message)
         _log.debug(f'Received {message.topic}:{msg_dct}')
         try:
-            if msg_dct['method'] == 'value':
+            if msg_dct.get('method') == 'value':
                 self.api.rpc_value(params=msg_dct['params'],
                                    gateway=self._gateway
                                    )
