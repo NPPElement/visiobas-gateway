@@ -54,9 +54,7 @@ class VisioMQTTClient(Thread):
         self._client.on_publish = self._on_publish_cb
 
         self.api = VisioMQTTApi(visio_mqtt_client=self)
-        self.topics = [
-            ('Set/#', 1),
-        ]
+        self.topics = [(topic, self._qos) for topic in self._config['subscribe']]
 
     def __repr__(self) -> str:
         return self.__class__.__name__

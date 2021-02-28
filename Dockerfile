@@ -38,7 +38,7 @@ RUN ln -snf /usr/share/python3/gw/bin/gateway  /usr/local/bin/
 # Set the default command to run when the container starts
 CMD ["gateway"]
 
-EXPOSE 7070 8080
+EXPOSE 502 7070 8080 47808
 
 #RUN	mkdir -p /visiobas-gateway
 #COPY . /visiobas-gateway
