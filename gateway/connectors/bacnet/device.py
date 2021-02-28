@@ -186,12 +186,12 @@ class BACnetDevice(Thread):
 
     def read_property(self, obj: BACnetObj, prop: ObjProperty):
         try:
-            request = '{0} {1} {2} {3}'.format(self.address,
-                                               obj.type.name,
-                                               obj.id,
-                                               prop.name
-                                               )
-            response = self.network.read(request)
+            args = '{0} {1} {2} {3}'.format(self.address,
+                                            obj.type.name,
+                                            obj.id,
+                                            prop.name
+                                            )
+            response = self.network.read(args=args)
             if response is None:
                 raise ReadPropertyException('Response is None')
             elif isinstance(response, str) and not response.strip():
@@ -200,6 +200,24 @@ class BACnetDevice(Thread):
 
         except Exception as e:
             self._log.warning(f'RP Error: {e}')
+            raise e
+
+    def write_property(self, value, prop: ObjProperty, priority: int, obj: BACnetObj,
+                       ) -> bool:
+        """
+        :return: is write successful
+        """
+        try:
+            args = '{0} {1} {2} {3} - {4}'.format(self.address,
+                                                  obj.type.name,
+                                                  obj.id,
+                                                  prop.name,
+                                                  value,
+                                                  priority
+                                                  )
+            return self.network.write(args=args)
+        except Exception as e:
+            self._log.warning(f'WP Error: {e}')
             raise e
 
     def read_property_multiple(self, obj: BACnetObj,
