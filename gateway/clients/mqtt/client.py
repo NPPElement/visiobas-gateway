@@ -3,6 +3,7 @@ from logging import getLogger
 from multiprocessing import SimpleQueue
 from pathlib import Path
 from threading import Thread
+from typing import Sequence
 
 import paho.mqtt.client as mqtt
 
@@ -34,25 +35,23 @@ class VisioMQTTClient(Thread):
         self._stopped = False
         self._connected = False
 
-        # self.topics_to_subscribe = [
-        #     ('Site/TP-1673/Controller1', 2),
-        #     ('Site/TP-1673/Controller2', 2),
-        #     ('Site/TP-1673/Controller3', 2)
-        # ]
-
         # self.__subscribed = set()
 
-        self._client = mqtt.Client(client_id='', transport='tcp')  # create new instance
+        self._client = mqtt.Client(client_id='12',
+                                   # clean_session=False,
+                                   transport='tcp'
+                                   )
         # self._client.enable_logger()  # logger=logger
         self._client.username_pw_set(username=self._username, password=self._password)
 
         # Set up external MQTT broker callbacks
         self._client.on_connect = self._on_connect_cb
-        self._client.on_disconnect = self.__on_disconnect_cb
+        self._client.on_disconnect = self._on_disconnect_cb
+        self._client.on_subscribe = self._on_subscribe_cb
+        self._client.on_message = self._on_message_cb
         self._client.on_publish = self._on_publish_cb
 
-        # self._client.on_message = self.__on_message_cb
-        # self._client.on_subscribe = self.__on_subscribe_cb
+        self.topics = []
 
     def __repr__(self) -> str:
         return self.__class__.__name__
@@ -74,7 +73,7 @@ class VisioMQTTClient(Thread):
         """Main loop."""
         while not self._stopped:  # not self._connected and
             if self._connected:
-                self._run_publish_loop(queue=self._getting_queue)
+                self._run_loop()
             else:
                 try:
                     self.connect(host=self._host,
@@ -88,7 +87,7 @@ class VisioMQTTClient(Thread):
                                exc_info=True
                                )
 
-    def _run_publish_loop(self, queue: SimpleQueue):
+    def _run_loop(self):
         """Listen queue from verifier.
         When receive data from verifier - publish it to MQTT.
 
@@ -96,7 +95,7 @@ class VisioMQTTClient(Thread):
         """
         while not self._stopped:
             try:
-                topic, data = queue.get()
+                topic, data = self._getting_queue.get()
                 _log.debug(f'Received: {topic}: {data}')
 
                 self.publish(payload=data,
@@ -122,14 +121,25 @@ class VisioMQTTClient(Thread):
                              port=port,
                              )
         self._client.reconnect_delay_set()
-        # self.__client.loop_forever(retry_first_connection=True)
-        self._client.loop_start()
+        self.subscribe(topics=self.topics)
+        self._client.loop_forever(retry_first_connection=True)
 
     def disconnect(self):
         self._client.disconnect()
         _log.debug(f'{self._client} Disconnecting from broker')
         self._connected = False
         self._client.loop_stop()
+
+    def subscribe(self, topics: Sequence[tuple[str, int]]):
+        """
+        Topics example:
+         [("my/topic", 0), ("another/topic", 2)]
+         """
+        result, mid = self._client.subscribe(topic=topics)
+        if result == mqtt.MQTT_ERR_SUCCESS:
+            _log.debug(f'Subscribed to topics: {topics}')
+        elif result == mqtt.MQTT_ERR_NO_CONN:
+            _log.warning(f'Not subscribed to topic: {topics} {result} {mid}')
 
     def publish(self, payload: str, topic: str, qos: int, retain: bool):
         return self._client.publish(topic=topic,
@@ -153,28 +163,23 @@ class VisioMQTTClient(Thread):
         # Subscribing in on_connect() means that if we lose the connection and
         # reconnect then subscriptions will be renewed.
 
-    def __on_disconnect_cb(self, client, userdata, rc):
+    def _on_disconnect_cb(self, client, userdata, rc):
         # self._connected = False
         _log.warning(f'Disconnected {client} userdata: {userdata} rc: {rc}')
+        # self._client.loop_stop()
 
-    # def __on_message_cb(self, userdata, message):
-    #     print(message.topic + " " + str(message.payload))
+    def _on_subscribe_cb(self, userdata, mid, granted_qos, properties=None):
+        try:
+            if granted_qos == 128:
+                _log.warning('Subscription failed')
+            else:
+                _log.debug('Subscription success')
+        except Exception as e:
+            _log.error(f'Error: {e}',
+                       exc_info=True
+                       )
 
-    # def __on_subscribe_cb(self, userdata, mid, granted_qos, properties=None):
-    #     try:
-    #         if granted_qos == 128:
-    #             _log.warning('Subscription failed')
-    #         else:
-    #             _log.debug('Subscription success')
-    #     except Exception as e:
-    #         _log.error(f'Error: {e}', exc_info=True)
-
-    # def __subscribe(self, topics: list[tuple[str, int]]):
-    #     """ Topics example:
-    #      [("my/topic", 0), ("another/topic", 2)]
-    #      """
-    #     result, mid = self._client.subscribe(topic=topics)
-    #     if result == mqtt.MQTT_ERR_SUCCESS:
-    #         _log.debug(f'Subscribed to topics: {topics}')
-    #     elif result == mqtt.MQTT_ERR_NO_CONN:
-    #         _log.warning(f'Not subscribed to topics: {topics}')
+    def _on_message_cb(self, client, userdata, message: mqtt.MQTTMessage):
+        decoded_msg = message.payload.decode("utf-8")
+        _log.debug(f'Received: {message.topic}: {decoded_msg}')
+        #  do wr
