@@ -1,3 +1,4 @@
+from functools import lru_cache
 from logging import getLogger
 
 _log = getLogger(__name__)
@@ -19,6 +20,7 @@ class DevObjMixin:
                          )
 
     @staticmethod
+    @lru_cache(maxsize=25)
     def get_obj(device, obj_type: int, obj_id: int):  # -> ProtocolObj
         """Returns protocol's object."""
         try:
