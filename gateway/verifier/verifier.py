@@ -199,6 +199,8 @@ class BACnetVerifier(Process):
 
     def send_properties(self, device_id: int,
                         obj_name: str, properties: dict[ObjProperty, ...]) -> None:
+        # TODO: add check out_of_service! (skip if enabled)
+
         if properties[ObjProperty.statusFlags] == 0:
             self._send_via_mqtt(device_id=device_id,
                                 obj_name=obj_name,

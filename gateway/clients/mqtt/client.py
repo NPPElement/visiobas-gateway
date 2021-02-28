@@ -196,6 +196,6 @@ class VisioMQTTClient(Thread):
                                    gateway=self._gateway
                                    )
         except Exception as e:
-            _log.warning(f'Error: {e}',
+            _log.warning(f'Error: {e} :{msg_dct}',
                          # exc_info=True
                          )

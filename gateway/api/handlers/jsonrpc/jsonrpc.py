@@ -5,14 +5,15 @@ from aiohttp.web_exceptions import HTTPBadGateway
 from aiohttp.web_response import json_response
 from aiohttp_apispec import docs, request_schema, response_schema
 
+from gateway.models import ObjProperty
 from ...handlers import BaseView
-from ...mixins import ModbusRWMixin
+from ...mixins import ReadWriteMixin
 from ...schema import JsonRPCSchema, JsonRPCPostResponseSchema
 
 _log = getLogger(__name__)
 
 
-class JsonRPCView(BaseView, ModbusRWMixin):
+class JsonRPCView(BaseView, ReadWriteMixin):
     URL_PATH = r'/json-rpc'
 
     @docs(summary='Write property to device object with check.')
@@ -29,17 +30,19 @@ class JsonRPCView(BaseView, ModbusRWMixin):
         device = self.get_device(dev_id=dev_id)
         obj = self.get_obj(device=device, obj_type=obj_type, obj_id=obj_id)
         try:
-            values_equal = self.write_with_check_modbus(value=value,
-                                                        obj=obj,
-                                                        device=device
-                                                        )
-            if values_equal:
+            _values_equal = self.write_with_check(value=value,
+                                                  prop=ObjProperty.presentValue,
+                                                  priority=11,  # todo: sure?
+                                                  obj=obj,
+                                                  device=device
+                                                  )
+            if _values_equal:
                 return json_response({'success': True},
                                      status=HTTPStatus.OK.value
                                      )
             else:
                 return json_response({'success': False,
-                                      'msg': 'The read value isn\'t equeal to the written value. '
+                                      'msg': 'The read value ins\'t equal to the written value.'
                                       # f'Written: {value} Read: {rvalue}'
                                       },
                                      status=HTTPStatus.BAD_GATEWAY.value

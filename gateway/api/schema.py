@@ -68,5 +68,5 @@ class JsonRPCPostResponseSchema(Schema):
     success = Bool(required=True)
 
 
-class WriteResultSchema(Schema):
+class ReadResultSchema(Schema):
     value = Field(required=True)
