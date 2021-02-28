@@ -7,6 +7,8 @@ from typing import Sequence
 
 import paho.mqtt.client as mqtt
 
+from gateway.clients.mqtt.api import VisioMQTTApi
+
 _log = getLogger(__name__)
 
 
@@ -51,7 +53,10 @@ class VisioMQTTClient(Thread):
         self._client.on_message = self._on_message_cb
         self._client.on_publish = self._on_publish_cb
 
-        self.topics = []
+        self.api = VisioMQTTApi(visio_mqtt_client=self)
+        self.topics = [
+            ('Set/#', 1),
+        ]
 
     def __repr__(self) -> str:
         return self.__class__.__name__
@@ -93,6 +98,7 @@ class VisioMQTTClient(Thread):
 
         Designed as an endless loop. CAn be stopped from gateway thread.
         """
+        # self.subscribe(topics=self.topics)
         while not self._stopped:
             try:
                 topic, data = self._getting_queue.get()
@@ -121,7 +127,7 @@ class VisioMQTTClient(Thread):
                              port=port,
                              )
         self._client.reconnect_delay_set()
-        self.subscribe(topics=self.topics)
+        # self.subscribe(topics=self.topics)
         self._client.loop_forever(retry_first_connection=True)
 
     def disconnect(self):
@@ -141,7 +147,8 @@ class VisioMQTTClient(Thread):
         elif result == mqtt.MQTT_ERR_NO_CONN:
             _log.warning(f'Not subscribed to topic: {topics} {result} {mid}')
 
-    def publish(self, payload: str, topic: str, qos: int, retain: bool):
+    def publish(self, topic: str, payload: str = None, qos: int = 0,
+                retain: bool = False) -> mqtt.MQTTMessageInfo:
         return self._client.publish(topic=topic,
                                     payload=payload,
                                     qos=qos,
@@ -157,11 +164,11 @@ class VisioMQTTClient(Thread):
         if rc == 0:
             self._connected = True
             _log.info('Successfully connected to broker')
-            # self.__subscribe(topics=self.topics_to_subscribe)
+            self.subscribe(topics=self.topics)
+            # Subscribing in on_connect() means that if we lose the connection and
+            # reconnect then subscriptions will be renewed.
         else:
             _log.warning(f'Failed connection to broker: rc={rc}')
-        # Subscribing in on_connect() means that if we lose the connection and
-        # reconnect then subscriptions will be renewed.
 
     def _on_disconnect_cb(self, client, userdata, rc):
         # self._connected = False
@@ -180,6 +187,14 @@ class VisioMQTTClient(Thread):
                        )
 
     def _on_message_cb(self, client, userdata, message: mqtt.MQTTMessage):
-        decoded_msg = message.payload.decode("utf-8")
-        _log.debug(f'Received: {message.topic}: {decoded_msg}')
-        #  do wr
+        msg_dct = self.api.decode(msg=message)
+        _log.debug(f'Received {message.topic}:{msg_dct}')
+        try:
+            if msg_dct['method'] == 'value':
+                self.api.rpc_value(params=msg_dct['params'],
+                                   gateway=self._gateway
+                                   )
+        except Exception as e:
+            _log.warning(f'Error: {e}',
+                         # exc_info=True
+                         )

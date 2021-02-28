@@ -1,4 +1,4 @@
-aiohttp==3.7.3
+aiohttp==3.7.4
 BAC0==21.2.5
 bacpypes==0.18.3
 pymodbus==2.4.0

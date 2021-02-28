@@ -4,7 +4,7 @@ from logging import getLogger
 from aiohttp.web_response import json_response
 from aiohttp_apispec import docs, request_schema, response_schema
 
-from ..mixins import ModbusRWMixin
+from ...mixins import ModbusRWMixin
 from ...handlers import BaseView
 from ...schema import JsonRPCSchema, JsonRPCPostResponseSchema
 

@@ -3,21 +3,23 @@ from logging import getLogger
 from aiohttp.web_exceptions import HTTPNotFound
 from aiohttp.web_urldispatcher import View
 
+from gateway.api.mixins import DevObjMixin
+
 _log = getLogger(__name__)
 
 
-class BaseView(View):
+class BaseView(View, DevObjMixin):
     @property
     def gateway(self):  # -> VisioGateway
         return self.request.app['gateway']
 
     def get_device(self, dev_id: int):  # ->  Device(Thread)
-        """Returns device's thread (for interactions with object)."""
         try:
-            for con in self.gateway.connectors.values():
-                if dev_id in con.polling_devices:
-                    return con.polling_devices[dev_id]
-            raise HTTPNotFound(reason=f'Device id {dev_id} not polling.')
+            super().get_device(dev_id=dev_id,
+                               gateway=self.gateway
+                               )
+        except ValueError as e:
+            raise HTTPNotFound(reason=str(e.args))
         except AttributeError as e:
             _log.error(f'Error: {e}',
                        exc_info=True
@@ -29,11 +31,12 @@ class BaseView(View):
     def get_obj(device, obj_type: int, obj_id: int):  # -> ProtocolObj
         """Returns protocol's object."""
         try:
-            for obj in device.objects:
-                if obj.type.id == obj_type and obj.id == obj_id:
-                    return obj
-            raise HTTPNotFound(reason=f'Object type {obj_type} id:{obj_id} '
-                                      f'not polling at {device}.')
+            super().get_obj(device=device,
+                            obj_type=obj_type,
+                            obj_id=obj_id
+                            )
+        except ValueError as e:
+            raise HTTPNotFound(reason=str(e.args))
         except AttributeError as e:
             _log.error(f'Error: {e}',
                        exc_info=True

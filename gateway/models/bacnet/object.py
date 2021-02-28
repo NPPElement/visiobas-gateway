@@ -12,6 +12,10 @@ class BACnetObj(NamedTuple):
     resolution: float = None  # todo
     update_interval: int = None  # TODO: implement skip by update_interval
 
+    @property
+    def topic(self):
+        return self.name.replace(':', '/').replace('.', '/')
+
     @classmethod
     def from_dict(cls, obj_type: ObjType, obj_props: dict):
         obj_id = obj_props[str(ObjProperty.objectIdentifier.id)]

@@ -10,6 +10,10 @@ class ModbusObj(NamedTuple):
     name: str
     # upd_period: int
 
+    @property
+    def topic(self):
+        return self.name.replace(':', '/').replace('.', '/')
+
     properties: VisioModbusProperties
 
     @classmethod

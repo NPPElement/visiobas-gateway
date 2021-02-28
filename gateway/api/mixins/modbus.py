@@ -10,6 +10,7 @@ _log = getLogger(__name__)
 
 
 class ModbusRWMixin:
+
     @staticmethod
     def read_modbus(obj: ModbusObj, device: ModbusDevice) -> Any:
         if not isinstance(device, ModbusDevice):
