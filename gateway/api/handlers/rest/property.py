@@ -1,6 +1,7 @@
 from http import HTTPStatus
 from logging import getLogger
 
+from aiohttp.web_exceptions import HTTPBadGateway
 from aiohttp.web_response import json_response
 from aiohttp_apispec import docs, response_schema
 
@@ -36,13 +37,15 @@ class ModbusPropertyView(BaseView, ModbusRWMixin):
     async def get(self):
         device = self.get_device(dev_id=self.device_id)
         obj = self.get_obj(device=device, obj_type=self.object_type, obj_id=self.object_id)
-
-        value = self.read_modbus(obj=obj,
-                                 device=device
+        try:
+            value = self.read_modbus(obj=obj,
+                                     device=device
+                                     )
+            return json_response({'value': value},
+                                 status=HTTPStatus.OK.value
                                  )
-        return json_response({'value': value},
-                             status=HTTPStatus.OK.value
-                             )
+        except Exception as e:
+            return HTTPBadGateway(reason=str(e))
 
     @docs(summary='Write property to device object with check.')
     @response_schema(schema=JsonRPCPostResponseSchema, code=HTTPStatus.OK.value)
@@ -51,33 +54,30 @@ class ModbusPropertyView(BaseView, ModbusRWMixin):
         obj = self.get_obj(device=device, obj_type=self.object_type, obj_id=self.object_id)
 
         body = await self.request.json()
-
-        value = body.get('value')
-        property_ = body.get('property')
-
-        if property_ != 85:
-            return json_response({'success': False,
-                                  'msg': 'For now, only the presentValue(85) '
-                                         'property is supported.'
-                                  },
-                                 status=HTTPStatus.NOT_IMPLEMENTED.value
-                                 )
-
-        self.write_modbus(value=value,
-                          obj=obj,
-                          device=device
-                          )
-        rvalue = self.read_modbus(obj=obj,
-                                  device=device
-                                  )
-        if value == rvalue:
-            return json_response({'success': True},
-                                 status=HTTPStatus.OK.value
-                                 )
-        else:
-            return json_response({'success': False,
-                                  'msg': 'The read value does not match the written one. '
-                                         f'Written: {value} Read: {rvalue}'
-                                  },
-                                 status=HTTPStatus.BAD_GATEWAY.value
-                                 )
+        try:
+            value = body['value']
+            # property_ = body.get('property')
+            # if property_ != 85:
+            #     return json_response({'success': False,
+            #                           'msg': 'For now, only the presentValue(85) '
+            #                                  'property is supported.'
+            #                           },
+            #                          status=HTTPStatus.NOT_IMPLEMENTED.value
+            #                          )
+            values_equal = self.write_with_check_modbus(value=value,
+                                                        obj=obj,
+                                                        device=device
+                                                        )
+            if values_equal:
+                return json_response({'success': True},
+                                     status=HTTPStatus.OK.value
+                                     )
+            else:
+                return json_response({'success': False,
+                                      'msg': 'The read value does not match the written one. '
+                                      # f'Written: {value} Read: {rvalue}'
+                                      },
+                                     status=HTTPStatus.BAD_GATEWAY.value
+                                     )
+        except Exception as e:
+            return HTTPBadGateway(reason=str(e))

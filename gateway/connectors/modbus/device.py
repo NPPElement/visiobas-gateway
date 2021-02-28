@@ -46,7 +46,7 @@ class ModbusDevice(Thread):
         self.objects: set[ModbusObj] = objects
 
         self._log.info(f'{self} starting ...')
-        #self.start()
+        # self.start()
 
     def __repr__(self) -> str:
         return f'{self.__class__.__name__}[{self.id}]'
@@ -134,42 +134,50 @@ class ModbusDevice(Thread):
             self._log.error(f'Modbus client init error: {e}', exc_info=True)
             raise e
 
-    def read(self, cmd_code: int, reg_address: int,
-             quantity: int, unit=0x01) -> list:
+    def read(self, obj: ModbusObj, unit=0x01) -> list:
         """Read data from Modbus registers."""
         read_cmd_codes = {1, 2, 3, 4}
-        if cmd_code not in read_cmd_codes:
+
+        read_cmd_code = obj.properties.func_read,
+        address = obj.properties.address,
+        quantity = obj.properties.quantity
+
+        if read_cmd_code not in read_cmd_codes:
             raise ValueError(f'Read functions must be one of {read_cmd_codes}')
 
         # try:  # todo: do we need re-raise??
-        data = self._available_functions[cmd_code](address=reg_address,
-                                                   count=quantity,
-                                                   unit=unit
-                                                   )
+        data = self._available_functions[read_cmd_code](address=address,
+                                                        count=quantity,
+                                                        unit=unit
+                                                        )
         if not data.isError():
-            self._log.debug(f'Successful reading cmd_code={cmd_code} address={reg_address} '
-                            f'quantity={quantity} registers={data.registers}'
-                            # extra={'cmd_code': cmd_code,
-                            #        'address': reg_address,
-                            #        'quantity': data.registers
-                            #        }
-                            )
+            self._log.debug(
+                f'Successful reading cmd_code={read_cmd_code} address={address} '
+                f'quantity={quantity} registers={data.registers}'
+                # extra={'cmd_code': cmd_code,
+                #        'address': reg_address,
+                #        'quantity': data.registers
+                #        }
+            )
             return data.registers
         else:
             self._log.warning(f'Read failed: {data}')
             raise data
 
-    def write(self, cmd_code: int, reg_address: int,
-              values, unit=0x01) -> None:
+    def write(self, values, obj: ModbusObj, unit=0x01) -> None:
         """Write data to Modbus registers."""
         write_cmd_codes = {5, 6, 15, 16}
-        if cmd_code not in write_cmd_codes:
+
+        write_cmd_code = obj.properties.func_write,
+        reg_address = obj.properties.address
+
+        if write_cmd_code not in write_cmd_codes:
             raise ValueError(f'Read functions must be one of {write_cmd_codes}')
 
-        rq = self._available_functions[cmd_code](reg_address,
-                                                 values,
-                                                 unit=unit
-                                                 )
+        rq = self._available_functions[write_cmd_code](reg_address,
+                                                       values,
+                                                       unit=unit
+                                                       )
         if not rq.isError():
             self._log.debug(f'Successfully write: {reg_address}: {values}')
         else:
@@ -237,10 +245,7 @@ class ModbusDevice(Thread):
         """
         for obj in objects:
             try:
-                registers = self.read(cmd_code=obj.properties.func_read,
-                                      reg_address=obj.properties.address,
-                                      quantity=obj.properties.quantity
-                                      )
+                registers = self.read(obj=obj)
                 value = self.process_registers(registers=registers,
                                                quantity=obj.properties.quantity,
                                                properties=obj.properties

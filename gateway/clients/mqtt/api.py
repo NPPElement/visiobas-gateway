@@ -55,6 +55,6 @@ class VisioMQTTApi(DevObjMixin, ModbusRWMixin):
                                                cur_value,
                                                sf
                                                )
-        _ = self.publish(topic=obj.topic,
-                         payload=payload,
-                         )
+        self.publish(topic=obj.topic,
+                     payload=payload,
+                     )

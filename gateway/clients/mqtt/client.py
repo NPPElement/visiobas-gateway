@@ -191,6 +191,7 @@ class VisioMQTTClient(Thread):
         _log.debug(f'Received {message.topic}:{msg_dct}')
         try:
             if msg_dct.get('method') == 'value':
+                # todo: provide device_id and cache result (error) if device not polling
                 self.api.rpc_value(params=msg_dct['params'],
                                    gateway=self._gateway
                                    )
