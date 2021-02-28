@@ -190,7 +190,7 @@ class BACnetDevice(Thread):
                                                obj.id,
                                                prop.name
                                                )
-            response = self.network.read_modbus(request)
+            response = self.network.read(request)
             if response is None:
                 raise ReadPropertyException('Response is None')
             elif isinstance(response, str) and not response.strip():
