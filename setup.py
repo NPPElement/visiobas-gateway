@@ -27,10 +27,10 @@ from setuptools import find_packages, setup
 
 
 setup(name='visiobas-gateway',
-      version='0.1.3',
+      version='0.1.4',
       author='VisioBAS, Ovtsin Matvey',
       # author_email=__email__,
-      # license=__license__,
+      license='GNU General Public License v3.0',
       description='VisiBAS IoT gateway.',
       # long_description=open('README.md').read(),
       url='https://github.com/NPPElement/visiobas-gateway',
