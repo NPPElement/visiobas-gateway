@@ -10,6 +10,7 @@ from BAC0.core.io.IOExceptions import (ReadPropertyException,
                                        UnknownPropertyError,
                                        ReadPropertyMultipleException
                                        )
+from BAC0.scripts.Lite import Lite
 from bacpypes.basetypes import PriorityArray
 
 from gateway.models import BACnetObj, ObjType, ObjProperty
@@ -46,7 +47,7 @@ class BACnetDevice(Thread):
         self._verifier_queue = verifier_queue
 
         self.address = address
-        self.network = network
+        self.network: Lite = network
 
         self.support_rpm: set[BACnetObj] = objects
         self.not_support_rpm: set[BACnetObj] = set()
@@ -291,9 +292,8 @@ class BACnetDevice(Thread):
         except Exception as e:
             self._log.error(f'Read Error: {e}', exc_info=True)
             values = get_fault_obj_properties(reliability='error')
-        finally:
-            properties.update(values)
-            return properties
+        properties.update(values)
+        return properties
 
     def _put_device_end_to_verifier(self) -> None:
         """device_id in queue means that device polled.
