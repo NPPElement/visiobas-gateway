@@ -5,13 +5,15 @@
 sudo git clone --single-branch --branch develop https://github.com/NPPElement/visiobas-gateway
 
 # shellcheck disable=SC2164
-cd visiobas-gateway
+cd visiobas-gateway/
 
 # todo: here set:
 #  /gateway/config/http.yaml
 #  /gateway/config/mqtt.yaml
 #  /gateway/connectors/bacnet/address_cache
 #  /gateway/connectors/modbus/address_cache
+
+# Configure docker-compose.yaml if need
 
 sudo python3 setup.py sdist # create a source distribution
 # if not creating - use current from /dist

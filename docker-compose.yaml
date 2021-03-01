@@ -18,7 +18,7 @@ services:
         max-file: "2"
         max-size: "1024k"
     restart: always
-    user: root
+    # user: root
     environment:
       - TZ=Europe/Moscow
       - PYTHONPATH=/
@@ -27,11 +27,12 @@ services:
       - LOG_LEVEL=DEBUG
       #- FILE_LOG_LEVEL=DEBUG
     volumes:
-      #- /opt/visiobas-gateway/config:/visiobas-gateway/gateway/config
-      #- /opt/visiobas-gateway/logs:/visiobas-gateway/gateway/logs
-      #- /opt/visiobas-gateway/gateway/connectors/bacnet/address_cache:/visiobas-gateway/gateway/connectors/bacnet/address_cache
-      #- /opt/visiobas-gateway/gateway/connectors/modbus/address_cache:/visiobas-gateway/gateway/connectors/modbus/address_cache
-      - /home/user/visiobas-gateway:/visiobas-gateway
+      - /opt/visiobas-gateway/gateway/config:/usr/share/python3/gw/lib/python3.9/site-packages/gateway/config/
+      #- /opt/visiobas-gateway/logs:/usr/share/python3/gw/gateway/logs
+      - /opt/visiobas-gateway/gateway/connectors/bacnet/address_cache:/usr/share/python3/gw/lib/python3.9/site-packages/gateway/connectors/bacnet/address_cache
+      - /opt/visiobas-gateway/gateway/connectors/modbus/address_cache:/usr/share/python3/gw/lib/python3.9/site-packages/gateway/connectors/modbus/address_cache
+
+      #- /home/user/visiobas-gateway:/visiobas-gateway
     # command: python -OO __main__.py
     networks:
       - backend
