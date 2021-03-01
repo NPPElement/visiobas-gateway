@@ -19,7 +19,9 @@ class ReadWriteMixin(BACnetRWMixin, ModbusRWMixin):
         elif isinstance(device, ModbusDevice):
             protocol_read_func = self.read_modbus
         else:
-            raise NotImplementedError('Only BACnet, Modbus implemented')
+            raise NotImplementedError('Only BACnet, Modbus implemented. '
+                                      f'Received: {device} {type(device)}'
+                                      )
 
         value = protocol_read_func(obj=obj,
                                    device=device,
@@ -40,7 +42,9 @@ class ReadWriteMixin(BACnetRWMixin, ModbusRWMixin):
         elif isinstance(device, ModbusDevice):
             protocol_write_func = self.write_modbus
         else:
-            raise NotImplementedError('Only BACnet, Modbus implemented')
+            raise NotImplementedError('Only BACnet, Modbus implemented. '
+                                      f'Received: {device} {type(device)}'
+                                      )
         protocol_write_func(value=value,
                             prop=prop,
                             priority=priority,
@@ -61,7 +65,9 @@ class ReadWriteMixin(BACnetRWMixin, ModbusRWMixin):
         elif isinstance(device, ModbusDevice):
             protocol_write_with_check = self.write_with_check_modbus
         else:
-            raise NotImplementedError('Only BACnet, Modbus implemented')
+            raise NotImplementedError('Only BACnet, Modbus implemented. '
+                                      f'Received: {device} {type(device)}'
+                                      )
         _values_equal = protocol_write_with_check(value=value,
                                                   prop=prop,
                                                   priority=priority,

@@ -39,17 +39,3 @@ RUN ln -snf /usr/share/python3/gw/bin/gateway  /usr/local/bin/
 CMD ["gateway"]
 
 EXPOSE 502 7070 8080 47808
-
-#RUN	mkdir -p /visiobas-gateway
-#COPY . /visiobas-gateway
-#WORKDIR /visiobas-gateway
-#RUN pip install --no-cache-dir -r requirements.txt
-
-
-
-
-
-
-
-
-#502 1883 7070 8080 8883 47808 47809 47810 47811 47812 47813 47814 47815 47816 47817 47818 47819 47820 47821 47822 47823
