@@ -55,7 +55,8 @@ class BaseConnector(Thread, ABC):
         self.stop_devices(devices_id=self.polling_devices.keys())
 
         # Clear the read_address_cache cache to read the updated `address_cache` file.
-        self.read_address_cache.clear_cache()
+        # self.
+        read_address_cache.clear_cache()
 
     def run_getting_devices_loop(self) -> None:
         """Receive data about device form HTTP client.
@@ -122,9 +123,9 @@ class BaseConnector(Thread, ABC):
             return True
 
         except KeyError as e:
-            _log.warning(f"Device [{device_id}] isn't running. "
-                         f"Please provide the id of the polling device: {e}"
-                         )
+            # _log.warning(f"Device [{device_id}] isn't running. "
+            #              f"Please provide the id of the polling device: {e}"
+            #              )
             return True
         except Exception as e:
             _log.error(f'Device stopping error: {e}',
@@ -158,5 +159,4 @@ class BaseConnector(Thread, ABC):
 
         :return: Example: {200: '10.21.80.12:47808', ...}
         """
-        return read_address_cache(address_cache_path=self.address_cache_path
-                                  )
+        return read_address_cache(address_cache_path=self.address_cache_path)

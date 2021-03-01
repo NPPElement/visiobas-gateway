@@ -239,7 +239,7 @@ class BACnetDevice(Thread):
                 raise ReadPropertyMultipleException('Response is None')
 
         except Exception as e:
-            self._log.warning(f'RPM Error: {e}')
+            # self._log.warning(f'RPM Error: {e}')
             raise ReadPropertyMultipleException(e)
 
     def __simulate_rpm(self, obj: BACnetObj, properties: Iterable[ObjProperty]) -> dict:
@@ -251,16 +251,16 @@ class BACnetDevice(Thread):
                 # self.not_support_rpm.update(obj)
 
             except (UnknownObjectError, NoResponseFromController) as e:
-                self._log.warning(f'sRPM Error: {e}')
+                # self._log.warning(f'sRPM Error: {e}')
                 raise e
 
             except (UnknownPropertyError, ReadPropertyException) as e:
                 if prop is ObjProperty.priorityArray:
                     continue
-                self._log.warning(f'sRPM Error: {e}')
+                # self._log.warning(f'sRPM Error: {e}')
                 raise e
             except TypeError as e:
-                self._log.error(f'Type error: {e}')
+                # self._log.error(f'Type error: {e}')
                 raise e
             except Exception as e:
                 self._log.error(f'sRPM error: {e}', exc_info=True)
@@ -281,7 +281,7 @@ class BACnetDevice(Thread):
             return properties
 
         except ReadPropertyMultipleException as e:
-            self._log.error(f'Read Error: {e}')
+            # self._log.warning(f'Read Error: {e}')
             raise e
 
     def simulate_rpm(self, obj: BACnetObj) -> dict:

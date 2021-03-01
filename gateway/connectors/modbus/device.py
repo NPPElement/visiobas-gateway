@@ -161,8 +161,8 @@ class ModbusDevice(Thread):
             )
             return data.registers
         else:
-            self._log.warning(f'Read failed: {data}')
-            raise data
+            # self._log.warning(f'Read failed: {data}')
+            raise ValueError(data)
 
     def write(self, values, obj: ModbusObj, unit=0x01) -> None:
         """Write data to Modbus registers."""
@@ -262,7 +262,7 @@ class ModbusDevice(Thread):
                                   exc_info=True
                                   )
                 # todo: except read errors and add to reliability
-                # todo: put obj data to verifier
+                # FIXME: put obj data to verifier
         self._put_device_end_to_verifier()
 
     @staticmethod

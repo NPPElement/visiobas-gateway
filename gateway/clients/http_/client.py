@@ -189,7 +189,8 @@ class VisioHTTPClient(Thread):
         """
         try:
             # Clear the read_address_cache cache to read the updated `address_cache` file.
-            read_address_cache.clear_cache()
+            # read_address_cache.clear_cache() FIXME!!
+
 
             upd_coros = [self.upd_device(node=node,
                                          device_id=dev_id,
