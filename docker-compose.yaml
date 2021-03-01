@@ -27,7 +27,7 @@ services:
       - LOG_LEVEL=DEBUG
       #- FILE_LOG_LEVEL=DEBUG
     volumes:
-      - /opt/visiobas-gateway/gateway/config:/usr/share/python3/gw/lib/python3.9/site-packages/gateway/config/
+      - /opt/visiobas-gateway/gateway/config:/usr/share/python3/gw/lib/python3.9/site-packages/gateway/config
       #- /opt/visiobas-gateway/logs:/usr/share/python3/gw/gateway/logs
       - /opt/visiobas-gateway/gateway/connectors/bacnet/address_cache:/usr/share/python3/gw/lib/python3.9/site-packages/gateway/connectors/bacnet/address_cache
       - /opt/visiobas-gateway/gateway/connectors/modbus/address_cache:/usr/share/python3/gw/lib/python3.9/site-packages/gateway/connectors/modbus/address_cache
