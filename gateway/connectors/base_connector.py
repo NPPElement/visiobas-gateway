@@ -1,15 +1,13 @@
 # import atexit
 from abc import ABC, abstractmethod
-from functools import lru_cache
-from ipaddress import IPv4Address
 from json import loads
 from logging import getLogger
 from multiprocessing import SimpleQueue
-from pathlib import Path
 from threading import Thread
 from typing import Iterable
 
 from ..models import ObjType, BACnetObj, ObjProperty
+from ..utils import read_address_cache
 
 _log = getLogger(__name__)
 
@@ -160,58 +158,5 @@ class BaseConnector(Thread, ABC):
 
         :return: Example: {200: '10.21.80.12:47808', ...}
         """
-        return self.read_address_cache(address_cache_path=self.address_cache_path
-                                       )
-
-    @lru_cache(maxsize=1)
-    def read_address_cache(self, address_cache_path: Path) -> dict[int, str]:
-        """Updates address_cache file.
-        Caches the read result. Therefore, the cache must be cleared on update.
-
-        Parse text file format of address_cache.
-        Add information about devices
-
-        Example of address_cache format:
-            ;Device   MAC (hex)            SNET  SADR (hex)           APDU
-            ;-------- -------------------- ----- -------------------- ----
-              200     0A:15:50:0C:BA:C0    0     00                   480
-              300     0A:15:50:0D:BA:C0    0     00                   480
-              400     0A:15:50:0E:BA:C0    0     00                   480
-              500     0A:15:50:0F:BA:C0    0     00                   480
-              600     0A:15:50:10:BA:C0    0     00                   480
-            ;
-            ; Total Devices: 5
-
-        :return: Example:
-            200: '10.21.80.200:47808'
-        """
-        try:
-            address_cache = {}
-
-            text = address_cache_path.read_text(encoding='utf-8')
-            for line in text.split('\n'):
-                trimmed = line.strip()
-                if not trimmed.startswith(';') and trimmed:
-                    try:
-                        device_id, mac, _, _, apdu = trimmed.split(maxsplit=4)
-                        # In mac we have ip-address host:port in hex
-                        device_id = int(device_id)
-                        addr1, addr2, addr3, addr4, port1, port2 = mac.rsplit(':',
-                                                                              maxsplit=5)
-                        addr = IPv4Address('.'.join((
-                            str(int(addr1, base=16)),
-                            str(int(addr2, base=16)),
-                            str(int(addr3, base=16)),
-                            str(int(addr4, base=16)))))
-                        port = int(port1 + port2, base=16)
-                        address_cache[device_id] = ':'.join((str(addr), str(port)))
-                    except ValueError:
-                        continue
-            return address_cache
-
-        except Exception as e:
-            _log.critical(f'Read address_cache error: {e} '
-                          # f'Closing {self}'
-                          )
-            # self.close()  # fixme
-            # raise e
+        return read_address_cache(address_cache_path=self.address_cache_path
+                                  )

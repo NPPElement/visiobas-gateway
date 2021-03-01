@@ -14,6 +14,7 @@ from .http_config import VisioHTTPConfig
 from .http_node import VisioHTTPNode
 from ...connectors import BaseConnector
 from ...models import ObjType
+from ...utils import read_address_cache
 
 _log = getLogger(__name__)
 
@@ -188,7 +189,7 @@ class VisioHTTPClient(Thread):
         """
         try:
             # Clear the read_address_cache cache to read the updated `address_cache` file.
-            connector.read_address_cache.clear_cache()
+            read_address_cache.clear_cache()
 
             upd_coros = [self.upd_device(node=node,
                                          device_id=dev_id,
