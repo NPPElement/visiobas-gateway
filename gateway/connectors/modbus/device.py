@@ -138,8 +138,8 @@ class ModbusDevice(Thread):
         """Read data from Modbus registers."""
         read_cmd_codes = {1, 2, 3, 4}
 
-        read_cmd_code = obj.properties.func_read,
-        address = obj.properties.address,
+        read_cmd_code = obj.properties.func_read
+        address = obj.properties.address
         quantity = obj.properties.quantity
 
         if read_cmd_code not in read_cmd_codes:
@@ -168,7 +168,7 @@ class ModbusDevice(Thread):
         """Write data to Modbus registers."""
         write_cmd_codes = {5, 6, 15, 16}
 
-        write_cmd_code = obj.properties.func_write,
+        write_cmd_code = obj.properties.func_write
         reg_address = obj.properties.address
 
         if write_cmd_code not in write_cmd_codes:
