@@ -222,10 +222,12 @@ class BACnetVerifier(Process):
         try:
             device_str = ';'.join((*self._http_storage.pop(device_id), ''))
             self._http_queue.put((device_id, device_str))
+        except KeyError:
+            pass
         except Exception as e:
-            _log.error(f'HTTP Sending Error: {e}',
-                       # exc_info=True
-                       )
+            _log.warning(f'HTTP Sending Error: {e}',
+                         exc_info=True
+                         )
 
     def _send_via_mqtt(self, device_id: int, obj_name: str,
                        properties: dict[ObjProperty, ...]) -> None:
