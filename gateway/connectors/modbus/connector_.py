@@ -73,7 +73,7 @@ class ModbusConnector(BaseConnector):
     def parse_objs_data(self, objs_data: dict[ObjType, list[dict]]
                         ) -> tuple[int, set[ModbusObj]]:
         # Extract update period
-        upd_period = self.parse_upd_period(device_obj_data=objs_data[ObjType.DEVICE])
+        upd_period = self.parse_upd_period(device_obj_data=objs_data.pop(ObjType.DEVICE))
 
         modbus_objs = set()
         # Create protocol objects from objs_data
