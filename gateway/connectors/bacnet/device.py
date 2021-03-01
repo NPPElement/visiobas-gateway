@@ -294,7 +294,6 @@ class BACnetDevice(Thread):
             values = self.__simulate_rpm(obj=obj,
                                          properties=obj.type.properties
                                          )
-
         except NoResponseFromController as e:
             self._log.error(f'No response error: {e}')
             values = get_fault_obj_properties(reliability='no-response')

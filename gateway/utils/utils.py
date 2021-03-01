@@ -6,11 +6,9 @@ from gateway.models import ObjProperty, StatusFlag
 
 def get_fault_obj_properties(reliability: int or str,
                              pv='null',
-                             sf: int = None) -> dict:
+                             sf: int = StatusFlag.FAULT.value) -> dict:
     """ Returns properties for unknown objects
     """
-    if sf is None:
-        sf = StatusFlag.FAULT.value
     return {ObjProperty.presentValue: pv,
             ObjProperty.statusFlags: sf,
             ObjProperty.reliability: reliability

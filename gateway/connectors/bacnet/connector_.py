@@ -6,9 +6,9 @@ from time import sleep
 from BAC0 import lite
 from BAC0.core.io.IOExceptions import InitializationError, NetworkInterfaceException
 
-from gateway.models import ObjType, BACnetObj
 from .device import BACnetDevice
 from ..base_connector import BaseConnector
+from ...models import ObjType, BACnetObj
 
 _base_path = Path(__file__).resolve().parent.parent.parent
 _log = getLogger(__name__)

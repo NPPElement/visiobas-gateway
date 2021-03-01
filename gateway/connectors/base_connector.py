@@ -163,7 +163,7 @@ class BaseConnector(Thread, ABC):
         return self.read_address_cache(address_cache_path=self.address_cache_path
                                        )
 
-    @lru_cache(maxsize=2)
+    @lru_cache(maxsize=1)
     def read_address_cache(self, address_cache_path: Path) -> dict[int, str]:
         """Updates address_cache file.
         Caches the read result. Therefore, the cache must be cleared on update.

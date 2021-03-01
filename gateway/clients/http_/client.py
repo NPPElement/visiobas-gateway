@@ -10,10 +10,10 @@ from typing import Iterable
 import aiohttp
 from aiomisc import awaitable
 
-from gateway.connectors import BaseConnector
-from gateway.models import ObjType
 from .http_config import VisioHTTPConfig
 from .http_node import VisioHTTPNode
+from ...connectors import BaseConnector
+from ...models import ObjType
 
 _log = getLogger(__name__)
 
@@ -23,22 +23,18 @@ _base_path = Path(__file__).resolve().parent.parent.parent
 class VisioHTTPClient(Thread):
     """Control interactions via HTTP."""
 
-    def __init__(self, gateway, getting_queue: SimpleQueue, config: dict,
-                 test_modbus: bool = False,
-                 # **kwargs: Any
-                 ):
+    def __init__(self, gateway, getting_queue: SimpleQueue, config: dict):
         super().__init__()
         self.setName(name=f'{self}-Thread')
         self.setDaemon(True)
 
-        # super().__init__(**kwargs)
         self._gateway = gateway
         self._getting_queue = getting_queue
         self._config = config
 
         self._timeout = aiohttp.ClientTimeout(total=self._config.get('timeout', 60))
 
-        self.run_send_loop = self.run_http_post_loop
+        self.run_send_loop = self.run_http_post_loop  # fixme
 
         self.get_node = VisioHTTPNode.from_dict(cfg=self._config['get_node'])
 
@@ -66,8 +62,7 @@ class VisioHTTPClient(Thread):
 
         return cls(gateway=gateway,
                    getting_queue=getting_queue,
-                   config=http_cfg,
-                   test_modbus=test_modbus
+                   config=http_cfg
                    )
 
     def run(self) -> None:
@@ -192,6 +187,9 @@ class VisioHTTPClient(Thread):
         :return: is update successful
         """
         try:
+            # Clear the read_address_cache cache to read the updated `address_cache` file.
+            connector.read_address_cache.clear_cache()
+
             upd_coros = [self.upd_device(node=node,
                                          device_id=dev_id,
                                          obj_types=connector.obj_types_to_request,
