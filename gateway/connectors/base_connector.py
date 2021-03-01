@@ -9,7 +9,7 @@ from pathlib import Path
 from threading import Thread
 from typing import Iterable
 
-from gateway.models import ObjType, BACnetObj, ObjProperty
+from ..models import ObjType, BACnetObj, ObjProperty
 
 _log = getLogger(__name__)
 

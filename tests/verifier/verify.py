@@ -1,8 +1,5 @@
 import unittest
 
-from bacpypes.basetypes import PriorityArray, PriorityValue
-from bacpypes.primitivedata import Null
-
 from gateway.models.bacnet import ObjType, ObjProperty, StatusFlag
 from gateway.verifier import BACnetVerifier
 

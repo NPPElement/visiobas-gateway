@@ -1,10 +1,8 @@
-import logging
 from logging import getLogger
 
 from aiohttp.web_app import Application
 from aiohttp_apispec import setup_aiohttp_apispec
 from aiomisc import entrypoint
-from aiomisc.log import basic_config
 from aiomisc.service.aiohttp import AIOHTTPService
 
 from .handlers import HANDLERS

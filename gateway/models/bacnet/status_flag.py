@@ -11,6 +11,8 @@ class StatusFlag(Enum):
 
         For disable flag IN_ALARM use:
             sf = sf & ~StatusFlags.IN_ALARM.value
+
+            TODO add check flag
     """
     OUT_OF_SERVICE = 0b1000
     OVERRIDEN = 0b0100

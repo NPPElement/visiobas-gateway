@@ -68,4 +68,4 @@ class ObjType(Enum):
                     ObjProperty.priorityArray
                     )
         else:
-            raise NotImplementedError(f'Properties for type {self} not yet defined')
+            raise NotImplementedError(f'Properties for {self} not defined yet')

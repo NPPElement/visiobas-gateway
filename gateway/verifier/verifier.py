@@ -1,7 +1,7 @@
 from logging import getLogger
 from multiprocessing import Process, SimpleQueue
 
-from gateway.models import ObjProperty, StatusFlag
+from ..models import ObjProperty, StatusFlag
 
 _log = getLogger(__name__)
 
@@ -102,7 +102,7 @@ class BACnetVerifier(Process):
         }
 
         sf = obj_properties.get(ObjProperty.statusFlags, 0b0000)
-        # self.verify_sf()  implement if needs to verify statusFlags
+        sf = self.verify_sf(sf=sf)
         verified_props[ObjProperty.statusFlags] = sf
 
         reliability = obj_properties.get(ObjProperty.reliability, 0)
@@ -117,6 +117,14 @@ class BACnetVerifier(Process):
                                             properties=verified_props)
 
         return verified_props
+
+    @staticmethod
+    def verify_sf(sf: int or list) -> int:
+        if isinstance(sf, int):
+            return sf
+        elif isinstance(sf, list) and len(sf) == 4:
+            return int(''.join((str(flag) for flag in sf)), base=2)
+        raise ValueError(f'Not supported sf: {sf} {type(sf)}')
 
     @staticmethod
     def verify_pv(pv, properties: dict[ObjProperty, ...]) -> dict[ObjProperty, ...]:
@@ -169,10 +177,7 @@ class BACnetVerifier(Process):
     def verify_pa(pa: tuple, properties: dict[ObjProperty, ...]
                   ) -> dict[ObjProperty, ...]:
         """Convert priorityArray to tuple."""
-
         verified_props = properties.copy()
-        # pa_size = pa.value[0]
-        # priorities = []
 
         # todo: move priorities into Enum
         manual_life_safety = 9 - 1
@@ -180,14 +185,6 @@ class BACnetVerifier(Process):
         override_priorities = {manual_life_safety,
                                automatic_life_safety
                                }
-
-        # for i in range(1, pa_size + 1):
-        #     priority = pa.value[i]
-        #     key, value = zip(*priority.dict_contents().items())
-        #     if key[0] == 'null':
-        #         priorities.append('')
-        #     else:
-        #         priorities.append(round(float(value[0])))
         for i in range(len(pa)):
             if pa[i] is not None and i in override_priorities:
                 sf = verified_props.get(ObjProperty.statusFlags, 0b0000)
@@ -226,7 +223,9 @@ class BACnetVerifier(Process):
             device_str = ';'.join((*self._http_storage.pop(device_id), ''))
             self._http_queue.put((device_id, device_str))
         except Exception as e:
-            _log.error(f'HTTP Sending Error: {e}', exc_info=True)
+            _log.error(f'HTTP Sending Error: {e}',
+                       # exc_info=True
+                       )
 
     def _send_via_mqtt(self, device_id: int, obj_name: str,
                        properties: dict[ObjProperty, ...]) -> None:

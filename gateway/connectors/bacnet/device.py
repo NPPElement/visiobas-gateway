@@ -316,11 +316,14 @@ class BACnetDevice(Thread):
         """device_id in queue means that device polled.
         Should send collected objects to HTTP.
         """
-
         self._verifier_queue.put(self.id)
 
     def _put_data_into_verifier(self, properties: dict) -> None:
         """Send collected data about obj into BACnetVerifier."""
+        if ObjProperty.priorityArray in properties:
+            properties[ObjProperty.priorityArray] = self.pa_to_tuple(
+                pa=properties[ObjProperty.priorityArray]
+            )
         self._verifier_queue.put(properties)
 
     @staticmethod

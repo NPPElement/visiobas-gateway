@@ -1,3 +1,4 @@
+from json import loads
 from typing import NamedTuple
 
 
@@ -24,8 +25,6 @@ class VisioModbusProperties(NamedTuple):
 
     @classmethod
     def create_from_json(cls, property_list: str):
-        from json import loads
-
         modbus_properties = loads(property_list)['modbus']
 
         address = int(modbus_properties['address'])
