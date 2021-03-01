@@ -16,9 +16,9 @@ class BaseView(View, DevObjMixin):
     def get_device(self, dev_id: int):  # ->  Device(Thread)
         # _log.critical(BaseView.__mro__)
         try:
-            DevObjMixin.get_device(dev_id=dev_id,
-                                   gateway=self.gateway
-                                   )
+            return DevObjMixin.get_device(dev_id=dev_id,
+                                          gateway=self.gateway
+                                          )
         except ValueError as e:
             raise HTTPNotFound(reason=str(e.args))
         except AttributeError as e:
@@ -32,10 +32,10 @@ class BaseView(View, DevObjMixin):
     def get_obj(device, obj_type: int, obj_id: int):  # -> ProtocolObj
         """Returns protocol's object."""
         try:
-            DevObjMixin.get_obj(device=device,
-                                obj_type=obj_type,
-                                obj_id=obj_id
-                                )
+            return DevObjMixin.get_obj(device=device,
+                                       obj_type=obj_type,
+                                       obj_id=obj_id
+                                       )
         except ValueError as e:
             raise HTTPNotFound(reason=str(e.args))
         except AttributeError as e:

@@ -59,7 +59,6 @@ class BACnetDevice(Thread):
         self._polling = True
 
         self._log.info(f'{self} starting ...')
-        # self.start()
 
     def __repr__(self):
         return f'{self.__class__.__name__}:[{self.id}]'
@@ -68,6 +67,10 @@ class BACnetDevice(Thread):
         """ :return: the quantity of objects in the device received from the server
         """
         return len(self.support_rpm) + len(self.not_support_rpm)
+
+    @property
+    def objects(self) -> set[BACnetObj]:
+        return self.support_rpm | self.not_support_rpm
 
     def run(self):
         while self._polling:
@@ -78,12 +81,12 @@ class BACnetDevice(Thread):
                     t0 = time()
                     self.poll()  # poll all objects
                     t1 = time()
-                    time_delta = t1 - t0
+                    time_delta = round(t1 - t0, ndigits=2)
 
                     self._log.info(
                         '\n==================================================\n'
                         f'{self} ip:{self.address} polled for: '
-                        f'{round(time_delta, ndigits=2)} sec.\n'
+                        f'{time_delta} sec.\n'
                         f'Update period: {self.update_period} sec.\n'
                         f'Objects: {len(self)}\n'
                         f'Support RPM: {len(self.support_rpm)}\n'
@@ -93,9 +96,10 @@ class BACnetDevice(Thread):
                     self._log.info(
                         f'Timedelta = {time_delta}, upd_period = {self.update_period}')
                     if time_delta < self.update_period:
-                        waiting_time = (self.update_period - time_delta) * 0.8
-                        self._log.info(
-                            f'{self} Sleeping {round(waiting_time, ndigits=2)} sec ...')
+                        waiting_time = round((self.update_period - time_delta) * 0.8,
+                                             ndigits=2
+                                             )
+                        self._log.info(f'{self} Sleeping {waiting_time} sec ...')
                         sleep(waiting_time)
 
                 except Exception as e:
@@ -145,8 +149,6 @@ class BACnetDevice(Thread):
         When all objects polled, send device_id into verifier as finish signal
         """
         for obj in self.support_rpm:
-            assert isinstance(obj, BACnetObj)
-
             self._log.debug(f'Polling supporting PRM {obj} ...')
             try:
                 values = self.rpm(obj=obj)
@@ -166,8 +168,6 @@ class BACnetDevice(Thread):
         self.support_rpm.difference_update(self.not_support_rpm)
 
         for obj in self.not_support_rpm:
-            assert isinstance(obj, BACnetObj)
-
             self._log.debug(f'Polling not supporting PRM {obj} ...')
             try:
                 values = self.simulate_rpm(obj=obj)
