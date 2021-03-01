@@ -5,3 +5,7 @@ password: password
 
 qos: 0
 retain: True
+
+subscribe:
+  - Topics/to/subscribe
+  - Topics/#

@@ -8,10 +8,10 @@ sudo git clone --single-branch --branch develop https://github.com/NPPElement/vi
 cd visiobas-gateway/
 
 # todo: here set:
-#  /gateway/config/http.yaml
-#  /gateway/config/mqtt.yaml
-#  /gateway/connectors/bacnet/address_cache
-#  /gateway/connectors/modbus/address_cache
+#  gateway/config/http.yaml
+#  gateway/config/mqtt.yaml
+#  gateway/connectors/bacnet/address_cache
+#  gateway/connectors/modbus/address_cache
 
 # Configure docker-compose.yaml if need
 
