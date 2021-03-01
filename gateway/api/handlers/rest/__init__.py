@@ -1,4 +1,4 @@
-from .property import ModbusPropertyView
+from .property import PropertyView
 
-__all__ = ('ModbusPropertyView',
+__all__ = ('PropertyView',
            )

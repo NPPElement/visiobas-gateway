@@ -6,14 +6,14 @@ from aiohttp.web_response import json_response
 from aiohttp_apispec import docs, response_schema
 
 from gateway.models import ObjProperty
-from ...handlers import BaseView
+from ..base import BaseView
 from ...mixins import ReadWriteMixin
 from ...schema import JsonRPCPostResponseSchema, ReadResultSchema
 
 _log = getLogger(__name__)
 
 
-class ModbusPropertyView(BaseView, ReadWriteMixin):
+class PropertyView(BaseView, ReadWriteMixin):
     URL_PATH = (r'/api/v1/property/{device_id:\d+}/{object_type:\d+}/'
                 r'{object_id:\d+}/{property:\d+}')
 
@@ -77,3 +77,7 @@ class ModbusPropertyView(BaseView, ReadWriteMixin):
                                      )
         except Exception as e:
             return HTTPBadGateway(reason=str(e))
+
+
+if __name__ == '__main__':
+    print(PropertyView.__mro__)

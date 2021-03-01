@@ -6,7 +6,7 @@ from aiohttp.web_response import json_response
 from aiohttp_apispec import docs, request_schema, response_schema
 
 from gateway.models import ObjProperty
-from ...handlers import BaseView
+from ..base import BaseView
 from ...mixins import ReadWriteMixin
 from ...schema import JsonRPCSchema, JsonRPCPostResponseSchema
 

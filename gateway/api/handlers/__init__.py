@@ -1,13 +1,13 @@
-from .base import BaseView
+# from .base import BaseView
 from .jsonrpc import JsonRPCView
-from .rest import ModbusPropertyView
+from .rest import PropertyView
 
 HANDLERS = (JsonRPCView,
-            ModbusPropertyView
+            PropertyView
             )
 
-__all__ = ('BaseView',
+__all__ = (  # 'BaseView',
            'JsonRPCView',
-           'ModbusPropertyView',
+           'PropertyView',
            'HANDLERS'
            )

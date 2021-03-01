@@ -16,7 +16,7 @@ cd visiobas-gateway/
 # Configure docker-compose.yaml if need
 
 sudo python3 setup.py sdist # create a source distribution
-# if not creating - use current from /dist
+# if not creating - use current from /dist (problem was only in .240 server)
 # fixme: solve sdist problem then remove
 
 sudo docker-compose up --build

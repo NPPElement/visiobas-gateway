@@ -7,7 +7,7 @@ It is an application for polling devices using various protocols and transmittin
 Swagger docs available on http://127.0.0.1:7070/
 
 ```
-curl -X GET http://127.0.0.1:7070/api/property/35/2/1/85
+curl -X GET http://127.0.0.1:7070/api/v1/property/35/2/1/85
 ```
 
 ```
