@@ -21,11 +21,13 @@ setup(name='visiobas-panel',
                    'Programming Language :: Python :: Implementation :: CPython'
                    ],
       python_requires='>=3.9',
-      packages=find_packages(include=['gateway.clients.mqtt', 'panel']),
+      packages=find_packages(include=['gateway.clients.mqtt',
+                                      'gateway.api.mixins',
+                                      'panel'
+                                      ]),
       install_requires=requirements,
       # extras_require={'dev': load_requirements('requirements.dev.txt')},
       entry_points={'console_scripts': ['panel = panel.__main__:main'
-                                        ]
-                    },
+                                        ]},
       include_package_data=True
       )
