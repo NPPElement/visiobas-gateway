@@ -1,8 +1,13 @@
 # import os
 # from importlib.machinery import SourceFileLoader
-#
-# from pkg_resources import parse_requirements
+
+from pathlib import Path
+
+from pkg_resources import parse_requirements
 from setuptools import find_packages, setup
+
+_req_path = Path().cwd() / 'requirements.gateway.txt'
+requirements = [str(r) for r in parse_requirements(_req_path.read_text())]
 
 # from gateway import __version__, __author__, __email__, __license__
 
@@ -27,12 +32,12 @@ from setuptools import find_packages, setup
 
 
 setup(name='visiobas-gateway',
-      version='0.1.4',
+      version='0.1.5',
       author='VisioBAS, Ovtsin Matvey',
       # author_email=__email__,
       license='GNU General Public License v3.0',
       description='VisiBAS IoT gateway.',
-      # long_description=open('README.md').read(),
+      long_description=open('README.md').read(),
       url='https://github.com/NPPElement/visiobas-gateway',
       # platforms='all',
       classifiers=['Programming Language :: Python',
@@ -41,20 +46,8 @@ setup(name='visiobas-gateway',
                    'Programming Language :: Python :: Implementation :: CPython'
                    ],
       python_requires='>=3.9',
-      packages=find_packages(exclude=['tests']),
-      # install_requires=load_requirements('requirements.txt'),
-      install_requires=['aiohttp==3.7.4',
-                        'BAC0==21.2.5',
-                        'bacpypes==0.18.3',
-                        'pymodbus==2.4.0',
-                        'paho-mqtt~=1.5.1',
-                        'aiomisc~=11.1.11',
-                        # 'setuptools~=53.0.0',
-                        'marshmallow~=3.10.0',
-                        'PyYAML==5.4.1',
-                        'netifaces==0.10.9',
-                        'aiohttp-apispec==2.2.1',
-                        ],
+      packages=find_packages(exclude=['tests', 'panel']),
+      install_requires=requirements,
       # extras_require={'dev': load_requirements('requirements.dev.txt')},
       entry_points={'console_scripts': ['gateway = gateway.__main__:main'
                                         ]

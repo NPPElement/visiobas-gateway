@@ -1,8 +1,8 @@
 venv
 .idea
 
-visiobas_gateway.egg-info
-#dist
+*.egg-info
+dist
 build
 .github
 

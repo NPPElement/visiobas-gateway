@@ -4,7 +4,7 @@ bacpypes==0.18.3
 pymodbus==2.4.0  # TODO: check async!
 paho-mqtt~=1.5.1
 aiomisc~=11.1.11  # todo upd
-setuptools==54.0.0
+setuptools==54.1.0
 marshmallow~=3.10.0
 PyYAML==5.4.1
 netifaces==0.10.9
