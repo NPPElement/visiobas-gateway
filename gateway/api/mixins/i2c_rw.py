@@ -4,8 +4,13 @@ from digitalio import Direction, Pull
 
 try:
     import board
-except (ImportError, NotImplementedError):
-    pass
+except (ImportError, NotImplementedError) as e:
+    from logging import getLogger
+
+    _log = getLogger(__name__)
+    _log.critical(f'Error: {e}',
+                  exc_info=True
+                  )
 
 
 class I2CRWMixin:

@@ -49,7 +49,7 @@ class VisioMQTTApi(DevObjMixin, ReadWriteMixin, I2CRWMixin):
 
         if params['object_type'] == ObjType.BINARY_OUTPUT.id:
             _is_equal = self.write_with_check_i2c(value=params['value'],
-                                                  obj_id=params['object_id'],
+                                                  obj_id=params['object_identifier'],
                                                   obj_type=params['object_type'],
                                                   dev_id=params['device_id']
                                                   )
@@ -57,18 +57,18 @@ class VisioMQTTApi(DevObjMixin, ReadWriteMixin, I2CRWMixin):
                 return None
             payload = '{0} {1} {2} {3}'.format(params['device_id'],
                                                params['object_type'],
-                                               params['object_id'],
+                                               params['object_identifier'],
                                                params['value'],
                                                )
 
         elif params['object_type'] == ObjType.BINARY_INPUT.id:
-            value = self.read_i2c(obj_id=params['object_id'],
+            value = self.read_i2c(obj_id=params['object_identifier'],
                                   obj_type=params['object_type'],
                                   dev_id=params['device_id']
                                   )
             payload = '{0} {1} {2} {3}'.format(params['device_id'],
                                                params['object_type'],
-                                               params['object_id'],
+                                               params['object_identifier'],
                                                value,
                                                )
         else:
