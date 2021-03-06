@@ -34,7 +34,7 @@ class ReadWriteMixin(BACnetRWMixin, ModbusRWMixin):
             value: int or float or str,
             obj: BACnetObj or ModbusObj,
             device: BACnetDevice or ModbusDevice,
-            priority: int = 11,  # TODO!! SURE?
+            priority: int = 11,
             prop: ObjProperty = ObjProperty.presentValue
     ) -> None:
         if isinstance(device, BACnetDevice):
@@ -57,7 +57,7 @@ class ReadWriteMixin(BACnetRWMixin, ModbusRWMixin):
             value: int or float or str,
             obj: BACnetObj or ModbusObj,
             device: BACnetDevice or ModbusDevice,
-            priority: int = 11,  # TODO!! SURE?
+            priority: int = 11,
             prop: ObjProperty = ObjProperty.presentValue
     ) -> bool:
         if isinstance(device, BACnetDevice):

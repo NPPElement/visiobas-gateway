@@ -1,16 +1,16 @@
 from json import loads, JSONDecodeError
-from typing import Any
 
 import paho.mqtt.client as mqtt
 
-from gateway.api.mixins import ReadWriteMixin, DevObjMixin
-from gateway.models import ObjProperty
+from gateway.api.mixins import ReadWriteMixin, DevObjMixin, I2CRWMixin
+from gateway.models import ObjProperty, ObjType
 
 
-class VisioMQTTApi(DevObjMixin, ReadWriteMixin):
+class VisioMQTTApi(DevObjMixin, ReadWriteMixin, I2CRWMixin):
 
-    def __init__(self, visio_mqtt_client):
+    def __init__(self, visio_mqtt_client, gateway):
         self.mqtt_client = visio_mqtt_client
+        self._gateway = gateway
 
     def publish(self, topic: str, payload: str = None, qos: int = 0,
                 retain: bool = False) -> mqtt.MQTTMessageInfo:
@@ -34,7 +34,50 @@ class VisioMQTTApi(DevObjMixin, ReadWriteMixin):
                 content = msg.payload
         return content
 
-    def rpc_value(self, params: dict, gateway) -> Any:
+    def rpc_value(self, params: dict, topic: str, gateway=None) -> None:
+        if str(self._gateway) == 'VisioGateway':
+            self.rpc_value_gw(params=params, gateway=gateway)
+        elif str(self._gateway) == 'VisioPanel':
+            self.rpc_value_panel(params=params, topic=topic)
+        else:
+            raise ValueError('Please provide gateway or panel')
+
+    def rpc_value_panel(self, params: dict, topic: str) -> None:
+        # todo: default value
+        # todo: validate params
+        publish_topic = topic.replace('Set', 'Site')
+
+        if params['object_type'] == ObjType.BINARY_OUTPUT.id:
+            _is_equal = self.write_with_check_i2c(value=params['value'],
+                                                  obj_id=params['object_id'],
+                                                  obj_type=params['object_type'],
+                                                  dev_id=params['device_id']
+                                                  )
+            if not _is_equal:
+                return None
+            payload = '{0} {1} {2} {3}'.format(params['device_id'],
+                                               params['object_type'],
+                                               params['object_id'],
+                                               params['value'],
+                                               )
+
+        elif params['object_type'] == ObjType.BINARY_INPUT.id:
+            value = self.read_i2c(obj_id=params['object_id'],
+                                  obj_type=params['object_type'],
+                                  dev_id=params['device_id']
+                                  )
+            payload = '{0} {1} {2} {3}'.format(params['device_id'],
+                                               params['object_type'],
+                                               params['object_id'],
+                                               value,
+                                               )
+        else:
+            raise ValueError('Expected only BI or BO')
+        self.publish(topic=publish_topic,
+                     payload=payload,
+                     )
+
+    def rpc_value_gw(self, params: dict, gateway) -> None:
         priority = 11 if params.get('priority') is None else params['priority']
 
         device = self.get_device(dev_id=params['device_id'],
@@ -61,6 +104,6 @@ class VisioMQTTApi(DevObjMixin, ReadWriteMixin):
                                                cur_value,
                                                sf
                                                )
-        self.publish(topic=obj.topic,
+        self.publish(topic=obj.topic,  # todo: change topic here?
                      payload=payload,
                      )

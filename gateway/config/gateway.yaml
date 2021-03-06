@@ -9,7 +9,7 @@ verifier:
 
 api:
   host: localhost
-  port: 7070
+  port: 7079
 
   sleep_period: 60
 

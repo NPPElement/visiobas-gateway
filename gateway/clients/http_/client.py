@@ -14,7 +14,7 @@ from .http_config import VisioHTTPConfig
 from .http_node import VisioHTTPNode
 from ...connectors import BaseConnector
 from ...models import ObjType
-from ...utils import read_address_cache
+# from ...utils import read_address_cache
 
 _log = getLogger(__name__)
 

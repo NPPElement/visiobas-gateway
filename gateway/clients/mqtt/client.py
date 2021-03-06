@@ -7,7 +7,8 @@ from typing import Sequence
 
 import paho.mqtt.client as mqtt
 
-from gateway.clients.mqtt.api import VisioMQTTApi
+from .api import VisioMQTTApi
+from ...models import ResultCode
 
 _log = getLogger(__name__)
 
@@ -15,8 +16,13 @@ _log = getLogger(__name__)
 class VisioMQTTClient(Thread):
     """Control interactions via MQTT."""
 
-    def __init__(self, gateway, getting_queue: SimpleQueue,
-                 config: dict):
+    def __init__(self, gateway,
+                 config: dict,
+                 getting_queue: SimpleQueue = None
+                 ):
+        """
+        :param gateway: Gateway or Panel
+        """
         super().__init__()
         self.setName(name=f'{self}-Thread')
         self.setDaemon(True)
@@ -37,9 +43,7 @@ class VisioMQTTClient(Thread):
         self._stopped = False
         self._connected = False
 
-        # self.__subscribed = set()
-
-        self._client = mqtt.Client(client_id='12',
+        self._client = mqtt.Client(client_id='12',  # fixme
                                    # clean_session=False,
                                    transport='tcp'
                                    )
@@ -53,15 +57,17 @@ class VisioMQTTClient(Thread):
         self._client.on_message = self._on_message_cb
         self._client.on_publish = self._on_publish_cb
 
-        self.api = VisioMQTTApi(visio_mqtt_client=self)
+        self.api = VisioMQTTApi(visio_mqtt_client=self,
+                                gateway=gateway
+                                )
         self.topics = [(topic, self._qos) for topic in self._config['subscribe']]
 
     def __repr__(self) -> str:
         return self.__class__.__name__
 
     @classmethod
-    def create_from_yaml(cls, gateway, getting_queue: SimpleQueue,
-                         yaml_path: Path):
+    def from_yaml(cls, gateway, getting_queue: SimpleQueue,
+                  yaml_path: Path):
         import yaml
 
         with yaml_path.open() as cfg_file:
@@ -158,19 +164,18 @@ class VisioMQTTClient(Thread):
         pass
 
     def _on_connect_cb(self, client, userdata, flags, rc, properties=None):
-
-        if rc == 0:
+        if rc == ResultCode.CONNECTION_SUCCESSFUL.rc:
             self._connected = True
             _log.info('Successfully connected to broker')
             self.subscribe(topics=self.topics)
             # Subscribing in on_connect() means that if we lose the connection and
             # reconnect then subscriptions will be renewed.
         else:
-            _log.warning(f'Failed connection to broker: rc={rc}')
+            _log.warning(f'Failed connection to broker: {ResultCode(rc)}')
 
     def _on_disconnect_cb(self, client, userdata, rc):
         # self._connected = False
-        _log.warning(f'Disconnected {client} userdata: {userdata} rc: {rc}')
+        _log.warning(f'Disconnected: {ResultCode(rc)}')
         # self._client.loop_stop()
 
     def _on_subscribe_cb(self, userdata, mid, granted_qos, properties=None):
@@ -191,6 +196,7 @@ class VisioMQTTClient(Thread):
             if msg_dct.get('method') == 'value':
                 # todo: provide device_id and cache result (error) if device not polling
                 self.api.rpc_value(params=msg_dct['params'],
+                                   topic=message.topic,
                                    gateway=self._gateway
                                    )
         except Exception as e:
