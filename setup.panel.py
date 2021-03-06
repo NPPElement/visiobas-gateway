@@ -6,7 +6,6 @@ from setuptools import find_packages, setup
 _req_path = Path().cwd() / 'requirements.panel.txt'
 requirements = [str(r) for r in parse_requirements(_req_path.read_text())]
 
-
 setup(name='visiobas-panel',
       version='0.1.5',
       author='VisioBAS, Ovtsin Matvey',
@@ -22,7 +21,7 @@ setup(name='visiobas-panel',
                    'Programming Language :: Python :: Implementation :: CPython'
                    ],
       python_requires='>=3.9',
-      packages=find_packages(exclude=['tests', 'gateway']),
+      packages=find_packages(include=['gateway.clients.mqtt', 'panel']),
       install_requires=requirements,
       # extras_require={'dev': load_requirements('requirements.dev.txt')},
       entry_points={'console_scripts': ['panel = panel.__main__:main'
