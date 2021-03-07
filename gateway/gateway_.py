@@ -69,7 +69,7 @@ class VisioGateway:
                                        )
         self.verifier.start()
 
-        self.http_client = VisioHTTPClient.create_from_yaml(
+        self.http_client = VisioHTTPClient.from_yaml(
             gateway=self,
             getting_queue=self._verifier_http_queue,
             yaml_path=_base_path / 'config/http.yaml'

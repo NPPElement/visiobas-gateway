@@ -52,8 +52,8 @@ class VisioHTTPClient(Thread):
         return self.__class__.__name__
 
     @classmethod
-    def create_from_yaml(cls, gateway, getting_queue: SimpleQueue,
-                         yaml_path: Path, test_modbus: bool = False):
+    def from_yaml(cls, gateway, getting_queue: SimpleQueue,
+                  yaml_path: Path, test_modbus: bool = False):
         """Create HTTP client with configuration read from YAML file."""
         import yaml
 
