@@ -1,4 +1,4 @@
-from .panel import VisioPanel
+from .panel_ import VisioPanel
 
 __all__ = ('VisioPanel',
            )

@@ -9,7 +9,7 @@ except (ImportError, NotImplementedError) as e:
 
     _log = getLogger(__name__)
     _log.critical(f'Error: {e}',
-                  exc_info=True
+                  # exc_info=True
                   )
 
 

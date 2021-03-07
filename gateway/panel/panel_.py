@@ -3,9 +3,9 @@ from multiprocessing import SimpleQueue
 from pathlib import Path
 from time import sleep
 
-from gateway.clients import VisioMQTTClient
+from gateway.clients.mqtt import VisioMQTTClient
 
-_base_path = Path(__file__).resolve().parent
+_base_path = Path(__file__).resolve().parent.parent
 
 _log = getLogger(__name__)
 

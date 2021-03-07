@@ -2,8 +2,8 @@ from json import loads, JSONDecodeError
 
 import paho.mqtt.client as mqtt
 
-from gateway.api.mixins import ReadWriteMixin, DevObjMixin, I2CRWMixin
-from gateway.models import ObjProperty, ObjType
+from ...api import ReadWriteMixin, DevObjMixin, I2CRWMixin
+from ...models import ObjProperty, ObjType
 
 
 class VisioMQTTApi(DevObjMixin, ReadWriteMixin, I2CRWMixin):

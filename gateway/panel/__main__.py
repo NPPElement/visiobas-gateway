@@ -4,7 +4,7 @@ import sys
 from logging import getLogger
 from pathlib import Path
 
-from panel import VisioPanel
+from gateway.panel import VisioPanel
 
 # from aiomisc.log import basic_config
 

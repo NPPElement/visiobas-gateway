@@ -15,4 +15,3 @@ logs/*.log*
 gateway/config/http.yaml
 gateway/config/mqtt.yaml
 gateway/config/test-modbus-http.yaml
-panel/config/mqtt.yaml
