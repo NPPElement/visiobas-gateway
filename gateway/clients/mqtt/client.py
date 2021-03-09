@@ -43,10 +43,10 @@ class VisioMQTTClient(Thread):
         self._stopped = False
         self._connected = False
 
-        self._client = mqtt.Client(client_id='12',  # fixme
-                                   # clean_session=False,
-                                   transport='tcp'
-                                   )
+        self._client = mqtt.Client(  # client_id='12',  # fixme
+            # clean_session=False,
+            transport='tcp'
+        )
         # self._client.enable_logger()  # logger=logger
         self._client.username_pw_set(username=self._username, password=self._password)
 
