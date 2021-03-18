@@ -1,8 +1,8 @@
 from logging import getLogger
 from typing import Any
 
-from gateway.connectors import BACnetDevice
-from gateway.models import BACnetObj, ObjProperty
+from ...connectors import BACnetDevice
+from ...models import BACnetObj, ObjProperty
 
 _log = getLogger(__name__)
 

@@ -13,8 +13,8 @@ from BAC0.core.io.IOExceptions import (ReadPropertyException,
 from BAC0.scripts.Lite import Lite
 from bacpypes.basetypes import PriorityArray
 
-from gateway.models import BACnetObj, ObjType, ObjProperty
-from gateway.utils import get_fault_obj_properties
+from ...models import BACnetObj, ObjType, ObjProperty
+from ...utils import get_fault_obj_properties
 
 
 class BACnetDevice(Thread):

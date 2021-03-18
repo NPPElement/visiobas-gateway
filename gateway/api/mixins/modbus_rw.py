@@ -1,8 +1,8 @@
 from logging import getLogger
 from typing import Any
 
-from gateway.connectors import ModbusDevice
-from gateway.models import ModbusObj, ObjProperty
+from ...connectors import ModbusDevice
+from ...models import ModbusObj, ObjProperty
 
 _log = getLogger(__name__)
 

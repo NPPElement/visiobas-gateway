@@ -5,8 +5,8 @@ from time import time, sleep
 
 from pymodbus.client.sync import ModbusTcpClient
 
-from gateway.models import ModbusObj, VisioModbusProperties, ObjProperty
-from gateway.utils import cast_to_bit, cast_2_registers
+from ...models import ModbusObj, VisioModbusProperties, ObjProperty
+from ...utils import cast_to_bit, cast_2_registers
 
 
 class ModbusDevice(Thread):

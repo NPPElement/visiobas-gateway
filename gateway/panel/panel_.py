@@ -18,7 +18,7 @@ class VisioPanel:
         self.mqtt_client = VisioMQTTClient.from_yaml(
             gateway=self,  # Using panel as gateway!
             getting_queue=SimpleQueue(),
-            yaml_path=_base_path / 'config/mqtt.yaml'
+            yaml_path=_base_path / 'mqtt.yaml'
         )
         self.mqtt_client.start()
 

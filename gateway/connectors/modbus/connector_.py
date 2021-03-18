@@ -2,9 +2,9 @@ from logging import getLogger
 from multiprocessing import SimpleQueue
 from pathlib import Path
 
-from gateway.models import ObjType, ModbusObj
 from .device import ModbusDevice
 from ..base_connector import BaseConnector
+from ...models import ObjType, ModbusObj
 
 _base_path = Path(__file__).resolve().parent.parent.parent
 _log = getLogger(__name__)
