@@ -20,20 +20,6 @@ class VisioMQTTApi(DevObjMixin, ReadWriteMixin, I2CRWMixin):
                                         retain=retain
                                         )
 
-    @staticmethod
-    def decode(msg: mqtt.MQTTMessage):
-        try:
-            if isinstance(msg.payload, bytes):
-                content = loads(msg.payload.decode("utf-8", "ignore"))
-            else:
-                content = loads(msg.payload)
-        except JSONDecodeError:
-            if isinstance(msg.payload, bytes):
-                content = msg.payload.decode("utf-8", "ignore")
-            else:
-                content = msg.payload
-        return content
-
     def rpc_value(self, params: dict, topic: str, gateway=None) -> None:
         if str(self._gateway) == 'VisioGateway':
             self.rpc_value_gw(params=params, gateway=gateway)

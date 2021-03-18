@@ -1,4 +1,5 @@
 import time
+from json import loads, JSONDecodeError
 from logging import getLogger
 from multiprocessing import SimpleQueue
 from pathlib import Path
@@ -9,6 +10,7 @@ import paho.mqtt.client as mqtt
 
 from .api import VisioMQTTApi
 from ...models import ResultCode
+from ...models.mqtt.qos import Qos
 
 _log = getLogger(__name__)
 
@@ -37,7 +39,7 @@ class VisioMQTTClient(Thread):
         self._username = self._config['username']
         self._password = self._config['password']
 
-        self._qos = self._config.get('qos', 0)
+        self._qos = self._config.get('qos', Qos.AT_MOST_ONCE_DELIVERY)
         self._retain = self._config.get('retain', True)
 
         self._stopped = False
@@ -45,8 +47,10 @@ class VisioMQTTClient(Thread):
 
         self._client = mqtt.Client(  # client_id='12',  # fixme
             # clean_session=False,
-            transport='tcp'
+            transport='tcp',
+            # transport='websockets'
         )
+        # self._client.tls_set() # TODO
         # self._client.enable_logger()  # logger=logger
         self._client.username_pw_set(username=self._username, password=self._password)
 
@@ -100,7 +104,7 @@ class VisioMQTTClient(Thread):
         """Listen queue from verifier.
         When receive data from verifier - publish it to MQTT.
 
-        Designed as an endless loop. CAn be stopped from gateway thread.
+        Designed as an endless loop. Can be stopped from gateway thread.
         """
         # self.subscribe(topics=self.topics)
         while not self._stopped:
@@ -151,13 +155,11 @@ class VisioMQTTClient(Thread):
         elif result == mqtt.MQTT_ERR_NO_CONN:
             _log.warning(f'Not subscribed to topic: {topics} {result} {mid}')
 
-    def publish(self, topic: str, payload: str = None, qos: int = 0,
+    def publish(self, topic: str, payload: str = None, qos: int = Qos.AT_MOST_ONCE_DELIVERY,
                 retain: bool = False) -> mqtt.MQTTMessageInfo:
         return self._client.publish(topic=topic,
                                     payload=payload,
-                                    qos=qos,
-                                    retain=retain
-                                    )
+                                    qos=qos, retain=retain)
 
     def _on_publish_cb(self, client, userdata, mid):
         # _log.debug(f'Published: {client} {userdata} {mid}')
@@ -190,7 +192,7 @@ class VisioMQTTClient(Thread):
                        )
 
     def _on_message_cb(self, client, userdata, message: mqtt.MQTTMessage):
-        msg_dct = self.api.decode(msg=message)
+        msg_dct = self.decode(msg=message)
         _log.debug(f'Received {message.topic}:{msg_dct}')
         try:
             if msg_dct.get('method') == 'value':
@@ -203,3 +205,17 @@ class VisioMQTTClient(Thread):
             _log.warning(f'Error: {e} :{msg_dct}',
                          # exc_info=True
                          )
+
+    @staticmethod
+    def decode(msg: mqtt.MQTTMessage) -> dict or str:
+        try:
+            if isinstance(msg.payload, bytes):
+                content = loads(msg.payload.decode("utf-8", "ignore"))
+            else:
+                content = loads(msg.payload)
+        except JSONDecodeError:
+            if isinstance(msg.payload, bytes):
+                content = msg.payload.decode("utf-8", "ignore")
+            else:
+                content = msg.payload
+        return content

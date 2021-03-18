@@ -96,11 +96,11 @@ class BACnetDevice(Thread):
                     self._log.info(
                         f'Timedelta = {time_delta}, upd_period = {self.update_period}')
                     if time_delta < self.update_period:
-                        waiting_time = round((self.update_period - time_delta) * 0.8,
-                                             ndigits=2
-                                             )
-                        self._log.info(f'{self} Sleeping {waiting_time} sec ...')
-                        sleep(waiting_time)
+                        _delay = round((self.update_period - time_delta) * 0.8,
+                                       ndigits=2
+                                       )
+                        self._log.info(f'{self} Sleeping {_delay} sec ...')
+                        sleep(_delay)
 
                 except Exception as e:
                     self._log.error(f'Polling error: {e}', exc_info=True)
