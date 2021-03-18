@@ -1,0 +1,10 @@
+host: visiodesk.net
+port: 1883
+username: user
+password: user
+
+qos: 0
+retain: True
+
+subscribe:
+  - Set/yard/#
