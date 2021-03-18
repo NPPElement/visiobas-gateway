@@ -9,8 +9,7 @@ from typing import Sequence
 import paho.mqtt.client as mqtt
 
 from .api import VisioMQTTApi
-from ...models import ResultCode
-from ...models.mqtt.qos import Qos
+from ...models import ResultCode, Qos
 
 _log = getLogger(__name__)
 
@@ -45,11 +44,10 @@ class VisioMQTTClient(Thread):
         self._stopped = False
         self._connected = False
 
-        self._client = mqtt.Client(  # client_id='12',  # fixme
-            # clean_session=False,
-            transport='tcp',
-            # transport='websockets'
-        )
+        self._client = mqtt.Client(transport='tcp',
+                                   # transport='websockets' # todo
+                                   )
+        # self._client.tls_set_context(ssl.SSLContext(ssl.PROTOCOL_TLSv1_2))
         # self._client.tls_set() # TODO
         # self._client.enable_logger()  # logger=logger
         self._client.username_pw_set(username=self._username, password=self._password)

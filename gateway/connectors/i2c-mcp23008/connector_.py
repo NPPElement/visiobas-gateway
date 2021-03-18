@@ -7,9 +7,8 @@ import busio
 import digitalio
 from adafruit_mcp230xx.mcp23008 import MCP23008
 
-from gateway.api import ParamsModel
-from gateway.models import ObjType
-from gateway.models.mqtt.qos import Qos
+from ...api import ParamsModel
+from ...models import ObjType, Qos
 
 _log = logging.getLogger(__name__)
 
