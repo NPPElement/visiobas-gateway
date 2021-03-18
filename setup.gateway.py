@@ -32,7 +32,7 @@ requirements = [str(r) for r in parse_requirements(_req_path.read_text())]
 
 
 setup(name='visiobas-gateway',
-      version='1.1.5',
+      version='0.1.5',
       author='VisioBAS, Ovtsin Matvey',
       # author_email=__email__,
       license='GNU General Public License v3.0',
