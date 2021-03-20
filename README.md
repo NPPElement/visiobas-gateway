@@ -1,8 +1,9 @@
 # Visiobas-Gateway
 
 It's the application for polling devices using various protocols and transmitting data to
-the visiobas system.
+the visioBAS system.
 
+# Contents
 1. [Installation](#Installation)
    - [Install Docker](#Install-Docker)
    - [Install Docker Compose](#Install-Docker-Compose)
@@ -14,62 +15,35 @@ the visiobas system.
 
 ## Installation
 ### Install Docker
+``` shell
+# Only for Debian
+apt install gnupg
 
-```
 sudo apt update
-```
-
-```
 sudo apt install apt-transport-https ca-certificates curl software-properties-common
-```
-
-```
 curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
-```
 
-```
+# Use Ubuntu or Debian
 sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu focal stable"
-```
+sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/debian buster stable"
 
-```
 sudo apt update
-```
-
-```
 apt-cache policy docker-ce
-```
-
-```
 sudo apt install docker-ce
-```
-
-```
 sudo systemctl status docker
 ```
 
 ### Install Docker Compose
-```
+``` shell
 sudo curl -L https://github.com/docker/compose/releases/download/1.21.2/docker-compose-`uname -s`-`uname -m` -o /usr/local/bin/docker-compose
-```
-
-```
 sudo chmod +x /usr/local/bin/docker-compose
-```
-
-```
 docker-compose --version
 ```
 
 ### Install VisioBAS Gateway
-```
+``` shell
 cd /opt
-```
-
-```
 sudo git clone https://github.com/NPPElement/visiobas-gateway
-```
-
-```
 cd visiobas-gateway
 ```
 
@@ -82,61 +56,45 @@ You can change the logging level in the `docker-compose.yaml` file. You can choo
 the following levels: `DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL`
 
 ## Launch
-Go to the `visiobas-gateway` directory
-```
+From the `visiobas-gateway` directory
+``` shell
 sudo docker-compose up -d
-```
 
-For enable docker logs:
-```
+# For enable docker logs
 sudo docker-compose logs -f
 ```
 
 ## Update
-```
+``` shell
 sudo docker-compose down
-```
-
-```
 sudo docker-compose build
-```
-
-```
 sudo docker-compose up -d
 ```
 Or with full cleaning
-```
+``` shell
 sudo docker-compose down 
-```
-
-```
 sudo docker images
-```
 
-```
 sudo docker rmi -f [image_id]
-```
-OR
-```
+# or
 sudo docker images -a | xargs -n 1 -I {} sudo docker rmi -f {}
 ```
-Set the data received after executing the previous command instead of the id
-```
+
+``` shell
+# Set the data received after executing the previous command instead of the id
 sudo git pull
 sudo docker-compose up --build
 ```
 
 ## Remove
-Delete all containers
-```
+``` shell
+# Delete all containers
 sudo docker ps -a -q | xargs -n 1 -I {} sudo docker rm -f {}
-```
-Remove all unused images, not just dangling ones
-```
+
+# Remove all unused images, not just dangling ones
 sudo docker image prune -a -f
-```
-If deleting or stopping the container is hopeless
-```
+
+# If deleting or stopping the container is hopeless
 sudo systemctl daemon-reload
 sudo systemctl restart docker
 ```
