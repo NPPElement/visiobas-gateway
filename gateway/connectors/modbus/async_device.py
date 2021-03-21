@@ -1,6 +1,7 @@
 import asyncio
 from logging import getLogger
 from multiprocessing import SimpleQueue
+from time import time
 from typing import Sequence, Any
 
 from pymodbus.client.asynchronous.schedulers import ASYNC_IO
@@ -11,6 +12,7 @@ from ...models import ModbusObj
 
 class AsyncModbusDevice:
     upd_period_factor = 0.9  # todo provide from config
+    delay_next_attempt = 60  # todo provide from config
 
     def __init__(self,
                  verifier_queue: SimpleQueue,
@@ -21,7 +23,7 @@ class AsyncModbusDevice:
                  update_period: int = 10):
         self.id = device_id
         self.address, self.port = address.split(sep=':', maxsplit=1)
-        self.update_period = update_period
+        self.upd_period = update_period
 
         self._log = getLogger(name=f'{device_id}')
 
@@ -128,7 +130,7 @@ class AsyncModbusDevice:
         except Exception as e:
             self._log.exception(e)
 
-    async def read_send_to_verifier(self, obj: ModbusObj, queue:SimpleQueue) -> None:
+    async def read_send_to_verifier(self, obj: ModbusObj, queue: SimpleQueue) -> None:
         try:
             value = await self.read(obj=obj)
         except Exception as e:
@@ -141,19 +143,53 @@ class AsyncModbusDevice:
         # queue.put()
 
     async def poll(self, objects: Sequence[ModbusObj]) -> None:
-        """ Read objects from registers in Modbus Device.
-            todo Convert register values to BACnet properties.
-        """
+        """Represent one iteration of poll."""
         read_requests = [self.read_send_to_verifier(obj=obj,
                                                     queue=self._verifier_queue
-                                                    ) for obj in self.objects]
+                                                    ) for obj in objects]
         await asyncio.gather(*read_requests)
         self._put_device_end_to_verifier()
+
+    async def start_poll(self):
+        self._log.info(f'{self} started')
+        while self._polling:
+            if hasattr(self._client, 'protocol') and self._client.protocol is not None:
+                _t0 = time()
+                # todo kill running tasks at updating
+                done, pending = await asyncio.wait({self.poll(objects=self.objects)},
+                                                   loop=self._loop)
+                # self._loop.run_until_complete(self.poll(objects=self.objects))
+                _t_delta = time() - _t0
+                self._log.info(
+                    '\n==================================================\n'
+                    f'{self} ip:{self.address} polled for: '
+                    f'{round(_t_delta, ndigits=1)} sec.\n'
+                    f'Update period: {self.upd_period} sec.\n'
+                    f'Objects: {len(self)}\n'
+                )
+                if _t_delta < self.upd_period:
+                    _delay = (self.upd_period - _t_delta) * self.upd_period_factor
+                    self._log.debug(f'Sleeping {round(_delay, ndigits=1)} sec ...')
+                    await asyncio.sleep(_delay)
+            else:
+                self._log.debug('Connecting to client ...')
+                try:
+                    self._loop, self._client = self._get_client(host=self.address,
+                                                                port=self.port)
+                    self.read_funcs, self.write_funcs = self._get_functions(
+                        client=self._client)
+                except ConnectionError as e:
+                    self._log.warning(
+                        f'{self} connection error: {e} '
+                        f'Wait {self.delay_next_attempt} sec. before next attempt ...')
+                    await asyncio.sleep(self.delay_next_attempt)
+                except Exception as e:
+                    self._log.exception(e, exc_info=True)
+        else:
+            self._log.info(f'{self} stopped')
 
     def _put_device_end_to_verifier(self) -> None:
         """device_id in queue means that device polled.
         Should send collected objects to HTTP
         """
         self._verifier_queue.put(self.id)
-
-
