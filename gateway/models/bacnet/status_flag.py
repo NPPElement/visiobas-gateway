@@ -14,7 +14,9 @@ class StatusFlag(Enum):
 
             TODO add check flag
     """
-    OUT_OF_SERVICE = 0b1000
-    OVERRIDEN = 0b0100
+    # принимается ли значения сервером
+    OUT_OF_SERVICE = 0b1000  # не слать на сервер
+
+    OVERRIDEN = 0b0100  # не слать на сервер
     FAULT = 0b0010
-    IN_ALARM = 0b0001
+    IN_ALARM = 0b0001  # не слать на сервер
