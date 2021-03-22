@@ -15,6 +15,7 @@ from .http_node import VisioHTTPNode
 from ...connectors import BaseConnector
 from ...models import ObjType
 # from ...utils import read_address_cache
+from ...models.bacnet.object import BACnetObjectsDataModel
 
 _log = getLogger(__name__)
 
@@ -230,7 +231,7 @@ class VisioHTTPClient(Thread):
             # add first type - device info, contains upd_interval
             obj_types = [ObjType.DEVICE, *obj_types]
 
-            obj_coros = [
+            obj_requests = [
                 self._rq(method='GET',
                          url=(f'{node.cur_server.base_url}'
                               f'/vbas/gate/get/{device_id}/{obj_type.name_dashed}'),
@@ -238,10 +239,13 @@ class VisioHTTPClient(Thread):
                          headers=node.cur_server.auth_headers
                          ) for obj_type in obj_types
             ]
-            objs_data = await asyncio.gather(*obj_coros)
+            objs_data = await asyncio.gather(*obj_requests)
 
+            data = BACnetObjectsDataModel(**objs_data[0])
+            print(data)
             # objects of each type, if it's not empty, are added to the dictionary,
             # where key is obj_type and value is list with objects
+
             objs_data = {obj_type: objs for obj_type, objs in
                          zip(obj_types, objs_data)
                          if objs_data
@@ -438,6 +442,8 @@ class VisioHTTPClient(Thread):
         :param response: server's response
         :return: response['data'] field after checks
         """
+        # todo make decorator
+
         response.raise_for_status()
 
         if response.status == 200:

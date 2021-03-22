@@ -1,6 +1,6 @@
 from enum import Enum
 
-from .obj_property import ObjProperty
+from obj_property import ObjProperty
 
 
 class ObjType(Enum):
@@ -34,6 +34,13 @@ class ObjType(Enum):
     FOLDER = "folder", -1
     TRUNK = "trunk", -1
     GRAPHIC = "graphic", -1
+
+    def __new__(cls, *values):
+        obj = object.__new__(cls)
+        for other_value in values:
+            cls._value2member_map_[other_value] = obj
+        obj._all_values = values
+        return obj
 
     def __repr__(self):
         return f'{self.__class__.__name__}.{self.name}'
