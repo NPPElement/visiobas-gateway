@@ -360,7 +360,3 @@ class ObjProperty(Enum):
     @property
     def id(self):
         return self.value
-
-    @property
-    def id_str(self):
-        return str(self.value)
