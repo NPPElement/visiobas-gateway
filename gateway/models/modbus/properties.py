@@ -2,7 +2,7 @@ from json import loads
 from typing import NamedTuple
 
 
-class VisioModbusProperties(NamedTuple):
+class ModbusProperties(NamedTuple):
     address: int
     quantity: int
     func_read: int

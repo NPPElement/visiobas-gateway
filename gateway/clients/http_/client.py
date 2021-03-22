@@ -448,11 +448,11 @@ class VisioHTTPClient(Thread):
 
         if response.status == 200:
             response.raise_for_status()
-            resp_json = await response.json()
-            if resp_json['success']:
+            _json = await response.json()
+            if _json['success']:
                 _log.debug(f'Successfully response: {response.url}')
                 try:
-                    return resp_json['data']
+                    return _json['data']
                 except LookupError as e:
                     # fixme
                     _log.warning(f'Extracting failed (most likely in logout): {e}',
@@ -460,7 +460,7 @@ class VisioHTTPClient(Thread):
                                  )
             else:
                 raise aiohttp.ClientError(
-                    f'Failure response: {response.url}\n{resp_json}'
+                    f'Failure response: {response.url}\n{_json}'
                 )
         # else:
         #     # todo: switch to another server
