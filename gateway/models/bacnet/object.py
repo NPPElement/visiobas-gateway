@@ -7,7 +7,7 @@ from obj_type import ObjType
 
 
 class BACnetObjModel(BaseModel):
-    type: ObjType = Field(..., alias=ObjProperty.objectType.id_str)
+    type: Union[int, str] = Field(..., alias=ObjProperty.objectType.id_str)
     id: int = Field(..., alias=ObjProperty.objectIdentifier.id_str)
     name: str = Field(..., alias=ObjProperty.objectName.id_str)
     resolution: Union[float, int, None] = Field(alias=ObjProperty.resolution.id_str)
@@ -15,9 +15,10 @@ class BACnetObjModel(BaseModel):
     # property_list: dict = Field(alias=ObjProperty.propertyList.id)
     _last_value = None
 
-    # @validator('type')
-    # def cast_to_objType(cls, v):
-    #     return ObjType(value=v)
+    @validator('type')
+    def cast_to_obj_type(cls, v):
+        print(type(v), v)
+        return ObjType(v)
 
     @validator('resolution')
     def set_default_resolution(cls, v):
@@ -96,11 +97,12 @@ data = {'103': 'no-fault-detected',
         '72': None,
         '75': 496,
         '77': 'Site:Engineering/Electricity.TP_1002.Temperature.AI_703',
-        '79': 'analog-input',
+        '79': 'binary-input',
         '81': None,
         '846': 1673,
         '85': 0.0,
         'timestamp': '2021-02-04 05:47:23'}
+
 
 obj = BACnetObjModel(**data)
 print(obj)
