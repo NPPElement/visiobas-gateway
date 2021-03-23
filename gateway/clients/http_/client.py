@@ -15,7 +15,7 @@ from .http_node import VisioHTTPNode
 from ...connectors import BaseConnector
 from ...models import ObjType
 # from ...utils import read_address_cache
-from ...models.bacnet.object import BACnetObjectsDataModel
+from ...models import BACnetObjModel
 
 _log = getLogger(__name__)
 
@@ -192,7 +192,6 @@ class VisioHTTPClient(Thread):
             # Clear the read_address_cache cache to read the updated `address_cache` file.
             # read_address_cache.clear_cache() FIXME!!
 
-
             upd_coros = [self.upd_device(node=node,
                                          device_id=dev_id,
                                          obj_types=connector.obj_types_to_request,
@@ -218,6 +217,8 @@ class VisioHTTPClient(Thread):
                          device_id: int, obj_types: Iterable[ObjType],
                          connector: BaseConnector,
                          session) -> bool:
+
+        # todo: implement data factory param?
         """Perform request objects of each types for device by id.
         Then resend data about device to connector.
         :param node:
@@ -239,18 +240,14 @@ class VisioHTTPClient(Thread):
                          headers=node.cur_server.auth_headers
                          ) for obj_type in obj_types
             ]
-            objs_data = await asyncio.gather(*obj_requests)
+            objs_data = await asyncio.gather(*obj_requests)  # list[dict]
 
-            data = BACnetObjectsDataModel(**objs_data[0])
-            print(data)
             # objects of each type, if it's not empty, are added to the dictionary,
             # where key is obj_type and value is list with objects
-
-            objs_data = {obj_type: objs for obj_type, objs in
-                         zip(obj_types, objs_data)
-                         if objs_data
-                         }
-            # todo: IDEA TO FUTURE: can send objects to connector by small parts
+            # objs_data = {obj_type: objs for obj_type, objs in
+            #              zip(obj_types, objs_data)
+            #              if objs_data
+            #              }
             connector.getting_queue.put((device_id, objs_data))
             return True
 

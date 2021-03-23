@@ -1,9 +1,8 @@
-from typing import NamedTuple, Union
+from typing import Union
 
-# from .properties import VisioModbusProperties
 from pydantic import BaseModel, Field, validator
 
-from ..bacnet import ObjType, ObjProperty, BACnetObjModel
+from ..bacnet import ObjProperty, BACnetObjModel
 from ..modbus import ModbusFunc
 
 
@@ -14,7 +13,7 @@ class ModbusPropertiesModel(BaseModel):
     func_write: ModbusFunc = Field(default=ModbusFunc.WRITE_REGISTER, alias='functionWrite')
 
     # TODO: change to 'multiplier' \ change operation in scaled value
-    scale: float
+    scale: float = 1
     # for recalculate (A*X+B)
     # multiplier: float  # A # todo
     # corrective: float  # B# todo
@@ -37,14 +36,30 @@ class ModbusPropertiesModel(BaseModel):
 class PropertyListModel(BaseModel):
     modbus: ModbusPropertiesModel
 
+    @property
+    def address(self) -> int:
+        return self.modbus.address
+
+    @property
+    def func_read(self) -> ModbusFunc:
+        return self.modbus.func_read
+
+    @property
+    def func_write(self) -> ModbusFunc:
+        return self.modbus.func_write
+
+    @property
+    def quantity(self) -> int:
+        return self.modbus.quantity
+
 
 class ModbusObjModel(BACnetObjModel):
     property_list: str = Field(alias=ObjProperty.propertyList.id_str)
 
     @validator('property_list')
     def parse_property_list(cls, v):
+        # JSON of property list is str
         return PropertyListModel.parse_raw(v)
-
 
 # class ModbusObj(NamedTuple):
 #     # type: ObjType

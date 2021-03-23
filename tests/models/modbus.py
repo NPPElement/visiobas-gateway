@@ -1,5 +1,6 @@
 from gateway.models.modbus import ModbusObjModel
 
+
 data_dict = {'103': 'no-fault-detected',
              '106': None,
              '111': [False, True, False, False],
@@ -40,4 +41,4 @@ data_dict = {'103': 'no-fault-detected',
 
 obj = ModbusObjModel(**data_dict)
 
-print(obj)
+print(obj.dict())

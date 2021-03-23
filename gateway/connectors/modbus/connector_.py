@@ -4,7 +4,7 @@ from pathlib import Path
 
 from .device import ModbusDevice
 from ..base_connector import BaseConnector
-from ...models import ObjType, ModbusObj
+from ...models import ObjType, ModbusObjModel
 
 _base_path = Path(__file__).resolve().parent.parent.parent
 _log = getLogger(__name__)
@@ -49,7 +49,7 @@ class ModbusConnector(BaseConnector):
         else:
             _log.info(f'{self} stopped.')
 
-    def start_device(self, device_id: int, objs: set[ModbusObj],
+    def start_device(self, device_id: int, objs: set[ModbusObjModel],
                      upd_interval: int) -> None:
         """Start Modbus device thread."""
         _log.debug(f'Starting Device [{device_id}] ...')
@@ -70,24 +70,20 @@ class ModbusConnector(BaseConnector):
                        exc_info=True
                        )
 
-    def parse_objs_data(self, objs_data: dict[ObjType, list[dict]]
-                        ) -> tuple[int, set[ModbusObj]]:
+    def parse_objs_data(self, objs_data: list[dict]) -> tuple[int, set[ModbusObjModel]]:
         # Extract update period
-        upd_period = self.parse_upd_period(device_obj_data=objs_data.pop(ObjType.DEVICE))
-
+        # upd_period = self.parse_upd_period(device_obj_data=objs_data.pop(ObjType.DEVICE))
+        upd_period = 60  # FIXME
         modbus_objs = set()
         # Create protocol objects from objs_data
-        for obj_type, objs in objs_data.items():
-            for obj_props in objs:
-                try:
-                    modbus_obj = ModbusObj.create_from_dict(obj_type=obj_type,
-                                                            obj_props=obj_props
-                                                            )
-                    modbus_objs.add(modbus_obj)
-                except (LookupError, Exception) as e:
-                    _log.warning(f'Extract object error: {e}',
-                                 exc_info=True
-                                 )
+        for obj_data in objs_data:
+            try:
+                modbus_obj = ModbusObjModel(**obj_data)
+                modbus_objs.add(modbus_obj)
+            except (LookupError, Exception) as e:
+                _log.warning(f'Extract object error: {e}',
+                             exc_info=True
+                             )
         return upd_period, modbus_objs
 
     # @staticmethod

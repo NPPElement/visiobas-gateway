@@ -13,7 +13,7 @@ from BAC0.core.io.IOExceptions import (ReadPropertyException,
 from BAC0.scripts.Lite import Lite
 from bacpypes.basetypes import PriorityArray
 
-from ...models import BACnetObj, ObjType, ObjProperty
+from ...models import BACnetObjModel, ObjProperty
 from ...utils import get_fault_obj_properties
 
 
@@ -30,7 +30,7 @@ class BACnetDevice(Thread):
                  address: str,
                  device_id: int,
                  network,
-                 objects: set[BACnetObj],
+                 objects: set[BACnetObjModel],
                  update_period: int):
         super().__init__()
         self.id = device_id
@@ -49,8 +49,8 @@ class BACnetDevice(Thread):
         self.address = address
         self.network: Lite = network
 
-        self.support_rpm: set[BACnetObj] = objects
-        self.not_support_rpm: set[BACnetObj] = set()
+        self.support_rpm: set[BACnetObjModel] = objects
+        self.not_support_rpm: set[BACnetObjModel] = set()
 
         # self.__objects_per_rpm = 25
         # todo: Should we use one RPM for several objects?
@@ -69,7 +69,7 @@ class BACnetDevice(Thread):
         return len(self.support_rpm) + len(self.not_support_rpm)
 
     @property
-    def objects(self) -> set[BACnetObj]:
+    def objects(self) -> set[BACnetObjModel]:
         return self.support_rpm | self.not_support_rpm
 
     def run(self):
@@ -105,27 +105,28 @@ class BACnetDevice(Thread):
                 except Exception as e:
                     self._log.error(f'Polling error: {e}', exc_info=True)
             else:  # if device inactive
-                self._log.debug(f'{self} is inactive')
-                try:
-                    device_obj = BACnetObj(type=ObjType.DEVICE,
-                                           id=self.id,
-                                           name='None'
-                                           )
-                    device_id = self.read_property(obj=device_obj,
-                                                   prop=ObjProperty.objectIdentifier
-                                                   )
-                    self._log.info(f'PING: device_id: {device_id} <{type(device_id)}>')
-
-                    if device_id:
-                        self._log.debug(f'{self} setting to active ...')
-                        self._active = True
-                        continue
-                except Exception as e:
-                    self._log.error(f"'Ping checking' error: {e}")
-                    pass
-                # todo: close Thread and push to bacnet-connector
-                self._log.debug(f'Sleeping {self.delay_inactive} sec ...')
-                sleep(self.delay_inactive)  # todo from cfg
+                # fixme
+                # self._log.debug(f'{self} is inactive')
+                # try:
+                #     device_obj = BACnetObjModel(type=ObjType.DEVICE,
+                #                                 id=self.id,
+                #                                 name='None'
+                #                                 )
+                #     device_id = self.read_property(obj=device_obj,
+                #                                    prop=ObjProperty.objectIdentifier
+                #                                    )
+                #     self._log.info(f'PING: device_id: {device_id} <{type(device_id)}>')
+                #
+                #     if device_id:
+                #         self._log.debug(f'{self} setting to active ...')
+                #         self._active = True
+                #         continue
+                # except Exception as e:
+                #     self._log.error(f"'Ping checking' error: {e}")
+                #     pass
+                # # todo: close Thread and push to bacnet-connector
+                # self._log.debug(f'Sleeping {self.delay_inactive} sec ...')
+                sleep(self.delay_inactive)
         else:
             self._log.info(f'{self} stopped.')
 
@@ -184,7 +185,7 @@ class BACnetDevice(Thread):
         self._log.debug('All objects were polled. Send device_id to verifier')
         self._put_device_end_to_verifier()
 
-    def read_property(self, obj: BACnetObj, prop: ObjProperty):
+    def read_property(self, obj: BACnetObjModel, prop: ObjProperty):
         try:
             args = '{0} {1} {2} {3}'.format(self.address,
                                             obj.type.name,
@@ -202,7 +203,7 @@ class BACnetDevice(Thread):
             self._log.warning(f'RP Error: {e}')
             raise e
 
-    def write_property(self, value, prop: ObjProperty, priority: int, obj: BACnetObj,
+    def write_property(self, value, prop: ObjProperty, priority: int, obj: BACnetObjModel,
                        ) -> bool:
         """
         :return: is write successful
@@ -220,7 +221,7 @@ class BACnetDevice(Thread):
             self._log.warning(f'WP Error: {e}')
             raise e
 
-    def read_property_multiple(self, obj: BACnetObj,
+    def read_property_multiple(self, obj: BACnetObjModel,
                                properties: Sequence[ObjProperty]) -> dict:
         try:
             request = ' '.join([self.address,
@@ -242,7 +243,8 @@ class BACnetDevice(Thread):
             # self._log.warning(f'RPM Error: {e}')
             raise ReadPropertyMultipleException(e)
 
-    def __simulate_rpm(self, obj: BACnetObj, properties: Iterable[ObjProperty]) -> dict:
+    def __simulate_rpm(self, obj: BACnetObjModel,
+                       properties: Iterable[ObjProperty]) -> dict:
         values = {}
         for prop in properties:
             try:
@@ -267,7 +269,7 @@ class BACnetDevice(Thread):
 
         return values
 
-    def rpm(self, obj: BACnetObj) -> dict:
+    def rpm(self, obj: BACnetObjModel) -> dict:
         properties = {ObjProperty.deviceId: self.id,
                       ObjProperty.objectName: obj.name,
                       ObjProperty.objectType: obj.type,
@@ -284,7 +286,7 @@ class BACnetDevice(Thread):
             # self._log.warning(f'Read Error: {e}')
             raise e
 
-    def simulate_rpm(self, obj: BACnetObj) -> dict:
+    def simulate_rpm(self, obj: BACnetObjModel) -> dict:
         properties = {ObjProperty.deviceId: self.id,
                       ObjProperty.objectName: obj.name,
                       ObjProperty.objectType: obj.type,

@@ -2,6 +2,7 @@ from gateway.gateway_ import VisioGateway
 
 """VisioBAS IoT gateway."""
 
+
 __version__ = '1.1.5'
 __author__ = 'VisioBAS, Ovtsin Matvey'
 __maintainer__ = __author__
