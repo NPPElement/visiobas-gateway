@@ -35,3 +35,13 @@ class ModbusFunc(Enum):
     def code_str(self) -> str:
         return self.value[1]
 
+
+MODBUS_READ_FUNCTIONS = {ModbusFunc.READ_COILS,
+                         ModbusFunc.READ_DISCRETE_INPUTS,
+                         ModbusFunc.READ_HOLDING_REGISTERS,
+                         ModbusFunc.READ_INPUT_REGISTERS}
+
+MODBUS_WRITE_FUNCTIONS = {ModbusFunc.WRITE_COIL,
+                          ModbusFunc.WRITE_REGISTER,
+                          ModbusFunc.WRITE_COILS,
+                          ModbusFunc.WRITE_REGISTERS}

@@ -6,7 +6,8 @@ from typing import Iterable
 
 from pymodbus.client.sync import ModbusTcpClient
 
-from ...models import ModbusObjModel
+from ...models import ModbusObjModel, MODBUS_READ_FUNCTIONS, ModbusFunc, \
+    MODBUS_WRITE_FUNCTIONS
 
 
 class ModbusDevice(Thread):
@@ -117,15 +118,15 @@ class ModbusDevice(Thread):
                                      )
             client.connect()
             available_functions = {
-                1: client.read_coils,
-                2: client.read_discrete_inputs,
-                3: client.read_holding_registers,
-                4: client.read_input_registers,
+                ModbusFunc.READ_COILS: client.read_coils,
+                ModbusFunc.READ_DISCRETE_INPUTS: client.read_discrete_inputs,
+                ModbusFunc.READ_HOLDING_REGISTERS: client.read_holding_registers,
+                ModbusFunc.READ_INPUT_REGISTERS: client.read_input_registers,
 
-                5: client.write_coil,
-                6: client.write_register,
-                15: client.write_coils,
-                16: client.write_registers
+                ModbusFunc.WRITE_COIL: client.write_coil,
+                ModbusFunc.WRITE_REGISTER: client.write_register,
+                ModbusFunc.WRITE_COILS: client.write_coils,
+                ModbusFunc.WRITE_REGISTERS: client.write_registers
             }
             self._log.info(f'{self} client initialized')
             return client, available_functions
@@ -136,23 +137,23 @@ class ModbusDevice(Thread):
 
     def read(self, obj: ModbusObjModel, unit=0x01) -> list:
         """Read data from Modbus registers."""
-        read_cmd_codes = {1, 2, 3, 4}
 
-        read_cmd_code = obj.property_list.func_read
+        func_read = obj.property_list.func_read
+
+        if func_read not in MODBUS_READ_FUNCTIONS:
+            raise ValueError(f'Read functions must be one of {MODBUS_READ_FUNCTIONS}')
+
         address = obj.property_list.address
         quantity = obj.property_list.quantity
 
-        if read_cmd_code not in read_cmd_codes:
-            raise ValueError(f'Read functions must be one of {read_cmd_codes}')
-
         # try:  # todo: do we need re-raise??
-        data = self._available_functions[read_cmd_code](address=address,
-                                                        count=quantity,
-                                                        unit=unit
-                                                        )
+        data = self._available_functions[func_read](address=address,
+                                                    count=quantity,
+                                                    unit=unit
+                                                    )
         if not data.isError():
             self._log.debug(
-                f'Successful reading cmd_code={read_cmd_code} address={address} '
+                f'Successful reading {func_read} address={address} '
                 f'quantity={quantity} registers={data.registers}'
                 # extra={'cmd_code': cmd_code,
                 #        'address': reg_address,
@@ -166,18 +167,17 @@ class ModbusDevice(Thread):
 
     def write(self, values, obj: ModbusObjModel, unit=0x01) -> None:
         """Write data to Modbus registers."""
-        write_cmd_codes = {5, 6, 15, 16}
 
-        write_cmd_code = obj.property_list.func_write
+        func_write = obj.property_list.func_write
         reg_address = obj.property_list.address
 
-        if write_cmd_code not in write_cmd_codes:
-            raise ValueError(f'Read functions must be one of {write_cmd_codes}')
+        if func_write not in MODBUS_WRITE_FUNCTIONS:
+            raise ValueError(f'Read functions must be one of {MODBUS_WRITE_FUNCTIONS}')
 
-        rq = self._available_functions[write_cmd_code](reg_address,
-                                                       values,
-                                                       unit=unit
-                                                       )
+        rq = self._available_functions[func_write](reg_address,
+                                                   values,
+                                                   unit=unit
+                                                   )
         if not rq.isError():
             self._log.debug(f'Successfully write: {reg_address}: {values}')
         else:
@@ -279,9 +279,14 @@ class ModbusDevice(Thread):
     #             ObjProperty.presentValue: value,
     #             }
 
-    def _put_data_into_verifier(self, properties: dict) -> None:
+    def _put_data_into_verifier(self, obj: ModbusObjModel) -> None:
         """Send collected data about obj into BACnetVerifier."""
-        self._verifier_queue.put(properties)
+        self._verifier_queue.put(obj.dict(include={'device_id',
+                                                   'type'
+                                                   'id',
+                                                   'name'
+                                                   'present_value'
+                                                   }))
 
     def _put_device_end_to_verifier(self) -> None:
         """device_id in queue means that device polled.

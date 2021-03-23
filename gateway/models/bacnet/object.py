@@ -9,8 +9,10 @@ from .obj_type import ObjType
 class BACnetObjModel(BaseModel):
     # for evident exception use code below + validation
     # # type: Union[int, str] = Field(..., alias=ObjProperty.objectType.id_str)
-
     type: ObjType = Field(..., alias=ObjProperty.objectType.id_str)
+
+    device_id: int = Field(..., gt=0, alias=ObjProperty.deviceId.id_str)
+
     id: int = Field(..., ge=0, alias=ObjProperty.objectIdentifier.id_str)
     name: str = Field(..., alias=ObjProperty.objectName.id_str)
 
@@ -22,6 +24,8 @@ class BACnetObjModel(BaseModel):
 
     resolution: Union[float, int, None] = Field(alias=ObjProperty.resolution.id_str)
     upd_interval: Union[float, int, None] = Field(alias=ObjProperty.updateInterval.id_str)
+    present_value: float = Field(alias=ObjProperty.presentValue.id_str)
+
     _last_value = None
 
     # @validator('type')
