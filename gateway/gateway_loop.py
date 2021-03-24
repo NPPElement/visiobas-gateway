@@ -30,20 +30,22 @@ class VisioBASGateway:
         asyncio.run(self.async_run())
 
     async def async_run(self) -> None:
-        # _async_stop will set this instead of stopping the loop
+        """Gateway main entry point.
+        Start Gateway and block until stopped.
+        """
+        # self.async_stop will set this instead of stopping the loop
         self._stopped = asyncio.Event()
         await self.async_start()
 
         await self._stopped.wait()
 
     async def async_start(self):
-        """Gateway main entry point.
-        Start Gateway and block until stopped.
-        """
+
         await self.add_job(self.async_setup)
         # self.loop.run_forever()
 
     async def async_setup(self):
+        """Set up Gateway."""
         pass
         # todo use add_job for all
         # setup http client
@@ -66,6 +68,3 @@ class VisioBASGateway:
         """Stop Gateway."""
         if self._stopped is not None:
             self._stopped.set()
-
-
-
