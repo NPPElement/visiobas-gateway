@@ -15,6 +15,7 @@ from .http_node import VisioHTTPNode
 from ...connectors import BaseConnector
 from ...models import ObjType
 # from ...utils import read_address_cache
+from ...models import BACnetObjModel
 
 _log = getLogger(__name__)
 
@@ -191,7 +192,6 @@ class VisioHTTPClient(Thread):
             # Clear the read_address_cache cache to read the updated `address_cache` file.
             # read_address_cache.clear_cache() FIXME!!
 
-
             upd_coros = [self.upd_device(node=node,
                                          device_id=dev_id,
                                          obj_types=connector.obj_types_to_request,
@@ -217,6 +217,8 @@ class VisioHTTPClient(Thread):
                          device_id: int, obj_types: Iterable[ObjType],
                          connector: BaseConnector,
                          session) -> bool:
+
+        # todo: implement data factory param?
         """Perform request objects of each types for device by id.
         Then resend data about device to connector.
         :param node:
@@ -230,7 +232,7 @@ class VisioHTTPClient(Thread):
             # add first type - device info, contains upd_interval
             obj_types = [ObjType.DEVICE, *obj_types]
 
-            obj_coros = [
+            obj_requests = [
                 self._rq(method='GET',
                          url=(f'{node.cur_server.base_url}'
                               f'/vbas/gate/get/{device_id}/{obj_type.name_dashed}'),
@@ -238,15 +240,14 @@ class VisioHTTPClient(Thread):
                          headers=node.cur_server.auth_headers
                          ) for obj_type in obj_types
             ]
-            objs_data = await asyncio.gather(*obj_coros)
+            objs_data = await asyncio.gather(*obj_requests)  # list[dict]
 
             # objects of each type, if it's not empty, are added to the dictionary,
             # where key is obj_type and value is list with objects
-            objs_data = {obj_type: objs for obj_type, objs in
-                         zip(obj_types, objs_data)
-                         if objs_data
-                         }
-            # todo: IDEA TO FUTURE: can send objects to connector by small parts
+            # objs_data = {obj_type: objs for obj_type, objs in
+            #              zip(obj_types, objs_data)
+            #              if objs_data
+            #              }
             connector.getting_queue.put((device_id, objs_data))
             return True
 
@@ -438,15 +439,17 @@ class VisioHTTPClient(Thread):
         :param response: server's response
         :return: response['data'] field after checks
         """
+        # todo make decorator
+
         response.raise_for_status()
 
         if response.status == 200:
             response.raise_for_status()
-            resp_json = await response.json()
-            if resp_json['success']:
+            _json = await response.json()
+            if _json['success']:
                 _log.debug(f'Successfully response: {response.url}')
                 try:
-                    return resp_json['data']
+                    return _json['data']
                 except LookupError as e:
                     # fixme
                     _log.warning(f'Extracting failed (most likely in logout): {e}',
@@ -454,7 +457,7 @@ class VisioHTTPClient(Thread):
                                  )
             else:
                 raise aiohttp.ClientError(
-                    f'Failure response: {response.url}\n{resp_json}'
+                    f'Failure response: {response.url}\n{_json}'
                 )
         # else:
         #     # todo: switch to another server

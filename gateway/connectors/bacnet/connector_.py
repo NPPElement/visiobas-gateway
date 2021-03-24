@@ -2,13 +2,14 @@ from logging import getLogger
 from multiprocessing import SimpleQueue
 from pathlib import Path
 from time import sleep
+from typing import Sequence
 
 from BAC0 import lite
 from BAC0.core.io.IOExceptions import InitializationError, NetworkInterfaceException
 
 from .device import BACnetDevice
 from ..base_connector import BaseConnector
-from ...models import ObjType, BACnetObj
+from ...models import ObjType, BACnetObjModel
 
 _base_path = Path(__file__).resolve().parent.parent.parent
 _log = getLogger(__name__)
@@ -73,26 +74,25 @@ class BACnetConnector(BaseConnector):
             self._network.disconnect()
             _log.info(f'{self} stopped.')
 
-    def parse_objs_data(self, objs_data: dict[ObjType, list[dict]]
-                        ) -> tuple[int, set[BACnetObj]]:
+    def parse_objs_data(self,
+                        objs_data: list[dict]
+                        # objs_data: dict[ObjType, list[dict]]
+                        ) -> tuple[int, set[BACnetObjModel]]:
         # Extract update period
-        upd_period = self.parse_upd_period(device_obj_data=objs_data.pop(ObjType.DEVICE))
-
+        # upd_period = self.parse_upd_period(device_obj_data=objs_data.pop(ObjType.DEVICE))
+        upd_period = 60  # FIXME
         bacnet_objs = set()
         # Create protocol objects from objs_data
-        for obj_type, objs in objs_data.items():
-            for obj_props in objs:
-                try:
-                    bacnet_obj = BACnetObj.from_dict(obj_type=obj_type,
-                                                     obj_props=obj_props
-                                                     )
-                    bacnet_objs.add(bacnet_obj)
+        for obj_data in objs_data:
+            try:
+                bacnet_obj = BACnetObjModel(**obj_data)
+                bacnet_objs.add(bacnet_obj)
 
-                except LookupError:
-                    _log.warning('Extract object error.')
+            except LookupError:
+                _log.warning('Extract object error.')
         return upd_period, bacnet_objs
 
-    def start_device(self, device_id: int, objs: set[BACnetObj],
+    def start_device(self, device_id: int, objs: set[BACnetObjModel],
                      upd_interval: int) -> None:
         """Start BACnet device thread."""
         _log.debug(f'Starting Device [{device_id}] ...')

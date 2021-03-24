@@ -2,11 +2,12 @@ from logging import getLogger
 from multiprocessing import SimpleQueue
 from threading import Thread
 from time import time, sleep
+from typing import Iterable
 
 from pymodbus.client.sync import ModbusTcpClient
 
-from ...models import ModbusObj, VisioModbusProperties, ObjProperty
-from ...utils import cast_to_bit, cast_2_registers
+from ...models import ModbusObjModel, MODBUS_READ_FUNCTIONS, ModbusFunc, \
+    MODBUS_WRITE_FUNCTIONS
 
 
 class ModbusDevice(Thread):
@@ -24,7 +25,7 @@ class ModbusDevice(Thread):
                  connector,
                  address: str,
                  device_id: int,
-                 objects: set[ModbusObj],
+                 objects: set[ModbusObjModel],
                  update_period: int = 10):
         super().__init__()
         self.id = device_id
@@ -43,7 +44,7 @@ class ModbusDevice(Thread):
 
         self._polling = True
 
-        self.objects: set[ModbusObj] = objects
+        self.objects: set[ModbusObjModel] = objects
 
         self._log.info(f'{self} starting ...')
         # self.start()
@@ -117,15 +118,15 @@ class ModbusDevice(Thread):
                                      )
             client.connect()
             available_functions = {
-                1: client.read_coils,
-                2: client.read_discrete_inputs,
-                3: client.read_holding_registers,
-                4: client.read_input_registers,
+                ModbusFunc.READ_COILS: client.read_coils,
+                ModbusFunc.READ_DISCRETE_INPUTS: client.read_discrete_inputs,
+                ModbusFunc.READ_HOLDING_REGISTERS: client.read_holding_registers,
+                ModbusFunc.READ_INPUT_REGISTERS: client.read_input_registers,
 
-                5: client.write_coil,
-                6: client.write_register,
-                15: client.write_coils,
-                16: client.write_registers
+                ModbusFunc.WRITE_COIL: client.write_coil,
+                ModbusFunc.WRITE_REGISTER: client.write_register,
+                ModbusFunc.WRITE_COILS: client.write_coils,
+                ModbusFunc.WRITE_REGISTERS: client.write_registers
             }
             self._log.info(f'{self} client initialized')
             return client, available_functions
@@ -134,25 +135,25 @@ class ModbusDevice(Thread):
             self._log.error(f'Modbus client init error: {e}', exc_info=True)
             raise e
 
-    def read(self, obj: ModbusObj, unit=0x01) -> list:
+    def read(self, obj: ModbusObjModel, unit=0x01) -> list:
         """Read data from Modbus registers."""
-        read_cmd_codes = {1, 2, 3, 4}
 
-        read_cmd_code = obj.properties.func_read
-        address = obj.properties.address
-        quantity = obj.properties.quantity
+        func_read = obj.property_list.func_read
 
-        if read_cmd_code not in read_cmd_codes:
-            raise ValueError(f'Read functions must be one of {read_cmd_codes}')
+        if func_read not in MODBUS_READ_FUNCTIONS:
+            raise ValueError(f'Read functions must be one of {MODBUS_READ_FUNCTIONS}')
+
+        address = obj.property_list.address
+        quantity = obj.property_list.quantity
 
         # try:  # todo: do we need re-raise??
-        data = self._available_functions[read_cmd_code](address=address,
-                                                        count=quantity,
-                                                        unit=unit
-                                                        )
+        data = self._available_functions[func_read](address=address,
+                                                    count=quantity,
+                                                    unit=unit
+                                                    )
         if not data.isError():
             self._log.debug(
-                f'Successful reading cmd_code={read_cmd_code} address={address} '
+                f'Successful reading {func_read} address={address} '
                 f'quantity={quantity} registers={data.registers}'
                 # extra={'cmd_code': cmd_code,
                 #        'address': reg_address,
@@ -164,80 +165,79 @@ class ModbusDevice(Thread):
             # self._log.warning(f'Read failed: {data}')
             raise ValueError(data)
 
-    def write(self, values, obj: ModbusObj, unit=0x01) -> None:
+    def write(self, values, obj: ModbusObjModel, unit=0x01) -> None:
         """Write data to Modbus registers."""
-        write_cmd_codes = {5, 6, 15, 16}
 
-        write_cmd_code = obj.properties.func_write
-        reg_address = obj.properties.address
+        func_write = obj.property_list.func_write
+        reg_address = obj.property_list.address
 
-        if write_cmd_code not in write_cmd_codes:
-            raise ValueError(f'Read functions must be one of {write_cmd_codes}')
+        if func_write not in MODBUS_WRITE_FUNCTIONS:
+            raise ValueError(f'Read functions must be one of {MODBUS_WRITE_FUNCTIONS}')
 
-        rq = self._available_functions[write_cmd_code](reg_address,
-                                                       values,
-                                                       unit=unit
-                                                       )
+        rq = self._available_functions[func_write](reg_address,
+                                                   values,
+                                                   unit=unit
+                                                   )
         if not rq.isError():
             self._log.debug(f'Successfully write: {reg_address}: {values}')
         else:
             self._log.warning(f'Write failed: {rq}')
             raise rq
 
-    def process_registers(self, registers: list[int],
-                          quantity: int,
-                          properties: VisioModbusProperties) -> int or float or str:
-        """ Perform casting to desired type and scale"""
-        if registers is None:
-            return 'null'
+    # def process_registers(self, registers: list[int],
+    #                       quantity: int,
+    #                       properties: VisioModbusProperties) -> int or float or str:
+    #     """ Perform casting to desired type and scale"""
+    #     if registers is None:
+    #         return 'null'
+    #
+    #     if (properties.data_type == 'BOOL' and quantity == 1 and
+    #             properties.data_length == 1 and isinstance(properties.bit, int)):
+    #         # bool: 1bit
+    #         # TODO: Group bits into one request for BOOL
+    #         value = cast_to_bit(register=registers, bit=properties.bit)
+    #
+    #     elif (properties.data_type == 'BOOL' and quantity == 1 and
+    #           properties.data_length == 16):
+    #         # bool: 16bit
+    #         value = int(bool(registers[0]))
+    #
+    #     elif quantity == 1 and properties.data_length == 16:
+    #         # expected only: int16 | uint16 |  fixme: BYTE?
+    #         value = registers[0]
+    #
+    #     # todo
+    #     elif (properties.data_type == 'FLOAT' and
+    #           quantity == 2 and properties.data_length == 32):  # float32
+    #         value = round(cast_2_registers(registers=registers,
+    #                                        data_len=properties.data_length,
+    #                                        byteorder='>', wordorder='<',  # fixme use obj
+    #                                        type_name=properties.data_type
+    #                                        ),
+    #                       ndigits=6)
+    #
+    #     # elif ((properties.data_type == 'INT' or properties.data_type == 'UINT') and
+    #     #       quantity == 2 and properties.data_length == 32):  # int32 | uint32
+    #     #     value = cast_2_registers(registers=registers,
+    #     #                              byteorder='<', wordorder='>',  # fixme use obj
+    #     #                              type_name=properties.data_type)
+    #     else:
+    #         raise NotImplementedError('What to do with that type '
+    #                                   f'not yet defined: {registers, quantity, properties}')
+    #     scaled = value / properties.scale
+    #
+    #     self._log.debug(f'Processed registers={registers} quantity={quantity} '
+    #                     f'properties={properties} cast_value={value} scaled_value={scaled}',
+    #                     # extra={'registers': registers,
+    #                     #        'quantity': quantity,
+    #                     #        'properties': properties,
+    #                     #        'cast value': value,
+    #                     #        'scaled': scaled,
+    #                     #        }
+    #                     )
+    #     return scaled
 
-        if (properties.data_type == 'BOOL' and quantity == 1 and
-                properties.data_length == 1 and isinstance(properties.bit, int)):
-            # bool: 1bit
-            # TODO: Group bits into one request for BOOL
-            value = cast_to_bit(register=registers, bit=properties.bit)
-
-        elif (properties.data_type == 'BOOL' and quantity == 1 and
-              properties.data_length == 16):
-            # bool: 16bit
-            value = int(bool(registers[0]))
-
-        elif quantity == 1 and properties.data_length == 16:
-            # expected only: int16 | uint16 |  fixme: BYTE?
-            value = registers[0]
-
-        # todo
-        elif (properties.data_type == 'FLOAT' and
-              quantity == 2 and properties.data_length == 32):  # float32
-            value = round(cast_2_registers(registers=registers,
-                                           data_len=properties.data_length,
-                                           byteorder='>', wordorder='<',  # fixme use obj
-                                           type_name=properties.data_type
-                                           ),
-                          ndigits=6)
-
-        # elif ((properties.data_type == 'INT' or properties.data_type == 'UINT') and
-        #       quantity == 2 and properties.data_length == 32):  # int32 | uint32
-        #     value = cast_2_registers(registers=registers,
-        #                              byteorder='<', wordorder='>',  # fixme use obj
-        #                              type_name=properties.data_type)
-        else:
-            raise NotImplementedError('What to do with that type '
-                                      f'not yet defined: {registers, quantity, properties}')
-        scaled = value / properties.scale
-
-        self._log.debug(f'Processed registers={registers} quantity={quantity} '
-                        f'properties={properties} cast_value={value} scaled_value={scaled}',
-                        # extra={'registers': registers,
-                        #        'quantity': quantity,
-                        #        'properties': properties,
-                        #        'cast value': value,
-                        #        'scaled': scaled,
-                        #        }
-                        )
-        return scaled
-
-    def poll(self, objects: list[ModbusObj]) -> None:
+    def poll(self, objects: Iterable[ModbusObjModel]) -> None:
         """ Read objects from registers in Modbus Device.
             Convert register values to BACnet properties.
             Send convert objects into verifier.
@@ -246,16 +246,19 @@ class ModbusDevice(Thread):
         for obj in objects:
             try:
                 registers = self.read(obj=obj)
-                value = self.process_registers(registers=registers,
-                                               quantity=obj.properties.quantity,
-                                               properties=obj.properties
-                                               )
-                converted_properties = self._add_bacnet_properties(
-                    device_id=self.id,
-                    obj=obj,
-                    value=value
-                )
-                self._put_data_into_verifier(properties=converted_properties)
+                # todo: make process in read
+                # value = self.process_registers(registers=registers,
+                #                                quantity=obj.properties.quantity,
+                #                                properties=obj.properties
+                #                                )
+                # todo: make by default
+                # converted_properties = self._add_bacnet_properties(
+                #     device_id=self.id,
+                #     obj=obj,
+                #     value=value
+                # )
+                # todo: put obj
+                # self._put_data_into_verifier(properties=converted_properties)
 
             except Exception as e:
                 self._log.warning(f'Read from {obj} error: {e}',
@@ -265,20 +268,25 @@ class ModbusDevice(Thread):
                 # FIXME: put obj data to verifier
         self._put_device_end_to_verifier()
 
-    @staticmethod
-    def _add_bacnet_properties(device_id: int,
-                               obj: ModbusObj, value) -> dict[ObjProperty, ...]:
-        """Represent modbus register value as a bacnet object."""
-        return {ObjProperty.deviceId: device_id,
-                ObjProperty.objectName: obj.name,
-                ObjProperty.objectType: obj.type,
-                ObjProperty.objectIdentifier: obj.id,
-                ObjProperty.presentValue: value,
-                }
+    # @staticmethod
+    # def _add_bacnet_properties(device_id: int,
+    #                            obj: ModbusObj, value) -> dict[ObjProperty, ...]:
+    #     """Represent modbus register value as a bacnet object."""
+    #     return {ObjProperty.deviceId: device_id,
+    #             ObjProperty.objectName: obj.name,
+    #             ObjProperty.objectType: obj.type,
+    #             ObjProperty.objectIdentifier: obj.id,
+    #             ObjProperty.presentValue: value,
+    #             }
 
-    def _put_data_into_verifier(self, properties: dict) -> None:
+    def _put_data_into_verifier(self, obj: ModbusObjModel) -> None:
         """Send collected data about obj into BACnetVerifier."""
-        self._verifier_queue.put(properties)
+        self._verifier_queue.put(obj.dict(include={'device_id',
+                                                   'type'
+                                                   'id',
+                                                   'name'
+                                                   'present_value'
+                                                   }))
 
     def _put_device_end_to_verifier(self) -> None:
         """device_id in queue means that device polled.

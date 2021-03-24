@@ -13,8 +13,6 @@ class BACnetVerifier(Process):
                  config: dict):
         super().__init__(daemon=True)
         self._config = config
-        # self._mqtt_enable = config.get('mqtt_enable', False)
-        # self._http_enable = config.get('http_enable', True)
 
         self._protocols_queue = protocols_queue
         self._http_queue = http_queue
@@ -22,17 +20,7 @@ class BACnetVerifier(Process):
 
         self._active = True
 
-        # if self._http_enable:
-        #     # Dict, where key - device_id,
-        #     # value - list of collected verified strings
         self._http_storage: dict[int, list[str]] = {}
-        #     self._http_queue = send_queue
-        #
-        # elif self._mqtt_enable:
-        #     self._mqtt_queue = send_queue
-        #
-        # else:
-        #     raise NotImplementedError('Select sending via HTTP ot MQTT')
 
     def __repr__(self) -> str:
         return self.__class__.__name__
@@ -92,7 +80,6 @@ class BACnetVerifier(Process):
             _log.info(f'{self} stopped.')
 
     # todo: make reliability Enum
-    # todo: implement reliability concatenation
 
     def verify(self, obj_properties: dict[ObjProperty, ...]) -> dict[ObjProperty, ...]:
 

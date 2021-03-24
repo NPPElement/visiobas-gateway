@@ -3,6 +3,7 @@ from enum import Enum, unique
 
 @unique
 class ObjProperty(Enum):
+    """Represent properties of BACnet object."""
     ackedTransitions = 0
     ackRequired = 1
     action = 2
@@ -358,5 +359,9 @@ class ObjProperty(Enum):
     deviceId = 846
 
     @property
-    def id(self):
+    def id(self) -> int:
         return self.value
+
+    @property
+    def id_str(self) -> str:
+        return str(self.value)

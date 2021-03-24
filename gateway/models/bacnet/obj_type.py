@@ -1,9 +1,11 @@
-from enum import Enum
+from enum import Enum, unique
 
 from .obj_property import ObjProperty
 
 
+# @unique
 class ObjType(Enum):
+    """Represent types of BACnet objects."""
     ANALOG_INPUT = "analog-input", 0, 'analogInput'
     ANALOG_OUTPUT = "analog-output", 1, 'analogOutput'
     ANALOG_VALUE = "analog-value", 2, 'analogValue'
@@ -30,28 +32,36 @@ class ObjType(Enum):
     ACCUMULATOR = "accumulator", 23, 'accumulator'
     PULSE_CONVERTER = "pulse-converter", 24, 'pulseConverter'
     ACCESS_POINT = "access-point", 33, 'accessPoint'
-    SITE = "site", -1
-    FOLDER = "folder", -1
-    TRUNK = "trunk", -1
-    GRAPHIC = "graphic", -1
+
+    # SITE = "site", -1
+    # FOLDER = "folder", -1
+    # TRUNK = "trunk", -1
+    # GRAPHIC = "graphic", -1
+
+    def __new__(cls, *values):
+        obj = object.__new__(cls)
+        for other_value in values:
+            cls._value2member_map_[other_value] = obj
+        obj._all_values = values
+        return obj
 
     def __repr__(self):
         return f'{self.__class__.__name__}.{self.name}'
 
     @property
-    def id(self):
+    def id(self) -> int:
         return self.value[1]
 
     @property
-    def name(self):
+    def name(self) -> str:
         return self.value[2]
 
     @property
-    def name_dashed(self):
+    def name_dashed(self) -> str:
         return self.value[0]
 
     @property
-    def properties(self):
+    def properties(self) -> tuple[ObjProperty, ...]:
         if self in {ObjType.BINARY_INPUT,
                     ObjType.ANALOG_INPUT,
                     ObjType.MULTI_STATE_INPUT

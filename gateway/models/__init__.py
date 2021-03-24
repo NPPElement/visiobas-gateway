@@ -1,14 +1,18 @@
-from .bacnet import ObjType, ObjProperty, StatusFlag, BACnetObj
-from .modbus import ModbusObj, VisioModbusProperties
+from .bacnet import ObjType, ObjProperty, StatusFlag, BACnetObjModel
+from .modbus import (ModbusObjModel, ModbusFunc, MODBUS_READ_FUNCTIONS,
+                     MODBUS_WRITE_FUNCTIONS)
 from .mqtt import ResultCode, Qos
 
 __all__ = ['ObjType',
            'ObjProperty',
            'StatusFlag',
-           'BACnetObj',
+           'BACnetObjModel',
 
-           'VisioModbusProperties',
-           'ModbusObj',
+           # 'VisioModbusProperties',
+           'ModbusObjModel',
+           'ModbusFunc',
+           'MODBUS_READ_FUNCTIONS',
+           'MODBUS_WRITE_FUNCTIONS',
 
            'ResultCode',
            'Qos'
