@@ -58,8 +58,17 @@ class ModbusConnector(Thread, Connector):
 
         self.__update_intervals = {}
 
-    def __repr__(self):
-        return 'ModbusConnector'
+    def __repr__(self) -> str:
+        return self.__class__.__name__
+
+    @classmethod
+    def read_rtu_yaml(cls, yaml_path: Path):
+        import yaml
+
+        with yaml_path.open() as cfg_file:
+            rtu_cfg = yaml.load(cfg_file, Loader=yaml.FullLoader)
+            _log.debug(f'Read from {yaml_path}: {rtu_cfg}')
+        return rtu_cfg
 
     def run(self):
         _log.info(f'{self} starting ...')
@@ -70,6 +79,9 @@ class ModbusConnector(Thread, Connector):
             self.__address_cache = self.read_address_cache(
                 address_cache_path=address_cache_path)
 
+            # todo read rtu yaml
+            # rtu_cfg
+
             # stop irrelevant devices
             irrelevant_devices_id = tuple(set(self.__polling_devices.keys()) - set(
                 self.__address_cache.keys()))
@@ -77,9 +89,8 @@ class ModbusConnector(Thread, Connector):
                 self.__stop_devices(devices_id=irrelevant_devices_id)
 
             try:  # Requesting objects and their types from the server
-                # FIXME: move to client
                 devices_objects = self.get_devices_objects(
-                    devices_id=tuple(self.__address_cache.keys()),
+                    devices_id=tuple(self.__address_cache.keys()),  # fixme add rtu ids
                     obj_types=self.__object_types_to_request)
 
                 if devices_objects:  # If received devices with objects from the server
@@ -114,7 +125,6 @@ class ModbusConnector(Thread, Connector):
 
             _log.debug('Sleeping 1h ...')
             sleep(60 * 60)
-            # FIXME REPLACE TO threading.Timer? in ThreadPoolExecutor?
 
         else:
             _log.info(f'{self} stopped.')
@@ -137,8 +147,10 @@ class ModbusConnector(Thread, Connector):
         for dev_id, objs in devices.items():
             if dev_id in self.__polling_devices.keys():
                 self.__stop_device(device_id=dev_id)
-            self.__start_device(device_id=dev_id, objects=objs,
-                                update_interval=update_intervals[dev_id])
+            if dev_id in self.__address_cache:
+                self.__start_device(device_id=dev_id, objects=objs,
+                                    update_interval=update_intervals[dev_id])
+            # elif dev_id in rtu_cfg: # todo
 
         _log.info('Devices updated')
 
@@ -250,7 +262,7 @@ class ModbusConnector(Thread, Connector):
 
                     property_list = obj[str(ObjProperty.propertyList.id)]
                     if property_list is not None:
-                        address, quantity, func_read, props = self.extract_properties(
+                        address, quantity, func_read, func_write, props = self.extract_properties(
                             property_list=property_list)
 
                         modbus_obj = ModbusObject(type=obj_type,
@@ -260,6 +272,7 @@ class ModbusConnector(Thread, Connector):
                                                   address=address,
                                                   quantity=quantity,
                                                   func_read=func_read,
+                                                  func_write=func_write,
 
                                                   properties=props
                                                   )
@@ -273,13 +286,14 @@ class ModbusConnector(Thread, Connector):
 
     @staticmethod
     def extract_properties(property_list: str
-                           ) -> tuple[int, int, int, VisioModbusProperties]:
+                           ) -> tuple[int, int, int, int, VisioModbusProperties]:
         try:
             modbus_properties = loads(property_list)['modbus']
 
             address = int(modbus_properties['address'])
             quantity = int(modbus_properties['quantity'])
             func_read = int(modbus_properties['functionRead'][-2:])
+            func_write = int(modbus_properties['functionWrite'][-2:])
 
             scale = int(modbus_properties.get('scale', 1))
             data_type = modbus_properties['dataType']
@@ -308,4 +322,4 @@ class ModbusConnector(Thread, Connector):
         except KeyError as e:
             raise e
         else:
-            return address, quantity, func_read, properties
+            return address, quantity, func_read, func_write, properties

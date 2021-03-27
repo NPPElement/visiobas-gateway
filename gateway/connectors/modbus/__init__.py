@@ -22,6 +22,7 @@ class ModbusObject(NamedTuple):
     address: int
     quantity: int
     func_read: int
+    func_write: int
 
     properties: VisioModbusProperties
 
