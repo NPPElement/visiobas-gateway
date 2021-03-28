@@ -4,13 +4,15 @@ from multiprocessing import SimpleQueue
 from pathlib import Path
 from threading import Thread
 from time import sleep
+from typing import Sequence
 
 from aiohttp.web_exceptions import HTTPServerError, HTTPClientError
 
 from gateway.connectors import Connector
 from gateway.connectors.bacnet import ObjProperty, ObjType
 from gateway.connectors.modbus import ModbusObject, VisioModbusProperties
-from gateway.connectors.modbus.device import ModbusDevice
+from gateway.connectors.modbus.device import ModbusTCPDevice
+from gateway.connectors.modbus.devices_rtu import ModbusRTUDevice
 from gateway.logs import get_file_logger
 
 _base_path = Path(__file__).resolve().parent.parent.parent
@@ -57,6 +59,7 @@ class ModbusConnector(Thread, Connector):
         # self.__not_connect_devices: set[int, ...] = set()
 
         self.__update_intervals = {}
+        self.rtu_cfg = {}
 
     def __repr__(self) -> str:
         return self.__class__.__name__
@@ -70,6 +73,17 @@ class ModbusConnector(Thread, Connector):
             _log.debug(f'Read from {yaml_path}: {rtu_cfg}')
         return rtu_cfg
 
+    @property
+    def tcp_device_ids(self) -> list[int]:
+        return list(self.__address_cache.keys())
+
+    @property
+    def rtu_device_ids(self) -> list[int, ...]:
+        return list(self.rtu_cfg.keys())
+
+    def device_ids(self) -> list[int, ...]:
+        return list(*self.rtu_device_ids, *self.tcp_device_ids)
+
     def run(self):
         _log.info(f'{self} starting ...')
         while not self.__stopped:
@@ -79,18 +93,18 @@ class ModbusConnector(Thread, Connector):
             self.__address_cache = self.read_address_cache(
                 address_cache_path=address_cache_path)
 
-            # todo read rtu yaml
-            # rtu_cfg
+            self.rtu_cfg = self.read_rtu_yaml(
+                yaml_path=_base_path / 'connectors/modbus/rtu.yaml')
 
             # stop irrelevant devices
             irrelevant_devices_id = tuple(set(self.__polling_devices.keys()) - set(
-                self.__address_cache.keys()))
+                self.tcp_device_ids) - set(self.rtu_device_ids))
             if irrelevant_devices_id:
                 self.__stop_devices(devices_id=irrelevant_devices_id)
 
             try:  # Requesting objects and their types from the server
                 devices_objects = self.get_devices_objects(
-                    devices_id=tuple(self.__address_cache.keys()),  # fixme add rtu ids
+                    devices_id=self.device_ids,
                     obj_types=self.__object_types_to_request)
 
                 if devices_objects:  # If received devices with objects from the server
@@ -99,7 +113,7 @@ class ModbusConnector(Thread, Connector):
                               'Requesting update intervals for them ...')
 
                     self.__update_intervals = self.get_devices_update_interval(
-                        devices_id=tuple(self.__address_cache.keys()),
+                        devices_id=self.device_ids,
                         default_update_interval=self.default_update_period
                     )
                     _log.info('Received update intervals for devices. '
@@ -142,25 +156,42 @@ class ModbusConnector(Thread, Connector):
 
     def update_devices(self, devices: dict[int, set[ModbusObject]],
                        update_intervals: dict[int, int]) -> None:
-        """ Starts Modbus devices threads
-        """
+        """ Starts Modbus devices threads"""
         for dev_id, objs in devices.items():
             if dev_id in self.__polling_devices.keys():
                 self.__stop_device(device_id=dev_id)
-            if dev_id in self.__address_cache:
-                self.__start_device(device_id=dev_id, objects=objs,
-                                    update_interval=update_intervals[dev_id])
-            # elif dev_id in rtu_cfg: # todo
+            if dev_id in self.tcp_device_ids:
+                self._start_tcp_device(device_id=dev_id, objects=objs,
+                                       update_interval=update_intervals[dev_id])
+            elif dev_id in self.rtu_device_ids:
+                self._start_rtu_device(dev_id=dev_id, objs=objs,
+                                       upd_interval=update_intervals[dev_id])
 
         _log.info('Devices updated')
 
-    def __start_device(self, device_id: int, objects: set[ModbusObject],
-                       update_interval: int) -> None:
-        """ Start Modbus devise thread
-        """
-        _log.debug(f'Starting Device [{device_id}] ...')
+    def _start_rtu_device(self, dev_id: int, objs: set[ModbusObject],
+                          upd_interval: int) -> None:
+        """ Start Modbus RTU Devise thread"""
+        _log.debug(f'Starting TCP Device [{dev_id}] ...')
         try:
-            self.__polling_devices[device_id] = ModbusDevice(
+            self.__polling_devices[dev_id] = ModbusRTUDevice(
+                **self.rtu_cfg[dev_id],
+                verifier_queue=self.__verifier_queue,
+                connector=self,
+                device_id=dev_id,
+                objects=objs,
+                update_period=upd_interval,
+            )
+            _log.info(f'Device [{dev_id}] started')
+        except Exception as e:
+            _log.error(f'Device [{dev_id}] starting error: {e}', exc_info=True)
+
+    def _start_tcp_device(self, device_id: int, objects: set[ModbusObject],
+                          update_interval: int) -> None:
+        """ Start Modbus device thread"""
+        _log.debug(f'Starting TCP Device [{device_id}] ...')
+        try:
+            self.__polling_devices[device_id] = ModbusTCPDevice(
                 verifier_queue=self.__verifier_queue,
                 connector=self,
                 address=self.__address_cache[device_id],
@@ -168,18 +199,12 @@ class ModbusConnector(Thread, Connector):
                 objects=objects,
                 update_period=update_interval
             )
-        # except ConnectionError as e:
-        #     _log.error(f'Device [{device_id}] connection error: {e}')
-        #     self.__not_connect_devices.add(device_id)
+            _log.info(f'Device [{device_id}] started')
         except Exception as e:
             _log.error(f'Device [{device_id}] starting error: {e}', exc_info=True)
 
-        else:
-            _log.info(f'Device [{device_id}] started')
-
     def __stop_device(self, device_id: int) -> None:
-        """ Stop Modbus device thread
-        """
+        """ Stop Modbus device thread"""
         try:
             _log.debug(f'Device [{device_id}] stopping polling ...')
             self.__polling_devices[device_id].stop_polling()
@@ -205,7 +230,7 @@ class ModbusConnector(Thread, Connector):
         else:
             _log.info(f'Modbus devices [{devices_id}] were stopping')
 
-    def get_devices_objects(self, devices_id: tuple[int],
+    def get_devices_objects(self, devices_id: Sequence[int],
                             obj_types: tuple[ObjType, ...]
                             ) -> dict[int, dict[ObjType, list[dict]]]:
 
@@ -217,7 +242,7 @@ class ModbusConnector(Thread, Connector):
             ))
         return devices_objs
 
-    def get_devices_update_interval(self, devices_id: tuple[int],
+    def get_devices_update_interval(self, devices_id: Sequence[int],
                                     default_update_interval: int = 10) -> dict[int, int]:
         """ Receive update intervals for devices via http client
         """

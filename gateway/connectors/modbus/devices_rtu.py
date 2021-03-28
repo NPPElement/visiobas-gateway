@@ -4,7 +4,6 @@ from multiprocessing import SimpleQueue
 from pathlib import Path
 from threading import Thread
 from time import sleep, time
-from typing import Sequence
 
 from pymodbus.client.sync import ModbusSerialClient
 from pymodbus.constants import Defaults
@@ -23,13 +22,14 @@ class ModbusRTUDevice(Thread):
                  verifier_queue: SimpleQueue,
                  connector,
                  device_id: int,
-                 method: str,
-                 port: str,
-                 unit: int,
-                 baudrate: int,
-                 objects: Sequence[ModbusObject],
-                 poll_period: int = 10,
+                 objects: set[ModbusObject],
 
+                 # method: str,
+                 # port: str,
+                 # unit: int,
+                 # baudrate: int,
+
+                 poll_period: int = 10,
                  **kwargs
                  ):
         super().__init__()
@@ -46,19 +46,19 @@ class ModbusRTUDevice(Thread):
         self._verifier_queue = verifier_queue
         self._connector = connector
 
-        self.method = method
-        self.port = port
-        self.baudrate = baudrate
-
-        self.unit = unit
-        self.objects = objects
-        self.poll_period = poll_period
+        self.method = 'rtu'
+        self.port = kwargs.get('port', 0)
+        self.baudrate = kwargs.get('baudrate', Defaults.Baudrate)
+        self.unit = kwargs.get('unit', 0)
 
         self.stopbits = kwargs.get('stopbits', Defaults.Stopbits)
         self.bytesize = kwargs.get('bytesize', Defaults.Bytesize)
         self.parity = kwargs.get('parity', Defaults.Parity)
         self.timeout = kwargs.get('timeout', Defaults.Timeout)
         self.strict = kwargs.get("strict", False)
+
+        self.objects = objects
+        self.poll_period = poll_period
 
         self._polling = True
         self.client = None
@@ -133,7 +133,7 @@ class ModbusRTUDevice(Thread):
         else:
             self._log.info(f'{self} stopped.')
 
-    def poll(self, objects: Sequence[ModbusObject]) -> None:
+    def poll(self, objects: set[ModbusObject]) -> None:
         for obj in objects:
             try:
                 registers = self.read(obj=obj)

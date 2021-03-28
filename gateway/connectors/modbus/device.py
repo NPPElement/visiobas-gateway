@@ -13,7 +13,7 @@ from gateway.connectors.modbus import (ModbusObject,
 from gateway.logs import get_file_logger
 
 
-class ModbusDevice(Thread):
+class ModbusTCPDevice(Thread):
     __slots__ = ('id', 'address', 'port', 'update_period', '__logger',
                  '__client', '__available_functions',
                  '__connector', '__verifier_queue',
