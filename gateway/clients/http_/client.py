@@ -28,14 +28,14 @@ class VisioBASHTTPClient:
         self._timeout = aiohttp.ClientTimeout(total=self._config.get('timeout', 30))
         self._session = aiohttp.ClientSession(timeout=self.timeout)
 
-        self.get_node = VisioHTTPNode.from_dict(cfg=self._config['get_node'])
-        self.post_nodes = [
+        self._get_node = VisioHTTPNode.from_dict(cfg=self._config['get_node'])
+        self._post_nodes = [
             VisioHTTPNode.from_dict(cfg=list(node.values()).pop()) for
             node in self._config['post']
         ]
 
         self._upd_task = None
-        self._is_authorized = False
+        self._authorized = False
         # self._stopped = False
 
     def __repr__(self) -> str:
@@ -56,8 +56,8 @@ class VisioBASHTTPClient:
         return self._timeout
 
     @property
-    def is_authorized(self) -> bool:
-        return self._is_authorized
+    def authorized(self) -> bool:
+        return self._authorized
 
     @property
     def retry_delay(self) -> int:
@@ -69,7 +69,7 @@ class VisioBASHTTPClient:
 
     @property
     def all_nodes(self) -> list[VisioHTTPNode]:
-        return [self.get_node, *self.post_nodes]
+        return [self._get_node, *self._post_nodes]
 
     async def setup(self) -> None:
         """Wait for authorization then spawn a periodic update task."""
@@ -252,11 +252,11 @@ class VisioBASHTTPClient:
     # todo use async_backoff decorator for retry
     async def authorize(self, retry: int = 60) -> None:
         """Update authorizations and devices data."""
-        while not self._is_authorized:
-            self._is_authorized = await self.login(get_node=self.get_node,
-                                                   post_nodes=self.post_nodes,
-                                                   )
-            if not self._is_authorized:
+        while not self._authorized:
+            self._authorized = await self.login(get_node=self._get_node,
+                                                post_nodes=self._post_nodes,
+                                                )
+            if not self._authorized:
                 await asyncio.sleep(delay=retry)
 
     async def login(self, get_node: VisioHTTPNode,
