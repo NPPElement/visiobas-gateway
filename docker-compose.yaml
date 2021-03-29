@@ -7,11 +7,11 @@ services:
       dockerfile: Dockerfile
     image: vb-gateway:1.0.0
     logging:
-      # driver: none
       driver: "json-file"
-        options:
-          max-file: "2"
-          max-size: "1024k"
+      options:
+        max-file: "2"
+        max-size: "1024k"
+      # driver: none
     restart: always
     user: root
     env_file:
@@ -22,8 +22,8 @@ services:
       - PYTHONPATH=/
 
       # Logging
-      - LOG_LEVEL=INFO
-      - FILE_LOG_LEVEL=INFO
+      - LOG_LEVEL=DEBUG
+      - FILE_LOG_LEVEL=DEBUG
 
       # Provide 'TRUE' or 'FALSE' for enable\disable sending data via protocol
       - HTTP_ENABLE=TRUE
@@ -32,8 +32,8 @@ services:
       - BACNET_DEFAULT_UPDATE_PERIOD=10
       - MODBUS_DEFAULT_UPDATE_PERIOD=10
     volumes:
-      - /opt/visiobas-gateway/gateway:/gateway
-      #- /home/user/visiobas-gateway/gateway:/gateway
+      #- /opt/visiobas-gateway/gateway:/gateway
+      - /home/user/visiobas-gateway/gateway:/gateway
     command: python /gateway/run.py
     ports:
       - 502:502
