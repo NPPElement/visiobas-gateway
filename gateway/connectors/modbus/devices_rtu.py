@@ -65,7 +65,7 @@ class ModbusRTUDevice(Thread):
         self.available_functions = {}
 
     def __repr__(self) -> str:
-        return f'{self.__class__.__name__}[{self.id}]{self.port}/{self.unit}'
+        return f'{self.__class__.__name__}[{self.id}]'
 
     def __len__(self) -> int:
         return len(self.objects)
