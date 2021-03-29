@@ -18,7 +18,7 @@ class VisioBASGateway:
 
         self._stopped: asyncio.Event | None = None
 
-        self.http_client = None
+        self.http_client: VisioBASHTTPClient | None = None
         self.mqtt_client = None
         self.http_api_server = None
         self.verifier = None  # verifier(non-threaded)
@@ -47,7 +47,6 @@ class VisioBASGateway:
         await self._stopped.wait()
 
     async def async_start(self):
-
         await self.add_job(self.async_setup)
         # self.loop.run_forever()
 
@@ -60,7 +59,6 @@ class VisioBASGateway:
             yaml_path=self._cfg_dir / 'http.yaml'
         )
         await self.http_client.setup()
-        # setup http client
         # setup mqtt
         # setup http api server
 
