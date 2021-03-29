@@ -245,7 +245,7 @@ class ModbusConnector(Thread, Connector):
         else:
             _log.info(f'Modbus devices [{devices_id}] were stopping')
 
-    def get_devices_objects(self, device_ids: Iterable[int, ...],
+    def get_devices_objects(self, device_ids: Iterable[int],
                             obj_types: tuple[ObjType, ...]
                             ) -> dict[int, dict[ObjType, list[dict]]]:
 
@@ -257,7 +257,7 @@ class ModbusConnector(Thread, Connector):
             ))
         return devices_objs
 
-    def get_devices_update_interval(self, devices_id: Sequence[int, ...],
+    def get_devices_update_interval(self, devices_id: Sequence[int],
                                     default_update_interval: int = 10) -> dict[int, int]:
         """ Receive update intervals for devices via http client
         """
@@ -287,8 +287,8 @@ class ModbusConnector(Thread, Connector):
 
         return devices_intervals
 
-    def unpack_objects(self, objects: dict[int, dict[ObjType, list[dict]]]) -> \
-            dict[int, set[ModbusObject]]:
+    def unpack_objects(self, objects: dict[int, dict[ObjType, list[dict]]]
+                       ) -> dict[int, set[ModbusObject]]:
         """ Makes BACnetObjects from device structure, received from the server
         """
         devices_objects = {dev_id: set() for dev_id in objects.keys()}
