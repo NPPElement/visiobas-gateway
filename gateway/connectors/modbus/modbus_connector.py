@@ -26,7 +26,7 @@ _log = get_file_logger(logger_name=__name__,
 class ModbusConnector(Thread, Connector):
     __slots__ = ('__config', 'default_update_period', '__gateway', '__verifier_queue',
                  '__connected', '__stopped', '__object_types_to_request',
-                 '__address_cache', '__polling_devices', '__update_intervals'
+                 'address_cache', '__polling_devices', '__update_intervals'
                  )
 
     def __init__(self, gateway,
@@ -54,12 +54,13 @@ class ModbusConnector(Thread, Connector):
         )
 
         # Match device_id with device_address. Example: {200: '10.21.80.12'}
-        self.__address_cache = {}
+        self.address_cache = {}
+        self.rtu_cfg = {}
+
         self.__polling_devices = {}
         # self.__not_connect_devices: set[int, ...] = set()
 
         self.__update_intervals = {}
-        self.rtu_cfg = {}
 
     def __repr__(self) -> str:
         return self.__class__.__name__
@@ -75,7 +76,7 @@ class ModbusConnector(Thread, Connector):
 
     @property
     def tcp_device_ids(self) -> list[int]:
-        return list(self.__address_cache.keys())
+        return list(self.address_cache.keys())
 
     @property
     def rtu_device_ids(self) -> list[int, ...]:
@@ -84,17 +85,31 @@ class ModbusConnector(Thread, Connector):
     def device_ids(self) -> list[int, ...]:
         return list(*self.rtu_device_ids, *self.tcp_device_ids)
 
+    def read_devices_config(self) -> bool:
+        """Read Modbus devices configuration.
+
+        Returns True if there are devices to continue working."""
+        address_cache_path = _base_path / 'connectors/modbus/address_cache'
+        try:
+            self.address_cache = self.read_address_cache(
+                address_cache_path=address_cache_path)
+        except FileNotFoundError:
+            _log.warning(f'Not found {address_cache_path}')
+
+        rtu_path = _base_path / 'connectors/modbus/rtu.yaml'
+        try:
+            self.rtu_cfg = self.read_rtu_yaml(yaml_path=rtu_path)
+        except FileNotFoundError:
+            _log.warning(f'Not found {rtu_path}')
+
+        return bool(self.device_ids)
+
     def run(self):
         _log.info(f'{self} starting ...')
         while not self.__stopped:
-
-            # base_dir = Path(__file__).resolve().parent.parent.parent
-            address_cache_path = _base_path / 'connectors/modbus/address_cache'
-            self.__address_cache = self.read_address_cache(
-                address_cache_path=address_cache_path)
-
-            self.rtu_cfg = self.read_rtu_yaml(
-                yaml_path=_base_path / 'connectors/modbus/rtu.yaml')
+            if not self.read_devices_config():
+                sleep(60*60)
+                continue
 
             # stop irrelevant devices
             irrelevant_devices_id = tuple(set(self.__polling_devices.keys()) - set(
@@ -194,7 +209,7 @@ class ModbusConnector(Thread, Connector):
             self.__polling_devices[device_id] = ModbusTCPDevice(
                 verifier_queue=self.__verifier_queue,
                 connector=self,
-                address=self.__address_cache[device_id],
+                address=self.address_cache[device_id],
                 device_id=device_id,
                 objects=objects,
                 update_period=update_interval
