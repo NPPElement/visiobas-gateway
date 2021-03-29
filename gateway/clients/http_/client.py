@@ -18,15 +18,15 @@ class VisioBASHTTPClient:
     """Control interactions via HTTP."""
 
     # URL's # todo: add format brackets
-    auth_url = '/auth/rest/login'
-    logout_url = '/auth/secure/logout'
-    post_device_url = '/vbas/gate/light/'
+    _AUTH_URL = '/auth/rest/login'
+    _LOGOUT_URL = '/auth/secure/logout'
+    _POST_LIGHT_URL = '/vbas/gate/light/'
 
     def __init__(self, gateway, config: dict):
         self.gateway = gateway
         self._config = config
         self._timeout = aiohttp.ClientTimeout(total=self._config.get('timeout', 30))
-        self.session = aiohttp.ClientSession(timeout=self.timeout)
+        self._session = aiohttp.ClientSession(timeout=self.timeout)
 
         self.get_node = VisioHTTPNode.from_dict(cfg=self._config['get_node'])
         self.post_nodes = [
@@ -72,19 +72,17 @@ class VisioBASHTTPClient:
         return [self.get_node, *self.post_nodes]
 
     async def setup(self) -> None:
-        async with self.session as session:
-            await self.authorize(session=session, retry=self.retry_delay)
-            self._upd_task = self.gateway.loop.create_task(
-                self.periodic_update(session=session))
+        """Wait for authorization then spawn a periodic update task."""
+        await self.authorize(retry=self.retry_delay)
+        self._upd_task = self.gateway.loop.create_task(self.periodic_update())
 
-    async def periodic_update(self, session: aiohttp.ClientSession) -> None:
+    async def periodic_update(self) -> None:
         """Perform periodically reauthorize."""
         await asyncio.sleep(delay=self.upd_delay)
         # todo kill/wait pending tasks
-        await self.logout(nodes=self.all_nodes, session=session)
-        await self.authorize(session=session, retry=self.retry_delay)
-        self._upd_task = self.gateway.loop.create_task(
-            self.periodic_update(session=session))
+        await self.logout(nodes=self.all_nodes)
+        await self.authorize(retry=self.retry_delay)
+        self._upd_task = self.gateway.loop.create_task(self.periodic_update())
 
     # async def run_http_post_loop(self, queue: asyncio.Queue,
     #                              post_nodes: Iterable[VisioHTTPNode],
@@ -153,27 +151,23 @@ class VisioBASHTTPClient:
     # ]
     # _ = await asyncio.gather(*upd_connector_coros)
 
-    async def upd_connector(self, node: VisioHTTPNode,
-                            connector: BaseConnector,
-                            session) -> bool:
+    async def upd_connector(self, node: VisioHTTPNode, connector: BaseConnector) -> bool:
         """Update all devices into connector.
         :param node:
         :param connector:
-        :param session:
         :return: is update successful
         """
         try:
             # Clear the read_address_cache cache to read the updated `address_cache` file.
             # read_address_cache.clear_cache() FIXME!!
 
-            upd_coros = [self.upd_device(node=node,
+            upd_tasks = [self.upd_device(node=node,
                                          device_id=dev_id,
                                          obj_types=connector.obj_types_to_request,
                                          connector=connector,
-                                         session=session
                                          ) for dev_id in connector.address_cache_ids]
 
-            _ = await asyncio.gather(*upd_coros)
+            _ = await asyncio.gather(*upd_tasks)
             # todo check results
             return True
 
@@ -189,9 +183,7 @@ class VisioBASHTTPClient:
 
     async def upd_device(self, node: VisioHTTPNode,
                          device_id: int, obj_types: Iterable[ObjType],
-                         connector: BaseConnector,
-                         session) -> bool:
-
+                         connector: BaseConnector) -> bool:
         # todo: implement data factory param?
         """Perform request objects of each types for device by id.
         Then resend data about device to connector.
@@ -199,7 +191,6 @@ class VisioBASHTTPClient:
         :param device_id:
         :param obj_types:
         :param connector:
-        :param session:
         :return: is device updated successfully
         """
         try:
@@ -210,7 +201,6 @@ class VisioBASHTTPClient:
                 self._rq(method='GET',
                          url=(f'{node.cur_server.base_url}'
                               f'/vbas/gate/get/{device_id}/{obj_type.name_dashed}'),
-                         session=session,
                          headers=node.cur_server.auth_headers
                          ) for obj_type in obj_types
             ]
@@ -231,18 +221,15 @@ class VisioBASHTTPClient:
                        )
             return False
 
-    async def logout(self, nodes: Iterable[VisioHTTPNode],
-                     session: aiohttp.ClientSession) -> bool:
+    async def logout(self, nodes: Iterable[VisioHTTPNode]) -> bool:
         """Perform log out from nodes.
         :param nodes:
-        :param session:
         :return: is logout successful
         """
         _log.debug(f'Logging out from: {nodes} ...')
         try:
             logout_tasks = [self._rq(method='GET',
-                                     url=node.cur_server.base_url + self.logout_url,
-                                     session=session,
+                                     url=node.cur_server.base_url + self._LOGOUT_URL,
                                      headers=node.cur_server.auth_headers
                                      ) for node in nodes]
             res = await asyncio.gather(*logout_tasks)
@@ -263,30 +250,27 @@ class VisioBASHTTPClient:
             return False
 
     # todo use async_backoff decorator for retry
-    async def authorize(self, session: aiohttp.ClientSession, retry: int = 60) -> None:
+    async def authorize(self, retry: int = 60) -> None:
         """Update authorizations and devices data."""
         while not self._is_authorized:
             self._is_authorized = await self.login(get_node=self.get_node,
                                                    post_nodes=self.post_nodes,
-                                                   session=session
                                                    )
             if not self._is_authorized:
                 await asyncio.sleep(delay=retry)
 
     async def login(self, get_node: VisioHTTPNode,
-                    post_nodes: Iterable[VisioHTTPNode],
-                    session: aiohttp.ClientSession) -> bool:
+                    post_nodes: Iterable[VisioHTTPNode]) -> bool:
         """Perform authorization to all nodes.
         :param get_node:
         :param post_nodes:
-        :param session:
         :return: can continue with current authorizations
         """
         _log.debug(f'Logging in to {get_node}, {post_nodes} ...')
 
         res = await asyncio.gather(
-            self._login_node(node=get_node, session=session),
-            *[self._login_node(node=node, session=session) for node in post_nodes]
+            self._login_node(node=get_node),
+            *[self._login_node(node=node) for node in post_nodes]
         )
         is_get_authorized = res[0]
         is_post_authorized = any(res[1:])
@@ -298,23 +282,17 @@ class VisioBASHTTPClient:
             _log.warning('Failed authorizations!')
         return successfully_authorized
 
-    async def _login_node(self, node: VisioHTTPNode,
-                          session: aiohttp.ClientSession) -> bool:
+    async def _login_node(self, node: VisioHTTPNode) -> bool:
         """Perform authorization to node (primary server or mirror)
         :param node: node on witch the authorization is performed
-        :param session:
         :return: is node authorized
         """
         _log.debug(f'Authorization to {node} ...')
         try:
-            is_authorized = await self._login_server(server=node.cur_server,
-                                                     session=session
-                                                     )
+            is_authorized = await self._login_server(server=node.cur_server)
             if not is_authorized:
                 node.switch_to_mirror()
-                is_authorized = await self._login_server(server=node.cur_server,
-                                                         session=session
-                                                         )
+                is_authorized = await self._login_server(server=node.cur_server)
             if is_authorized:
                 _log.info(f'Successfully authorized to {node}')
             else:
@@ -326,23 +304,20 @@ class VisioBASHTTPClient:
         finally:
             return node.is_authorized
 
-    async def _login_server(self, server: VisioHTTPConfig,
-                            session: aiohttp.ClientSession) -> bool:
+    async def _login_server(self, server: VisioHTTPConfig) -> bool:
         """Perform authorization to server.
         :param server: server on which the authorization is performed
-        :param session:
         :return: is server authorized
         """
         if server.is_authorized:
             return True
 
         _log.debug(f'Authorization to {server}...')
-        auth_url = server.base_url + self.auth_url
+        auth_url = server.base_url + self._AUTH_URL
         try:
             auth_data = await self._rq(method='POST',
                                        url=auth_url,
-                                       json=server.auth_payload,
-                                       session=session
+                                       json=server.auth_payload
                                        )
             server.set_auth_data(bearer_token=auth_data['token'],
                                  user_id=auth_data['user_id'],
@@ -362,21 +337,18 @@ class VisioBASHTTPClient:
             return server.is_authorized
 
     async def post_device(self, nodes: Iterable[VisioHTTPNode],
-                          device_id: int, data: str,
-                          session: aiohttp.ClientSession) -> bool:
+                          device_id: int, data: str) -> bool:
         """Perform POST requests with data to nodes.
         :param nodes:
         :param device_id:
         :param data:
-        :param session:
         :return: is POST requests successful
         """
         try:
             post_tasks = [
                 self._rq(
                     method='POST',
-                    url=f'{node.cur_server.base_url}{self.post_device_url}{device_id}',
-                    session=session,
+                    url=f'{node.cur_server.base_url}{self._POST_LIGHT_URL}{device_id}',
                     headers=node.cur_server.auth_headers,
                     data=data
                 ) for node in nodes
@@ -390,13 +362,13 @@ class VisioBASHTTPClient:
                          )
             return False
 
-    async def _rq(self, method: str, url: str, session, **kwargs) -> list or dict:
+    async def _rq(self, method: str, url: str, **kwargs) -> list or dict:
         """Perform HTTP request and check response.
         :return: extracted data
         """
         # todo: need re-raise?
         _log.debug(f'{method}: {url}')
-        async with session.request(method=method, url=url, **kwargs) as resp:
+        async with self._session.request(method=method, url=url, **kwargs) as resp:
             data = await self._extract_response_data(response=resp)
             return data
 
