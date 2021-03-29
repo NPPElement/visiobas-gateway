@@ -84,7 +84,10 @@ class ModbusConnector(Thread, Connector):
 
     @property
     def device_ids(self) -> list[int, ...]:
-        return list(*self.rtu_device_ids, *self.tcp_device_ids)
+        device_ids = self.rtu_device_ids.copy()
+        device_ids.extend(self.tcp_device_ids)
+        return device_ids
+        # return list(*self.rtu_device_ids, *self.tcp_device_ids)
 
     def read_devices_config(self) -> bool:
         """Read Modbus devices configuration.
