@@ -4,7 +4,7 @@ from multiprocessing import SimpleQueue
 from pathlib import Path
 from threading import Thread
 from time import sleep
-from typing import Sequence
+from typing import Sequence, Iterable
 
 from aiohttp.web_exceptions import HTTPServerError, HTTPClientError
 
@@ -108,7 +108,7 @@ class ModbusConnector(Thread, Connector):
         _log.info(f'{self} starting ...')
         while not self.__stopped:
             if not self.read_devices_config():
-                sleep(60*60)
+                sleep(60 * 60)
                 continue
 
             # stop irrelevant devices
@@ -119,7 +119,7 @@ class ModbusConnector(Thread, Connector):
 
             try:  # Requesting objects and their types from the server
                 devices_objects = self.get_devices_objects(
-                    devices_id=self.device_ids,
+                    device_ids=self.device_ids,
                     obj_types=self.__object_types_to_request)
 
                 if devices_objects:  # If received devices with objects from the server
@@ -245,19 +245,19 @@ class ModbusConnector(Thread, Connector):
         else:
             _log.info(f'Modbus devices [{devices_id}] were stopping')
 
-    def get_devices_objects(self, devices_id: Sequence[int],
+    def get_devices_objects(self, device_ids: Iterable[int, ...],
                             obj_types: tuple[ObjType, ...]
                             ) -> dict[int, dict[ObjType, list[dict]]]:
 
         devices_objs = asyncio.run(
             self.__gateway.http_client.rq_devices_objects(
                 get_server_data=self.__gateway.http_client.get_server_data,
-                devices_id=devices_id,
+                devices_id=device_ids,
                 obj_types=obj_types
             ))
         return devices_objs
 
-    def get_devices_update_interval(self, devices_id: Sequence[int],
+    def get_devices_update_interval(self, devices_id: Sequence[int, ...],
                                     default_update_interval: int = 10) -> dict[int, int]:
         """ Receive update intervals for devices via http client
         """

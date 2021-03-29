@@ -3,6 +3,7 @@ from multiprocessing import SimpleQueue
 from pathlib import Path
 from threading import Thread
 from time import sleep
+from typing import Iterable
 
 from aiohttp import ClientConnectorError, ClientSession, ClientResponse
 
@@ -206,7 +207,7 @@ class VisioHTTPClient(Thread):
         return device_objects
 
     async def rq_devices_objects(self, get_server_data: VisioHTTPServerConfig,
-                                 devices_id: tuple[int],
+                                 devices_id: Iterable[int],
                                  obj_types: tuple[ObjType]
                                  ) -> dict[int, dict[ObjType, list[dict]]]:
         """ Requests types of objects for each device_id.

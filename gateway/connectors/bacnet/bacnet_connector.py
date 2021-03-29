@@ -4,6 +4,7 @@ from multiprocessing import SimpleQueue
 from pathlib import Path
 from threading import Thread
 from time import sleep
+from typing import Iterable
 
 from BAC0 import lite
 from BAC0.core.io.IOExceptions import InitializationError, NetworkInterfaceException
@@ -86,13 +87,13 @@ class BACnetConnector(Thread, Connector):
         _log.info(f'{self} starting ...')
         while not self.__stopped:
             if not self.read_devices_config():
-                sleep(60*60)
+                sleep(60 * 60)
                 continue
 
             if len(self.__polling_devices) > 0:
                 # Check irrelevant devices. Stop them, if found
                 irrelevant_devices_id = tuple(set(self.__polling_devices.keys()) - set(
-                    self.address_cache.keys()))
+                    self.device_ids))
                 if irrelevant_devices_id:
                     self.__stop_devices(devices_id=irrelevant_devices_id)
 
@@ -100,7 +101,7 @@ class BACnetConnector(Thread, Connector):
                 try:  # Requesting objects and their types from the server
                     # FIXME: move to client?
                     devices_objects = self.get_devices_objects(
-                        devices_id=tuple(self.address_cache.keys()),
+                        device_ids=self.device_ids,
                         obj_types=self.__types_to_request)
 
                     if devices_objects:  # If received devices with objects from the server
@@ -110,7 +111,7 @@ class BACnetConnector(Thread, Connector):
                                   )
 
                         self.__update_intervals = self.get_devices_update_interval(
-                            devices_id=tuple(self.address_cache.keys()),
+                            devices_id=self.device_ids,
                             default_update_interval=self.default_update_period
                         )
                         _log.info('Received update intervals for devices. '
@@ -226,18 +227,18 @@ class BACnetConnector(Thread, Connector):
         except Exception as e:
             _log.error(f'Device stopping error: {e}')
 
-    def get_devices_objects(self, devices_id: tuple[int],
+    def get_devices_objects(self, device_ids: Iterable[int],
                             obj_types: tuple) -> dict[int, dict[ObjType, list[dict]]]:
         """ Requests objects for modbus connector from server via http client """
         devices_objs = asyncio.run(
             self.__gateway.http_client.rq_devices_objects(
                 get_server_data=self.__gateway.http_client.get_server_data,
-                devices_id=devices_id,
+                devices_id=device_ids,
                 obj_types=obj_types
             ))
         return devices_objs
 
-    def get_devices_update_interval(self, devices_id: tuple[int],
+    def get_devices_update_interval(self, devices_id: Iterable[int],
                                     default_update_interval: int) -> dict[int, int]:
         """ Receive update intervals for devices via http client """
         device_objs = asyncio.run(
