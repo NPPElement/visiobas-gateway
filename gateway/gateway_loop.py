@@ -2,8 +2,15 @@ import asyncio
 from pathlib import Path
 from typing import Callable, Any
 
+from gateway.clients import VisioBASHTTPClient
+
 
 class VisioBASGateway:
+    """VisioBAS IoT Gateway."""
+
+    _base_dir = Path(__file__).resolve().parent
+    _cfg_dir = _base_dir / 'config'
+
     def __init__(self, config: dict):
         self.loop = asyncio.get_running_loop()
         # self._pending_tasks: list = []
@@ -45,9 +52,14 @@ class VisioBASGateway:
         # self.loop.run_forever()
 
     async def async_setup(self):
-        """Set up Gateway."""
-        pass
-        # todo use add_job for all
+        """Set up Gateway.
+
+        Note: Used gateway.add_job in all to start serve."""
+        self.http_client = VisioBASHTTPClient.from_yaml(
+            gateway=self,
+            yaml_path=self._cfg_dir / 'http.yaml'
+        )
+        await self.http_client.setup()
         # setup http client
         # setup mqtt
         # setup http api server

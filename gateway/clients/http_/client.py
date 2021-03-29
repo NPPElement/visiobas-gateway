@@ -1,6 +1,5 @@
 import asyncio
 from logging import getLogger
-# import atexit
 from pathlib import Path
 from typing import Iterable
 
@@ -11,14 +10,11 @@ from .http_node import VisioHTTPNode
 from ...connectors import BaseConnector
 from ...models import ObjType
 
-# from ...utils import read_address_cache
-
 _log = getLogger(__name__)
-
 _base_path = Path(__file__).resolve().parent.parent.parent
 
 
-class VisioHTTPClient:
+class VisioBASHTTPClient:
     """Control interactions via HTTP."""
 
     # URL's # todo: add format brackets
@@ -39,8 +35,6 @@ class VisioHTTPClient:
         ]
 
         self._upd_task = None
-
-        # self.session = None  # todo: keep one session?
         self._is_authorized = False
         # self._stopped = False
 
@@ -48,14 +42,14 @@ class VisioHTTPClient:
         return self.__class__.__name__
 
     @classmethod
-    def from_yaml(cls, yaml_path: Path):
+    def from_yaml(cls, gateway, yaml_path: Path) -> dict | list:
         """Create HTTP client with configuration read from YAML file."""
         import yaml
 
         with yaml_path.open() as cfg_file:
             config = yaml.load(cfg_file, Loader=yaml.FullLoader)
             _log.info(f'Creating {cls.__name__} from {yaml_path} ...')
-        return cls(config=config)
+        return cls(gateway=gateway, config=config)
 
     @property
     def timeout(self) -> aiohttp.ClientTimeout:

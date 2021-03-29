@@ -6,7 +6,7 @@ from pathlib import Path
 from aiomisc import entrypoint
 
 from gateway.api import VisioGatewayApiService
-from gateway.clients import VisioHTTPClient, VisioMQTTClient
+from gateway.clients import VisioBASHTTPClient, VisioMQTTClient
 from gateway.connectors import BACnetConnector, ModbusConnector
 from gateway.verifier import BACnetVerifier
 
@@ -69,7 +69,7 @@ class VisioGateway:
                                        )
         self.verifier.start()
 
-        self.http_client = VisioHTTPClient.from_yaml(
+        self.http_client = VisioBASHTTPClient.from_yaml(
             gateway=self,
             getting_queue=self._verifier_http_queue,
             yaml_path=_base_path / 'config/http.yaml'
