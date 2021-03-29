@@ -1,139 +1,126 @@
 import asyncio
 from logging import getLogger
 # import atexit
-from multiprocessing import SimpleQueue
 from pathlib import Path
-from threading import Thread
-from time import sleep
 from typing import Iterable
 
 import aiohttp
-from aiomisc import awaitable
 
 from .http_config import VisioHTTPConfig
 from .http_node import VisioHTTPNode
 from ...connectors import BaseConnector
 from ...models import ObjType
+
 # from ...utils import read_address_cache
-from ...models import BACnetObjModel
 
 _log = getLogger(__name__)
 
 _base_path = Path(__file__).resolve().parent.parent.parent
 
 
-class VisioHTTPClient(Thread):
+class VisioHTTPClient:
     """Control interactions via HTTP."""
 
-    def __init__(self, gateway, getting_queue: SimpleQueue, config: dict):
-        super().__init__()
-        self.setName(name=f'{self}-Thread')
-        self.setDaemon(True)
+    # URL's # todo: add format brackets
+    auth_url = '/auth/rest/login'
+    logout_url = '/auth/secure/logout'
+    post_device_url = '/vbas/gate/light/'
 
-        self._gateway = gateway
-        self._getting_queue = getting_queue
+    def __init__(self, gateway, config: dict):
+        self.gateway = gateway
         self._config = config
-
-        self._timeout = aiohttp.ClientTimeout(total=self._config.get('timeout', 60))
-
-        self.run_send_loop = self.run_http_post_loop  # fixme
+        self._timeout = aiohttp.ClientTimeout(total=self._config.get('timeout', 30))
+        self.session = aiohttp.ClientSession(timeout=self.timeout)
 
         self.get_node = VisioHTTPNode.from_dict(cfg=self._config['get_node'])
-
         self.post_nodes = [
-            VisioHTTPNode.from_dict(cfg=list(node.values()).pop()) for node in
-            self._config['post']
+            VisioHTTPNode.from_dict(cfg=list(node.values()).pop()) for
+            node in self._config['post']
         ]
+
+        self._upd_task = None
 
         # self.session = None  # todo: keep one session?
         self._is_authorized = False
-        self._stopped = False
+        # self._stopped = False
 
     def __repr__(self) -> str:
         return self.__class__.__name__
 
     @classmethod
-    def from_yaml(cls, gateway, getting_queue: SimpleQueue,
-                  yaml_path: Path, test_modbus: bool = False):
+    def from_yaml(cls, yaml_path: Path):
         """Create HTTP client with configuration read from YAML file."""
         import yaml
 
         with yaml_path.open() as cfg_file:
-            http_cfg = yaml.load(cfg_file, Loader=yaml.FullLoader)
+            config = yaml.load(cfg_file, Loader=yaml.FullLoader)
             _log.info(f'Creating {cls.__name__} from {yaml_path} ...')
+        return cls(config=config)
 
-        return cls(gateway=gateway,
-                   getting_queue=getting_queue,
-                   config=http_cfg
-                   )
+    @property
+    def timeout(self) -> aiohttp.ClientTimeout:
+        return self._timeout
 
-    def run(self) -> None:
-        """Start async run_main_loop."""
-        _log.info(f'{self} starting ...')
+    @property
+    def is_authorized(self) -> bool:
+        return self._is_authorized
 
-        while not self._stopped:
-            try:
-                asyncio.run(self.start_loop())
-            except Exception as e:
-                _log.error(f'Main loop error: {e}',
-                           exc_info=True
-                           )
+    @property
+    def retry_delay(self) -> int:
+        return self._config['delay'].get('retry', 60)
 
-    async def start_loop(self) -> None:
-        """Main loop."""
-        # self.start_event.set()
+    @property
+    def upd_delay(self) -> int:
+        return self._config['delay'].get('update', 60 * 60)
 
-        async with aiohttp.ClientSession(timeout=self._timeout) as session:
-            # todo keep one session
-            while not self._stopped:
-                # Authorize to nodes. Request data then give it to connectors.
-                await self.update(session=session)
+    @property
+    def all_nodes(self) -> list[VisioHTTPNode]:
+        return [self.get_node, *self.post_nodes]
 
-                # Receive data from verifier, then send it via HTTP or websocket
-                await self.run_send_loop(queue=self._getting_queue,
-                                         post_nodes=self.post_nodes,
-                                         session=session
-                                         )
-                await asyncio.sleep(self._config.get('interval').get('update', 60 * 60))
-                self._stopped = True  # Exit from send loop?
-                # task.cancel()
+    async def setup(self) -> None:
+        async with self.session as session:
+            await self.authorize(session=session, retry=self.retry_delay)
+            self._upd_task = self.gateway.loop.create_task(
+                self.periodic_update(session=session))
 
-                await self.logout(nodes=[self.get_node, *self.post_nodes])
-                self._stopped = False
-            else:
-                _log.info(f'{self} stopped.')
+    async def periodic_update(self, session: aiohttp.ClientSession) -> None:
+        """Perform periodically reauthorize."""
+        await asyncio.sleep(delay=self.upd_delay)
+        # todo kill/wait pending tasks
+        await self.logout(nodes=self.all_nodes, session=session)
+        await self.authorize(session=session, retry=self.retry_delay)
+        self._upd_task = self.gateway.loop.create_task(
+            self.periodic_update(session=session))
 
-    async def run_http_post_loop(self, queue: SimpleQueue,
-                                 post_nodes: Iterable[VisioHTTPNode],
-                                 session
-                                 ) -> None:
-        """Listen queue from verifier.
-        When receive data from verifier - send it to nodes via HTTP.
-
-        Designed as an endless loop. Can be stopped from gateway thread.
-        """
-        _log.info('Sending via HTTP loop started')
-        # Loop that receive data from verifier then send it to nodes via HTTP.
-        while not self._stopped:
-            try:
-                async_get = awaitable(queue.get)
-
-                device_id, device_str = await async_get()
-                _log.debug('Received data from BACnetVerifier: '
-                           f'Device[{device_id}]'
-                           )
-                # todo: change to fire and forget?
-                _ = await self.post_device(nodes=post_nodes,
-                                           device_id=device_id,
-                                           data=device_str,
-                                           session=session
-                                           )
-            except Exception as e:
-                _log.error(f"Receive or post error: {e}",
-                           exc_info=True
-                           )
-        else:  # received stop signal
-            _log.info(f'{self} stopped.')
+    # async def run_http_post_loop(self, queue: asyncio.Queue,
+    #                              post_nodes: Iterable[VisioHTTPNode],
+    #                              session
+    #                              ) -> None:
+    #     """Listen queue from verifier.
+    #     When receive data from verifier - send it to nodes via HTTP.
+    #
+    #     Designed as an endless loop. Can be stopped from gateway thread.
+    #     """
+    #     _log.info('Sending via HTTP loop started')
+    #     # Loop that receive data from verifier then send it to nodes via HTTP.
+    #     while not self._stopped:
+    #         try:
+    #             device_id, device_str = await queue.get()
+    #             _log.debug('Received data from BACnetVerifier: '
+    #                        f'Device[{device_id}]'
+    #                        )
+    #             # todo: change to fire and forget?
+    #             _ = await self.post_device(nodes=post_nodes,
+    #                                        device_id=device_id,
+    #                                        data=device_str,
+    #                                        session=session
+    #                                        )
+    #         except Exception as e:
+    #             _log.error(f"Receive or post error: {e}",
+    #                        exc_info=True
+    #                        )
+    #     else:  # received stop signal
+    #         _log.info(f'{self} stopped.')
 
     # async def run_ws_send_loop(self, queue: SimpleQueue,
     #                            post_nodes: Iterable[VisioHTTPNode],
@@ -163,21 +150,14 @@ class VisioHTTPClient(Thread):
     #         self.logout(nodes=[self.get_node, *self.post_nodes])
     #     )
 
-    async def update(self, session) -> None:
-        """Update authorizations and devices data."""
-        while not self._is_authorized:
-            self._is_authorized = await self.login(get_node=self.get_node,
-                                                   post_nodes=self.post_nodes,
-                                                   session=session
-                                                   )
-        # Request all devices then send data to connectors
-        upd_connector_coros = [
-            self.upd_connector(node=self.get_node,
-                               connector=connector,
-                               session=session
-                               ) for connector in self._gateway.connectors.values()
-        ]
-        _ = await asyncio.gather(*upd_connector_coros)
+    # Request all devices then send data to connectors
+    # upd_connector_coros = [
+    #     self.upd_connector(node=self.get_node,
+    #                        connector=connector,
+    #                        session=session
+    #                        ) for connector in self._gateway.connectors.values()
+    # ]
+    # _ = await asyncio.gather(*upd_connector_coros)
 
     async def upd_connector(self, node: VisioHTTPNode,
                             connector: BaseConnector,
@@ -258,42 +238,50 @@ class VisioHTTPClient(Thread):
             return False
 
     async def logout(self, nodes: Iterable[VisioHTTPNode],
-                     # session
-                     ) -> bool:
-        """Perform log out from all nodes.
+                     session: aiohttp.ClientSession) -> bool:
+        """Perform log out from nodes.
         :param nodes:
-        #:param session:
+        :param session:
         :return: is logout successful
         """
-        logout_url = '/auth/secure/logout'  # todo move to class attr?
         _log.debug(f'Logging out from: {nodes} ...')
-        async with aiohttp.ClientSession(timeout=self._timeout) as session:
-            try:
-                logout_coros = [self._rq(method='GET',
-                                         url=node.cur_server.base_url + logout_url,
-                                         session=session,
-                                         headers=node.cur_server.auth_headers
-                                         ) for node in nodes]
-                res = await asyncio.gather(*logout_coros)
+        try:
+            logout_tasks = [self._rq(method='GET',
+                                     url=node.cur_server.base_url + self.logout_url,
+                                     session=session,
+                                     headers=node.cur_server.auth_headers
+                                     ) for node in nodes]
+            res = await asyncio.gather(*logout_tasks)
 
-                # # clean auth data
-                # [node.cur_server.delete_auth_data() for node in nodes]
+            # forget auth data
+            [node.cur_server.clear_auth_data() for node in nodes]
 
-                _log.info(f'Logout from {nodes}: {res}')
-                return True
+            _log.info(f'Logout from {nodes}: {res}')
+            return True
 
-            except aiohttp.ClientResponseError as e:
-                _log.warning(f'Logout was failed: {e}')
-                return False
-            except Exception as e:
-                _log.error(f'Logout error: {e}',
-                           exc_info=True
-                           )
-                return False
+        except aiohttp.ClientResponseError as e:
+            _log.warning(f'Failure logout: {e}')
+            return False
+        except Exception as e:
+            _log.error(f'Logout error: {e}',
+                       exc_info=True
+                       )
+            return False
+
+    # todo use async_backoff decorator for retry
+    async def authorize(self, session: aiohttp.ClientSession, retry: int = 60) -> None:
+        """Update authorizations and devices data."""
+        while not self._is_authorized:
+            self._is_authorized = await self.login(get_node=self.get_node,
+                                                   post_nodes=self.post_nodes,
+                                                   session=session
+                                                   )
+            if not self._is_authorized:
+                await asyncio.sleep(delay=retry)
 
     async def login(self, get_node: VisioHTTPNode,
                     post_nodes: Iterable[VisioHTTPNode],
-                    session) -> bool:
+                    session: aiohttp.ClientSession) -> bool:
         """Perform authorization to all nodes.
         :param get_node:
         :param post_nodes:
@@ -302,13 +290,10 @@ class VisioHTTPClient(Thread):
         """
         _log.debug(f'Logging in to {get_node}, {post_nodes} ...')
 
-        res = await asyncio.gather(self._login_node(node=get_node,
-                                                    session=session
-                                                    ),
-                                   *[self._login_node(node=node,
-                                                      session=session
-                                                      ) for node in post_nodes]
-                                   )
+        res = await asyncio.gather(
+            self._login_node(node=get_node, session=session),
+            *[self._login_node(node=node, session=session) for node in post_nodes]
+        )
         is_get_authorized = res[0]
         is_post_authorized = any(res[1:])
         successfully_authorized = bool(is_get_authorized and is_post_authorized)
@@ -316,22 +301,17 @@ class VisioHTTPClient(Thread):
         if successfully_authorized:
             _log.info(f'Successfully authorized to {get_node}, {post_nodes}')
         else:
-            next_attempt = self._config['interval']['next_attempt']
-            _log.warning("Failed authorizations! Next attempt after "
-                         f"{next_attempt} seconds."
-                         )
-            sleep(next_attempt)
-
+            _log.warning('Failed authorizations!')
         return successfully_authorized
 
     async def _login_node(self, node: VisioHTTPNode,
-                          session) -> bool:
-        """Perform authorization to node (primary server + mirror)
+                          session: aiohttp.ClientSession) -> bool:
+        """Perform authorization to node (primary server or mirror)
         :param node: node on witch the authorization is performed
         :param session:
         :return: is node authorized
         """
-        _log.info(f'Authorization to {node} ...')
+        _log.debug(f'Authorization to {node} ...')
         try:
             is_authorized = await self._login_server(server=node.cur_server,
                                                      session=session
@@ -342,9 +322,9 @@ class VisioHTTPClient(Thread):
                                                          session=session
                                                          )
             if is_authorized:
-                _log.info(f'Successfully authorized on {node}')
+                _log.info(f'Successfully authorized to {node}')
             else:
-                _log.warning(f'Failed authorization on {node}')
+                _log.warning(f'Failed authorization to {node}')
         except Exception as e:
             _log.warning(f'Authorization error! Please check {node}: {e}',
                          exc_info=True
@@ -353,7 +333,7 @@ class VisioHTTPClient(Thread):
             return node.is_authorized
 
     async def _login_server(self, server: VisioHTTPConfig,
-                            session) -> bool:
+                            session: aiohttp.ClientSession) -> bool:
         """Perform authorization to server.
         :param server: server on which the authorization is performed
         :param session:
@@ -362,10 +342,8 @@ class VisioHTTPClient(Thread):
         if server.is_authorized:
             return True
 
-        _log.info(f'Authorization to {server}...',
-                  # extra={'server': server}
-                  )
-        auth_url = server.base_url + '/auth/rest/login'
+        _log.debug(f'Authorization to {server}...')
+        auth_url = server.base_url + self.auth_url
         try:
             auth_data = await self._rq(method='POST',
                                        url=auth_url,
@@ -377,27 +355,21 @@ class VisioHTTPClient(Thread):
                                  auth_user_id=auth_data['auth_user_id']
                                  )
             if server.is_authorized:
-                _log.info(f'Successful authorization to {server}',
-                          # extra={'server': server}
-                          )
+                _log.debug(f'Successfully authorization to {server}')
             else:
-                _log.warning(f'Failed authorization to {server}',
-                             # extra={'server': server}
-                             )
+                _log.warning(f'Failed authorization to {server}')
         except aiohttp.ClientError as e:
-            _log.warning(f'Failed authorization to {server}: {e}',
-                         # extra={'server': server}
-                         )
+            _log.warning(f'Failed authorization to {server}: {e}')
         except Exception as e:
             _log.error(f'Authorization to {server} error: {e}',
-                       # extra={'server': server},
                        exc_info=True
                        )
         finally:
             return server.is_authorized
 
     async def post_device(self, nodes: Iterable[VisioHTTPNode],
-                          device_id: int, data: str, session) -> bool:
+                          device_id: int, data: str,
+                          session: aiohttp.ClientSession) -> bool:
         """Perform POST requests with data to nodes.
         :param nodes:
         :param device_id:
@@ -406,19 +378,20 @@ class VisioHTTPClient(Thread):
         :return: is POST requests successful
         """
         try:
-            post_coros = [self._rq(method='POST',
-                                   url=(f'{node.cur_server.base_url}'
-                                        f'/vbas/gate/light/{device_id}'),
-                                   session=session,
-                                   headers=node.cur_server.auth_headers,
-                                   data=data
-                                   ) for node in nodes
-                          ]
-            _ = await asyncio.gather(*post_coros)
-            _log.debug(f'Successfully sent [{device_id}] to {nodes}')
+            post_tasks = [
+                self._rq(
+                    method='POST',
+                    url=f'{node.cur_server.base_url}{self.post_device_url}{device_id}',
+                    session=session,
+                    headers=node.cur_server.auth_headers,
+                    data=data
+                ) for node in nodes
+            ]
+            _ = await asyncio.gather(*post_tasks)
+            _log.debug(f'Successfully sent [{device_id}]\'s data to {nodes}')
             return True
         except Exception as e:
-            _log.warning(f'Sending device error: {e}',
+            _log.warning(f'Failed to send: {e}',
                          exc_info=True
                          )
             return False
@@ -439,8 +412,6 @@ class VisioHTTPClient(Thread):
         :param response: server's response
         :return: response['data'] field after checks
         """
-        # todo make decorator
-
         response.raise_for_status()
 
         if response.status == 200:

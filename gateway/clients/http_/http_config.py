@@ -37,7 +37,7 @@ class VisioHTTPConfig:
         self._user_id = None
         self._auth_user_id = None
 
-        self.is_connected = True
+        # self.is_connected = True
         self.is_authorized = False
 
     def set_auth_data(self, bearer_token: str, user_id: int, auth_user_id: int) -> None:
@@ -48,12 +48,12 @@ class VisioHTTPConfig:
 
         self.is_authorized = True
 
-    # def delete_auth_data(self) -> None:
-    #     self._bearer_token = None
-    #     self._user_id = None
-    #     self._auth_user_id = None
-    #
-    #     self.is_authorized = False
+    def clear_auth_data(self) -> None:
+        self._bearer_token = None
+        self._user_id = None
+        self._auth_user_id = None
+
+        self.is_authorized = False
 
     @property
     def base_url(self) -> str:
