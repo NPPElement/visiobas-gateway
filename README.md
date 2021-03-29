@@ -13,6 +13,12 @@ the visioBAS system.
 4. [Update](#Update)
 5. [Remove](#Remove)
 
+
+```shell
+# for clone branch
+sudo git clone --single-branch --branch feature/modbus-rtu https://github.com/NPPElement/visiobas-gateway
+```
+
 ## Installation
 ### Install Docker
 ``` shell
