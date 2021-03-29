@@ -20,7 +20,15 @@ _unused_loggers = (
     'BAC0_Root.BAC0.tasks.TaskManager.Manager',
     'BAC0_Root.BAC0.tasks.RecurringTask.RecurringTask',
     'bacpypes.iocb._statelog',
-    'bacpypes.task'
+    'bacpypes.task',
+
+    'pymodbus.client.sync',
+    'pymodbus.transaction',
+    'pymodbus.framer.socket_framer',
+    'pymodbus.framer.rtu_framer ',
+    'pymodbus.factory',
+    'pymodbus.payload'
+
 )
 logging.basicConfig(format=_LOGGER_FORMAT,
                     level=_log_level,
