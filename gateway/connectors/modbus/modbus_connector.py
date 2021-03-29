@@ -190,7 +190,7 @@ class ModbusConnector(Thread, Connector):
 
     def _start_rtu_device(self, dev_id: int, objs: set[ModbusObject],
                           upd_interval: int) -> None:
-        """ Start Modbus RTU Devise thread"""
+        """ Start Modbus RTU Device thread"""
         _log.debug(f'Starting RTU Device [{dev_id}] ...')
         try:
             self.__polling_devices[dev_id] = ModbusRTUDevice(

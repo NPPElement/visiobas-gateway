@@ -64,6 +64,8 @@ class ModbusRTUDevice(Thread):
         self.client = None
         self.available_functions = {}
 
+        self.start()
+
     def __repr__(self) -> str:
         return f'{self.__class__.__name__}[{self.id}]'
 
@@ -96,6 +98,7 @@ class ModbusRTUDevice(Thread):
             raise e
 
     def run(self) -> None:
+        self._log.info(f'{self} starting ...')
         while self._polling:
             try:
                 if self.client is not None:
