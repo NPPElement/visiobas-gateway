@@ -97,39 +97,42 @@ class ModbusRTUDevice(Thread):
 
     def run(self) -> None:
         while self._polling:
-            if self.client is not None:
-                self._log.debug('Polling started')
-                _t0 = time()
-                self.poll(objects=self.objects)
-                _t_delta = time() - _t0
-                self._log.info('\n==================================================\n'
-                               f'{self} polled for: '
-                               f'{round(_t_delta, ndigits=1)} sec.\n'
-                               f'Update period: {self.poll_period} sec.\n'
-                               f'Objects: {len(self)}\n'
-                               )
-                if _t_delta < self.poll_period:
-                    _delay = (self.poll_period - _t_delta) * self.poll_period_factor
-                    self._log.debug(f'Sleeping {round(_delay, ndigits=1)} sec ...')
-                    sleep(_delay)
+            try:
+                if self.client is not None:
+                    self._log.debug('Polling started')
+                    _t0 = time()
+                    self.poll(objects=self.objects)
+                    _t_delta = time() - _t0
+                    self._log.info('\n==================================================\n'
+                                   f'{self} polled for: '
+                                   f'{round(_t_delta, ndigits=1)} sec.\n'
+                                   f'Update period: {self.poll_period} sec.\n'
+                                   f'Objects: {len(self)}\n'
+                                   )
+                    if _t_delta < self.poll_period:
+                        _delay = (self.poll_period - _t_delta) * self.poll_period_factor
+                        self._log.debug(f'Sleeping {round(_delay, ndigits=1)} sec ...')
+                        sleep(_delay)
 
-            else:
-                self._log.info('Connecting to client ...')
-                try:
-                    self.client, self.available_functions = self._init_client(
-                        method=self.method,
-                        port=self.port,
-                        baudrate=self.baudrate,
-                        stopbits=self.stopbits,
-                        bytesize=self.bytesize,
-                        parity=self.parity,
-                        timeout=self.timeout,
-                        strict=self.strict
-                    )
-                except Exception as e:
-                    self._log.warning(f'{self} connection error: {e} '
-                                      'Sleeping 60 sec before next attempt ...')
-                    sleep(self.before_next_client_attempt)
+                else:
+                    self._log.info('Connecting to client ...')
+                    try:
+                        self.client, self.available_functions = self._init_client(
+                            method=self.method,
+                            port=self.port,
+                            baudrate=self.baudrate,
+                            stopbits=self.stopbits,
+                            bytesize=self.bytesize,
+                            parity=self.parity,
+                            timeout=self.timeout,
+                            strict=self.strict
+                        )
+                    except Exception as e:
+                        self._log.warning(f'{self} connection error: {e} '
+                                          'Sleeping 60 sec before next attempt ...')
+                        sleep(self.before_next_client_attempt)
+            except Exception as e:
+                self._log.error(f'Polling error: {e}', exc_info=True)
         else:
             self._log.info(f'{self} stopped.')
 
