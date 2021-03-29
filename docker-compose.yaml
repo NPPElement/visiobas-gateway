@@ -7,12 +7,13 @@ services:
       dockerfile: Dockerfile
     image: vb-gateway:1.0.0
     logging:
+      # driver: none
       driver: "json-file"
       options:
         max-file: "2"
         max-size: "1024k"
-      # driver: none
     restart: always
+    privileged: true # [1]
     user: root
     env_file:
       - http_config.env
@@ -34,29 +35,33 @@ services:
     volumes:
       #- /opt/visiobas-gateway/gateway:/gateway
       - /home/user/visiobas-gateway/gateway:/gateway
+      - /dev:/dev # [1]
     command: python /gateway/run.py
     ports:
       - 502:502
       - 1883:1883
       - 8080:8080
       - 8883:8883
-#      - 47808:47808
-#      - 47809:47809
-#      - 47810:47810
-#      - 47811:47811
-#      - 47812:47812
-#      - 47813:47813
-#      - 47814:47814
-#      - 47815:47815
-#      - 47816:47816
-#      - 47817:47817
-#      - 47818:47818
-#      - 47819:47819
-#      - 47820:47820
-#      - 47821:47821
-#      - 47822:47822
-#      - 47823:47823
+    #      - 47808:47808
+    #      - 47809:47809
+    #      - 47810:47810
+    #      - 47811:47811
+    #      - 47812:47812
+    #      - 47813:47813
+    #      - 47814:47814
+    #      - 47815:47815
+    #      - 47816:47816
+    #      - 47817:47817
+    #      - 47818:47818
+    #      - 47819:47819
+    #      - 47820:47820
+    #      - 47821:47821
+    #      - 47822:47822
+    #      - 47823:47823
 
     devices: # To detect Modbus RTU devices
       - "/dev/ttyS0:/dev/ttyS0"
       # - "/dev/ttyUSB0:/dev/ttyUSB0"
+
+
+# [1]: https://www.losant.com/blog/how-to-access-serial-devices-in-docker
