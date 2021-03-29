@@ -207,7 +207,7 @@ class VisioHTTPClient(Thread):
         return device_objects
 
     async def rq_devices_objects(self, get_server_data: VisioHTTPServerConfig,
-                                 devices_id: Iterable[int],
+                                 device_ids: Iterable[int],
                                  obj_types: tuple[ObjType]
                                  ) -> dict[int, dict[ObjType, list[dict]]]:
         """ Requests types of objects for each device_id.
@@ -221,13 +221,12 @@ class VisioHTTPClient(Thread):
                                              device_id=device_id,
                                              object_types=obj_types,
                                              session=session
-                                             ) for
-                device_id in devices_id]
+                                             ) for device_id in device_ids]
 
             devices = {
                 device_id: device_objects for
                 device_id, device_objects in
-                zip(devices_id, await asyncio.gather(*devices_requests))
+                zip(device_ids, await asyncio.gather(*devices_requests))
                 if device_objects
             }
             # drops devices with no objects

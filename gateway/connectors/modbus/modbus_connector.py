@@ -75,13 +75,14 @@ class ModbusConnector(Thread, Connector):
         return rtu_cfg
 
     @property
-    def tcp_device_ids(self) -> list[int]:
+    def tcp_device_ids(self) -> list[int, ...]:
         return list(self.address_cache.keys())
 
     @property
     def rtu_device_ids(self) -> list[int, ...]:
         return list(self.rtu_cfg.keys())
 
+    @property
     def device_ids(self) -> list[int, ...]:
         return list(*self.rtu_device_ids, *self.tcp_device_ids)
 
@@ -252,7 +253,7 @@ class ModbusConnector(Thread, Connector):
         devices_objs = asyncio.run(
             self.__gateway.http_client.rq_devices_objects(
                 get_server_data=self.__gateway.http_client.get_server_data,
-                devices_id=device_ids,
+                device_ids=device_ids,
                 obj_types=obj_types
             ))
         return devices_objs
@@ -264,7 +265,7 @@ class ModbusConnector(Thread, Connector):
         device_objs = asyncio.run(
             self.__gateway.http_client.rq_devices_objects(
                 get_server_data=self.__gateway.http_client.get_server_data,
-                devices_id=devices_id,
+                device_ids=devices_id,
                 obj_types=(ObjType.DEVICE,)
             ))
         devices_intervals = {}
