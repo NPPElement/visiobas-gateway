@@ -2,7 +2,7 @@ import asyncio
 from pathlib import Path
 from typing import Callable, Any
 
-from gateway.clients import VisioBASHTTPClient
+from gateway.clients import VisioBASHTTPClient, VisioBASMQTTClient
 
 
 class VisioBASGateway:
@@ -17,20 +17,26 @@ class VisioBASGateway:
         self.config = config
 
         self._stopped: asyncio.Event | None = None
+        self._upd_task: asyncio.Task | None = None
 
-        self.http_client: VisioBASHTTPClient | None = None
-        self.mqtt_client = None
+        self.http_client: VisioBASHTTPClient = None
+        self.mqtt_client: VisioBASMQTTClient = None
         self.http_api_server = None
         self.verifier = None  # verifier(non-threaded)
 
     @classmethod
     def from_yaml(cls, yaml_path: Path):
+        # todo add a pydantic model of config and use it
         """Create gateway with configuration, read from YAML file."""
         import yaml
 
         with yaml_path.open() as cfg_file:
             cfg = yaml.load(cfg_file, Loader=yaml.FullLoader)
         return cls(config=cfg)
+
+    @property
+    def upd_period(self) -> int:
+        return self.config.get('upd_period', 3600)
 
     def run(self) -> None:
         # if need, set event loop policy here
@@ -51,26 +57,53 @@ class VisioBASGateway:
         # self.loop.run_forever()
 
     async def async_setup(self):
-        """Set up Gateway.
+        """Set up Gateway and spawn update task.
 
-        Note: Used gateway.add_job in all to start serve."""
+        Setup gateway steps:
+            - Log in to HTTP
+            - Get device id list
+            - Get device data via HTTP
+            - Start devices poll
+            - Connect to MQTT
+        """
         self.http_client = VisioBASHTTPClient.from_yaml(
-            gateway=self,
-            yaml_path=self._cfg_dir / 'http.yaml'
+            gateway=self, yaml_path=self._cfg_dir / 'http.yaml'
         )
         await self.http_client.setup()
-        # setup mqtt
-        # setup http api server
 
-    async def periodic_update(self):
+        self.mqtt_client = VisioBASMQTTClient.from_yaml(
+            gateway=self, yaml_path=self._cfg_dir / 'mqtt.yaml'
+        )
+        # todo: setup http api server
+
+        self._upd_task = self.loop.create_task(self.periodic_update())
+
+    async def periodic_update(self) -> None:
         """Spawn periodic update task.
 
-        Update contains:
+        Update gateway steps:
+            - Unsubscribe to MQTT
+            - Stop devices poll
+            - Log out to HTTP # fixme
+            - Log in to HTTP
             - Update device ids
-            - Reauthorize by HTTP
-            - resubscribe to MQTT topics
+            - Request device data via HTTP
+            - Start devices poll
+            - Subscribe to MQTT topics
         """
-        # todo
+        await asyncio.sleep(delay=self.upd_period)
+
+        await self.mqtt_client.unsubscribe(self.mqtt_client.topics)
+        # await stop_devices()
+        await self.http_client.logout(nodes=self.http_client.all_nodes)
+        # await update device id list
+        await self.http_client.authorize()
+        # await self.http_client.rq_devices_data()
+        # await parse_device_data()
+        # await self.start_devices_poll
+        await self.mqtt_client.subscribe(self.mqtt_client.topics)
+
+        self._upd_task = self.loop.create_task(self.periodic_update())
 
     def add_job(self, target: Callable, *args: Any) -> asyncio.Future | None:
         """Add a job."""
@@ -88,3 +121,7 @@ class VisioBASGateway:
         """Stop Gateway."""
         if self._stopped is not None:
             self._stopped.set()
+
+    async def _perform_stop_tasks(self) -> None:
+        pass
+        # todo implement then use in upd

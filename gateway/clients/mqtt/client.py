@@ -13,7 +13,7 @@ from ...models import ResultCode, Qos
 _log = getLogger(__name__)
 
 
-class VisioMQTTClient:
+class VisioBASMQTTClient:
     """Control interactions via MQTT."""
 
     def __init__(self, gateway, config: dict):

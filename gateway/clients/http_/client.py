@@ -74,15 +74,15 @@ class VisioBASHTTPClient:
     async def setup(self) -> None:
         """Wait for authorization then spawn a periodic update task."""
         await self.authorize(retry=self.retry_delay)
-        self._upd_task = self.gateway.loop.create_task(self.periodic_update())
+        # self._upd_task = self.gateway.loop.create_task(self.periodic_update())
 
-    async def periodic_update(self) -> None:
-        """Perform periodically reauthorize."""
-        await asyncio.sleep(delay=self.upd_delay)
-        # todo kill/wait pending tasks
-        await self.logout(nodes=self.all_nodes)
-        await self.authorize(retry=self.retry_delay)
-        self._upd_task = self.gateway.loop.create_task(self.periodic_update())
+    # async def periodic_update(self) -> None:
+    #     """Perform periodically reauthorize."""
+    #     # await asyncio.sleep(delay=self.upd_delay)
+    #     # todo kill/wait pending tasks
+    #     await self.logout(nodes=self.all_nodes)
+    #     await self.authorize(retry=self.retry_delay)
+    #     # self._upd_task = self.gateway.loop.create_task(self.periodic_update())
 
     # async def run_http_post_loop(self, queue: asyncio.Queue,
     #                              post_nodes: Iterable[VisioHTTPNode],
