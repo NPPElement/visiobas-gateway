@@ -62,6 +62,16 @@ class VisioBASGateway:
         # setup mqtt
         # setup http api server
 
+    async def periodic_update(self):
+        """Spawn periodic update task.
+
+        Update contains:
+            - Update device ids
+            - Reauthorize by HTTP
+            - resubscribe to MQTT topics
+        """
+        # todo
+
     def add_job(self, target: Callable, *args: Any) -> asyncio.Future | None:
         """Add a job."""
         if target is None:
