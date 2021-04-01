@@ -1,5 +1,4 @@
 import asyncio
-import time
 import uuid
 from json import loads, JSONDecodeError
 from logging import getLogger
@@ -61,6 +60,7 @@ class VisioMQTTClient:
 
     @classmethod
     def from_yaml(cls, gateway, yaml_path: Path):
+        # todo add a pydantic model of config and use it
         import yaml
 
         with yaml_path.open() as cfg_file:
@@ -143,11 +143,12 @@ class VisioMQTTClient:
 
     async def async_disconnect(self) -> None:
         """Asynchronously call disconnect."""
+
         def disconnect():
             """Disconnect to broker."""
             self._client.disconnect()
             _log.debug(f'{self._client} Disconnecting to broker')
-            self._connected = False
+            # self._connected = False # will call in internal callback
             self._client.loop_stop()
 
         await self._gateway.add_job(disconnect)
@@ -163,10 +164,11 @@ class VisioMQTTClient:
             result, mid = await self._gateway.add_job(
                 self._client.subscribe, topics, qos
             )
-        if result == mqtt.MQTT_ERR_SUCCESS:
-            _log.debug(f'Subscribed to topics: {topics}')
-        elif result == mqtt.MQTT_ERR_NO_CONN:
-            _log.warning(f'Not subscribed to topic: {topics} {result} {mid}')
+        # check will perform in internal callback
+        # if result == mqtt.MQTT_ERR_SUCCESS:
+        #     _log.debug(f'Subscribed to topics: {topics}')
+        # elif result == mqtt.MQTT_ERR_NO_CONN:
+        #     _log.warning(f'Not subscribed to topic: {topics} {result} {mid}')
 
     async def unsubscribe(self, topics: list[str] | str) -> None:
         """Perform an unsubscription."""
@@ -179,12 +181,15 @@ class VisioMQTTClient:
         else:
             _log.warning(f'Failed unsubscription to {topics}')
 
-    def publish(self, topic: str, payload: str = None,
-                qos: int = Qos.AT_MOST_ONCE_DELIVERY,
-                retain: bool = False) -> mqtt.MQTTMessageInfo:
-        return self._client.publish(topic=topic,
-                                    payload=payload,
-                                    qos=qos, retain=retain)
+    async def publish(self, topic: str, payload: str = None,
+                      qos: int = Qos.AT_MOST_ONCE_DELIVERY,
+                      retain: bool = False) -> mqtt.MQTTMessageInfo:
+        """Send message to the broker."""
+        async with self._paho_lock:
+            msg_info = await self._gateway.add_job(
+                self._client.publish, topic, payload, qos, retain
+            )
+            return msg_info
 
     def _on_publish_cb(self, client, userdata, mid):
         # _log.debug(f'Published: {client} {userdata} {mid}')
@@ -196,40 +201,39 @@ class VisioMQTTClient:
             _log.info('Connected to broker')
             # Subscribing in on_connect() means that if we lose the connection and
             # reconnect then subscriptions will be renewed.
-            self.subscribe(topics=self.topics)
+            asyncio.run_coroutine_threadsafe(
+                self.subscribe(topics=self.topics),
+                loop=self._gateway.loop
+            )
         else:
             _log.warning(f'Failed connection to broker: {ResultCode(rc)}')
 
-    def _on_disconnect_callback(self, client, userdata, rc):
+    def _on_disconnect_callback(self, client, userdata, rc) -> None:
         self._connected = False
         _log.info(f'Disconnected: {ResultCode(rc)}')
         # self._client.loop_stop()
 
-    def _on_subscribe_cb(self, userdata, mid, granted_qos, properties=None):
-        try:
-            if granted_qos == 128:
-                _log.warning('Subscription failed')
-            else:
-                _log.debug('Subscription success')
-        except Exception as e:
-            _log.error(f'Error: {e}',
-                       exc_info=True
-                       )
+    def _on_subscribe_cb(self, userdata, mid, granted_qos, properties=None) -> None:
+        if granted_qos == 128:
+            _log.warning('Failed subscription')
+        else:
+            _log.debug('Subscribed')
 
-    def _on_message_cb(self, client, userdata, message: mqtt.MQTTMessage):
-        msg_dct = self.decode(msg=message)
-        _log.debug(f'Received {message.topic}:{msg_dct}')
-        try:
-            if msg_dct.get('method') == 'value':
-                # todo: provide device_id and cache result (error) if device not polling
-                self.api.rpc_value(params=msg_dct['params'],
-                                   topic=message.topic,
-                                   gateway=self._gateway
-                                   )
-        except Exception as e:
-            _log.warning(f'Error: {e} :{msg_dct}',
-                         # exc_info=True
-                         )
+    def _on_message_cb(self, client, userdata, message: mqtt.MQTTMessage) -> None:
+        pass
+        # msg_dct = self.decode(msg=message)
+        # _log.debug(f'Received {message.topic}:{msg_dct}')
+        # try:
+        #     if msg_dct.get('method') == 'value':
+        #         # todo: provide device_id and cache result (error) if device not polling
+        #         self.api.rpc_value(params=msg_dct['params'],
+        #                            topic=message.topic,
+        #                            gateway=self._gateway
+        #                            )
+        # except Exception as e:
+        #     _log.warning(f'Error: {e} :{msg_dct}',
+        #                  # exc_info=True
+        #                  )
 
     @staticmethod
     def decode(msg: mqtt.MQTTMessage) -> dict or str:
