@@ -1,11 +1,7 @@
 # All periods in seconds.
 
 gateway:
-  update_period: 3600
-
-verifier:
-#  http_enable: false
-#  mqtt_enable: true
+  upd_period: 3600
 
 api:
   host: localhost

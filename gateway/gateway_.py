@@ -6,7 +6,7 @@ from pathlib import Path
 from aiomisc import entrypoint
 
 from gateway.api import VisioGatewayApiService
-from gateway.clients import VisioBASHTTPClient, VisioMQTTClient
+from gateway.clients import VisioBASHTTPClient, VisioBASMQTTClient
 from gateway.connectors import BACnetConnector, ModbusConnector
 from gateway.verifier import BACnetVerifier
 
@@ -53,7 +53,7 @@ class VisioGateway:
         # HTTP client updatable. Re-created inside the main loop
         # self.http_client = None
 
-        self.mqtt_client = VisioMQTTClient.from_yaml(
+        self.mqtt_client = VisioBASMQTTClient.from_yaml(
             gateway=self,
             getting_queue=self._verifier_mqtt_queue,
             yaml_path=_base_path / 'config/mqtt.yaml'

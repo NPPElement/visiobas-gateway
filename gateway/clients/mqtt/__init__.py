@@ -1,4 +1,4 @@
-from .client import VisioMQTTClient
+from .client import VisioBASMQTTClient
 
-__all__ = ('VisioMQTTClient',
+__all__ = ('VisioBASMQTTClient',
            )
