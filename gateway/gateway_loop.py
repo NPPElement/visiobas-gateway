@@ -101,14 +101,15 @@ class VisioBASGateway:
 
         Setup gateway steps:
             - Log in to HTTP
-            - Get device id list
+            - Get device id list (HTTP?)
             - Get device data via HTTP
             - Start devices poll
             - Connect to MQTT
         """
         # todo
-        # await update device id list
+        
         await self.http_client.authorize()
+        # await update device id list
         # await self.http_client.rq_devices_data()
         # await parse_device_data()
         # await self.start_devices_poll
