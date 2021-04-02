@@ -33,6 +33,8 @@ class ObjType(Enum):
     PULSE_CONVERTER = "pulse-converter", 24, 'pulseConverter'
     ACCESS_POINT = "access-point", 33, 'accessPoint'
 
+    # todo add types from page 65
+
     # SITE = "site", -1
     # FOLDER = "folder", -1
     # TRUNK = "trunk", -1
