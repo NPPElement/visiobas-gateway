@@ -1,13 +1,9 @@
-# from .object import ModbusObj
-# from .properties import VisioModbusProperties
+from .device_rtu import ModbusRTUDeviceModel
 from .func_code import ModbusFunc, MODBUS_READ_FUNCTIONS, MODBUS_WRITE_FUNCTIONS
-from .object import ModbusObjModel
+from .obj import ModbusObjModel
 
 __all__ = [
-    # 'VisioModbusProperties',
-    # 'ModbusObj',
+    'ModbusFunc', 'MODBUS_READ_FUNCTIONS', 'MODBUS_WRITE_FUNCTIONS',
     'ModbusObjModel',
-    'ModbusFunc',
-    'MODBUS_READ_FUNCTIONS',
-    'MODBUS_WRITE_FUNCTIONS',
+    'ModbusRTUDeviceModel',
 ]
