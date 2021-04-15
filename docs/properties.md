@@ -61,12 +61,14 @@
 
 - `371 propertyList`:
     - modbus
-        - `modbus.address`
-        - `modbus.quantity`
-        - `modbus.functionRead`
-        - `modbus.functionWrite`
-        - `modbus.dataType`
-        - `modbus.dataLength`
+        - `modbus.address` Адрес регистра
+        - `modbus.quantity` Количество регистров
+        - `modbus.functionRead` Функция для чтения
+          - Пример: 0x03
+        - `modbus.functionWrite` Функция для записи
+          - Пример: 0x06
+        - `modbus.dataType` Тип значения
+        - `modbus.dataLength` Используемое количество бит 
         - `modbus.scale` Для формулы `A*X+B`: Коэффициент A — умножать, а не делить.
         - `modbus.offset` Для формулы `A*X+B`: коэффициент B — прибавляется для коррекции.
         - `modbus.wordOrder` Порядок слов.
