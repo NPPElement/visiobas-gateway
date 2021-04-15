@@ -36,13 +36,13 @@
       изменилось, то не будет никуда отправлено) Пример: 0.2, 0.5
     - rtu
         - `rtu.port` Пример: /dev/ttyS0, /dev/ttyUSB0
-        - `rtu.baudrate` 
-          - Возможные значения: 600, 1200, 2400, 4800, 9600, 19200, 38400, 57600, 115200
-          - По умолчанию: 9600
+        - `rtu.baudrate`
+            - Возможные значения: 600, 1200, 2400, 4800, 9600, 19200, 38400, 57600, 115200
+            - По умолчанию: 9600
         - `rtu.stopbits` По молчанию: 1
         - `rtu.bytesize` По умолчанию: 8
-        - `rtu.timeout` По умолчанию: 1
-        - `rtu.parity` По умолчанию: None
+        - `rtu.parity` По умолчанию: N
+          ~~- `rtu.timeout` По умолчанию: 1~~ Используется 11 `apduTimeout`
 
 ## Object
 
@@ -52,9 +52,9 @@
 - `104 relinquishDefault` ~~не опрашивать (опросить единожды при инициализации)~~
     - **БУДЕТ ИЗМЕНЕНО!**: ~~Значение по умолчанию, используемое в качестве текущего
       значения, если все значения массива приоритетов (Priority_Array) равны NULL (нулю)~~
-    - ~~ПРИЧИНА: The following example illustrates how a Lighting Output object may be used in a
-      typical office scenario. Prior to 7:00 AM the lights are off as the Lighting Output
-      object is being controlled at the relinquish default value (0.0%). At 7:00 AM a
+    - ~~ПРИЧИНА: The following example illustrates how a Lighting Output object may be used
+      in a typical office scenario. Prior to 7:00 AM the lights are off as the Lighting
+      Output object is being controlled at the relinquish default value (0.0%). At 7:00 AM a
       scheduler (e.g., a BACnet Schedule object or other automated process) turns the
       physical lights on by writing 100.0%~~
 - `107 segmentationSupported` Поддерживается ли несколько сегментов в 1-м запросе
@@ -66,11 +66,11 @@
         - `modbus.address` Адрес регистра
         - `modbus.quantity` Количество регистров
         - `modbus.functionRead` Функция для чтения
-          - Пример: 0x03
+            - Пример: 0x03
         - `modbus.functionWrite` Функция для записи
-          - По умолчанию: 0x06
+            - По умолчанию: 0x06
         - `modbus.dataType` Тип значения
-        - `modbus.dataLength` Используемое количество бит 
+        - `modbus.dataLength` Используемое количество бит
         - `modbus.scale` Для формулы `A*X+B`: Коэффициент A — умножать, а не делить.
         - `modbus.offset` Для формулы `A*X+B`: коэффициент B — прибавляется для коррекции.
         - `modbus.wordOrder` Порядок слов.
