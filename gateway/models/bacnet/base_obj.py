@@ -1,9 +1,7 @@
 from pydantic import BaseModel, Field
 
-
 from .obj_property import ObjProperty
 from .obj_type import ObjType
-
 
 
 class BaseBACnetObjModel(BaseModel):

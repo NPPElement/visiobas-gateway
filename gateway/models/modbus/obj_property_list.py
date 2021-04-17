@@ -1,6 +1,3 @@
-from json import loads
-from typing import NamedTuple
-
 from pydantic import BaseModel, Field
 
 from .func_code import ModbusFunc
@@ -23,7 +20,6 @@ class ModbusObjPropertyListModel(BaseModel):
     byte_order: str = Field(default='little', alias='byteOrder')
     word_order: str = Field(default='big', alias='wordOrder')
     repack: bool = Field(default=False)  # todo add to docs
-
 
     # bitmask = int todo
     # bit: Union[int, None] = None  # TODO: change to 'bitmask'
