@@ -4,6 +4,7 @@ from pydantic import Field, validator, BaseModel
 
 from .base_obj import BaseBACnetObjModel
 from .obj_property import ObjProperty
+from .obj_type import ObjType
 
 
 # from ..modbus.device_rtu_property_list import DeviceRTUPropertyListModel
@@ -31,6 +32,9 @@ class BACnetDeviceModel(BaseBACnetObjModel):
     protocol: str = Field(...,
                           alias=ObjProperty.protocolVersion.id_str)  # todo use Protocol Enum
 
+    # send_sync_delay = # send period
+    # internal_sync_delay =
+
     # todo refactor
     property_list: Union[str, DevicePropertyListWrapper] = Field(
         alias=ObjProperty.propertyList.id_str)
@@ -39,5 +43,11 @@ class BACnetDeviceModel(BaseBACnetObjModel):
     def parse_rtu_pl(cls, pl: str) -> DevicePropertyListWrapper:
         return DevicePropertyListWrapper.parse_raw(pl)
 
-    # send_sync_delay = # send period
-    # internal_sync_delay =
+    @property
+    def types_to_rq(self) -> tuple[ObjType, ...]:
+        return (ObjType.ANALOG_INPUT, ObjType.ANALOG_OUTPUT, ObjType.ANALOG_VALUE,
+                ObjType.BINARY_INPUT, ObjType.BINARY_OUTPUT, ObjType.BINARY_VALUE,
+                ObjType.MULTI_STATE_INPUT, ObjType.MULTI_STATE_OUTPUT,
+                ObjType.MULTI_STATE_VALUE, )
+
+

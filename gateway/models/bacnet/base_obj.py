@@ -12,10 +12,12 @@ class BaseBACnetObjModel(BaseModel):
     device_id: int = Field(..., gt=0, alias=ObjProperty.deviceId.id_str)
 
     id: int = Field(..., ge=0, alias=ObjProperty.objectIdentifier.id_str)
-    name: str = Field(..., alias=ObjProperty.objectName.id_str)
+
+    # name: str = Field(..., alias=ObjProperty.objectName.id_str)
 
     property_list: str = Field(alias=ObjProperty.propertyList.id_str)
 
-    @property
-    def topic(self):
-        return self.name.replace(':', '/').replace('.', '/')
+    # @property
+    # def topic(self):
+    #     return self.name.replace(':', '/').replace('.', '/')
+    # Deprecated. Todo parse topic
