@@ -1,18 +1,21 @@
 import asyncio
+from logging import getLogger
 from pathlib import Path
 from typing import Callable, Any, Optional, Awaitable, Iterable
 
 from gateway.clients import VisioBASHTTPClient, VisioBASMQTTClient
-from gateway.connectors.modbus.async_device import AsyncModbusDevice
-from gateway.models import ObjType, BACnetDeviceModel
+from gateway.devices.async_device import AsyncModbusDevice
+from gateway.models import ObjType, BACnetDeviceModel, ModbusObjModel
 from gateway.utils import read_address_cache
+
+_log = getLogger(__name__)
 
 
 class VisioBASGateway:
     """VisioBAS IoT Gateway."""
 
-    _base_dir = Path(__file__).resolve().parent
-    _cfg_dir = _base_dir / 'config'
+    BASE_DIR = Path(__file__).resolve().parent
+    CFG_DIR = BASE_DIR / 'config'
 
     def __init__(self, config: dict):
         self.loop = asyncio.get_running_loop()
@@ -67,11 +70,11 @@ class VisioBASGateway:
     async def async_setup(self) -> None:
         """Set up Gateway and spawn update task."""
         self.http_client = VisioBASHTTPClient.from_yaml(
-            gateway=self, yaml_path=self._cfg_dir / 'http.yaml')
+            gateway=self, yaml_path=self.CFG_DIR / 'http.yaml')
         # await self.http_client.setup()
 
         self.mqtt_client = VisioBASMQTTClient.from_yaml(
-            gateway=self, yaml_path=self._cfg_dir / 'mqtt.yaml')
+            gateway=self, yaml_path=self.CFG_DIR / 'mqtt.yaml')
         # todo: setup http api server
         self._upd_task = self.loop.create_task(self.periodic_update())
 
@@ -96,13 +99,13 @@ class VisioBASGateway:
             return task
 
     async def async_stop(self) -> None:
-        """Stop Gateway."""
+        """Stops Gateway."""
         # todo wait pending tasks
         if self._stopped is not None:
             self._stopped.set()
 
     async def _perform_start_tasks(self) -> None:
-        """Perform starting tasks.
+        """Performs starting tasks.
 
         Setup gateway steps:
             - Log in to HTTP
@@ -124,7 +127,7 @@ class VisioBASGateway:
         await self.mqtt_client.subscribe(self.mqtt_client.topics)
 
     async def _perform_stop_tasks(self) -> None:
-        """Perform stopping tasks.
+        """Performs stopping tasks.
 
         Stop gateway steps:
             - Unsubscribe to MQTT
@@ -135,31 +138,81 @@ class VisioBASGateway:
         # await stop_devices() todo
         await self.http_client.logout(nodes=self.http_client.all_nodes)
 
-    def _get_device_ids(self) -> Iterable[int]:
-        # todo get from gateway object
-        return read_address_cache(
-            path=self._base_dir / 'connectors/modbus/address_cache').keys()
+    async def setup_devices(self) -> None:
+        """Gets identifiers of devices to poll.
+        Gets objects of devices.
+        Gets objects to poll and load it to device.
+        """
 
-    async def _get_devices_objs(self, device_ids: Iterable[int]) -> list[
-        BACnetDeviceModel]:  # fixme type
-        rq_dev_tasks = [self.http_client.get_objs(device_id=dev_id,
+    async def load_device(self, dev_id: int) -> None:
+        """Tries to download an object of device from server.
+        Then gets objects to poll and load them into device.
+
+        If fails get objects from server - loads it from local.
+        """
+        dev_obj = await self.http_client.get_objs(dev_id=dev_id,
                                                   obj_types=(ObjType.DEVICE,))
-                        for dev_id in device_ids]
-        devices_data = await asyncio.gather(*rq_dev_tasks)
-
-        devices = [BACnetDeviceModel.parse_raw(**dev_data) for dev_data in devices_data]
-        return devices
-
-    def setup_device(self, dev_obj: BACnetDeviceModel) -> None:
         device = self.device_factory(dev_obj=dev_obj)
+
+        objs_to_poll = await self.http_client.get_objs(dev_id=dev_id,
+                                                       obj_types=device.types_to_rq)
+
+        objs = [self.object_factory(dev_obj=dev_obj, obj_data=obj_data)
+                for obj_data in objs_to_poll
+                if not None]
+
+        if len(objs):
+            device.load_objects(objs=objs)
         self._devices.update({device.id: device})
 
-    def device_factory(self, dev_obj: BACnetDeviceModel) -> Optional[Any]:
+    async def start_device_poll(self, dev_id: int) -> None:
+        """Starts poll of device."""
+
+    def _get_device_ids(self) -> Iterable[int]:
+        """Gets devise identifiers to poll.
+
+        Returns:
+            Device identifiers to poll.
+        """
+        # todo get from gateway object
+        return read_address_cache(
+            path=self.BASE_DIR / 'connectors/modbus/address_cache').keys()
+
+    def device_factory(self, dev_obj: BACnetDeviceModel) -> Any:
+        """Creates device for provided protocol.
+
+        Returns:
+            Created device.
+        Raises:
+            ValueError: if unexpected protocol provided.
+            # todo add parse model error
+        """
         protocol = dev_obj.protocol
         if protocol == 'ModbusTCP' or protocol == 'ModbusRTU':
             device = AsyncModbusDevice(device_obj=dev_obj, gateway=self)
         elif protocol == 'BACnet':
             device = None  # todo
         else:
-            raise ValueError(f'Unexpected protocol passed: {protocol}({dev_obj.id})')
+            raise ValueError(f'Unexpected protocol: {protocol}({dev_obj.id})')
         return device
+
+    @staticmethod
+    def object_factory(dev_obj: BACnetDeviceModel, obj_data: dict[str, Any]
+                       ) -> Optional[Any]:
+        """Creates object for provided protocol.
+
+        Returns:
+            If object created - returns created object.
+            If object incorrect - returns None.
+        """
+        try:
+            protocol = dev_obj.protocol
+            if protocol == 'ModbusTCP' or protocol == 'ModbusRTU':
+                obj = ModbusObjModel.parse_raw(**obj_data)
+            elif protocol == 'BACnet':
+                obj = None  # todo
+            else:
+                raise ValueError(f'Unexpected protocol: {protocol}({dev_obj.id})')
+            return obj
+        except Exception as e:  # fixme catch parsing error
+            _log.warning(f'Failed parsing: {dev_obj.id}: {obj_data}: {e}')

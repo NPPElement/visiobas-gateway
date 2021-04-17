@@ -1,6 +1,6 @@
 import asyncio
 from logging import getLogger
-from typing import Sequence, Any, Optional, Callable, Union
+from typing import Any, Optional, Callable, Union, Collection
 
 from pymodbus.client.asynchronous.schedulers import ASYNC_IO
 from pymodbus.client.asynchronous.serial import AsyncModbusSerialClient
@@ -8,7 +8,7 @@ from pymodbus.client.asynchronous.tcp import AsyncModbusTCPClient
 from pymodbus.constants import Endian
 from pymodbus.payload import BinaryPayloadDecoder
 
-from ...models import BACnetDeviceModel, ModbusObjModel
+from gateway.models import BACnetDeviceModel, ModbusObjModel, ObjType
 
 # aliases
 # BACnetDeviceModel = Any  # ...models
@@ -29,7 +29,11 @@ class AsyncModbusDevice:
         self._loop, self._client = None, None
 
         self._polling = True
-        self._objects: Sequence[ModbusObjModel] = None  # 'BACnetObjModel'
+        self._objects: Collection[ModbusObjModel] = None  # 'BACnetObjModel'
+
+    @property
+    def types_to_rq(self) -> tuple[ObjType, ...]:  # todo hide type
+        return self._device_obj.types_to_rq
 
     @property
     def id(self) -> int:
@@ -69,16 +73,20 @@ class AsyncModbusDevice:
         return len(self._objects)
 
     @property
-    def is_client_connected(self) -> bool:
+    def is_client_initialized(self) -> bool:
         if hasattr(self._client, 'protocol') and self._client.protocol is not None:
             return True
         return False
 
-    async def set_client(self) -> None:
-        setup_task = self._gateway.add_job(self._set_client)
+    async def init_client(self) -> None:
+        setup_task = self._gateway.add_job(self._init_client)
 
-    def _set_client(self) -> None:
-        """Init async modbus client."""
+    def _init_client(self) -> None:
+        """Initializes asynchronously modbus client.
+
+        Raises:
+            ConnectionError: if client is not initialized.
+        """
         if self.protocol == 'ModbusTCP':
             host, port = self.address
             loop, self._client = AsyncModbusTCPClient(
@@ -108,14 +116,25 @@ class AsyncModbusDevice:
         else:
             raise NotImplementedError('Other methods not support yet.')
 
-        if self.is_client_connected:
+        if self.is_client_initialized:
             self._log.debug(f'Connected to {self}')
         else:
             raise ConnectionError(f'Failed to connect to {self}({self.address})')
 
+    def load_objects(self, objs: Collection[ModbusObjModel]) -> None:
+        """Loads object to poll.
+        Group by poll period.
+        """
+        self._objects = objs
+        # todo
+
+    async def start_poll(self):
+
+
+
     @property
     def read_funcs(self) -> dict[int, Callable]:
-        if not self.is_client_connected:
+        if not self.is_client_initialized:
             raise ConnectionError('Ensure client connected')
         read_funcs = {1: self._client.protocol.read_coils,
                       2: self._client.protocol.read_discrete_inputs,
@@ -125,7 +144,7 @@ class AsyncModbusDevice:
 
     @property
     def write_funcs(self) -> dict[int, Callable]:
-        if not self.is_client_connected:
+        if not self.is_client_initialized:
             raise ConnectionError('Ensure client connected')
         write_funcs = {5: self._client.protocol.write_coil,
                        6: self._client.protocol.write_register,
@@ -185,18 +204,6 @@ class AsyncModbusDevice:
                 # raise rq  # fixme: isn't exception
         except Exception as e:
             self._log.exception(e)
-
-    # async def read_send_to_verifier(self, obj: ModbusObjModel) -> None:
-    #     try:
-    #         value = await self.read(obj=obj)
-    #     except Exception as e:
-    #         self._log.exception(e)
-    #         # todo set reliability and etc
-    #
-    #     # todo process vales
-    #
-    #     # todo: add BACnet properties?
-    #     # queue.put()
 
     # async def poll(self, objects: Sequence[ModbusObjModel]) -> None:
     #     """Represent one iteration of poll."""
@@ -273,7 +280,8 @@ class AsyncModbusDevice:
 
         decode_funcs = {
             'bits': decoder.decode_bits,
-            'sting': decoder.decode_string,
+            'bool': None,  # todo
+            'string': decoder.decode_string,
             8: {'int': decoder.decode_8bit_int,
                 'uint': decoder.decode_8bit_uint, },
             16: {'int': decoder.decode_16bit_int,
@@ -299,3 +307,11 @@ class AsyncModbusDevice:
 
     def _encode_register(self):
         pass
+
+    # @classmethod
+    # def download(cls, dev_id: int) -> 'AsyncModbusDevice':
+    #     """Tries to download an object of device from server.
+    #     Then gets objects to poll and load them into device.
+    #
+    #     If fail get object from server - load it from local.
+    #     """

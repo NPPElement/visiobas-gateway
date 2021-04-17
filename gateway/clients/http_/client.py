@@ -1,7 +1,7 @@
 import asyncio
 from logging import getLogger
 from pathlib import Path
-from typing import Iterable, Any
+from typing import Iterable, Any, Union, Collection
 
 import aiohttp
 
@@ -191,14 +191,31 @@ class VisioBASHTTPClient:
     #                    )
     #         return False
 
-    async def get_objs(self, device_id: int, obj_types: Iterable[ObjType]) -> tuple:
+    # async def _get_devices_objs(self, device_ids: Iterable[int]
+    #                             ) -> list[BACnetDeviceModel]:  # fixme type
+    #     rq_dev_tasks = [self.http_client.get_objs(device_id=dev_id,
+    #                                               obj_types=(ObjType.DEVICE,))
+    #                     for dev_id in device_ids]
+    #     devices_data = await asyncio.gather(*rq_dev_tasks)
+    #
+    #     devices = [BACnetDeviceModel.parse_raw(**dev_data) for dev_data in devices_data]
+    #     return devices
+
+    async def get_objs(self, dev_id: int, obj_types: Collection[ObjType]
+                       ) -> Union[tuple[Any], Any]:
+        """
+        Returns:
+            If provided one type - returns objects of this type.
+            If provided several types - returns tuple of objects.
+        """
         rq_tasks = [self._rq(method='GET',
                              url=(f'{self.get_node.cur_server.base_url}'
-                                  f'{self._GET_URL}{device_id}/{obj_type.name_dashed}'),
+                                  f'{self._GET_URL}{dev_id}/{obj_type.name_dashed}'),
                              headers=self.get_node.cur_server.auth_headers)
                     for obj_type in obj_types]
         data = await asyncio.gather(*rq_tasks)
-        return data
+
+        return data[0] if len(obj_types) == 1 else data
 
     # async def upd_device(self, node: VisioHTTPNode,
     #                      device_id: int, obj_types: Iterable[ObjType],
