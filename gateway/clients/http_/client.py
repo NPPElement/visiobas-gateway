@@ -1,17 +1,20 @@
 import asyncio
 from logging import getLogger
 from pathlib import Path
-from typing import Iterable
+from typing import Iterable, Any
 
 import aiohttp
 
 from .http_config import VisioHTTPConfig
 from .http_node import VisioHTTPNode
-from ...connectors import BaseConnector
+# from ...connectors import BaseConnector
 from ...models import ObjType
 
 _log = getLogger(__name__)
 _base_path = Path(__file__).resolve().parent.parent.parent
+
+# aliases
+VisioBASGateway = Any  # '...gateway_loop.VisioBASGateway'
 
 
 class VisioBASHTTPClient:
@@ -20,9 +23,10 @@ class VisioBASHTTPClient:
     # URL's # todo: add format brackets
     _AUTH_URL = '/auth/rest/login'
     _LOGOUT_URL = '/auth/secure/logout'
-    _POST_LIGHT_URL = '/vbas/gate/light/'
+    _GET_URL = '/vbas/gate/get/'
+    _POST_URL = '/vbas/gate/light/'
 
-    def __init__(self, gateway, config: dict):
+    def __init__(self, gateway: 'VisioBASGateway', config: dict):
         self.gateway = gateway
         self._config = config
         self._timeout = aiohttp.ClientTimeout(total=self._config.get('timeout', 30))
@@ -42,7 +46,8 @@ class VisioBASHTTPClient:
         return self.__class__.__name__
 
     @classmethod
-    def from_yaml(cls, gateway, yaml_path: Path) -> dict | list:
+    def from_yaml(cls, gateway: 'VisioBASGateway',
+                  yaml_path: Path) -> 'VisioBASHTTPClient':
         """Create HTTP client with configuration read from YAML file."""
         import yaml
 
@@ -68,12 +73,17 @@ class VisioBASHTTPClient:
         return self._config['delay'].get('update', 60 * 60)
 
     @property
+    def get_node(self) -> VisioHTTPNode:
+        return self._get_node
+
+    @property
     def all_nodes(self) -> list[VisioHTTPNode]:
         return [self._get_node, *self._post_nodes]
 
     async def setup(self) -> None:
         """Wait for authorization then spawn a periodic update task."""
         await self.authorize(retry=self.retry_delay)
+
         # self._upd_task = self.gateway.loop.create_task(self.periodic_update())
 
     # async def periodic_update(self) -> None:
@@ -151,75 +161,84 @@ class VisioBASHTTPClient:
     # ]
     # _ = await asyncio.gather(*upd_connector_coros)
 
-    async def upd_connector(self, node: VisioHTTPNode, connector: BaseConnector) -> bool:
-        """Update all devices into connector.
-        :param node:
-        :param connector:
-        :return: is update successful
-        """
-        try:
-            # Clear the read_address_cache cache to read the updated `address_cache` file.
-            # read_address_cache.clear_cache() FIXME!!
+    # async def upd_connector(self, node: VisioHTTPNode, connector: BaseConnector) -> bool:
+    #     """Update all devices into connector.
+    #     :param node:
+    #     :param connector:
+    #     :return: is update successful
+    #     """
+    #     try:
+    #         # Clear the read_address_cache cache to read the updated `address_cache` file.
+    #         # read_address_cache.clear_cache() FIXME!!
+    #
+    #         upd_tasks = [self.upd_device(node=node,
+    #                                      device_id=dev_id,
+    #                                      obj_types=connector.obj_types_to_request,
+    #                                      connector=connector,
+    #                                      ) for dev_id in connector.address_cache_ids]
+    #
+    #         _ = await asyncio.gather(*upd_tasks)
+    #         # todo check results
+    #         return True
+    #
+    #     except AttributeError as e:
+    #         _log.warning(f"Connector not updated: cannot read 'address_cache' : {e}")
+    #         return False
+    #
+    #     except Exception as e:
+    #         _log.error(f'Update {connector} error: {e}',
+    #                    exc_info=True
+    #                    )
+    #         return False
 
-            upd_tasks = [self.upd_device(node=node,
-                                         device_id=dev_id,
-                                         obj_types=connector.obj_types_to_request,
-                                         connector=connector,
-                                         ) for dev_id in connector.address_cache_ids]
+    async def get_objs(self, device_id: int, obj_types: Iterable[ObjType]) -> tuple:
+        rq_tasks = [self._rq(method='GET',
+                             url=(f'{self.get_node.cur_server.base_url}'
+                                  f'{self._GET_URL}{device_id}/{obj_type.name_dashed}'),
+                             headers=self.get_node.cur_server.auth_headers)
+                    for obj_type in obj_types]
+        data = await asyncio.gather(*rq_tasks)
+        return data
 
-            _ = await asyncio.gather(*upd_tasks)
-            # todo check results
-            return True
-
-        except AttributeError as e:
-            _log.warning(f"Connector not updated: cannot read 'address_cache' : {e}")
-            return False
-
-        except Exception as e:
-            _log.error(f'Update {connector} error: {e}',
-                       exc_info=True
-                       )
-            return False
-
-    async def upd_device(self, node: VisioHTTPNode,
-                         device_id: int, obj_types: Iterable[ObjType],
-                         connector: BaseConnector) -> bool:
-        # todo: implement data factory param?
-        """Perform request objects of each types for device by id.
-        Then resend data about device to connector.
-        :param node:
-        :param device_id:
-        :param obj_types:
-        :param connector:
-        :return: is device updated successfully
-        """
-        try:
-            # add first type - device info, contains upd_interval
-            obj_types = [ObjType.DEVICE, *obj_types]
-
-            obj_requests = [
-                self._rq(method='GET',
-                         url=(f'{node.cur_server.base_url}'
-                              f'/vbas/gate/get/{device_id}/{obj_type.name_dashed}'),
-                         headers=node.cur_server.auth_headers
-                         ) for obj_type in obj_types
-            ]
-            objs_data = await asyncio.gather(*obj_requests)  # list[dict]
-
-            # objects of each type, if it's not empty, are added to the dictionary,
-            # where key is obj_type and value is list with objects
-            # objs_data = {obj_type: objs for obj_type, objs in
-            #              zip(obj_types, objs_data)
-            #              if objs_data
-            #              }
-            connector.getting_queue.put((device_id, objs_data))
-            return True
-
-        except Exception as e:
-            _log.error(f'Device [{device_id}] updating was failed: {e}',
-                       exc_info=True
-                       )
-            return False
+    # async def upd_device(self, node: VisioHTTPNode,
+    #                      device_id: int, obj_types: Iterable[ObjType],
+    #                      connector: BaseConnector) -> bool:
+    #     # todo: implement data factory param?
+    #     """Perform request objects of each types for device by id.
+    #     Then resend data about device to connector.
+    #     :param node:
+    #     :param device_id:
+    #     :param obj_types:
+    #     :param connector:
+    #     :return: is device updated successfully
+    #     """
+    #     try:
+    #         # add first type - device info, contains upd_interval
+    #         obj_types = [ObjType.DEVICE, *obj_types]
+    #
+    #         obj_requests = [
+    #             self._rq(method='GET',
+    #                      url=(f'{node.cur_server.base_url}'
+    #                           f'/vbas/gate/get/{device_id}/{obj_type.name_dashed}'),
+    #                      headers=node.cur_server.auth_headers
+    #                      ) for obj_type in obj_types
+    #         ]
+    #         objs_data = await asyncio.gather(*obj_requests)  # list[dict]
+    #
+    #         # objects of each type, if it's not empty, are added to the dictionary,
+    #         # where key is obj_type and value is list with objects
+    #         # objs_data = {obj_type: objs for obj_type, objs in
+    #         #              zip(obj_types, objs_data)
+    #         #              if objs_data
+    #         #              }
+    #         connector.getting_queue.put((device_id, objs_data))
+    #         return True
+    #
+    #     except Exception as e:
+    #         _log.error(f'Device [{device_id}] updating was failed: {e}',
+    #                    exc_info=True
+    #                    )
+    #         return False
 
     async def logout(self, nodes: Iterable[VisioHTTPNode]) -> bool:
         """Perform log out from nodes.
@@ -348,7 +367,7 @@ class VisioBASHTTPClient:
             post_tasks = [
                 self._rq(
                     method='POST',
-                    url=f'{node.cur_server.base_url}{self._POST_LIGHT_URL}{device_id}',
+                    url=f'{node.cur_server.base_url}{self._POST_URL}{device_id}',
                     headers=node.cur_server.auth_headers,
                     data=data
                 ) for node in nodes
