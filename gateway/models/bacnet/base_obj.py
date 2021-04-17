@@ -1,6 +1,7 @@
 from pydantic import BaseModel, Field
 
-from gateway.models import ObjProperty, ObjType
+from .obj_property import ObjProperty
+from .obj_type import ObjType
 
 
 class BaseBACnetObjModel(BaseModel):

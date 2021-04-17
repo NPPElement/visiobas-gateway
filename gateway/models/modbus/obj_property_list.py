@@ -22,6 +22,7 @@ class ModbusObjPropertyListModel(BaseModel):
 
     byte_order: str = Field(default='little', alias='byteOrder')
     word_order: str = Field(default='big', alias='wordOrder')
+    repack: bool = Field(default=False)  # todo add to docs
 
     # bitmask = int todo
     # bit: Union[int, None] = None  # TODO: change to 'bitmask'

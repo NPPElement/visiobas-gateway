@@ -3,10 +3,10 @@ import os
 import sys
 from pathlib import Path
 
-from aiomisc.log import basic_config
-
-from gateway import VisioGateway
+from gateway import VisioBASGateway
 from gateway.utils import disable_loggers
+
+# from aiomisc.log import basic_config
 
 _base_path = Path(__file__).resolve().parent
 
@@ -36,13 +36,13 @@ def main():
     #                     stream=sys.stdout,
     #                     )
 
-    basic_config(level=logging.DEBUG, buffered=True, flush_interval=2,
-                 # log_format=_log_fmt,
-                 stream=sys.stderr
-                 )
+    # basic_config(level=logging.DEBUG, buffered=True, flush_interval=2,
+    #              # log_format=_log_fmt,
+    #              stream=sys.stderr
+    #              )
 
     disable_loggers(loggers=_unused_loggers)
-    gw = VisioGateway.from_yaml(yaml_path=_base_path / 'config/gateway.yaml')
+    VisioBASGateway.from_yaml(yaml_path=_base_path / 'config/gateway.yaml').run()
 
 
 if __name__ == '__main__':
