@@ -3,7 +3,7 @@ from logging import getLogger
 from multiprocessing import SimpleQueue
 from pathlib import Path
 
-from aiomisc import entrypoint
+# from aiomisc import entrypoint
 
 from gateway.api import VisioGatewayApiService
 from gateway.clients import VisioBASHTTPClient, VisioBASMQTTClient

@@ -12,8 +12,8 @@ _log = getLogger(__name__)
 
 
 @lru_cache(maxsize=2)
-def read_address_cache(address_cache_path: Path) -> dict[int, str]:
-    """Updates address_cache file.
+def read_address_cache(path: Path) -> dict[int, str]:
+    """Reads address_cache file.
     Caches the read result. Therefore, the cache must be cleared on update.
 
     Parse text file format of address_cache.
@@ -36,7 +36,7 @@ def read_address_cache(address_cache_path: Path) -> dict[int, str]:
     try:
         address_cache = {}
 
-        text = address_cache_path.read_text(encoding='utf-8')
+        text = path.read_text(encoding='utf-8')
         for line in text.split('\n'):
             trimmed = line.strip()
             if not trimmed.startswith(';') and trimmed:
@@ -58,11 +58,7 @@ def read_address_cache(address_cache_path: Path) -> dict[int, str]:
         return address_cache
 
     except Exception as e:
-        _log.critical(f'Read address_cache error: {e} '
-                      # f'Closing {self}'
-                      )
-        # self.close()  # fixme
-        # raise e
+        _log.critical(f'Read address_cache error: {e}')
 
 
 def get_fault_obj_properties(reliability: int or str,
