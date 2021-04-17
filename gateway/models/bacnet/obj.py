@@ -19,23 +19,6 @@ class BACnetObjModel(BaseBACnetObjModel):
 
     _last_value = None
 
-    # @validator('type')
-    # def cast_to_obj_type(cls, v):
-    #     print(type(v), v)
-    #     return ObjType(v)
-
-    # @validator('resolution')
-    # def set_default_resolution(cls, v):
-    #     return v or .1
-
-    # @validator('property_list')
-    # def parse_property_list(cls, v):
-    #     return PropertyListModel.parse_raw(v)
-
-    @property
-    def topic(self):
-        return self.name.replace(':', '/').replace('.', '/')
-
 # class BACnetObjectsDataModel(BaseModel):
 #     success: bool = Field(default=...)
 #     data: list[BACnetObjModel] = Field(default=...)
@@ -47,26 +30,3 @@ class BACnetObjModel(BaseBACnetObjModel):
 #         raise ValueError('Must be True')
 #
 #     @validator('')
-
-
-# class BACnetObj(NamedTuple):
-#     # type: ObjType
-#     id: int
-#
-#     name: str
-#     resolution: float = None  # todo
-#     update_interval: int = None  # TODO: implement skip by update_interval
-#
-#     @property
-#     def topic(self):
-#         return self.name.replace(':', '/').replace('.', '/')
-#
-#     @classmethod
-#     def from_dict(cls, obj_type: ObjType, obj_props: dict):
-#         obj_id = obj_props[str(ObjProperty.objectIdentifier.id)]
-#         obj_name = obj_props[str(ObjProperty.objectName.id)]
-#
-#         return cls(type=obj_type,
-#                    id=obj_id,
-#                    name=obj_name
-#                    )

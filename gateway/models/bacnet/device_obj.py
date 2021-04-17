@@ -36,8 +36,8 @@ class BACnetDeviceModel(BaseBACnetObjModel):
         alias=ObjProperty.propertyList.id_str)
 
     @validator('property_list')
-    def parse_rtu_pl(cls, pl: str) -> DeviceRTUPropertyListModel:
-        return DeviceRTUPropertyListModel.parse_raw(pl)
+    def parse_rtu_pl(cls, pl: str) -> DevicePropertyListWrapper:
+        return DevicePropertyListWrapper.parse_raw(pl)
 
     # send_sync_delay = # send period
     # internal_sync_delay =

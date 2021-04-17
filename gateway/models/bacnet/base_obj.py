@@ -15,3 +15,7 @@ class BaseBACnetObjModel(BaseModel):
     name: str = Field(..., alias=ObjProperty.objectName.id_str)
 
     property_list: str = Field(alias=ObjProperty.propertyList.id_str)
+
+    @property
+    def topic(self):
+        return self.name.replace(':', '/').replace('.', '/')
