@@ -1,3 +1,4 @@
+
 from typing import Union
 
 from pydantic import Field, validator, BaseModel
@@ -20,6 +21,7 @@ class DeviceRTUPropertyListModel(BaseModel):
 
 class DevicePropertyListWrapper(BaseModel):
     rtu: DeviceRTUPropertyListModel
+
 
 
 class BACnetDeviceModel(BaseBACnetObjModel):

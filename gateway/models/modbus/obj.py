@@ -1,3 +1,4 @@
+
 from typing import Union
 
 from pydantic import Field, validator
@@ -14,6 +15,7 @@ class ModbusObjModel(BACnetObjModel):
     @validator('property_list')
     def parse_property_list(cls, pl: str) -> ModbusPropertyListWrapper:
         return ModbusPropertyListWrapper.parse_raw(pl)
+
 
 # class ModbusObj(NamedTuple):
 #     # type: ObjType
