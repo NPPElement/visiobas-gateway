@@ -5,14 +5,15 @@ from enum import Enum, unique
 class StatusFlag(Enum):
     """StatusFlags represent by int.
 
-    How to use:
-        For enable flag FAULT use:
+    Usage:
+        - For enable flag FAULT use:
             sf = sf | StatusFlags.FAULT.value
 
-        For disable flag IN_ALARM use:
+        - For disable flag IN_ALARM use:
             sf = sf & ~StatusFlags.IN_ALARM.value
 
-            TODO add check flag
+        - For check flag OVERRIDEN use:
+            todo
     """
     # принимается ли значения сервером
     OUT_OF_SERVICE = 0b1000  # не слать на сервер
