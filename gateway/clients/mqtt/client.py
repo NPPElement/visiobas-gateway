@@ -3,11 +3,11 @@ import uuid
 from json import loads, JSONDecodeError
 from logging import getLogger
 from pathlib import Path
-from typing import Sequence
+from typing import Sequence, Union
 
 import paho.mqtt.client as mqtt
 
-from .api import VisioMQTTApi
+# from .api import VisioMQTTApi
 from ...models import ResultCode, Qos
 
 _log = getLogger(__name__)
@@ -33,7 +33,7 @@ class VisioBASMQTTClient:
         self._connected = False
         self._client: mqtt.Client = None
         self._paho_lock = asyncio.Lock()
-        self.api = VisioMQTTApi(visio_mqtt_client=self, gateway=gateway)
+        # self.api = VisioMQTTApi(visio_mqtt_client=self, gateway=gateway)
 
         self.init_client()
 
@@ -153,7 +153,7 @@ class VisioBASMQTTClient:
 
         await self._gateway.add_job(disconnect)
 
-    async def subscribe(self, topics: Sequence[tuple[str, int] | tuple[str, int]],
+    async def subscribe(self, topics: Sequence[tuple[str, int]],
                         qos: int = Qos.AT_MOST_ONCE_DELIVERY) -> None:
         """Perform a subscription.
 
@@ -170,7 +170,7 @@ class VisioBASMQTTClient:
         # elif result == mqtt.MQTT_ERR_NO_CONN:
         #     _log.warning(f'Not subscribed to topic: {topics} {result} {mid}')
 
-    async def unsubscribe(self, topics: list[str] | str) -> None:
+    async def unsubscribe(self, topics: Union[list[str], str]) -> None:
         """Perform an unsubscription."""
         async with self._paho_lock:
             result, mid = await self._gateway.add_job(

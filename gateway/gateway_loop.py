@@ -21,10 +21,11 @@ class VisioBASGateway:
     MQTT_CFG_PATH = CFG_DIR / 'mqtt.yaml'
 
     BACNET_ADDRESS_CACHE_PATH = BASE_DIR / 'connectors/bacnet/address_cache'
-    MODBUS_ADDRESS_CACHE_PATH = BASE_DIR / 'connectors/modbus/address_cache'
+    MODBUS_ADDRESS_CACHE_PATH = BASE_DIR / 'devices/modbus_address_cache'
     MODBUS_RTU_ADDRESS_CACHE_PATH = 'connectors/modbus/rtu.yaml'
 
     def __init__(self, config: dict):
+        # self.loop = asyncio.new_event_loop()
         self.loop = asyncio.get_running_loop()
         # self._pending_tasks: list = []
         self.config = config
@@ -57,9 +58,9 @@ class VisioBASGateway:
     def devices(self) -> dict[int, Any]:
         return self._devices
 
-    def run(self) -> None:
-        # if need, set event loop policy here
-        asyncio.run(self.async_run())
+    # def run(self) -> None:
+    #     # if need, set event loop policy here
+    #     asyncio.run(self.async_run(), debug=True)
 
     async def async_run(self) -> None:
         """Gateway main entry point.
@@ -72,7 +73,8 @@ class VisioBASGateway:
         await self._stopped.wait()
 
     async def async_start(self) -> None:
-        await self.add_job(self.async_setup)
+        self.add_job(self.async_setup)
+
         # self.loop.run_forever()
 
     async def async_setup(self) -> None:
@@ -80,8 +82,8 @@ class VisioBASGateway:
         self.http_client = VisioBASHTTPClient.from_yaml(
             gateway=self, yaml_path=self.HTTP_CFG_PATH)
         # await self.http_client.setup()
-        self.mqtt_client = VisioBASMQTTClient.from_yaml(
-            gateway=self, yaml_path=self.MQTT_CFG_PATH)
+        # self.mqtt_client = VisioBASMQTTClient.from_yaml(
+        #     gateway=self, yaml_path=self.MQTT_CFG_PATH)
         # todo: setup HTTP API server
         self._upd_task = self.loop.create_task(self.periodic_update())
 
@@ -93,12 +95,28 @@ class VisioBASGateway:
 
         self._upd_task = self.loop.create_task(self.periodic_update())
 
-    def add_job(self, target: Callable, *args: Any) -> Optional[Awaitable]:
-        """Add a job."""
+    def add_job(self, target: Callable, *args: Any) -> None:
+        """Adds job to the executor pool.
+
+        Args:
+            target: target to call.
+            args: parameters for target to call.
+        """
+        if target is None:
+            raise ValueError('None not allowed')
+        self.loop.call_soon_threadsafe(self.async_add_job, target, *args)
+
+    def async_add_job(self, target: Callable, *args: Any) -> Optional[asyncio.Future]:
+        """Adds a job from within the event loop.
+
+        Args:
+            target: target to call.
+            args: parameters for target to call.
+        """
         if target is None:
             raise ValueError('None not allowed')
 
-        if asyncio.iscoroutine(target):
+        if asyncio.iscoroutine(target) or asyncio.iscoroutinefunction(target):
             task = self.loop.create_task(target(*args))
             return task
         else:
@@ -123,7 +141,7 @@ class VisioBASGateway:
         await self.http_client.authorize()
 
         # Update devices identifiers to poll
-        device_ids = await self.add_job(target=self._get_device_ids)
+        device_ids = await self.async_add_job(target=self._get_device_ids)
 
         # Load devices
         load_device_tasks = [self.load_device(dev_id=dev_id) for dev_id in device_ids]
