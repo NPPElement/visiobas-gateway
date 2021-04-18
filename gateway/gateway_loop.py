@@ -17,6 +17,9 @@ class VisioBASGateway:
     BASE_DIR = Path(__file__).resolve().parent
     CFG_DIR = BASE_DIR / 'config'
 
+    HTTP_CFG_PATH = CFG_DIR / 'http.yaml'
+    MQTT_CFG_PATH = CFG_DIR / 'mqtt.yaml'
+
     BACNET_ADDRESS_CACHE_PATH = BASE_DIR / 'connectors/bacnet/address_cache'
     MODBUS_ADDRESS_CACHE_PATH = BASE_DIR / 'connectors/modbus/address_cache'
     MODBUS_RTU_ADDRESS_CACHE_PATH = 'connectors/modbus/rtu.yaml'
@@ -75,10 +78,10 @@ class VisioBASGateway:
     async def async_setup(self) -> None:
         """Set up Gateway and spawn update task."""
         self.http_client = VisioBASHTTPClient.from_yaml(
-            gateway=self, yaml_path=self.CFG_DIR / 'http.yaml')
+            gateway=self, yaml_path=self.HTTP_CFG_PATH)
         # await self.http_client.setup()
         self.mqtt_client = VisioBASMQTTClient.from_yaml(
-            gateway=self, yaml_path=self.CFG_DIR / 'mqtt.yaml')
+            gateway=self, yaml_path=self.MQTT_CFG_PATH)
         # todo: setup HTTP API server
         self._upd_task = self.loop.create_task(self.periodic_update())
 
