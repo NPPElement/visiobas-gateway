@@ -10,6 +10,8 @@ the visioBAS system.
     - [Install Docker Compose](#Install-Docker-Compose)
     - [Install VisioBAS gateway](#Install-VisioBAS-Gateway)
 2. [Setting](#Setting)
+    - [Setting COM ports](#Setting-COM-ports)
+    - [Setting configuration](#Setting-configuration)
 3. [Launch](#Launch)
 4. [Update](#Update)
 5. [Remove](#Remove)
@@ -58,6 +60,24 @@ cd visiobas-gateway
 ```
 
 ## Setting
+
+### Setting COM ports
+
+```shell
+sudo apt-get install minicom  # install minicom
+dmesg | grep tty  # show ports
+sudo minicom -s # launch minicom
+# setup COM ports in minicom
+# then save as dfl
+
+sudo nano /etc/udev/rules.d/99-serial.rules
+# then write line: KERNEL=="ttyUSB[0-9]*",MODE="0666"
+
+# Explanations: https://www.losant.com/blog/how-to-access-serial-devices-in-docker
+```
+
+
+### Setting configuration
 
 - To configure it, you need to edit the file `docker-compose.yaml`. HTTP's settings must be
   specified in the `http_config.env`. HTTP's settings file
