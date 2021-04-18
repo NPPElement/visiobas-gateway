@@ -186,7 +186,7 @@ class ModbusRTUDevice(Thread):
             )
             return data.registers
         else:
-            self._log.warning(f'Read failed: {data} {obj}')
+            self._log.warning(f'Read failed: {data} unit={self.unit} {obj}')
             # raise ValueError(data)
 
     def write(self, values, obj: ModbusObject) -> bool:

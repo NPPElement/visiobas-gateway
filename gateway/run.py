@@ -28,7 +28,6 @@ _unused_loggers = (
     'pymodbus.framer.rtu_framer',
     'pymodbus.factory',
     'pymodbus.payload'
-
 )
 logging.basicConfig(format=_LOGGER_FORMAT,
                     level=_log_level,
