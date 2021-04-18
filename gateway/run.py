@@ -25,7 +25,7 @@ _unused_loggers = (
     'pymodbus.client.sync',
     'pymodbus.transaction',
     'pymodbus.framer.socket_framer',
-    'pymodbus.framer.rtu_framer ',
+    'pymodbus.framer.rtu_framer',
     'pymodbus.factory',
     'pymodbus.payload'
 
