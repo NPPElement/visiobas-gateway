@@ -1,7 +1,7 @@
 import asyncio
 from logging import getLogger
 from pathlib import Path
-from typing import Callable, Any, Optional, Awaitable, Iterable
+from typing import Callable, Any, Optional, Awaitable, Iterable, Union
 
 from gateway.clients import VisioBASHTTPClient, VisioBASMQTTClient
 from gateway.devices.async_device import AsyncModbusDevice
@@ -16,6 +16,10 @@ class VisioBASGateway:
 
     BASE_DIR = Path(__file__).resolve().parent
     CFG_DIR = BASE_DIR / 'config'
+
+    BACNET_ADDRESS_CACHE_PATH = BASE_DIR / 'connectors/bacnet/address_cache'
+    MODBUS_ADDRESS_CACHE_PATH = BASE_DIR / 'connectors/modbus/address_cache'
+    MODBUS_RTU_ADDRESS_CACHE_PATH = 'connectors/modbus/rtu.yaml'
 
     def __init__(self, config: dict):
         self.loop = asyncio.get_running_loop()
@@ -32,9 +36,6 @@ class VisioBASGateway:
 
         self._devices = dict[int, Any]
 
-        # self.bacnet = list[BACnetDevice]
-        # self.modbus = list[ModbusDevice]
-
     @classmethod
     def from_yaml(cls, yaml_path: Path) -> 'VisioBASGateway':
         # todo add a pydantic model of config and use it
@@ -48,6 +49,10 @@ class VisioBASGateway:
     @property
     def upd_period(self) -> int:
         return self.config.get('upd_period', 3600)
+
+    @property
+    def devices(self) -> dict[int, Any]:
+        return self._devices
 
     def run(self) -> None:
         # if need, set event loop policy here
@@ -72,10 +77,9 @@ class VisioBASGateway:
         self.http_client = VisioBASHTTPClient.from_yaml(
             gateway=self, yaml_path=self.CFG_DIR / 'http.yaml')
         # await self.http_client.setup()
-
         self.mqtt_client = VisioBASMQTTClient.from_yaml(
             gateway=self, yaml_path=self.CFG_DIR / 'mqtt.yaml')
-        # todo: setup http api server
+        # todo: setup HTTP API server
         self._upd_task = self.loop.create_task(self.periodic_update())
 
     async def periodic_update(self) -> None:
@@ -109,21 +113,20 @@ class VisioBASGateway:
 
         Setup gateway steps:
             - Log in to HTTP
-            - Get device id list (HTTP?)
-            - Get device data via HTTP
+            - Load devices
             - Start devices poll
             - Connect to MQTT
         """
-        # todo
-
         await self.http_client.authorize()
 
-        # await update device id list
+        # Update devices identifiers to poll
         device_ids = await self.add_job(target=self._get_device_ids)
 
-        # await self.http_client.rq_devices_data()
-        # await self.http_client.rq_objects_data()
-        # await self.start_devices_poll
+        # Load devices
+        load_device_tasks = [self.load_device(dev_id=dev_id) for dev_id in device_ids]
+        await asyncio.gather(*load_device_tasks)
+
+        # todo await self.start_devices_poll
         await self.mqtt_client.subscribe(self.mqtt_client.topics)
 
     async def _perform_stop_tasks(self) -> None:
@@ -138,35 +141,39 @@ class VisioBASGateway:
         # await stop_devices() todo
         await self.http_client.logout(nodes=self.http_client.all_nodes)
 
-    async def setup_devices(self) -> None:
-        """Gets identifiers of devices to poll.
-        Gets objects of devices.
-        Gets objects to poll and load it to device.
-        """
-
     async def load_device(self, dev_id: int) -> None:
         """Tries to download an object of device from server.
         Then gets objects to poll and load them into device.
+
+        When device loaded, it may be accessed by `gateway.devices[identifier]`.
 
         If fails get objects from server - loads it from local.
         """
         dev_obj = await self.http_client.get_objs(dev_id=dev_id,
                                                   obj_types=(ObjType.DEVICE,))
-        device = self.device_factory(dev_obj=dev_obj)
+        device = await self.add_job(self.device_factory, dev_obj)
 
-        objs_to_poll = await self.http_client.get_objs(dev_id=dev_id,
-                                                       obj_types=device.types_to_rq)
-
-        objs = [self.object_factory(dev_obj=dev_obj, obj_data=obj_data)
-                for obj_data in objs_to_poll
-                if not None]
-
+        objs_data = await self.http_client.get_objs(dev_id=dev_id,
+                                                    obj_types=device.types_to_rq)
+        objs = await self.add_job(self._extract_objects, objs_data, dev_obj)
         if len(objs):
             device.load_objects(objs=objs)
         self._devices.update({device.id: device})
 
     async def start_device_poll(self, dev_id: int) -> None:
         """Starts poll of device."""
+
+    def _extract_objects(self, objs_data: tuple, dev_obj: BACnetDeviceModel
+                         ) -> list[ModbusObjModel]:
+        """Parses and validate objects data from JSON.
+
+        Returns:
+            List of parsed and validated objects.
+        """
+        objs = [self.object_factory(dev_obj=dev_obj, obj_data=obj_data)
+                for obj_data in objs_data
+                if not None]
+        return objs
 
     def _get_device_ids(self) -> Iterable[int]:
         """Gets devise identifiers to poll.
@@ -175,10 +182,9 @@ class VisioBASGateway:
             Device identifiers to poll.
         """
         # todo get from gateway object
-        return read_address_cache(
-            path=self.BASE_DIR / 'connectors/modbus/address_cache').keys()
+        return read_address_cache(path=self.MODBUS_ADDRESS_CACHE_PATH).keys()
 
-    def device_factory(self, dev_obj: BACnetDeviceModel) -> Any:
+    def device_factory(self, dev_obj: BACnetDeviceModel) -> Union[AsyncModbusDevice]:
         """Creates device for provided protocol.
 
         Returns:
@@ -198,7 +204,7 @@ class VisioBASGateway:
 
     @staticmethod
     def object_factory(dev_obj: BACnetDeviceModel, obj_data: dict[str, Any]
-                       ) -> Optional[Any]:
+                       ) -> Optional[Union[ModbusObjModel]]:
         """Creates object for provided protocol.
 
         Returns:

@@ -29,7 +29,8 @@ class AsyncModbusDevice:
         self._loop, self._client = None, None
 
         self._polling = True
-        self._objects: Collection[ModbusObjModel] = None  # 'BACnetObjModel'
+        self._objects: Collection[ModbusObjModel] = []  # 'BACnetObjModel'
+        # todo switch do dict
 
     @property
     def types_to_rq(self) -> tuple[ObjType, ...]:  # todo hide type
@@ -129,8 +130,7 @@ class AsyncModbusDevice:
         # todo
 
     async def start_poll(self):
-
-
+        pass
 
     @property
     def read_funcs(self) -> dict[int, Callable]:
