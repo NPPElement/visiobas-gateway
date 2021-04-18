@@ -339,7 +339,7 @@ class ModbusConnector(Thread, Connector):
             func_read = int(modbus_properties['functionRead'][-2:])
             func_write = int(modbus_properties.get('functionWrite', '0x06')[-2:])
 
-            scale = int(modbus_properties.get('scale', 1))
+            scale = float(modbus_properties.get('scale', 1))
             data_type = modbus_properties['dataType']
             data_length = modbus_properties.get('dataLength', None)
             bit = modbus_properties.get('bit', None)
