@@ -53,7 +53,12 @@
             - По умолчанию: `8`
         - `rtu.parity`
             - По умолчанию: `N`
+        - `rtu.retry_on_empty`
+          - По умолчанию `True`
+        - `rtu.retry_on_invalid`
+          - По умолчанию `True`  
         - ~~rtu.timeout~~ Используется 11-е свойство `apduTimeout`
+        
 
 ## Object
 
