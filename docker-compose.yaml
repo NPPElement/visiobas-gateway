@@ -10,7 +10,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: visiobas-gateway:1.1.5
+    image: visiobas-gateway:3.0.0
     logging:
       #driver: none
       driver: "json-file"
@@ -18,6 +18,7 @@ services:
         max-file: "2"
         max-size: "1024k"
     restart: always
+    privileged: true # [1]
     environment:
       - TZ=Europe/Moscow
       - PYTHONPATH=/
@@ -25,12 +26,13 @@ services:
       # Logging
       - LOG_LEVEL=DEBUG
       #- FILE_LOG_LEVEL=DEBUG
+      # - todo format
     volumes:
       - /opt/visiobas-gateway/gateway/config:/usr/share/python3/gw/lib/python3.9/site-packages/gateway/config
       #- /opt/visiobas-gateway/logs:/usr/share/python3/gw/gateway/logs
       - /opt/visiobas-gateway/gateway/connectors/bacnet/address_cache:/usr/share/python3/gw/lib/python3.9/site-packages/gateway/connectors/bacnet/address_cache
       - /opt/visiobas-gateway/gateway/connectors/modbus/address_cache:/usr/share/python3/gw/lib/python3.9/site-packages/gateway/connectors/modbus/address_cache
-
+      - /dev:/dev # [1]
       #- /home/user/visiobas-gateway:/visiobas-gateway
     # command: python -OO __main__.py
     networks:
@@ -41,3 +43,10 @@ services:
       - 7070:7070
       - 8080:8080
       - 47808:47808
+
+    devices: # To detect Modbus RTU devices
+      - "/dev/ttyS0:/dev/ttyS0"
+      # - "/dev/ttyUSB0:/dev/ttyUSB0"
+
+
+# [1]: https://www.losant.com/blog/how-to-access-serial-devices-in-docker
