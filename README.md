@@ -10,7 +10,7 @@ the visioBAS system.
     - [Install Docker Compose](#Install-Docker-Compose)
     - [Install VisioBAS gateway](#Install-VisioBAS-Gateway)
 2. [Setting](#Setting)
-    - [Setting COM ports](#Setting-COM-ports)
+    - [Setting COM ports](#Setting-Serial-ports)
     - [Setting configuration](#Setting-configuration)
 3. [Launch](#Launch)
 4. [Update](#Update)
@@ -61,7 +61,7 @@ cd visiobas-gateway
 
 ## Setting
 
-### Setting COM ports
+### Setting Serial ports
 
 ```shell
 sudo apt-get install minicom  # install minicom
@@ -74,6 +74,10 @@ sudo nano /etc/udev/rules.d/99-serial.rules
 # then write line: KERNEL=="ttyUSB[0-9]*",MODE="0666"
 
 # Explanations: https://www.losant.com/blog/how-to-access-serial-devices-in-docker
+
+# Before launch gateway, ensure user in the `dialout` group
+sudo usermod -a -G dialout username # add to group `dialout`
+id username # show user\group info
 ```
 
 
