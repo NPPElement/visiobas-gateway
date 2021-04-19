@@ -25,7 +25,7 @@ class ModbusObjPropertyListModel(BaseModel):
     # bit: Union[int, None] = None  # TODO: change to 'bitmask'
 
 
-class ModbusPropertyListWrapper(BaseModel):
+class ModbusPropertyListWrap(BaseModel):
     modbus: ModbusObjPropertyListModel = Field(...)  # alias='modbus')
 
     # @property

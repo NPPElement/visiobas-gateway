@@ -19,7 +19,7 @@ class DeviceRTUPropertyListModel(BaseModel):
     parity: str = Field(default='N')
 
 
-class DevicePropertyListWrapper(BaseModel):
+class DevicePropertyListWrap(BaseModel):
     rtu: DeviceRTUPropertyListModel = Field(default=None)
     address: str = Field(default=None)  # todo use Ip objs
 
@@ -39,12 +39,12 @@ class BACnetDeviceModel(BaseBACnetObjModel):
     # internal_sync_delay =
 
     # todo refactor
-    property_list: Union[str, DevicePropertyListWrapper] = Field(
+    property_list: Union[str, DevicePropertyListWrap] = Field(
         alias=ObjProperty.propertyList.id_str)
 
     @validator('property_list')
-    def parse_rtu_pl(cls, pl: str) -> DevicePropertyListWrapper:
-        return DevicePropertyListWrapper.parse_raw(pl)
+    def parse_rtu_pl(cls, pl: str) -> DevicePropertyListWrap:
+        return DevicePropertyListWrap.parse_raw(pl)
 
     @property
     def types_to_rq(self) -> tuple[ObjType, ...]:
