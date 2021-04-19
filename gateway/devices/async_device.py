@@ -29,7 +29,7 @@ class AsyncModbusDevice:
         self._loop, self._client = None, None
 
         self._polling = True
-        self._objects: Collection[ModbusObjModel] = []  # 'BACnetObjModel'
+        self._objects: dict[int, set[ModbusObjModel]] = {}  # todo hide type
         # todo switch do dict
 
     @property
@@ -126,8 +126,27 @@ class AsyncModbusDevice:
         """Loads object to poll.
         Group by poll period.
         """
+
+        objs = self._sort_objects_by_period(objs=objs)
         self._objects = objs
-        # todo
+
+    @staticmethod
+    def _sort_objects_by_period(objs: Collection[ModbusObjModel]
+                                ) -> dict[int, set[ModbusObjModel]]:
+        """Creates dict from objects, where key is period, value is collection
+        of objects with that period.
+
+        Returns:
+            dict, where key is period, value is collection of objects with that period.
+        """
+        dct = {}
+        for obj in objs:
+            poll_period = obj.upd_interval  # fixme?
+            try:
+                dct[poll_period].add(obj)
+            except KeyError:
+                dct[poll_period] = set(obj)
+        return dct
 
     async def start_poll(self):
         pass
