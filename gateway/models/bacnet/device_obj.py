@@ -12,7 +12,7 @@ from .obj_type import ObjType
 
 
 class DeviceRTUPropertyListModel(BaseModel):
-    port: str = Field(default=Defaults.Port)
+    port: str = Field(...)
     baudrate: int = Field(default=Defaults.Baudrate, gt=0, lt=115200)
     stopbits: int = Field(default=Defaults.Stopbits)
     bytesize: int = Field(default=Defaults.Bytesize)
