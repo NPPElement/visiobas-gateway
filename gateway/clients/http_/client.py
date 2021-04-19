@@ -398,7 +398,7 @@ class VisioBASHTTPClient:
                          )
             return False
 
-    async def _rq(self, method: str, url: str, **kwargs) -> list or dict:
+    async def _rq(self, method: str, url: str, **kwargs) -> Union[list, dict]:
         """Perform HTTP request and check response.
         :return: extracted data
         """

@@ -20,17 +20,20 @@ class DeviceRTUPropertyListModel(BaseModel):
 
 
 class DevicePropertyListWrapper(BaseModel):
-    rtu: DeviceRTUPropertyListModel
+    rtu: DeviceRTUPropertyListModel = Field(default=None)
+    address: str = Field(default=None)  # todo use Ip objs
 
 
 class BACnetDeviceModel(BaseBACnetObjModel):
     timeout: int = Field(..., alias=ObjProperty.apduTimeout.id_str)
     retries: int = Field(default=1, alias=ObjProperty.numberOfApduRetries.id_str)
 
-    address: str = Field(...,
-                         alias=ObjProperty.deviceAddressBinding.id_str)  # todo use Ip obj
-    protocol: str = Field(...,
-                          alias=ObjProperty.protocolVersion.id_str)  # todo use Protocol Enum
+    # address: str = Field(...,
+    #                      alias=ObjProperty.deviceAddressBinding.id_str)
+
+    # todo Enum for protocols
+    # protocol: str = Field(...,
+    #                       alias=ObjProperty.protocolVersion.id_str)
 
     # send_sync_delay = # send period
     # internal_sync_delay =
