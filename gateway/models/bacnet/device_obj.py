@@ -1,6 +1,7 @@
 from typing import Union
 
 from pydantic import Field, validator, BaseModel
+from pymodbus.constants import Defaults
 
 from .base_obj import BaseBACnetObjModel
 from .obj_property import ObjProperty
@@ -11,12 +12,12 @@ from .obj_type import ObjType
 
 
 class DeviceRTUPropertyListModel(BaseModel):
-    port: str = Field(...)
-    baudrate: int = Field(..., gt=0, lt=115200)
-    stopbits: int = Field(default=1)
-    bytesize: int = Field(default=8)
-    timeout: float = Field(default=1)
-    parity: str = Field(default='N')
+    port: str = Field(default=Defaults.Port)
+    baudrate: int = Field(default=Defaults.Baudrate, gt=0, lt=115200)
+    stopbits: int = Field(default=Defaults.Stopbits)
+    bytesize: int = Field(default=Defaults.Bytesize)
+    timeout: float = Field(default=1)  # 3s is too much
+    parity: str = Field(default=Defaults.Parity)
 
 
 class DevicePropertyListWrap(BaseModel):
@@ -26,7 +27,7 @@ class DevicePropertyListWrap(BaseModel):
 
 class BACnetDeviceModel(BaseBACnetObjModel):
     timeout: int = Field(..., alias=ObjProperty.apduTimeout.id_str)
-    retries: int = Field(default=1, alias=ObjProperty.numberOfApduRetries.id_str)
+    retries: int = Field(default=2, alias=ObjProperty.numberOfApduRetries.id_str)
 
     # address: str = Field(...,
     #                      alias=ObjProperty.deviceAddressBinding.id_str)
