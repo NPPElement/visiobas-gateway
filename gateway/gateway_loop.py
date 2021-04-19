@@ -1,7 +1,7 @@
 import asyncio
 from logging import getLogger
 from pathlib import Path
-from typing import Callable, Any, Optional, Awaitable, Iterable, Union
+from typing import Callable, Any, Optional, Iterable, Union
 
 from gateway.clients import VisioBASHTTPClient, VisioBASMQTTClient
 from gateway.devices.async_device import AsyncModbusDevice
@@ -73,7 +73,7 @@ class VisioBASGateway:
         await self._stopped.wait()
 
     async def async_start(self) -> None:
-        self.add_job(self.async_setup)
+        await self.async_add_job(self.async_setup)
 
         # self.loop.run_forever()
 
@@ -95,16 +95,16 @@ class VisioBASGateway:
 
         self._upd_task = self.loop.create_task(self.periodic_update())
 
-    def add_job(self, target: Callable, *args: Any) -> None:
-        """Adds job to the executor pool.
-
-        Args:
-            target: target to call.
-            args: parameters for target to call.
-        """
-        if target is None:
-            raise ValueError('None not allowed')
-        self.loop.call_soon_threadsafe(self.async_add_job, target, *args)
+    # def add_job(self, target: Callable, *args: Any) -> None:
+    #     """Adds job to the executor pool.
+    #
+    #     Args:
+    #         target: target to call.
+    #         args: parameters for target to call.
+    #     """
+    #     if target is None:
+    #         raise ValueError('None not allowed')
+    #     self.loop.call_soon_threadsafe(self.async_add_job, target, *args)
 
     def async_add_job(self, target: Callable, *args: Any) -> Optional[asyncio.Future]:
         """Adds a job from within the event loop.
@@ -170,19 +170,34 @@ class VisioBASGateway:
 
         If fails get objects from server - loads it from local.
         """
-        dev_obj = await self.http_client.get_objs(dev_id=dev_id,
-                                                  obj_types=(ObjType.DEVICE,))
-        device = await self.add_job(self.device_factory, dev_obj)
+        try:
+            dev_obj_data = await self.http_client.get_objs(dev_id=dev_id,
+                                                           obj_types=(ObjType.DEVICE,))
+            _log.debug(f'dev_obj_data: {dev_obj_data}')
 
-        objs_data = await self.http_client.get_objs(dev_id=dev_id,
-                                                    obj_types=device.types_to_rq)
-        objs = await self.add_job(self._extract_objects, objs_data, dev_obj)
-        if len(objs):
-            device.load_objects(objs=objs)
-        self._devices.update({device.id: device})
+            dev_obj = await self.async_add_job(self._parse_device_obj, dev_obj_data[0])
+            _log.debug(f'dev_obj: {dev_obj}')
+
+            device = await self.async_add_job(self.device_factory, dev_obj)
+            _log.debug(f'device: {device}')
+
+            objs_data = await self.http_client.get_objs(dev_id=dev_id,
+                                                        obj_types=device.types_to_rq)
+            objs = await self.async_add_job(self._extract_objects, objs_data, dev_obj_data)
+            if len(objs):
+                device.load_objects(objs=objs)
+            self._devices.update({device.id: device})
+        except AttributeError as e:
+            _log.warning(f'Cannot load device : {e}')
 
     async def start_device_poll(self, dev_id: int) -> None:
         """Starts poll of device."""
+
+    @staticmethod
+    def _parse_device_obj(dev_data: dict) -> BACnetDeviceModel:
+        dev = BACnetDeviceModel(**dev_data)
+        _log.debug(f'Parsed: {dev}')
+        return dev
 
     def _extract_objects(self, objs_data: tuple, dev_obj: BACnetDeviceModel
                          ) -> list[ModbusObjModel]:
@@ -226,7 +241,7 @@ class VisioBASGateway:
     @staticmethod
     def object_factory(dev_obj: BACnetDeviceModel, obj_data: dict[str, Any]
                        ) -> Optional[Union[ModbusObjModel]]:
-        """Creates object for provided protocol.
+        """Creates object for provided protocol data.
 
         Returns:
             If object created - returns created object.
