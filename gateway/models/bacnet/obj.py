@@ -16,6 +16,8 @@ class BACnetObjModel(BaseBACnetObjModel):
                                                 alias=ObjProperty.resolution.id_str)
     upd_interval: Union[float, int, None] = Field(default=60,
                                                   alias=ObjProperty.updateInterval.id_str)
+    segmentation_supported: bool = Field(default=False,
+                                         alias=ObjProperty.segmentationSupported.id_str)
 
     _last_value = None
 
