@@ -18,6 +18,8 @@ class DeviceRTUPropertyListModel(BaseModel):
     bytesize: int = Field(default=Defaults.Bytesize)
     timeout: float = Field(default=1)  # 3s is too much
     parity: str = Field(default=Defaults.Parity)
+    retry_on_empty: bool = Field(default=True)  # works better
+    retry_on_invalid: bool = Field(default=True)  # works better
 
 
 class DevicePropertyListWrap(BaseModel):
@@ -52,6 +54,4 @@ class BACnetDeviceModel(BaseBACnetObjModel):
         return (ObjType.ANALOG_INPUT, ObjType.ANALOG_OUTPUT, ObjType.ANALOG_VALUE,
                 ObjType.BINARY_INPUT, ObjType.BINARY_OUTPUT, ObjType.BINARY_VALUE,
                 ObjType.MULTI_STATE_INPUT, ObjType.MULTI_STATE_OUTPUT,
-                ObjType.MULTI_STATE_VALUE, )
-
-
+                ObjType.MULTI_STATE_VALUE,)

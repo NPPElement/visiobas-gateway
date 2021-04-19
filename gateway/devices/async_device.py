@@ -109,8 +109,8 @@ class AsyncModbusDevice:
                 parity=self._device_obj.property_list.rtu.parity,
                 stopbits=self._device_obj.property_list.rtu.stopbits,
                 retries=self.retries,
-                retry_on_empty=True,
-                retry_on_invalid=True,
+                retry_on_empty=self._device_obj.property_list.rtu.retry_on_empty,
+                retry_on_invalid=self._device_obj.property_list.rtu.retry_on_invalid,
                 loop=self._gateway.loop,
                 timeout=self.timeout
             )
