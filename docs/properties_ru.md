@@ -52,13 +52,13 @@
         - `rtu.bytesize`
             - По умолчанию: `8`
         - `rtu.parity`
+            - Возможные значения: `N`, `O`, `E`
             - По умолчанию: `N`
         - `rtu.retry_on_empty`
-          - По умолчанию `True`
+            - По умолчанию `True`
         - `rtu.retry_on_invalid`
-          - По умолчанию `True`  
+            - По умолчанию `True`
         - ~~rtu.timeout~~ Используется 11-е свойство `apduTimeout`
-        
 
 ## Object
 
@@ -75,9 +75,9 @@
 - `371 propertyList`:
     - modbus
         - `modbus.address` Адрес регистра.
-          - Обязательный
+            - Обязательный
         - `modbus.quantity` Количество регистров.
-          - По умолчанию: `1`
+            - По умолчанию: `1`
         - `modbus.functionRead` Функция для чтения.
             - Возможные значения: `0x01`, `0x02`, `0x03`, `0x04`
         - `modbus.functionWrite` Функция для записи.
@@ -86,7 +86,7 @@
         - `modbus.dataType` Тип значения.
             - Возможные значения: `int`, `uint`, `float`, `bool`, `bits`, `string`
         - `modbus.dataLength` Используемое количество бит.
-          - Пример: `16`
+            - Пример: `16`
         - `modbus.scale` Для формулы `A*X+B`: Коэффициент A — умножается для коррекции.
         - `modbus.offset` Для формулы `A*X+B`: Коэффициент B — прибавляется для коррекции.
         - `modbus.wordOrder` Порядок слов.
