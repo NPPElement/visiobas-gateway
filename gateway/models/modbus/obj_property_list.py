@@ -24,22 +24,12 @@ class ModbusObjPropertyListModel(BaseModel):
     # bitmask = int todo
     # bit: Union[int, None] = None  # TODO: change to 'bitmask'
 
+    def __repr__(self) -> str:
+        return str(self.__dict__)
+
 
 class ModbusPropertyListWrap(BaseModel):
-    modbus: ModbusObjPropertyListModel = Field(...)  # alias='modbus')
+    modbus: ModbusObjPropertyListModel = Field(...)
 
-    # @property
-    # def address(self) -> int:
-    #     return self.modbus.address
-    #
-    # @property
-    # def func_read(self) -> ModbusFunc:
-    #     return self.modbus.func_read
-    #
-    # @property
-    # def func_write(self) -> ModbusFunc:
-    #     return self.modbus.func_write
-    #
-    # @property
-    # def quantity(self) -> int:
-    #     return self.modbus.quantity
+    def __repr__(self) -> str:
+        return str(self.__dict__)

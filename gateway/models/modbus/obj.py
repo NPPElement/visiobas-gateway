@@ -14,3 +14,6 @@ class ModbusObjModel(BACnetObjModel):
     @validator('property_list')
     def parse_property_list(cls, pl: str) -> ModbusPropertyListWrap:
         return ModbusPropertyListWrap.parse_raw(pl)
+
+    def __repr__(self) -> str:
+        return f'ModbusObj{self.__dict__}'

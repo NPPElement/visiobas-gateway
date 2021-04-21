@@ -13,8 +13,8 @@ class TestToStr(unittest.TestCase):
 
         print(ai_obj, bi_obj, sep='\n')
 
-    def test_(self):
-        pass  # todo
+    # def test_(self):
+    #     pass  # todo
 
     def _set_AI_BI_objects_data(self) -> None:
         self.AI_obj_data = {'103': 'no-fault-detected',

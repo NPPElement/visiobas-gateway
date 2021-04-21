@@ -1,6 +1,6 @@
-from typing import Union
+from typing import Optional
 
-from pydantic import Field
+from pydantic import Field, validator
 
 from .base_obj import BaseBACnetObjModel
 from .obj_property import ObjProperty
@@ -12,23 +12,18 @@ class BACnetObjModel(BaseBACnetObjModel):
     # priority_array: Union[str, None] = Field(alias=ObjProperty.priorityArray.id_str)
     # reliability: Union[str, None] = Field(alias=ObjProperty.reliability.id_str)
 
-    resolution: Union[float, int, None] = Field(default=0.1,
-                                                alias=ObjProperty.resolution.id_str)
-    upd_interval: Union[float, int, None] = Field(default=60,
-                                                  alias=ObjProperty.updateInterval.id_str)
+    resolution: Optional[float] = Field(default=0.1, alias=ObjProperty.resolution.id_str)
+    poll_interval: Optional[float] = Field(default=60,
+                                           alias=ObjProperty.updateInterval.id_str)
+    send_interval: int = Field(default=60)
     segmentation_supported: bool = Field(default=False,
                                          alias=ObjProperty.segmentationSupported.id_str)
 
     _last_value = None
 
-# class BACnetObjectsDataModel(BaseModel):
-#     success: bool = Field(default=...)
-#     data: list[BACnetObjModel] = Field(default=...)
-#
-#     @validator('success')
-#     def successful(cls, v):
-#         if v:
-#             return v
-#         raise ValueError('Must be True')
-#
-#     @validator('')
+    def __repr__(self) -> str:
+        return f'BACnetObj{self.__dict__}'
+
+    @validator('poll_interval')
+    def set_default_poll_interval(cls, v):
+        return v or 60

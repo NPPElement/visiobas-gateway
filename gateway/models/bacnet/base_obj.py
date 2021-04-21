@@ -21,3 +21,6 @@ class BaseBACnetObjModel(BaseModel):
     # def topic(self):
     #     return self.name.replace(':', '/').replace('.', '/')
     # Deprecated. Todo parse topic
+
+    # def __repr__(self) -> str:
+    #     return str(self.__dict__)
