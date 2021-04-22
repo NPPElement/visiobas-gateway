@@ -1,5 +1,4 @@
 import asyncio
-from logging import getLogger
 from pathlib import Path
 from typing import Callable, Any, Optional, Iterable, Union
 
@@ -7,8 +6,10 @@ from gateway.clients import VisioBASHTTPClient, VisioBASMQTTClient
 from gateway.devices.async_device import AsyncModbusDevice
 from gateway.models import ObjType, BACnetDeviceModel, ModbusObjModel, Protocol
 from gateway.utils import read_address_cache
+# _log = getLogger(__name__)
+from utils import get_file_logger
 
-_log = getLogger(__name__)
+_log = get_file_logger(__name__)
 
 
 class VisioBASGateway:
@@ -177,6 +178,11 @@ class VisioBASGateway:
                                                            obj_types=(ObjType.DEVICE,))
             _log.debug('Device object downloaded',  #: {dev_obj_data}',
                        extra={'device_id': dev_id})
+
+            if not dev_obj_data:
+                _log.warning('Empty device object', extra={'device_id': dev_id})
+                return None
+
             # objs in the list, so get [0] element in `dev_obj_data[0]` below
             dev_obj = await self.async_add_job(self._parse_device_obj, dev_obj_data[0])
             device = await self.async_add_job(self.device_factory, dev_obj)

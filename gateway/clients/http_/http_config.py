@@ -40,6 +40,10 @@ class VisioHTTPConfig:
         # self.is_connected = True
         self.is_authorized = False
 
+    def __repr__(self) -> str:
+        _auth_status = 'Authorized' if self.is_authorized else 'Unauthorized'
+        return f'<[{_auth_status}]:{self.host}>'
+
     def set_auth_data(self, bearer_token: str, user_id: int, auth_user_id: int) -> None:
         # TODO validate data
         self._bearer_token = bearer_token
@@ -72,10 +76,6 @@ class VisioHTTPConfig:
             headers = {'Authorization': f'Bearer {self._bearer_token}'
                        }
             return headers
-
-    def __repr__(self) -> str:
-        _auth = 'Authorized' if self.is_authorized else 'Unauthorized'
-        return f'<{self.__class__.__name__}: {_auth}:{self.host} [{self._login}]>'
 
     @classmethod
     def from_dict(cls, cfg: dict):

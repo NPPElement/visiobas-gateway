@@ -15,8 +15,8 @@ class VisioHTTPNode:
         return self.cur_server.is_authorized
 
     def __repr__(self) -> str:
-        _is_authorized = f'Authorized' if self.is_authorized else 'Unauthorized'
-        return f'<{self.__class__.__name__}: {_is_authorized}: {self.cur_server}>'
+        _auth_status = f'Authorized' if self.is_authorized else 'Unauthorized'
+        return str(self.cur_server)
 
     def switch_to_mirror(self) -> None:
         """ Switches communication to mirror if the primary server is unavailable """

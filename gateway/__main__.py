@@ -6,8 +6,8 @@ from pathlib import Path
 
 from gateway import VisioBASGateway
 from gateway.utils import disable_loggers
-
 # from aiomisc.log import basic_config
+from utils import get_file_logger
 
 BASE_DIR = Path(__file__).resolve().parent
 GATEWAY_CFG_PATH = BASE_DIR / 'config/gateway.yaml'
@@ -18,7 +18,8 @@ LOG_FORMAT = os.environ.get('LOG_FORMAT',
                             '.%(funcName)s(%(lineno)d): %(message)s'
                             )
 LOG_LEVEL = os.environ.get('LOG_LEVEL', 'DEBUG')
-_log = logging.getLogger(__name__)
+# _log = logging.getLogger(__name__)
+_log = get_file_logger(__name__)
 
 logging.basicConfig(format=LOG_FORMAT,
                     level=LOG_LEVEL,
