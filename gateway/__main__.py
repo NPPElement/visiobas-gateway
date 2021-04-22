@@ -4,16 +4,12 @@ import os
 import sys
 from pathlib import Path
 
-BASE_DIR = Path(__file__).resolve().parent
-LOG_DIR = BASE_DIR / 'logs'
-LOG_DIR.mkdir(exist_ok=True)
-
 from gateway import VisioBASGateway
 from gateway.utils import disable_loggers, get_file_logger
 
 # from aiomisc.log import basic_config
 
-
+BASE_DIR = Path(__file__).resolve().parent
 GATEWAY_CFG_PATH = BASE_DIR / 'config/gateway.yaml'
 
 # Set logging
