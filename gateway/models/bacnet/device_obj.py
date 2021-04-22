@@ -1,7 +1,6 @@
 from ipaddress import IPv4Address
-from typing import Union
 
-from pydantic import Field, validator, BaseModel, Json
+from pydantic import Field, BaseModel, Json
 from pymodbus.constants import Defaults
 
 from .base_obj import BaseBACnetObjModel
@@ -24,7 +23,7 @@ class DeviceRTUPropertyListModel(BaseModel):
         return str(self.__dict__)
 
 
-class DevicePropertyListWrap(BaseModel):
+class DevicePropertyListJsonModel(BaseModel):
     rtu: DeviceRTUPropertyListModel = Field(default=None)
     protocol: str = Field(...)  # todo Enum for protocols
     address: IPv4Address = Field(default=None)
@@ -41,8 +40,11 @@ class BACnetDeviceModel(BaseBACnetObjModel):
     # internal_sync_delay =
 
     # todo refactor
-    property_list: Json[DevicePropertyListWrap] = Field(
+    property_list: Json[DevicePropertyListJsonModel] = Field(
         alias=ObjProperty.propertyList.id_str)
+    
+    def __repr__(self) -> str:
+        return f'DeviceObj{self.__dict__}'
 
     # @validator('property_list')
     # def parse_rtu_pl(cls, pl: str) -> DevicePropertyListWrap:
@@ -54,6 +56,3 @@ class BACnetDeviceModel(BaseBACnetObjModel):
                 ObjType.BINARY_INPUT, ObjType.BINARY_OUTPUT, ObjType.BINARY_VALUE,
                 ObjType.MULTI_STATE_INPUT, ObjType.MULTI_STATE_OUTPUT,
                 ObjType.MULTI_STATE_VALUE,)
-
-    def __repr__(self) -> str:
-        return f'DeviceObj{self.__dict__}'
