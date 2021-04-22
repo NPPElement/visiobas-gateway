@@ -9,12 +9,12 @@ api:
 
   sleep_period: 60
 
-connector:
-  bacnet:
-    default_upd_period: 10
-    delay_bac0_attempt: 30
-    # delay_inactive: 60 todo
-
-  modbus:
-    default_upd_period: 10
+#connector:
+#  bacnet:
+#    default_upd_period: 10
+#    delay_bac0_attempt: 30
+#    # delay_inactive: 60 todo
+#
+#  modbus:
+#    default_upd_period: 10
 
