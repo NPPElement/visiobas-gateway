@@ -41,15 +41,8 @@ class AsyncModbusDevice:
         return self._device_obj.id
 
     @property
-    def address(self) -> Optional[tuple[str, int]]:  # todo switch to IP object
-        address = self._device_obj.address
-        if isinstance(address, str):
-            host, port = self._device_obj.address.split(sep=':', maxsplit=1)
-            return host, int(port)
-
-    @property
     def unit(self) -> int:
-        unit = self._device_obj.address
+        unit = self._device_obj.property_list.rtu.unit
         if isinstance(unit, int) and not isinstance(unit, bool):
             return unit
         else:
@@ -127,12 +120,14 @@ class AsyncModbusDevice:
         Group by poll period.
         """
 
+        self._log.debug('calling sort ...')
         objs = self._sort_objects_by_period(objs=objs)
+        self._log.debug('sorted')
         self._objects = objs
 
     @staticmethod
     def _sort_objects_by_period(objs: Collection[ModbusObjModel]
-                                ) -> dict[int, set[ModbusObjModel]]:
+                                ) -> dict[int, list[ModbusObjModel]]:
         """Creates dict from objects, where key is period, value is collection
         of objects with that period.
 
@@ -141,11 +136,8 @@ class AsyncModbusDevice:
         """
         dct = {}
         for obj in objs:
-            poll_period = obj.upd_interval  # fixme?
-            try:
-                dct[poll_period].add(obj)
-            except KeyError:
-                dct[poll_period] = set(obj)
+            poll_period = obj.property_list.poll_interval
+            dct.get(poll_period, []).append(obj)
         return dct
 
     async def start_poll(self):

@@ -175,6 +175,7 @@ class VisioBASGateway:
                                                            obj_types=(ObjType.DEVICE,))
             _log.debug(f'dev_obj_data: {dev_obj_data}')
 
+            # objs in the list, so get [0] element in `dev_obj_data[0]` below
             dev_obj = await self.async_add_job(self._parse_device_obj, dev_obj_data[0])
             _log.debug(f'dev_obj: {dev_obj}')
 
@@ -183,12 +184,20 @@ class VisioBASGateway:
 
             objs_data = await self.http_client.get_objs(dev_id=dev_id,
                                                         obj_types=device.types_to_rq)
-            objs = await self.async_add_job(self._extract_objects, objs_data, dev_obj_data)
-            if len(objs):
-                device.load_objects(objs=objs)
+            _log.debug('Objects loaded')
+
+            # objs in the list, so get [0] element in `objs_data[0]` below
+            objs = await self.async_add_job(self._extract_objects, objs_data[0], dev_obj)
+            _log.debug(f'Objects parsed: {objs}')
+
+            if len(objs):  # if there are objects
+                await self.async_add_job(device.load_objects, objs)
+                _log.debug('Object loaded to device')
+
             self._devices.update({device.id: device})
+            _log.debug(f'Loaded: {dev_obj}')
         except AttributeError as e:
-            _log.warning(f'Cannot load device : {e}')
+            _log.exception(f'Cannot load device : {e}')
 
     async def start_device_poll(self, dev_id: int) -> None:
         """Starts poll of device."""
@@ -229,7 +238,7 @@ class VisioBASGateway:
             ValueError: if unexpected protocol provided.
             # todo add parse model error
         """
-        protocol = dev_obj.protocol
+        protocol = dev_obj.property_list.protocol
         if protocol == 'ModbusTCP' or protocol == 'ModbusRTU':
             device = AsyncModbusDevice(device_obj=dev_obj, gateway=self)
         elif protocol == 'BACnet':
@@ -248,13 +257,13 @@ class VisioBASGateway:
             If object incorrect - returns None.
         """
         try:
-            protocol = dev_obj.protocol
+            protocol = dev_obj.property_list.protocol
             if protocol == 'ModbusTCP' or protocol == 'ModbusRTU':
-                obj = ModbusObjModel.parse_raw(**obj_data)
+                obj = ModbusObjModel(**obj_data)  # todo switch to parse_raw
             elif protocol == 'BACnet':
                 obj = None  # todo
             else:
-                raise ValueError(f'Unexpected protocol: {protocol}({dev_obj.id})')
+                raise NotImplementedError(f'Protocol: {protocol}({dev_obj.id})')
             return obj
         except Exception as e:  # fixme catch parsing error
-            _log.warning(f'Failed parsing: {dev_obj.id}: {obj_data}: {e}')
+            _log.exception(f'Failed parsing: {dev_obj.id}: {obj_data}: {e}')
