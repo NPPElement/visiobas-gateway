@@ -1,5 +1,5 @@
 include requirements*.txt
 include LICENSE
-include *.md
-include gateway/config/*.yaml
-include gateway/devices/*address_cache
+include README.md
+include gateway/config/*
+include *address_cache
