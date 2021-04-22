@@ -1,6 +1,6 @@
 import asyncio
 from logging import getLogger
-from typing import Any, Optional, Callable, Union, Collection
+from typing import Any, Callable, Union, Collection
 
 from pymodbus.client.asynchronous.schedulers import ASYNC_IO
 from pymodbus.client.asynchronous.serial import AsyncModbusSerialClient
@@ -9,9 +9,10 @@ from pymodbus.constants import Endian
 from pymodbus.payload import BinaryPayloadDecoder
 
 from gateway.models import BACnetDeviceModel, ModbusObjModel, ObjType
-
 # aliases
 # BACnetDeviceModel = Any  # ...models
+from models import Protocol
+
 VisioBASGateway = Any  # ...gateway_loop
 
 
@@ -81,7 +82,7 @@ class AsyncModbusDevice:
         Raises:
             ConnectionError: if client is not initialized.
         """
-        if self.protocol == 'ModbusTCP':
+        if self.protocol is Protocol.MODBUS_TCP:
             host, port = self.address
             loop, self._client = AsyncModbusTCPClient(
                 scheduler=ASYNC_IO,
@@ -92,7 +93,7 @@ class AsyncModbusDevice:
                 loop=self._gateway.loop,
                 timeout=self.timeout
             )
-        elif self.protocol == 'ModbusRTU':
+        elif self.protocol is Protocol.MODBUS_RTU:
             loop, self._client = AsyncModbusSerialClient(
                 scheduler=ASYNC_IO,
                 method='rtu',
@@ -119,14 +120,12 @@ class AsyncModbusDevice:
         """Loads object to poll.
         Group by poll period.
         """
-
-        self._log.debug('calling sort ...')
         objs = self._sort_objects_by_period(objs=objs)
-        self._log.debug('sorted')
         self._objects = objs
+        self._log.debug('Objects to poll loaded to device')
 
-    @staticmethod
-    def _sort_objects_by_period(objs: Collection[ModbusObjModel]
+    # @staticmethod
+    def _sort_objects_by_period(self, objs: Collection[ModbusObjModel]
                                 ) -> dict[int, list[ModbusObjModel]]:
         """Creates dict from objects, where key is period, value is collection
         of objects with that period.
@@ -138,6 +137,7 @@ class AsyncModbusDevice:
         for obj in objs:
             poll_period = obj.property_list.poll_interval
             dct.get(poll_period, []).append(obj)
+        self._log.debug('Objects to poll sorted')
         return dct
 
     async def start_poll(self):

@@ -5,7 +5,7 @@ from typing import Callable, Any, Optional, Iterable, Union
 
 from gateway.clients import VisioBASHTTPClient, VisioBASMQTTClient
 from gateway.devices.async_device import AsyncModbusDevice
-from gateway.models import ObjType, BACnetDeviceModel, ModbusObjModel
+from gateway.models import ObjType, BACnetDeviceModel, ModbusObjModel, Protocol
 from gateway.utils import read_address_cache
 
 _log = getLogger(__name__)
@@ -175,31 +175,25 @@ class VisioBASGateway:
         try:
             dev_obj_data = await self.http_client.get_objs(dev_id=dev_id,
                                                            obj_types=(ObjType.DEVICE,))
-            _log.debug(f'dev_obj_data: {dev_obj_data}')
-
+            _log.debug(f'Device object downloaded: {dev_obj_data}',
+                       extra={'device_id': dev_id})
             # objs in the list, so get [0] element in `dev_obj_data[0]` below
             dev_obj = await self.async_add_job(self._parse_device_obj, dev_obj_data[0])
-            _log.debug(f'dev_obj: {dev_obj}')
-
             device = await self.async_add_job(self.device_factory, dev_obj)
-            _log.debug(f'device: {device}')
 
             objs_data = await self.http_client.get_objs(dev_id=dev_id,
                                                         obj_types=device.types_to_rq)
-            _log.debug('Objects loaded')
-
+            _log.debug('Objects to poll downloaded', extra={'device_id': dev_id})
             # objs in the list, so get [0] element in `objs_data[0]` below
             objs = await self.async_add_job(self._extract_objects, objs_data[0], dev_obj)
-            _log.debug(f'Objects parsed: {objs}')
 
             if len(objs):  # if there are objects
                 await self.async_add_job(device.load_objects, objs)
-                _log.debug('Object loaded to device')
 
             self._devices.update({device.id: device})
-            _log.debug(f'Loaded: {dev_obj}')
+            _log.info(f'Device loaded', extra={'device_id': dev_id})
         except AttributeError as e:
-            _log.exception(f'Cannot load device : {e}')
+            _log.exception(f'Cannot load device: {e}', extra={'device_id': dev_id})
 
     async def start_device_poll(self, dev_id: int) -> None:
         """Starts poll of device."""
@@ -211,9 +205,9 @@ class VisioBASGateway:
         Returns:
             parsed and validated device object.
         """
-        dev = BACnetDeviceModel(**dev_data)
-        _log.debug(f'Parsed: {dev}')
-        return dev
+        dev_obj = BACnetDeviceModel(**dev_data)
+        _log.debug(f'Device object parsed', extra={'device_object': str(dev_obj)})
+        return dev_obj
 
     def _extract_objects(self, objs_data: tuple, dev_obj: BACnetDeviceModel
                          ) -> list[ModbusObjModel]:
@@ -225,6 +219,7 @@ class VisioBASGateway:
         objs = [self.object_factory(dev_obj=dev_obj, obj_data=obj_data)
                 for obj_data in objs_data
                 if not None]
+        _log.debug('Objects to poll created', extra={'device_id': dev_obj.id})
         return objs
 
     def _get_device_ids(self) -> Iterable[int]:
@@ -246,12 +241,15 @@ class VisioBASGateway:
             # todo add parse model error
         """
         protocol = dev_obj.property_list.protocol
-        if protocol == 'ModbusTCP' or protocol == 'ModbusRTU':
+        if protocol in {Protocol.MODBUS_TCP, Protocol.MODBUS_RTU}:
             device = AsyncModbusDevice(device_obj=dev_obj, gateway=self)
-        elif protocol == 'BACnet':
+        elif protocol == Protocol.BACNET:
             device = None  # todo
         else:
-            raise ValueError(f'Unexpected protocol: {protocol}({dev_obj.id})')
+            _log.warning('Unexpected protocol', extra={'protocol': protocol,
+                                                       'device_id': dev_obj.id})
+            raise ValueError('Unexpected protocol')
+        _log.debug('Device object created', extra={'device_id': device.id})
         return device
 
     @staticmethod
@@ -265,12 +263,13 @@ class VisioBASGateway:
         """
         try:
             protocol = dev_obj.property_list.protocol
-            if protocol == 'ModbusTCP' or protocol == 'ModbusRTU':
+            if protocol in {Protocol.MODBUS_TCP, Protocol.MODBUS_RTU}:
                 obj = ModbusObjModel(**obj_data)  # todo switch to parse_raw
-            elif protocol == 'BACnet':
+            elif protocol == Protocol.BACNET:
                 obj = None  # todo
             else:
-                raise NotImplementedError(f'Protocol: {protocol}({dev_obj.id})')
+                # unknown protocols logging by pydantic on enter
+                raise ValueError('Unexpected protocol')
             return obj
-        except Exception as e:  # fixme catch parsing error
+        except AttributeError as e:
             _log.exception(f'Failed parsing: {dev_obj.id}: {obj_data}: {e}')

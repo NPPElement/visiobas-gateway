@@ -6,6 +6,7 @@ from pymodbus.constants import Defaults
 from .base_obj import BaseBACnetObjModel
 from .obj_property import ObjProperty
 from .obj_type import ObjType
+from ..protocol import Protocol
 
 
 class DeviceRTUPropertyListModel(BaseModel):
@@ -25,7 +26,7 @@ class DeviceRTUPropertyListModel(BaseModel):
 
 class DevicePropertyListJsonModel(BaseModel):
     rtu: DeviceRTUPropertyListModel = Field(default=None)
-    protocol: str = Field(...)  # todo Enum for protocols
+    protocol: Protocol = Field(...)
     address: IPv4Address = Field(default=None)
 
     def __repr__(self) -> str:
@@ -39,7 +40,6 @@ class BACnetDeviceModel(BaseBACnetObjModel):
     # send_sync_delay = # send period
     # internal_sync_delay =
 
-    # todo refactor
     property_list: Json[DevicePropertyListJsonModel] = Field(
         ..., alias=ObjProperty.propertyList.id_str)
 

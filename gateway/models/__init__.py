@@ -2,6 +2,7 @@ from .bacnet import (ObjType, ObjProperty, StatusFlag, BACnetObjModel, BACnetDev
 from .modbus import (ModbusObjModel, ModbusFunc, MODBUS_READ_FUNCTIONS,
                      MODBUS_WRITE_FUNCTIONS)
 from .mqtt import ResultCode, Qos
+from .protocol import Protocol
 
 __all__ = ['ObjType', 'ObjProperty', 'StatusFlag',
            'BACnetObjModel', 'BACnetDeviceModel',
@@ -9,5 +10,7 @@ __all__ = ['ObjType', 'ObjProperty', 'StatusFlag',
            'ModbusFunc', 'MODBUS_READ_FUNCTIONS', 'MODBUS_WRITE_FUNCTIONS',
            'ModbusObjModel',
 
-           'ResultCode', 'Qos'
+           'ResultCode', 'Qos',
+
+           'Protocol',
            ]
