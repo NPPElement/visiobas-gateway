@@ -1,7 +1,8 @@
 aiohttp==3.7.4.post0
 PyYAML==5.4.1
-setuptools==54.2.0
+setuptools==56.0.0
 paho-mqtt~=1.5.1
+pydantic~=1.8.1
 
 
 BAC0==21.2.5  # todo: use pure bacpypes
@@ -14,4 +15,3 @@ marshmallow~=3.10.0  # todo: use pydantic everywhere?
 
 netifaces==0.10.9
 aiohttp-apispec==2.2.1
-pydantic~=1.8.1
