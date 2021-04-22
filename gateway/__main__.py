@@ -5,9 +5,8 @@ import sys
 from pathlib import Path
 
 from gateway import VisioBASGateway
-from gateway.utils import disable_loggers
+from gateway.utils import disable_loggers, get_file_logger
 # from aiomisc.log import basic_config
-from utils import get_file_logger
 
 BASE_DIR = Path(__file__).resolve().parent
 GATEWAY_CFG_PATH = BASE_DIR / 'config/gateway.yaml'

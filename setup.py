@@ -32,7 +32,7 @@ requirements = [str(r) for r in parse_requirements(_req_path.read_text())]
 
 
 setup(name='visiobas-gateway',
-      version='3.0.1',
+      version='3.0.0',
       author='VisioBAS, Ovtsin Matvey',
       # author_email=__email__,
       license='GNU General Public License v3.0',
@@ -43,13 +43,13 @@ setup(name='visiobas-gateway',
       classifiers=['Programming Language :: Python',
                    'Programming Language :: Python :: 3',
                    'Programming Language :: Python :: 3.9',
-                   'Programming Language :: Python :: Implementation :: CPython'
+                   'Programming Language :: Python :: Implementation :: CPython',
                    ],
       python_requires='>=3.9',
-      packages=find_packages(exclude=['tests', 'panel']),
+      packages=find_packages(exclude=['tests', ]),
       install_requires=requirements,
       # extras_require={'dev': load_requirements('requirements.dev.txt')},
-      entry_points={'console_scripts': ['gateway = gateway.__main__:main'
+      entry_points={'console_scripts': ['gateway = gateway.__main__:main',
                                         ]
                     },
       include_package_data=True

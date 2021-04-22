@@ -5,9 +5,8 @@ from typing import Callable, Any, Optional, Iterable, Union
 from gateway.clients import VisioBASHTTPClient, VisioBASMQTTClient
 from gateway.devices.async_device import AsyncModbusDevice
 from gateway.models import ObjType, BACnetDeviceModel, ModbusObjModel, Protocol
-from gateway.utils import read_address_cache
+from gateway.utils import read_address_cache, get_file_logger
 # _log = getLogger(__name__)
-from utils import get_file_logger
 
 _log = get_file_logger(__name__)
 
