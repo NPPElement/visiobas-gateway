@@ -13,14 +13,15 @@ BASE_DIR = Path(__file__).resolve().parent
 GATEWAY_CFG_PATH = BASE_DIR / 'config/gateway.yaml'
 
 # Set logging
-_log_fmt = ('%(levelname)-8s [%(asctime)s] [%(threadName)s] %(name)s'
-            '.%(funcName)s(%(lineno)d): %(message)s'
-            )
-_log_level = os.environ.get('LOG_LEVEL', 'DEBUG')
+LOG_FORMAT = os.environ.get('LOG_FORMAT',
+                            '%(levelname)-8s [%(asctime)s] [%(threadName)s] %(name)s'
+                            '.%(funcName)s(%(lineno)d): %(message)s'
+                            )
+LOG_LEVEL = os.environ.get('LOG_LEVEL', 'DEBUG')
 _log = logging.getLogger(__name__)
 
-logging.basicConfig(format=_log_fmt,
-                    level=_log_level,
+logging.basicConfig(format=LOG_FORMAT,
+                    level=LOG_LEVEL,
                     stream=sys.stdout, )
 
 
