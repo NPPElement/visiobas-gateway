@@ -42,7 +42,7 @@ class BACnetDeviceModel(BaseBACnetObjModel):
     # todo refactor
     property_list: Json[DevicePropertyListJsonModel] = Field(
         alias=ObjProperty.propertyList.id_str)
-    
+
     def __repr__(self) -> str:
         return f'DeviceObj{self.__dict__}'
 

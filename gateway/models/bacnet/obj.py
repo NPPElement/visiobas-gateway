@@ -24,6 +24,10 @@ class BACnetObjModel(BaseBACnetObjModel):
     def __repr__(self) -> str:
         return f'BACnetObj{self.__dict__}'
 
-    @validator('poll_interval')
+    @validator('poll_interval')  # todo deprecate
     def set_default_poll_interval(cls, v):
         return v or 60
+
+    @validator('resolution')  # todo deprecate
+    def set_default_resolution(cls, v):
+        return v or 0.1
