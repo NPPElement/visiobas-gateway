@@ -6,7 +6,7 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 LOG_FORMAT = os.environ.get('LOG_FORMAT',
-                            '%(levelname)-8s [%(asctime)s] [%(threadName)s] %(name)s'
+                            '%(levelname)-8s [%(asctime)s] %(name)s'
                             '.%(funcName)s(%(lineno)d): %(message)s'
                             )
 _MEGABYTE = 1024 ** 2
