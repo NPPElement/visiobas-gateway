@@ -6,7 +6,7 @@ from pathlib import Path
 from pkg_resources import parse_requirements
 from setuptools import find_packages, setup
 
-_req_path = Path().cwd() / 'requirements.gateway.txt'
+_req_path = Path().cwd() / 'requirements.txt'
 requirements = [str(r) for r in parse_requirements(_req_path.read_text())]
 
 # from gateway import __version__, __author__, __email__, __license__
@@ -32,7 +32,7 @@ requirements = [str(r) for r in parse_requirements(_req_path.read_text())]
 
 
 setup(name='visiobas-gateway',
-      version='1.1.5',
+      version='3.0.0',
       author='VisioBAS, Ovtsin Matvey',
       # author_email=__email__,
       license='GNU General Public License v3.0',
