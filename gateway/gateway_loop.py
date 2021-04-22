@@ -147,8 +147,10 @@ class VisioBASGateway:
         load_device_tasks = [self.load_device(dev_id=dev_id) for dev_id in device_ids]
         await asyncio.gather(*load_device_tasks)
 
-        # todo await self.start_devices_poll
-        await self.mqtt_client.subscribe(self.mqtt_client.topics)
+        start_poll_tasks = [self.start_device_poll(dev_id=dev_id)
+                            for dev_id in device_ids]
+        await asyncio.gather(*start_poll_tasks)
+        # todo await self.mqtt_client.subscribe(self.mqtt_client.topics)
 
     async def _perform_stop_tasks(self) -> None:
         """Performs stopping tasks.
@@ -204,6 +206,11 @@ class VisioBASGateway:
 
     @staticmethod
     def _parse_device_obj(dev_data: dict) -> BACnetDeviceModel:
+        """Parses and validate device object data from JSON.
+
+        Returns:
+            parsed and validated device object.
+        """
         dev = BACnetDeviceModel(**dev_data)
         _log.debug(f'Parsed: {dev}')
         return dev
