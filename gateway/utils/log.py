@@ -10,7 +10,7 @@ LOG_FORMAT = os.environ.get('LOG_FORMAT',
                             '.%(funcName)s(%(lineno)d): %(message)s'
                             )
 _MEGABYTE = 1024 ** 2
-LOG_MB_COUNT = os.environ.get('LOG_FILE_SIZE', 50)
+LOG_MB_COUNT = int(os.environ.get('LOG_FILE_SIZE', 50))
 LOG_FILE_SIZE = LOG_MB_COUNT * _MEGABYTE
 
 
