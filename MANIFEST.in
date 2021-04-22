@@ -1,7 +1,5 @@
 include requirements*.txt
 include LICENSE
 include *.md
-
-include gateway/config/gateway.yaml
-include gateway/config/http.yaml
-include gateway/devices/modbus_address_cache
+include gateway/config/*.yaml
+include gateway/devices/*address_cache
