@@ -1,6 +1,7 @@
 import asyncio
+from ipaddress import IPv4Address
 from logging import getLogger
-from typing import Any, Callable, Union, Collection
+from typing import Any, Callable, Union, Collection, Optional
 
 from pymodbus.client.asynchronous.schedulers import ASYNC_IO
 from pymodbus.client.asynchronous.serial import AsyncModbusSerialClient
@@ -8,10 +9,11 @@ from pymodbus.client.asynchronous.tcp import AsyncModbusTCPClient
 from pymodbus.constants import Endian
 from pymodbus.payload import BinaryPayloadDecoder
 
-from gateway.models import BACnetDeviceModel, ModbusObjModel, ObjType
+from gateway.models import BACnetDeviceModel, ModbusObjModel, ObjType, Protocol
+
 # aliases
 # BACnetDeviceModel = Any  # ...models
-from models import Protocol
+
 
 VisioBASGateway = Any  # ...gateway_loop
 
@@ -34,6 +36,10 @@ class AsyncModbusDevice:
         # todo switch do dict
 
     @property
+    def address(self) -> Optional[IPv4Address]:
+        return self._device_obj.property_list.address
+
+    @property
     def types_to_rq(self) -> tuple[ObjType, ...]:  # todo hide type
         return self._device_obj.types_to_rq
 
@@ -50,8 +56,8 @@ class AsyncModbusDevice:
             return 0x01
 
     @property
-    def protocol(self) -> str:
-        return self._device_obj.protocol
+    def protocol(self) -> Protocol:
+        return self._device_obj.property_list.protocol
 
     @property
     def timeout(self) -> float:
