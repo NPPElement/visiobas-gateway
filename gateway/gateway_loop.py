@@ -38,7 +38,7 @@ class VisioBASGateway:
         self.http_api_server = None
         self.verifier = None  # verifier(non-threaded)
 
-        self._devices = dict[int, Any]
+        self._devices: dict[int, Union[AsyncModbusDevice]] = {}
 
     @classmethod
     def from_yaml(cls, yaml_path: Path) -> 'VisioBASGateway':
@@ -55,7 +55,7 @@ class VisioBASGateway:
         return self.config.get('upd_period', 3600)
 
     @property
-    def devices(self) -> dict[int, Any]:
+    def devices(self) -> dict[int, Union[AsyncModbusDevice]]:
         return self._devices
 
     # def run(self) -> None:
@@ -160,8 +160,8 @@ class VisioBASGateway:
             - Stop devices poll
             - Log out to HTTP
         """
-        await self.mqtt_client.unsubscribe(self.mqtt_client.topics)
-        # await stop_devices() todo
+        # todo await self.mqtt_client.unsubscribe(self.mqtt_client.topics)
+        # todo await stop_devices()
         await self.http_client.logout(nodes=self.http_client.all_nodes)
 
     async def load_device(self, dev_id: int) -> None:
