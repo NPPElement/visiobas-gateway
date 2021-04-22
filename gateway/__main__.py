@@ -9,6 +9,7 @@ from gateway.utils import disable_loggers, get_file_logger
 # from aiomisc.log import basic_config
 
 BASE_DIR = Path(__file__).resolve().parent
+LOG_DIR = BASE_DIR / 'logs'
 GATEWAY_CFG_PATH = BASE_DIR / 'config/gateway.yaml'
 
 # Set logging
@@ -36,6 +37,8 @@ async def load_and_run(cfg_path: Path):
 
 
 def main():
+    LOG_DIR.mkdir(exist_ok=True)
+
     unused_loggers = ('BAC0_Root.BAC0.scripts.Base.Base',
                       'BAC0_Root.BAC0.scripts.Lite.Lite',
                       'BAC0_Root.BAC0.tasks.UpdateCOV.Update_local_COV',
