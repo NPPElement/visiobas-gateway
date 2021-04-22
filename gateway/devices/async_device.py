@@ -1,6 +1,5 @@
 import asyncio
 from ipaddress import IPv4Address
-from logging import getLogger
 from typing import Any, Callable, Union, Collection, Optional
 
 from pymodbus.client.asynchronous.schedulers import ASYNC_IO
@@ -9,9 +8,10 @@ from pymodbus.client.asynchronous.tcp import AsyncModbusTCPClient
 from pymodbus.constants import Endian
 from pymodbus.payload import BinaryPayloadDecoder
 
-from gateway.models import BACnetDeviceModel, ModbusObjModel, ObjType, Protocol
+from ..models import BACnetDeviceModel, ModbusObjModel, ObjType, Protocol
+from ..utils import get_file_logger
 
-# aliases
+# aliases # TODO
 # BACnetDeviceModel = Any  # ...models
 
 
@@ -27,7 +27,8 @@ class AsyncModbusDevice:
         self._gateway = gateway
         self._device_obj = device_obj
 
-        self._log = getLogger(name=f'{self.id}')
+        # self._log = getLogger(name=f'{self.id}')
+        self._log = get_file_logger(logger_name=str(self))
 
         self._loop, self._client = None, None
 

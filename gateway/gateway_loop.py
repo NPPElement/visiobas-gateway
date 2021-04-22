@@ -198,7 +198,7 @@ class VisioBASGateway:
     async def start_device_poll(self, dev_id: int) -> None:
         """Starts poll of device."""
         await self.async_add_job(self.devices[dev_id].start_periodic_polls)
-        _log.debug('Poll od device started', extra={'device_id': dev_id})
+        _log.debug('Device polling started', extra={'device_id': dev_id})
 
     @staticmethod
     def _parse_device_obj(dev_data: dict) -> BACnetDeviceModel:

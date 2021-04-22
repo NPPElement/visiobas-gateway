@@ -14,7 +14,7 @@ GATEWAY_CFG_PATH = BASE_DIR / 'config/gateway.yaml'
 
 # Set logging
 LOG_FORMAT = os.environ.get('LOG_FORMAT',
-                            '%(levelname)-8s [%(asctime)s] [%(threadName)s] %(name)s'
+                            '%(levelname)-8s [%(asctime)s] %(name)s'
                             '.%(funcName)s(%(lineno)d): %(message)s'
                             )
 LOG_LEVEL = os.environ.get('LOG_LEVEL', 'DEBUG')

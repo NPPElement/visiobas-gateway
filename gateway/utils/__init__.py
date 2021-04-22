@@ -4,10 +4,10 @@ from .utils import (read_address_cache,
                     get_fault_obj_properties,
                     )
 
-__all__ = ('read_address_cache',
+__all__ = ['read_address_cache',
            'cast_to_bit',
            'get_fault_obj_properties',
            'cast_2_registers',
            'get_file_logger',
            'disable_loggers',
-           )
+           ]
