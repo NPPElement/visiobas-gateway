@@ -175,7 +175,7 @@ class VisioBASGateway:
         try:
             dev_obj_data = await self.http_client.get_objs(dev_id=dev_id,
                                                            obj_types=(ObjType.DEVICE,))
-            _log.debug(f'Device object downloaded: {dev_obj_data}',
+            _log.debug('Device object downloaded',  #: {dev_obj_data}',
                        extra={'device_id': dev_id})
             # objs in the list, so get [0] element in `dev_obj_data[0]` below
             dev_obj = await self.async_add_job(self._parse_device_obj, dev_obj_data[0])
@@ -197,6 +197,8 @@ class VisioBASGateway:
 
     async def start_device_poll(self, dev_id: int) -> None:
         """Starts poll of device."""
+        await self.async_add_job(self.devices[dev_id].start_periodic_polls)
+        _log.debug('Poll od device started', extra={'device_id': dev_id})
 
     @staticmethod
     def _parse_device_obj(dev_data: dict) -> BACnetDeviceModel:

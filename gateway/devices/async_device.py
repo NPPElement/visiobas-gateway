@@ -33,7 +33,7 @@ class AsyncModbusDevice:
 
         self._polling = True
         self._objects: dict[int, set[ModbusObjModel]] = {}  # todo hide type
-        # todo switch do dict
+        self._poll_tasks: dict[int, asyncio.Task] = {}
 
     @property
     def address(self) -> Optional[IPv4Address]:
@@ -146,9 +146,6 @@ class AsyncModbusDevice:
         self._log.debug('Objects to poll sorted')
         return dct
 
-    async def start_poll(self):
-        pass
-
     @property
     def read_funcs(self) -> dict[int, Callable]:
         if not self.is_client_initialized:
@@ -222,13 +219,30 @@ class AsyncModbusDevice:
         except Exception as e:
             self._log.exception(e)
 
-    # async def poll(self, objects: Sequence[ModbusObjModel]) -> None:
-    #     """Represent one iteration of poll."""
-    #     read_requests = [self.read_send_to_verifier(obj=obj,
-    #                                                 queue=self._verifier_queue
-    #                                                 ) for obj in objects]
-    #     await asyncio.gather(*read_requests)
-    #     self._put_device_end_to_verifier()
+    async def start_periodic_polls(self) -> None:
+        """Starts periodic polls for all periods."""
+        for period, objs in self._objects.items():
+            self._poll_tasks[period] = self._loop.create_task(
+                self.periodic_poll(objs=objs, period=period))
+        self._log.debug('Periodic polls started')
+
+    async def periodic_poll(self, objs: Collection[ModbusObjModel], period: int) -> None:
+        await self._poll_objects(objs=objs)
+        await asyncio.sleep(delay=period)
+
+        self._poll_tasks[period] = self._loop.create_task(
+            self.periodic_poll(objs=objs, period=period))
+
+    async def _read_and_log(self, obj: ModbusObjModel) -> None:
+        # fixme temp
+        value = await self.read(obj=obj)
+        self._log.debug(f'Read {value}')
+
+    async def _poll_objects(self, objs: Collection[ModbusObjModel]) -> None:
+        """Polls objects."""
+        read_requests = [self._read_and_log(obj=obj)
+                         for obj in objs]
+        await asyncio.gather(*read_requests)
 
     # async def start_poll(self):
     #     self._log.info(f'{self} started')
