@@ -212,9 +212,13 @@ class VisioBASGateway:
         Returns:
             parsed and validated device object.
         """
-        dev_obj = BACnetDeviceModel(**dev_data)
-        _log.debug(f'Device object parsed', extra={'device_object': str(dev_obj)})
-        return dev_obj
+        try:
+            dev_obj = BACnetDeviceModel(**dev_data)
+            _log.debug(f'Device object parsed', extra={'device_object': str(dev_obj)})
+            return dev_obj
+        except AttributeError as e:
+            _log.exception(f'Cannot parse device object {e}')
+
 
     def _extract_objects(self, objs_data: tuple, dev_obj: BACnetDeviceModel
                          ) -> list[ModbusObjModel]:
