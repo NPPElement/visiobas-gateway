@@ -29,12 +29,12 @@ services:
       # - FILE_LOG_LEVEL=DEBUG
       # - LOG_FORMAT="%(levelname)-8s [%(asctime)s] [%(threadName)s] %(name)s.%(funcName)s(%(lineno)d): %(message)s"
     volumes:
-      - /opt/visiobas-gateway/gateway/config:/usr/share/python3/gw/lib/python3.9/site-packages/gateway/config
+      #- /opt/visiobas-gateway/gateway/config:/usr/share/python3/gw/lib/python3.9/site-packages/gateway/config
       #- /opt/visiobas-gateway/logs:/usr/share/python3/gw/gateway/logs
-      - /opt/visiobas-gateway/gateway/connectors/bacnet/address_cache:/usr/share/python3/gw/lib/python3.9/site-packages/gateway/connectors/bacnet/address_cache
-      - /opt/visiobas-gateway/gateway/connectors/modbus/address_cache:/usr/share/python3/gw/lib/python3.9/site-packages/gateway/connectors/modbus/address_cache
+      #- /opt/visiobas-gateway/gateway/connectors/bacnet/address_cache:/usr/share/python3/gw/lib/python3.9/site-packages/gateway/connectors/bacnet/address_cache
+      #- /opt/visiobas-gateway/gateway/connectors/modbus/address_cache:/usr/share/python3/gw/lib/python3.9/site-packages/gateway/connectors/modbus/address_cache
       - /dev:/dev # [1]
-      #- /home/user/visiobas-gateway:/visiobas-gateway
+      - /home/user/visiobas-gateway:/visiobas-gateway
     # command: python -OO __main__.py
     networks:
       - backend
