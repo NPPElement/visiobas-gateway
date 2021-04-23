@@ -3,9 +3,10 @@ from pathlib import Path
 from typing import Callable, Any, Optional, Iterable, Union
 
 from gateway.clients import VisioBASHTTPClient, VisioBASMQTTClient
-from gateway.devices.async_device import AsyncModbusDevice
+from gateway.devices.async_modbus import AsyncModbusDevice
 from gateway.models import ObjType, BACnetDeviceModel, ModbusObjModel, Protocol
 from gateway.utils import read_address_cache, get_file_logger
+
 # _log = getLogger(__name__)
 
 _log = get_file_logger(__name__)
@@ -219,7 +220,6 @@ class VisioBASGateway:
         except AttributeError as e:
             _log.exception(f'Cannot parse device object {e}')
 
-
     def _extract_objects(self, objs_data: tuple, dev_obj: BACnetDeviceModel
                          ) -> list[ModbusObjModel]:
         """Parses and validate objects data from JSON.
@@ -251,17 +251,21 @@ class VisioBASGateway:
             ValueError: if unexpected protocol provided.
             # todo add parse model error
         """
-        protocol = dev_obj.property_list.protocol
-        if protocol in {Protocol.MODBUS_TCP, Protocol.MODBUS_RTU}:
-            device = AsyncModbusDevice(device_obj=dev_obj, gateway=self)
-        elif protocol == Protocol.BACNET:
-            device = None  # todo
-        else:
-            _log.warning('Unexpected protocol', extra={'protocol': protocol,
-                                                       'device_id': dev_obj.id})
-            raise ValueError('Unexpected protocol')
-        _log.debug('Device object created', extra={'device_id': device.id})
-        return device
+        try:
+            protocol = dev_obj.property_list.protocol
+            if protocol in {Protocol.MODBUS_TCP, Protocol.MODBUS_RTU}:
+                device = AsyncModbusDevice(device_obj=dev_obj, gateway=self)
+                self.async_add_job(device.init_client)
+            elif protocol == Protocol.BACNET:
+                device = None  # todo
+            else:
+                _log.warning('Unexpected protocol', extra={'protocol': protocol,
+                                                           'device_id': dev_obj.id})
+                raise ValueError('Unexpected protocol')
+            _log.debug('Device object created', extra={'device_id': device.id})
+            return device
+        except Exception as e:
+            _log.warning(f'Failed device creation {e}', extra={'device_id': dev_obj.id})
 
     @staticmethod
     def object_factory(dev_obj: BACnetDeviceModel, obj_data: dict[str, Any]

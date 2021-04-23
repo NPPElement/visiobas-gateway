@@ -36,6 +36,9 @@ class AsyncModbusDevice:
         self._objects: dict[int, set[ModbusObjModel]] = {}  # todo hide type
         self._poll_tasks: dict[int, asyncio.Task] = {}
 
+    @classmethod
+
+
     @property
     def address(self) -> Optional[IPv4Address]:
         return self._device_obj.property_list.address
@@ -80,10 +83,10 @@ class AsyncModbusDevice:
             return True
         return False
 
-    async def init_client(self) -> None:
-        setup_task = self._gateway.add_job(self._init_client)
+    async def async_init_client(self) -> None:
+        setup_task = await self._gateway.async_add_job(self.init_client)
 
-    def _init_client(self) -> None:
+    def init_client(self) -> None:
         """Initializes asynchronously modbus client.
 
         Raises:
@@ -236,8 +239,11 @@ class AsyncModbusDevice:
 
     async def _read_and_log(self, obj: ModbusObjModel) -> None:
         # fixme temp
-        value = await self.read(obj=obj)
-        self._log.debug(f'Read {value}')
+        try:
+            value = await self.read(obj=obj)
+            self._log.debug(f'Read {value}')
+        except Exception as e:
+            self._log.exception(f'Cannot read and log {e}')
 
     async def _poll_objects(self, objs: Collection[ModbusObjModel]) -> None:
         """Polls objects."""
