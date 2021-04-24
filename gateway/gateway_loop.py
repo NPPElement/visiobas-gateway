@@ -113,6 +113,7 @@ class VisioBASGateway:
         Args:
             target: target to call.
             args: parameters for target to call.
+            name: task's name (only for create_task)
         """
         if target is None:
             raise ValueError('None not allowed')
@@ -185,7 +186,7 @@ class VisioBASGateway:
 
             # objs in the list, so get [0] element in `dev_obj_data[0]` below
             dev_obj = await self.async_add_job(self._parse_device_obj, dev_obj_data[0])
-            device = await self.async_add_job(self.device_factory, dev_obj)
+            device = await self.async_add_job(self.device_factory, dev_obj)  #
 
             objs_data = await self.http_client.get_objs(dev_id=dev_id,
                                                         obj_types=device.types_to_rq)
@@ -204,7 +205,7 @@ class VisioBASGateway:
     async def start_device_poll(self, dev_id: int) -> None:
         """Starts poll of device."""
         await self.async_add_job(self.devices[dev_id].start_periodic_polls)
-        _log.debug('Device polling started', extra={'device_id': dev_id})
+        _log.info('Device polling started', extra={'device_id': dev_id})
 
     @staticmethod
     def _parse_device_obj(dev_data: dict) -> BACnetDeviceModel:
@@ -247,25 +248,26 @@ class VisioBASGateway:
 
         Returns:
             Created device.
-        Raises:
-            ValueError: if unexpected protocol provided.
-            # todo add parse model error
+        # Raises:
+        #     ValueError: if unexpected protocol provided.
+        #     # todo add parse model error
         """
         try:
             protocol = dev_obj.property_list.protocol
             if protocol in {Protocol.MODBUS_TCP, Protocol.MODBUS_RTU}:
                 device = AsyncModbusDevice(device_obj=dev_obj, gateway=self)
-                self.async_add_job(device.init_client)
+                device.init_client()
             elif protocol == Protocol.BACNET:
                 device = None  # todo
             else:
                 _log.warning('Unexpected protocol', extra={'protocol': protocol,
                                                            'device_id': dev_obj.id})
                 raise ValueError('Unexpected protocol')
+
             _log.debug('Device object created', extra={'device_id': device.id})
             return device
         except Exception as e:
-            _log.warning(f'Failed device creation {e}', extra={'device_id': dev_obj.id})
+            _log.exception(f'Failed device creation {e}', extra={'device_id': dev_obj.id})
 
     @staticmethod
     def object_factory(dev_obj: BACnetDeviceModel, obj_data: dict[str, Any]
@@ -283,7 +285,7 @@ class VisioBASGateway:
             elif protocol == Protocol.BACNET:
                 obj = None  # todo
             else:
-                # unknown protocols logging by pydantic on enter
+                # unknown protocols logging by `pydantic` on enter
                 raise ValueError('Unexpected protocol')
             return obj
         except AttributeError as e:

@@ -1,5 +1,6 @@
 import asyncio
 from ipaddress import IPv4Address
+from threading import Thread
 from typing import Any, Callable, Union, Collection, Optional
 
 from pymodbus.client.asynchronous.schedulers import ASYNC_IO
@@ -36,8 +37,7 @@ class AsyncModbusDevice:
         self._objects: dict[int, set[ModbusObjModel]] = {}  # todo hide type
         self._poll_tasks: dict[int, asyncio.Task] = {}
 
-    @classmethod
-
+        self._connected = False
 
     @property
     def address(self) -> Optional[IPv4Address]:
@@ -83,48 +83,53 @@ class AsyncModbusDevice:
             return True
         return False
 
-    async def async_init_client(self) -> None:
-        setup_task = await self._gateway.async_add_job(self.init_client)
-
     def init_client(self) -> None:
-        """Initializes asynchronously modbus client.
+        """Initializes asynchronous modbus client.
 
         Raises:
             ConnectionError: if client is not initialized.
         """
-        if self.protocol is Protocol.MODBUS_TCP:
-            host, port = self.address
-            loop, self._client = AsyncModbusTCPClient(
-                scheduler=ASYNC_IO,
-                host=host, port=port,
-                retries=self.retries,
-                retry_on_empty=True,
-                retry_on_invalid=True,
-                loop=self._gateway.loop,
-                timeout=self.timeout
-            )
-        elif self.protocol is Protocol.MODBUS_RTU:
-            loop, self._client = AsyncModbusSerialClient(
-                scheduler=ASYNC_IO,
-                method='rtu',
-                port=self._device_obj.property_list.rtu.port,
-                baudrate=self._device_obj.property_list.rtu.baudrate,
-                bytesize=self._device_obj.property_list.rtu.bytesize,
-                parity=self._device_obj.property_list.rtu.parity,
-                stopbits=self._device_obj.property_list.rtu.stopbits,
-                retries=self.retries,
-                retry_on_empty=self._device_obj.property_list.rtu.retry_on_empty,
-                retry_on_invalid=self._device_obj.property_list.rtu.retry_on_invalid,
-                loop=self._gateway.loop,
-                timeout=self.timeout
-            )
-        else:
-            raise NotImplementedError('Other methods not support yet.')
+        try:
+            loop = asyncio.new_event_loop()
+            assert not loop.is_running()
+            asyncio.set_event_loop(loop)
 
-        if self.is_client_initialized:
-            self._log.debug(f'Connected to {self}')
-        else:
-            raise ConnectionError(f'Failed to connect to {self}({self.address})')
+            if self.protocol is Protocol.MODBUS_TCP:
+                host, port = self.address
+                self._loop, self._client = AsyncModbusTCPClient(
+                    scheduler=ASYNC_IO,
+                    host=host, port=port,
+                    retries=self.retries,
+                    retry_on_empty=True,
+                    retry_on_invalid=True,
+                    loop=loop, # self._gateway.loop,
+                    timeout=self.timeout
+                )
+            elif self.protocol is Protocol.MODBUS_RTU:
+                self._loop, self._client = AsyncModbusSerialClient(
+                    scheduler=ASYNC_IO,
+                    method='rtu',
+                    port=self._device_obj.property_list.rtu.port,
+                    baudrate=self._device_obj.property_list.rtu.baudrate,
+                    bytesize=self._device_obj.property_list.rtu.bytesize,
+                    parity=self._device_obj.property_list.rtu.parity,
+                    stopbits=self._device_obj.property_list.rtu.stopbits,
+                    # retries=self.retries,
+                    # retry_on_empty=self._device_obj.property_list.rtu.retry_on_empty,
+                    # retry_on_invalid=self._device_obj.property_list.rtu.retry_on_invalid,
+                    loop=loop, # self._gateway.loop,
+                    timeout=self.timeout
+                )
+            else:
+                raise NotImplementedError('Other methods not support yet.')
+
+            if self.is_client_initialized:
+                self._connected = self._client.connect()
+                self._log.debug(f'Connected {self._connected}')
+            else:
+                raise ConnectionError(f'Failed to connect to {self}({self.address})')
+        except Exception as e:
+            self._log.exception('Cannot connect to device')
 
     def load_objects(self, objs: Collection[ModbusObjModel]) -> None:
         """Loads object to poll.
@@ -231,11 +236,14 @@ class AsyncModbusDevice:
         self._log.debug('Periodic polls started')
 
     async def periodic_poll(self, objs: Collection[ModbusObjModel], period: int) -> None:
-        await self._poll_objects(objs=objs)
-        await asyncio.sleep(delay=period)
+        try:
+            await self._poll_objects(objs=objs)
+            await asyncio.sleep(delay=period)
 
-        self._poll_tasks[period] = self._loop.create_task(
-            self.periodic_poll(objs=objs, period=period))
+            self._poll_tasks[period] = self._loop.create_task(
+                self.periodic_poll(objs=objs, period=period))
+        except Exception as e:
+            self._log.exception(repr(e))
 
     async def _read_and_log(self, obj: ModbusObjModel) -> None:
         # fixme temp
@@ -247,9 +255,12 @@ class AsyncModbusDevice:
 
     async def _poll_objects(self, objs: Collection[ModbusObjModel]) -> None:
         """Polls objects."""
-        read_requests = [self._read_and_log(obj=obj)
-                         for obj in objs]
-        await asyncio.gather(*read_requests)
+        try:
+            read_requests = [self._read_and_log(obj=obj)
+                             for obj in objs]
+            await asyncio.gather(*read_requests, return_exceptions=False)
+        except Exception as e:
+            self._log.exception(repr(e))
 
     # async def start_poll(self):
     #     self._log.info(f'{self} started')
