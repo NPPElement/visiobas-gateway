@@ -113,7 +113,6 @@ class VisioBASGateway:
         Args:
             target: target to call.
             args: parameters for target to call.
-            name: task's name (only for create_task)
         """
         if target is None:
             raise ValueError('None not allowed')
@@ -192,10 +191,16 @@ class VisioBASGateway:
                                                         obj_types=device.types_to_rq)
             _log.debug('Objects to poll downloaded', extra={'device_id': dev_id})
             # objs in the list, so get [0] element in `objs_data[0]` below
-            objs = await self.async_add_job(self._extract_objects, objs_data[0], dev_obj)
+            extract_tasks = [self.async_add_job(self._extract_objects, obj_data, dev_obj)
+                             for obj_data in objs_data]
+            objs_lists = await asyncio.gather(*extract_tasks)
+            objs = [obj for lst in objs_lists for obj in lst]  # flat list of lists
 
             if len(objs):  # if there are objects
+                _log.warning(f'Objects to poll: {len(objs)}', extra={'device_id': dev_id})
                 await self.async_add_job(device.load_objects, objs)
+            else:
+                _log.warning("There aren't objects to poll", extra={'device_id': dev_id})
 
             self._devices.update({device.id: device})
             _log.info(f'Device loaded', extra={'device_id': dev_id})
