@@ -237,7 +237,7 @@ class AsyncModbusDevice:
         """Starts periodic polls for all periods."""
         self._log.debug(f'Objects = {self._objects}')
         for period, objs in self._objects.items():
-            self._poll_tasks[period] = self._loop.create_task(
+            self._poll_tasks[period] = self._gateway.loop.create_task(
                 self.periodic_poll(objs=objs, period=period))
         # self._log.debug(f'Poll tasks = {self._poll_tasks}')
         self._log.debug('Periodic polls started')
