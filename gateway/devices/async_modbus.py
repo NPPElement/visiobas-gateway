@@ -43,6 +43,10 @@ class AsyncModbusDevice:
         return self._device_obj.property_list.address
 
     @property
+    def port(self) -> int:
+        return self._device_obj.property_list.port
+
+    @property
     def types_to_rq(self) -> tuple[ObjType, ...]:  # todo hide type
         return self._device_obj.types_to_rq
 
@@ -94,10 +98,9 @@ class AsyncModbusDevice:
             asyncio.set_event_loop(loop)
 
             if self.protocol is Protocol.MODBUS_TCP:
-                host, port = self.address
                 self._loop, self._client = AsyncModbusTCPClient(
                     scheduler=ASYNC_IO,
-                    host=host, port=port,
+                    host=self.address, port=self.port,
                     retries=self.retries,
                     retry_on_empty=True,
                     retry_on_invalid=True,
