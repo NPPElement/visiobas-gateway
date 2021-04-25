@@ -46,6 +46,7 @@ def main():
                       'bacpypes.task',
 
                       'pymodbus.client.sync',
+                      'pymodbus.client.asynchronous.async_io',
                       'pymodbus.transaction',
                       'pymodbus.framer.socket_framer',
                       'pymodbus.factory',

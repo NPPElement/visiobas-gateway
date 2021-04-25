@@ -1,6 +1,6 @@
 from ipaddress import IPv4Address
 
-from pydantic import Field, BaseModel, Json
+from pydantic import Field, BaseModel, Json, validator
 from pymodbus.constants import Defaults
 
 from .base_obj import BaseBACnetObjModel
@@ -22,6 +22,10 @@ class DeviceRTUPropertyListModel(BaseModel):
 
     def __repr__(self) -> str:
         return str(self.__dict__)
+
+    @validator('parity')  # todo remove. Hotfix for support 'None' in `parity`
+    def set_correct_parity(cls, v):
+        return Defaults.Parity
 
 
 class DevicePropertyListJsonModel(BaseModel):

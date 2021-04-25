@@ -1,6 +1,5 @@
 import asyncio
 from ipaddress import IPv4Address
-from threading import Thread
 from typing import Any, Callable, Union, Collection, Optional
 
 from pymodbus.client.asynchronous.schedulers import ASYNC_IO
@@ -102,7 +101,7 @@ class AsyncModbusDevice:
                     retries=self.retries,
                     retry_on_empty=True,
                     retry_on_invalid=True,
-                    loop=loop, # self._gateway.loop,
+                    loop=loop,  # self._gateway.loop,
                     timeout=self.timeout
                 )
             elif self.protocol is Protocol.MODBUS_RTU:
@@ -117,19 +116,22 @@ class AsyncModbusDevice:
                     # retries=self.retries,
                     # retry_on_empty=self._device_obj.property_list.rtu.retry_on_empty,
                     # retry_on_invalid=self._device_obj.property_list.rtu.retry_on_invalid,
-                    loop=loop, # self._gateway.loop,
+                    loop=loop,  # self._gateway.loop,
                     timeout=self.timeout
                 )
             else:
                 raise NotImplementedError('Other methods not support yet.')
-
-            if self.is_client_initialized:
-                self._connected = self._client.connect()
-                self._log.debug(f'Connected {self._connected}')
-            else:
-                raise ConnectionError(f'Failed to connect to {self}({self.address})')
+            # await self._gateway.async_add_job(self.connect_client)
         except Exception as e:
             self._log.exception('Cannot connect to device')
+
+    async def connect_client(self) -> None:
+        """Connects to the modbus server."""
+        if self.is_client_initialized:
+            # self._connected = await self._client.connect()
+            self._log.debug(f'Connected to modbus device', extra={'device_id': self.id})
+        else:
+            self._log.warning(f'Failed to connect to device', extra={'device_id': self.id})
 
     def load_objects(self, objs: Collection[ModbusObjModel]) -> None:
         """Loads object to poll.

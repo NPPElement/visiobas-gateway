@@ -96,16 +96,16 @@ class VisioBASGateway:
 
         self._upd_task = self.loop.create_task(self.periodic_update())
 
-    # def add_job(self, target: Callable, *args: Any) -> None:
-    #     """Adds job to the executor pool.
-    #
-    #     Args:
-    #         target: target to call.
-    #         args: parameters for target to call.
-    #     """
-    #     if target is None:
-    #         raise ValueError('None not allowed')
-    #     self.loop.call_soon_threadsafe(self.async_add_job, target, *args)
+    def add_job(self, target: Callable, *args: Any) -> None:
+        """Adds job to the executor pool.
+
+        Args:
+            target: target to call.
+            args: parameters for target to call.
+        """
+        if target is None:
+            raise ValueError('None not allowed')
+        self.loop.call_soon_threadsafe(self.async_add_job, target, *args)
 
     def async_add_job(self, target: Callable, *args: Any) -> Optional[asyncio.Future]:
         """Adds a job from within the event loop.
@@ -257,6 +257,7 @@ class VisioBASGateway:
             if protocol in {Protocol.MODBUS_TCP, Protocol.MODBUS_RTU}:
                 device = AsyncModbusDevice(device_obj=dev_obj, gateway=self)
                 device.init_client()
+                self.add_job(device.connect_client)
             elif protocol == Protocol.BACNET:
                 device = None  # todo
             else:
