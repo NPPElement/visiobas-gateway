@@ -23,12 +23,6 @@ class ModbusRTUDevice(Thread):
                  connector,
                  device_id: int,
                  objects: set[ModbusObject],
-
-                 # method: str,
-                 # port: str,
-                 # unit: int,
-                 # baudrate: int,
-
                  poll_period: int = 10,
                  **kwargs
                  ):
@@ -49,7 +43,8 @@ class ModbusRTUDevice(Thread):
         self.method = 'rtu'
         self.port = kwargs.get('port', 0)
         self.baudrate = kwargs.get('baudrate', Defaults.Baudrate)
-        self.unit = kwargs.get('unit', 0)
+        # self.
+        unit = kwargs.get('unit', 0)
 
         self.stopbits = kwargs.get('stopbits', Defaults.Stopbits)
         self.bytesize = kwargs.get('bytesize', Defaults.Bytesize)
@@ -57,7 +52,9 @@ class ModbusRTUDevice(Thread):
         self.timeout = kwargs.get('timeout', Defaults.Timeout)
         self.strict = kwargs.get("strict", False)
 
-        self.objects = objects
+        # self.objects = objects
+        self.objects: dict[int, set[ModbusObject]] = {unit: objects}
+
         self.poll_period = poll_period
 
         self._polling = True
@@ -71,6 +68,9 @@ class ModbusRTUDevice(Thread):
 
     def __len__(self) -> int:
         return len(self.objects)
+
+    def add_objects(self, unit: int, objs: set[ModbusObject]) -> None:
+        self.objects[unit] = objs
 
     def _init_client(self, **kwargs) -> tuple or None:
         try:
@@ -104,7 +104,9 @@ class ModbusRTUDevice(Thread):
                 if self.client is not None:
                     self._log.debug('Polling started')
                     _t0 = time()
-                    self.poll(objects=self.objects)
+                    for unit_, objs in self.objects.items():
+                        self.poll(objects=objs, unit=unit_)
+
                     _t_delta = time() - _t0
                     self._log.info('\n==================================================\n'
                                    f'{self} polled for: '
@@ -139,10 +141,10 @@ class ModbusRTUDevice(Thread):
         else:
             self._log.info(f'{self} stopped.')
 
-    def poll(self, objects: set[ModbusObject]) -> None:
+    def poll(self, objects: set[ModbusObject], unit: int) -> None:
         for obj in objects:
             try:
-                registers = self.read(obj=obj)
+                registers = self.read(obj=obj, unit=unit)
                 value = self.process_registers(registers=registers,
                                                quantity=obj.quantity,
                                                properties=obj.properties)
@@ -162,7 +164,7 @@ class ModbusRTUDevice(Thread):
         self._polling = False
         self._log.info('Stopping polling ...')
 
-    def read(self, obj: ModbusObject) -> list:
+    def read(self, obj: ModbusObject, unit: int) -> list:
         """Read data from Modbus object."""
         read_cmd_codes = {1, 2, 3, 4}
 
@@ -173,7 +175,7 @@ class ModbusRTUDevice(Thread):
         quantity = obj.quantity
         data = self.available_functions[read_cmd_code](address=address,
                                                        count=quantity,
-                                                       unit=self.unit
+                                                       unit=unit
                                                        )
         if not data.isError():
             self._log.debug(
@@ -186,10 +188,10 @@ class ModbusRTUDevice(Thread):
             )
             return data.registers
         else:
-            self._log.warning(f'Read failed: {data} unit={self.unit} {obj}')
+            self._log.warning(f'Read failed: {data} unit={unit} {obj}')
             # raise ValueError(data)
 
-    def write(self, values, obj: ModbusObject) -> bool:
+    def write(self, values, obj: ModbusObject, unit: int) -> bool:
         """Write data to Modbus object."""
         write_cmd_codes = {5, 6, 15, 16}
 
@@ -200,7 +202,7 @@ class ModbusRTUDevice(Thread):
 
         rq = self.available_functions[write_cmd_code](reg_address,
                                                       values,
-                                                      unit=self.unit
+                                                      unit=unit
                                                       )
         if not rq.isError():
             self._log.debug(f'Successfully write: {reg_address}: {values}')
