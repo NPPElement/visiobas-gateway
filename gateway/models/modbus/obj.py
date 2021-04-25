@@ -47,4 +47,4 @@ class ModbusObjModel(BACnetObjModel):
     #     return ModbusPropertyListWrap.parse_raw(pl)
 
     def __repr__(self) -> str:
-        return f'ModbusObj{self.__dict__}'
+        return f'ModbusObj'  # {self.__dict__}' # todo

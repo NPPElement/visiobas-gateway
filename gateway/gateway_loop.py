@@ -190,7 +190,7 @@ class VisioBASGateway:
             objs_data = await self.http_client.get_objs(dev_id=dev_id,
                                                         obj_types=device.types_to_rq)
             _log.debug('Objects to poll downloaded', extra={'device_id': dev_id})
-            # objs in the list, so get [0] element in `objs_data[0]` below
+
             extract_tasks = [self.async_add_job(self._extract_objects, obj_data, dev_obj)
                              for obj_data in objs_data]
             objs_lists = await asyncio.gather(*extract_tasks)
@@ -236,7 +236,7 @@ class VisioBASGateway:
         objs = [self.object_factory(dev_obj=dev_obj, obj_data=obj_data)
                 for obj_data in objs_data
                 if not None]
-        _log.debug('Objects to poll created', extra={'device_id': dev_obj.id})
+        # _log.debug('Objects to poll created', extra={'device_id': dev_obj.id})
         return objs
 
     def _get_device_ids(self) -> Iterable[int]:

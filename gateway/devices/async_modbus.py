@@ -139,7 +139,7 @@ class AsyncModbusDevice:
         """
         objs = self._sort_objects_by_period(objs=objs)
         self._objects = objs
-        self._log.debug('Objects to poll loaded to device')
+        self._log.debug('Objects to poll are loaded to device')
 
     # @staticmethod
     def _sort_objects_by_period(self, objs: Collection[ModbusObjModel]
@@ -153,8 +153,11 @@ class AsyncModbusDevice:
         dct = {}
         for obj in objs:
             poll_period = obj.property_list.poll_interval
-            dct.get(poll_period, []).append(obj)
-        self._log.debug('Objects to poll sorted')
+            try:
+                dct[poll_period].append(obj)
+            except KeyError:
+                dct[poll_period] = [obj]
+        self._log.debug('Objects to poll are grouped by periods')
         return dct
 
     @property
@@ -232,13 +235,16 @@ class AsyncModbusDevice:
 
     async def start_periodic_polls(self) -> None:
         """Starts periodic polls for all periods."""
+        self._log.debug(f'Objects = {self._objects}')
         for period, objs in self._objects.items():
             self._poll_tasks[period] = self._loop.create_task(
                 self.periodic_poll(objs=objs, period=period))
+        # self._log.debug(f'Poll tasks = {self._poll_tasks}')
         self._log.debug('Periodic polls started')
 
     async def periodic_poll(self, objs: Collection[ModbusObjModel], period: int) -> None:
         try:
+            self._log.debug(f'Periodic poll task created for period {period}')
             await self._poll_objects(objs=objs)
             await asyncio.sleep(delay=period)
 
@@ -250,6 +256,7 @@ class AsyncModbusDevice:
     async def _read_and_log(self, obj: ModbusObjModel) -> None:
         # fixme temp
         try:
+            self._log.debug(f'Reading...')
             value = await self.read(obj=obj)
             self._log.debug(f'Read {value}')
         except Exception as e:
@@ -260,7 +267,8 @@ class AsyncModbusDevice:
         try:
             read_requests = [self._read_and_log(obj=obj)
                              for obj in objs]
-            await asyncio.gather(*read_requests, return_exceptions=False)
+            self._log.debug('Performing read tasks...')
+            await asyncio.gather(*read_requests)
         except Exception as e:
             self._log.exception(repr(e))
 
