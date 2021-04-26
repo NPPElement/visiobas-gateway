@@ -4,9 +4,9 @@
 
 1. [Device](#Device)
     - [Device `propertyList`](#Device-propertyList)
-        - [ModbusRTU device `propertyList.rtu`](#ModbusRTU-device-propertyList--rtu)
+        - [ModbusRTU device `propertyList.rtu`](#ModbusRTU-device-propertyListrtu)
 2. [Object](#Object)
-    - [Modbus Object `propertyList.modbus`](#Modbus-object-propertyList--modbus)
+    - [Modbus Object `propertyList.modbus`](#Modbus-object-propertyListmodbus)
 
 ## Gateway device TODO
 
