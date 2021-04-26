@@ -1,16 +1,15 @@
 # Properties usage
 
 ## Contents
-
+0. [Gateway](#Gateway)
 1. [Device](#Device)
     - [Device `propertyList`](#Device-propertyList)
         - [ModbusRTU device `propertyList.rtu`](#ModbusRTU-device-propertyListrtu)
 2. [Object](#Object)
     - [Modbus Object `propertyList.modbus`](#Modbus-object-propertyListmodbus)
 
-## Gateway device TODO
-
-Создается девайс для шлюза. В нем определяются:
+## Gateway
+TODO Создается девайс для шлюза. В нем определяются:
 
 - `??` расписание
 - `??` список id девайсов для опроса
