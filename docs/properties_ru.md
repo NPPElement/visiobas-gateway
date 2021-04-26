@@ -16,6 +16,7 @@
 |Property|Type|Default|Required|Possible|Description|
 |--------|----|-------|--------|--------|-----------|
 |`846 deviceId`|`int`|-|yes|-|Id шлюза
+|`371 propertyList`|`JSON`-`str`|-|yes|-|См. таблицу ниже
 |`118 updatePeriod`|`int`|3600|-|-|Интервал обновления шлюза (пере-авторизация, обновление данных об опрашиваемых девайсах)
 |`??`|TODO|-|TODO|-|Расписание
 
@@ -23,7 +24,7 @@
 
 |Property|Type|Default|Required|Possible|Description|
 |--------|----|-------|--------|--------|-----------|
-|`device_ids`|`Json`|-|yes|TODO|Список id опрашиваемых девайсов
+|`device_ids`|`JSON`-`str`|-|yes|'[13,666,777]', ...|Список id опрашиваемых девайсов
 
 ---
 
@@ -32,16 +33,14 @@
 |Property|Type|Default|Required|Possible|Description|
 |--------|----|-------|--------|--------|-----------|
 |`846 deviceId`|`int`|-|yes|-|Id девайса
-|`371 propertyList`|`Json`|-|yes|-|См. таблицу ниже
-|`11 apduTimeout`|`int`|TODO|-|-|TODO
+|`371 propertyList`|`JSON`-`str`|-|yes|-|См. таблицу ниже
+|`11 apduTimeout`|`int`|TODO|-|-|Таймаут
 |`73 numberOfApduRetries`|`int`|2|-|-|Количество повторов, при неудачной попытке
 |`153 backupFailureTimeout`|`int`|TODO|-|-|(для сервера) Если шлюз не прислал данные на протяжении указанного периода — подсвечивается серым
 
-- ~~116 timeSynchronizationRecipients~~ (Время синхронизации получателей)
-    - Период отправки данные на сервер
-    - По умолчанию `60` ?? (сейчас `10`)
+- ~~116 timeSynchronizationRecipients (Время синхронизации получателей)~~
 - ~~118 updateInterval~~ ~~340 restoreCompletionTime~~ период отправки девайса на сервер (
-  Отправка происходит в любом случае. Даже если значения не менялись).
+  Отправка происходит в любом случае. Даже если значения не менялись).TODO
   ~~- 118 updatePeriod есть не во всех датчиках. Возможно лучше оставить в 371~~
 
 ## Device `propertyList`
@@ -51,7 +50,7 @@
 |`protocol`|`str`|-|yes|'BACnet', 'ModbusTCP', 'ModbusRTU'|По какому протоколу опрашивается девайс
 |`address`|`str`|-|for TCP|'10.20.30.40', ...|IP адрес девайса (для RTU не заполняется)
 |`port`|`int`|-|for TCP|-|Порт
-|`rtu`|`Json`|-|for RTU|-|Заполняется для `protocol`='ModbusRTU' (см. таблицу ниже)
+|`rtu`|`JSON`-`str`|-|for RTU|-|Заполняется для `protocol`='ModbusRTU' (см. таблицу ниже)
 |`internalPeriod`|`float`|TODO|-|-|Период 'внутреннего' опроса девайса в секундах (если значение не изменилось, то не будет отправлено)
 
 ## ModbusRTU device `propertyList.rtu`
@@ -79,7 +78,7 @@
 
 |Property|Type|Default|Required|Possible|Description|
 |--------|----|-------|--------|--------|-----------|
-|`371 propertyList`|`Json`|-|for Modbus|-|См. таблицу ниже
+|`371 propertyList`|`JSON`-`str`|-|for Modbus|-|См. таблицу ниже
 |`106 resolution`|`float`|0.1|-|-|Значение округляется с указанным шагом
 |`107 segmentationSupported`|`bool`|false|-|true, false|Поддерживается ли несколько сегментов в 1-м запросе.
 
