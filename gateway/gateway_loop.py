@@ -296,5 +296,5 @@ class VisioBASGateway:
                 # unknown protocols logging by `pydantic` on enter
                 raise ValueError('Unexpected protocol')
             return obj
-        except AttributeError as e:
+        except ValidationError as e:
             _log.exception(f'Failed parsing: {dev_obj.id}: {obj_data}: {e}')
