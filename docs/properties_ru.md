@@ -58,11 +58,13 @@
 
 - `371 propertyList` Все параметры из `address_cache` и `rtu.yaml` хранятся в свойствах
   девайса:
-  - ~~rtu.retry_on_empty~~
-    - ~~По умолчанию~~ `True`
-  - ~~rtu.retry_on_invalid~~
-    - ~~По умолчанию~~ `True`
-  - ~~rtu.timeout~~ Используется 11-е свойство `apduTimeout`
+    - ~~rtu.retry_on_empty~~
+        - ~~По умолчанию~~ `True`
+    - ~~rtu.retry_on_invalid~~
+        - ~~По умолчанию~~ `True`
+    - ~~rtu.timeout~~ Используется 11-е свойство `apduTimeout`
+
+ ---
 
 ## BACnet object
 
