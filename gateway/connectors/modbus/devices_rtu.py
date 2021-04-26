@@ -29,11 +29,12 @@ class ModbusRTUDevice(Thread):
         super().__init__()
         self.id = device_id
         self.port = kwargs.get('port', 0)
+        _, _, self.portname = self.port.split('/', maxsplit=2)
         self.setName(name=f'{self}-Thread')
         self.setDaemon(True)
 
         _base_path = Path(__file__).resolve().parent.parent.parent
-        _log_file_path = _base_path / f'logs/{self.port}.log'
+        _log_file_path = _base_path / f'logs/{self.portname}.log'
         self._log = get_file_logger(logger_name=f'{self}',
                                     size_bytes=50_000_000,
                                     file_path=_log_file_path)
