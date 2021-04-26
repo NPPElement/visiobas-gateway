@@ -51,9 +51,9 @@ def cast_2_registers(registers: list[int],
         wordorder=wordorder
     )
     decode_func = {
-        'INT': decoder.decode_32bit_int,
-        'UINT': decoder.decode_32bit_uint,
-        'FLOAT': decoder.decode_32bit_float
+        'int': decoder.decode_32bit_int,
+        'uint': decoder.decode_32bit_uint,
+        'float': decoder.decode_32bit_float
     }
     try:
         return decode_func[type_name]()

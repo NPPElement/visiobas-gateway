@@ -176,6 +176,8 @@ class ModbusConnector(Thread, Connector):
     def update_devices(self, devices: dict[int, set[ModbusObject]],
                        update_intervals: dict[int, int]) -> None:
         """ Starts Modbus devices threads"""
+        # rtu_started = False
+
         for dev_id, objs in devices.items():
             if dev_id in self.__polling_devices.keys():
                 self.__stop_device(device_id=dev_id)
@@ -183,8 +185,12 @@ class ModbusConnector(Thread, Connector):
                 self._start_tcp_device(device_id=dev_id, objects=objs,
                                        update_interval=update_intervals[dev_id])
             elif dev_id in self.rtu_device_ids:
+                # if not rtu_started:
                 self._start_rtu_device(dev_id=dev_id, objs=objs,
-                                       upd_interval=update_intervals[dev_id])
+                                           upd_interval=update_intervals[dev_id])
+                # rtu_started = True
+                # else:
+                    # unit = self.rtu_cfg[dev_id].get('unit')
 
         _log.info('Devices updated')
 
@@ -193,14 +199,21 @@ class ModbusConnector(Thread, Connector):
         """ Start Modbus RTU Device thread"""
         _log.debug(f'Starting RTU Device [{dev_id}] ...')
         try:
-            self.__polling_devices[dev_id] = ModbusRTUDevice(
-                **self.rtu_cfg[dev_id],
-                verifier_queue=self.__verifier_queue,
-                connector=self,
-                device_id=dev_id,
-                objects=objs,
-                update_period=upd_interval,
-            )
+            port = self.rtu_cfg[dev_id].get('port')
+            unit = self.rtu_cfg[dev_id].get('unit')
+            dev = self.__polling_devices.get(port)
+            if not dev:
+                self.__polling_devices[port] = ModbusRTUDevice(
+                    **self.rtu_cfg[dev_id],
+                    verifier_queue=self.__verifier_queue,
+                    connector=self,
+                    device_id=dev_id,
+                    objects=objs,
+                    update_period=upd_interval,
+                )
+            else:
+                dev.add_objects(unit=unit, objs=objs, dev_id=dev_id)
+
             _log.info(f'Device [{dev_id}] started')
         except Exception as e:
             _log.error(f'Device [{dev_id}] starting error: {e}', exc_info=True)

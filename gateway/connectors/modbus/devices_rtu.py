@@ -23,22 +23,18 @@ class ModbusRTUDevice(Thread):
                  connector,
                  device_id: int,
                  objects: set[ModbusObject],
-
-                 # method: str,
-                 # port: str,
-                 # unit: int,
-                 # baudrate: int,
-
                  poll_period: int = 10,
                  **kwargs
                  ):
         super().__init__()
         self.id = device_id
+        self.port = kwargs.get('port', 0)
+        _, _, self.portname = self.port.split('/', maxsplit=2)
         self.setName(name=f'{self}-Thread')
         self.setDaemon(True)
 
         _base_path = Path(__file__).resolve().parent.parent.parent
-        _log_file_path = _base_path / f'logs/{self.id}.log'
+        _log_file_path = _base_path / f'logs/{self.portname}.log'
         self._log = get_file_logger(logger_name=f'{self}',
                                     size_bytes=50_000_000,
                                     file_path=_log_file_path)
@@ -47,9 +43,12 @@ class ModbusRTUDevice(Thread):
         self._connector = connector
 
         self.method = 'rtu'
-        self.port = kwargs.get('port', 0)
+
         self.baudrate = kwargs.get('baudrate', Defaults.Baudrate)
-        self.unit = kwargs.get('unit', 0)
+        # self.
+        unit = kwargs.get('unit', 0)
+
+        self.unit_id_mapping = {unit: self.id}
 
         self.stopbits = kwargs.get('stopbits', Defaults.Stopbits)
         self.bytesize = kwargs.get('bytesize', Defaults.Bytesize)
@@ -57,7 +56,9 @@ class ModbusRTUDevice(Thread):
         self.timeout = kwargs.get('timeout', Defaults.Timeout)
         self.strict = kwargs.get("strict", False)
 
-        self.objects = objects
+        # self.objects = objects
+        self.objects: dict[int, set[ModbusObject]] = {unit: objects}
+
         self.poll_period = poll_period
 
         self._polling = True
@@ -66,11 +67,19 @@ class ModbusRTUDevice(Thread):
 
         self.start()
 
+    def get_device_id(self, unit: int) -> int:
+        """Returns device id by unit."""
+        return self.unit_id_mapping[unit]
+
     def __repr__(self) -> str:
-        return f'{self.__class__.__name__}[{self.id}]'
+        return f'{self.__class__.__name__}[{self.port}]'
 
     def __len__(self) -> int:
         return len(self.objects)
+
+    def add_objects(self, unit: int, objs: set[ModbusObject], dev_id: int) -> None:
+        self.objects[unit] = objs
+        self.unit_id_mapping[unit] = dev_id
 
     def _init_client(self, **kwargs) -> tuple or None:
         try:
@@ -104,7 +113,9 @@ class ModbusRTUDevice(Thread):
                 if self.client is not None:
                     self._log.debug('Polling started')
                     _t0 = time()
-                    self.poll(objects=self.objects)
+                    for unit_, objs in self.objects.items():
+                        self.poll(objects=objs, unit=unit_)
+
                     _t_delta = time() - _t0
                     self._log.info('\n==================================================\n'
                                    f'{self} polled for: '
@@ -139,30 +150,32 @@ class ModbusRTUDevice(Thread):
         else:
             self._log.info(f'{self} stopped.')
 
-    def poll(self, objects: set[ModbusObject]) -> None:
+    def poll(self, objects: set[ModbusObject], unit: int) -> None:
         for obj in objects:
             try:
-                registers = self.read(obj=obj)
+                registers = self.read(obj=obj, unit=unit)
                 value = self.process_registers(registers=registers,
                                                quantity=obj.quantity,
                                                properties=obj.properties)
-                converted_properties = self._add_bacnet_properties(device_id=self.id,
-                                                                   obj=obj,
-                                                                   value=value
-                                                                   )
+                converted_properties = self._add_bacnet_properties(
+                    device_id=self.get_device_id(unit=unit),
+                    obj=obj,
+                    value=value
+                    )
                 self._verifier_queue.put(converted_properties)
             except Exception as e:
                 self._log.warning(f'Object {obj} was skipped due to an error: {e}',
                                   exc_info=True)
         # device_id in queue means that device polled.
-        self._verifier_queue.put(self.id)
+        self._verifier_queue.put(self.get_device_id(unit=unit))
+        self._log.info(f'Device UNIT={unit} polled')
 
     def stop_polling(self) -> None:
         self.client.close()
         self._polling = False
         self._log.info('Stopping polling ...')
 
-    def read(self, obj: ModbusObject) -> list:
+    def read(self, obj: ModbusObject, unit: int) -> list:
         """Read data from Modbus object."""
         read_cmd_codes = {1, 2, 3, 4}
 
@@ -173,11 +186,11 @@ class ModbusRTUDevice(Thread):
         quantity = obj.quantity
         data = self.available_functions[read_cmd_code](address=address,
                                                        count=quantity,
-                                                       unit=self.unit
+                                                       unit=unit
                                                        )
         if not data.isError():
             self._log.debug(
-                f'Successful reading cmd_code={read_cmd_code} address={address} '
+                f'Successful reading UNIT={unit} address={address} '
                 f'quantity={quantity} registers={data.registers}'
                 # extra={'cmd_code': cmd_code,
                 #        'address': reg_address,
@@ -186,10 +199,10 @@ class ModbusRTUDevice(Thread):
             )
             return data.registers
         else:
-            self._log.warning(f'Read failed: {data} unit={self.unit} {obj}')
+            self._log.warning(f'Read failed: {data} UNIT={unit} {obj}')
             # raise ValueError(data)
 
-    def write(self, values, obj: ModbusObject) -> bool:
+    def write(self, values, obj: ModbusObject, unit: int) -> bool:
         """Write data to Modbus object."""
         write_cmd_codes = {5, 6, 15, 16}
 
@@ -200,7 +213,7 @@ class ModbusRTUDevice(Thread):
 
         rq = self.available_functions[write_cmd_code](reg_address,
                                                       values,
-                                                      unit=self.unit
+                                                      unit=unit
                                                       )
         if not rq.isError():
             self._log.debug(f'Successfully write: {reg_address}: {values}')
@@ -216,13 +229,15 @@ class ModbusRTUDevice(Thread):
         if registers is None:
             return 'null'
 
-        if (properties.data_type == 'BOOL' and quantity == 1 and
+        data_type = properties.data_type.lower()
+
+        if (data_type == 'bool' and quantity == 1 and
                 properties.data_length == 1 and isinstance(properties.bit, int)):
             # bool: 1bit
             # TODO: Group bits into one request for BOOL
             value = cast_to_bit(register=registers, bit=properties.bit)
 
-        elif (properties.data_type == 'BOOL' and quantity == 1 and
+        elif (data_type == 'bool' and quantity == 1 and
               properties.data_length == 16):
             # bool: 16bit
             value = int(bool(registers[0]))
@@ -231,17 +246,17 @@ class ModbusRTUDevice(Thread):
             # expected only: int16 | uint16 |  fixme: BYTE?
             value = registers[0]
 
-        elif (properties.data_type == 'FLOAT' and
+        elif (data_type == 'float' and
               quantity == 2 and properties.data_length == 32):  # float32
             value = round(cast_2_registers(registers=registers,
                                            byteorder='>', wordorder='<',  # fixme use obj
-                                           type_name=properties.data_type),
+                                           type_name=data_type),
                           ndigits=6)
-        elif ((properties.data_type == 'INT' or properties.data_type == 'UINT') and
+        elif ((data_type == 'int' or data_type == 'uint') and
               quantity == 2 and properties.data_length == 32):  # int32 | uint32
             value = cast_2_registers(registers=registers,
                                      byteorder='<', wordorder='>',  # fixme use obj
-                                     type_name=properties.data_type)
+                                     type_name=data_type)
         else:
             raise NotImplementedError('What to do with that type '
                                       f'not yet defined: {registers, quantity, properties}')
