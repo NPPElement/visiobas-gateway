@@ -5,7 +5,7 @@
 1. ### [Device](#Device)
     - ### [Device `propertyList`](#Device-propertyList)
         - ### [ModbusRTU device `propertyList.rtu`](#ModbusRTU-device-propertyList-rtu)
-2. ### [BACnet object](#BACnet-object)
+2. ### [Object](#Object)
     - ### [Modbus Object `propertyList.modbus`](#Modbus-object-propertyList-modbus)
 
 ## Gateway device TODO
@@ -66,7 +66,7 @@
 
  ---
 
-## BACnet object
+## Object
 
 |Property|Type|Default|Required|Possible|Description|
 |--------|----|-------|--------|--------|-----------|
