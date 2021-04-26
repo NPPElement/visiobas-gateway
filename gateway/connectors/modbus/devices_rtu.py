@@ -28,6 +28,7 @@ class ModbusRTUDevice(Thread):
                  ):
         super().__init__()
         self.id = device_id
+        self.port = kwargs.get('port', 0)
         self.setName(name=f'{self}-Thread')
         self.setDaemon(True)
 
@@ -41,7 +42,7 @@ class ModbusRTUDevice(Thread):
         self._connector = connector
 
         self.method = 'rtu'
-        self.port = kwargs.get('port', 0)
+
         self.baudrate = kwargs.get('baudrate', Defaults.Baudrate)
         # self.
         unit = kwargs.get('unit', 0)
