@@ -12,13 +12,15 @@ from ..protocol import Protocol
 class DeviceRTUPropertyListModel(BaseModel):
     unit: int = Field(...)  # address of serial device
     port: str = Field(...)  # interface for serial devices
-    baudrate: int = Field(default=Defaults.Baudrate, gt=0, lt=115200)
+    baudrate: int = Field(9600, gt=0, lt=115200)  # default=Defaults.Baudrate
     stopbits: int = Field(default=Defaults.Stopbits)
     bytesize: int = Field(default=Defaults.Bytesize)
-    timeout: float = Field(default=1)  # 3s is too much
+    # timeout: float = Field(default=1)  # 3s is too much
     parity: str = Field(default=Defaults.Parity)
-    retry_on_empty: bool = Field(default=True)  # works better
-    retry_on_invalid: bool = Field(default=True)  # works better
+
+    # Unexpected in RTU
+    # retry_on_empty: bool = Field(default=True)  # works better
+    # retry_on_invalid: bool = Field(default=True)  # works better
 
     def __repr__(self) -> str:
         return str(self.__dict__)
