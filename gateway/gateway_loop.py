@@ -2,6 +2,8 @@ import asyncio
 from pathlib import Path
 from typing import Callable, Any, Optional, Iterable, Union
 
+from pydantic import ValidationError
+
 from gateway.clients import VisioBASHTTPClient, VisioBASMQTTClient
 from gateway.devices.async_modbus import AsyncModbusDevice
 from gateway.models import ObjType, BACnetDeviceModel, ModbusObjModel, Protocol
@@ -223,7 +225,7 @@ class VisioBASGateway:
             dev_obj = BACnetDeviceModel(**dev_data)
             _log.debug(f'Device object parsed', extra={'device_object': str(dev_obj)})
             return dev_obj
-        except AttributeError as e:
+        except ValidationError as e:
             _log.exception(f'Cannot parse device object {e}')
 
     def _extract_objects(self, objs_data: tuple, dev_obj: BACnetDeviceModel

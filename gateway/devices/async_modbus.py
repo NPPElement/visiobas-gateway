@@ -155,7 +155,7 @@ class AsyncModbusDevice:
         """
         dct = {}
         for obj in objs:
-            poll_period = obj.property_list.poll_interval
+            poll_period = obj.property_list.send_interval
             try:
                 dct[poll_period].append(obj)
             except KeyError:
