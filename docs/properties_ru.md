@@ -1,7 +1,9 @@
 # Properties usage
 
 ## Contents
+
 0. [Gateway](#Gateway)
+    - [Gateway `propertyList`](#Gateway-propertyList)
 1. [Device](#Device)
     - [Device `propertyList`](#Device-propertyList)
         - [ModbusRTU device `propertyList.rtu`](#ModbusRTU-device-propertyListrtu)
@@ -9,19 +11,22 @@
     - [Modbus Object `propertyList.modbus`](#Modbus-object-propertyListmodbus)
 
 ## Gateway
-TODO Создается девайс для шлюза. В нем определяются:
+|Property|Type|Default|Required|Possible|Description|
+|--------|----|-------|--------|--------|-----------|
+|`846 deviceId`|`int`|-|yes|-|Id шлюза
+|`118 updatePeriod`|`int`|3600|-|-|Интервал обновления шлюза (пере-авторизация, обновление данных об опрашиваемых девайсах)
+|`??`|TODO|-|TODO|-|Расписание
 
-- `??` расписание
-- `??` список id девайсов для опроса
-- `??` время обновления шлюза (пере-авторизация, обновление данных об опрашиваемых девайсах)
-
-При запуске шлюза, он посылает запрос на сервер для получения собственного объекта (по id).
-Из этого объекта берется список id девайсов, которые опрашиваются этим шлюзом.
+## Gateway `propertyList`
+|Property|Type|Default|Required|Possible|Description|
+|--------|----|-------|--------|--------|-----------|
+|`device_ids`|`Json`|-|yes|-|Список id опрашиваемых девайсов
 
 ## Device
 
 |Property|Type|Default|Required|Possible|Description|
 |--------|----|-------|--------|--------|-----------|
+|`846 deviceId`|`int`|-|yes|-|Id девайса
 |`371 propertyList`|`Json`|-|yes|-|См. таблицу ниже
 |`11 apduTimeout`|`int`|TODO|-|-|TODO
 |`73 numberOfApduRetries`|`int`|2|-|-|Количество повторов, при неудачной попытке
