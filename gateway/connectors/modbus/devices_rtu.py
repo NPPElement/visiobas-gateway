@@ -32,7 +32,7 @@ class ModbusRTUDevice(Thread):
         self.setDaemon(True)
 
         _base_path = Path(__file__).resolve().parent.parent.parent
-        _log_file_path = _base_path / f'logs/{self.id}.log'
+        _log_file_path = _base_path / f'logs/{self.port}.log'
         self._log = get_file_logger(logger_name=f'{self}',
                                     size_bytes=50_000_000,
                                     file_path=_log_file_path)
@@ -45,6 +45,8 @@ class ModbusRTUDevice(Thread):
         self.baudrate = kwargs.get('baudrate', Defaults.Baudrate)
         # self.
         unit = kwargs.get('unit', 0)
+
+        self.unit_id_mapping = {unit: self.id}
 
         self.stopbits = kwargs.get('stopbits', Defaults.Stopbits)
         self.bytesize = kwargs.get('bytesize', Defaults.Bytesize)
@@ -63,14 +65,19 @@ class ModbusRTUDevice(Thread):
 
         self.start()
 
+    def get_device_id(self, unit: int) -> int:
+        """Returns device id by unit."""
+        return self.unit_id_mapping[unit]
+
     def __repr__(self) -> str:
-        return f'{self.__class__.__name__}[{self.id}]'
+        return f'{self.__class__.__name__}[{self.port}]'
 
     def __len__(self) -> int:
         return len(self.objects)
 
-    def add_objects(self, unit: int, objs: set[ModbusObject]) -> None:
+    def add_objects(self, unit: int, objs: set[ModbusObject], dev_id: int) -> None:
         self.objects[unit] = objs
+        self.unit_id_mapping[unit] = dev_id
 
     def _init_client(self, **kwargs) -> tuple or None:
         try:
@@ -148,16 +155,18 @@ class ModbusRTUDevice(Thread):
                 value = self.process_registers(registers=registers,
                                                quantity=obj.quantity,
                                                properties=obj.properties)
-                converted_properties = self._add_bacnet_properties(device_id=self.id,
-                                                                   obj=obj,
-                                                                   value=value
-                                                                   )
+                converted_properties = self._add_bacnet_properties(
+                    device_id=self.get_device_id(unit=unit),
+                    obj=obj,
+                    value=value
+                    )
                 self._verifier_queue.put(converted_properties)
             except Exception as e:
                 self._log.warning(f'Object {obj} was skipped due to an error: {e}',
                                   exc_info=True)
         # device_id in queue means that device polled.
-        self._verifier_queue.put(self.id)
+        self._verifier_queue.put(self.get_device_id(unit=unit))
+        self._log.info(f'Device UNIT={unit} polled')
 
     def stop_polling(self) -> None:
         self.client.close()
@@ -179,7 +188,7 @@ class ModbusRTUDevice(Thread):
                                                        )
         if not data.isError():
             self._log.debug(
-                f'Successful reading cmd_code={read_cmd_code} address={address} '
+                f'Successful reading UNIT={unit} address={address} '
                 f'quantity={quantity} registers={data.registers}'
                 # extra={'cmd_code': cmd_code,
                 #        'address': reg_address,
@@ -188,7 +197,7 @@ class ModbusRTUDevice(Thread):
             )
             return data.registers
         else:
-            self._log.warning(f'Read failed: {data} unit={unit} {obj}')
+            self._log.warning(f'Read failed: {data} UNIT={unit} {obj}')
             # raise ValueError(data)
 
     def write(self, values, obj: ModbusObject, unit: int) -> bool:

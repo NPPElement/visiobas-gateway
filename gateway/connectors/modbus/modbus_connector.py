@@ -212,7 +212,7 @@ class ModbusConnector(Thread, Connector):
                     update_period=upd_interval,
                 )
             else:
-                dev.add_objects(unit=unit, objs=objs)
+                dev.add_objects(unit=unit, objs=objs, dev_id=dev_id)
 
             _log.info(f'Device [{dev_id}] started')
         except Exception as e:
