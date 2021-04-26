@@ -16,15 +16,15 @@
 |Property|Type|Default|Required|Possible|Description|
 |--------|----|-------|--------|--------|-----------|
 |`846 deviceId`|`int`|-|yes|-|Id шлюза
-|`371 propertyList`|`JSON`-`str`|-|yes|-|См. таблицу ниже
-|`118 updatePeriod`|`int`|3600|-|-|Интервал обновления шлюза (пере-авторизация, обновление данных об опрашиваемых девайсах)
+|`371 propertyList`|`JSON-str`|-|yes|-|См. таблицу ниже
+|`118 updatePeriod`|`int`|3600|-|-|Интервал обновления шлюза в секундах (пере-авторизация, обновление данных об опрашиваемых девайсах)
 |`??`|TODO|-|TODO|-|Расписание
 
 ## Gateway `propertyList`
 
 |Property|Type|Default|Required|Possible|Description|
 |--------|----|-------|--------|--------|-----------|
-|`device_ids`|`JSON`-`str`|-|yes|'[13,666,777]', ...|Список id опрашиваемых девайсов
+|`device_ids`|`JSON`|-|yes|[13,666,777], ...|Список id опрашиваемых девайсов
 
 ---
 
@@ -33,15 +33,13 @@
 |Property|Type|Default|Required|Possible|Description|
 |--------|----|-------|--------|--------|-----------|
 |`846 deviceId`|`int`|-|yes|-|Id девайса
-|`371 propertyList`|`JSON`-`str`|-|yes|-|См. таблицу ниже
+|`371 propertyList`|`JSON-str`|-|yes|-|См. таблицу ниже
 |`11 apduTimeout`|`int`|TODO|-|-|Таймаут
+|`118 updateInterval`|`int`|60|-|-|Интервал полной отправки девайса на сервер (в любом случае)
 |`73 numberOfApduRetries`|`int`|2|-|-|Количество повторов, при неудачной попытке
 |`153 backupFailureTimeout`|`int`|TODO|-|-|(для сервера) Если шлюз не прислал данные на протяжении указанного периода — подсвечивается серым
 
 - ~~116 timeSynchronizationRecipients (Время синхронизации получателей)~~
-- ~~118 updateInterval~~ ~~340 restoreCompletionTime~~ период отправки девайса на сервер (
-  Отправка происходит в любом случае. Даже если значения не менялись).TODO
-  ~~- 118 updatePeriod есть не во всех датчиках. Возможно лучше оставить в 371~~
 
 ## Device `propertyList`
 
@@ -50,8 +48,8 @@
 |`protocol`|`str`|-|yes|'BACnet', 'ModbusTCP', 'ModbusRTU'|По какому протоколу опрашивается девайс
 |`address`|`str`|-|for TCP|'10.20.30.40', ...|IP адрес девайса (для RTU не заполняется)
 |`port`|`int`|-|for TCP|-|Порт
-|`rtu`|`JSON`-`str`|-|for RTU|-|Заполняется для `protocol`='ModbusRTU' (см. таблицу ниже)
-|`internalPeriod`|`float`|TODO|-|-|Период 'внутреннего' опроса девайса в секундах (если значение не изменилось, то не будет отправлено)
+|`rtu`|`JSON`|-|for RTU|-|Заполняется для `protocol`='ModbusRTU' (см. таблицу ниже)
+|`pollInterval`|`float`|0.5|-|-|Интервал 'внутреннего' опроса девайса в секундах (если значение не изменилось, то не будет отправлено)
 
 ## ModbusRTU device `propertyList.rtu`
 
@@ -64,13 +62,7 @@
 |`bytesize`|`int`|8|-|-|-
 |`parity`|`str`|'N'|-| 'N', 'O', 'E'|-
 
-- `371 propertyList` Все параметры из `address_cache` и `rtu.yaml` хранятся в свойствах
-  девайса:
-    - ~~rtu.retry_on_empty~~
-        - ~~По умолчанию~~ `True`
-    - ~~rtu.retry_on_invalid~~
-        - ~~По умолчанию~~ `True`
-    - ~~rtu.timeout~~ Используется 11-е свойство `apduTimeout`
+- ~~rtu.timeout~~ Используется 11-е свойство `apduTimeout`
 
  ---
 
@@ -78,7 +70,7 @@
 
 |Property|Type|Default|Required|Possible|Description|
 |--------|----|-------|--------|--------|-----------|
-|`371 propertyList`|`JSON`-`str`|-|for Modbus|-|См. таблицу ниже
+|`371 propertyList`|`JSON-str`|-|for Modbus|-|См. таблицу ниже
 |`106 resolution`|`float`|0.1|-|-|Значение округляется с указанным шагом
 |`107 segmentationSupported`|`bool`|false|-|true, false|Поддерживается ли несколько сегментов в 1-м запросе.
 
@@ -86,7 +78,9 @@
 
 |Property|Type|Default|Required|Possible|Description|
 |--------|----|-------|--------|--------|-----------|
-|`sendInterval`|`int`|60|-|-|Период отправки значения на сервер (в секундах)
+|`updateInterval`|`int`|`device.updateInterval`|-|-|Интервал отправки значения на сервер в секундах
+|`pollInterval`|`float`|`device.propertyList.pollInterval`|-|-|Интервал 'внутреннего' опроса объекта в секундах (если значение не изменилось, то не будет отправлено)
+|`modbus`|`JSON`|-|for Modbus|-|Заполняется для Modbus объектов (См. таблицу ниже)
 
 ## Modbus object `propertyList.modbus`
 
