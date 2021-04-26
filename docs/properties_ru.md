@@ -25,7 +25,7 @@
 |--------|----|-------|--------|--------|-----------|
 |`371 propertyList`|`Json`|-|yes|-|См. таблицу ниже
 |`11 apduTimeout`|`int`|TODO|-|-|TODO
-|`73 numberOfApduRetries`|`int`|1|-|-|Количество повторов, при неудачной попытке
+|`73 numberOfApduRetries`|`int`|2|-|-|Количество повторов, при неудачной попытке
 |`153 backupFailureTimeout`|`int`|TODO|-|-|(для сервера) Если шлюз не прислал данные на протяжении указанного периода — подсвечивается серым
 
 - ~~116 timeSynchronizationRecipients~~ (Время синхронизации получателей)
@@ -88,7 +88,7 @@
 |`offset`|`float`|0.0|-|-|Для `A*X+B`: Коэффициент `B` — прибавляется для коррекции
 |`wordOrder`|`str`|depends on `dataType`|-|'big', 'little'|Порядок слов (см. под таблицей)
 |`byteOrder`|`str`|depends on `dataType`|-|'big', 'little'|Порядок байтов (см. под таблицей)
-|`repack`TODO
+|`repack`TODO|`bool`|false
 
 - `modbus.wordOrder` Порядок слов.
     - По умолчанию: `big` (старшим словом назад\обратный порядок)
