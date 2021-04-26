@@ -2,11 +2,11 @@
 
 ## Contents
 
-1. ### [Device](#Device)
-    - ### [Device `propertyList`](#Device-propertyList)
-        - ### [ModbusRTU device `propertyList.rtu`](#ModbusRTU-device-propertyList-rtu)
-2. ### [Object](#Object)
-    - ### [Modbus Object `propertyList.modbus`](#Modbus-object-propertyList-modbus)
+1. [Device](#Device)
+    - [Device `propertyList`](#Device-propertyList)
+        - [ModbusRTU device `propertyList.rtu`](#ModbusRTU-device-propertyList--rtu)
+2. [Object](#Object)
+    - [Modbus Object `propertyList.modbus`](#Modbus-object-propertyList--modbus)
 
 ## Gateway device TODO
 
