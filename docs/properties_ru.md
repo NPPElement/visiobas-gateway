@@ -8,9 +8,11 @@
     - [Device `propertyList`](#Device-propertyList)
         - [ModbusRTU device `propertyList.rtu`](#ModbusRTU-device-propertyListrtu)
 2. [Object](#Object)
-    - [Modbus Object `propertyList.modbus`](#Modbus-object-propertyListmodbus)
+    - [Object `propertyList`](#Object-propertyList)
+        - [Modbus Object `propertyList.modbus`](#Modbus-object-propertyListmodbus)
 
 ## Gateway
+
 |Property|Type|Default|Required|Possible|Description|
 |--------|----|-------|--------|--------|-----------|
 |`846 deviceId`|`int`|-|yes|-|Id шлюза
@@ -18,6 +20,7 @@
 |`??`|TODO|-|TODO|-|Расписание
 
 ## Gateway `propertyList`
+
 |Property|Type|Default|Required|Possible|Description|
 |--------|----|-------|--------|--------|-----------|
 |`device_ids`|`Json`|-|yes|TODO|Список id опрашиваемых девайсов
@@ -77,6 +80,12 @@
 |`371 propertyList`|`Json`|-|for Modbus|-|См. таблицу ниже
 |`106 resolution`|`float`|0.1|-|-|Значение округляется с указанным шагом
 |`107 segmentationSupported`|`bool`|false|-|true, false|Поддерживается ли несколько сегментов в 1-м запросе.
+
+## Object `propertyList`
+
+|Property|Type|Default|Required|Possible|Description|
+|--------|----|-------|--------|--------|-----------|
+|`sendInterval`|`int`|60|-|-|Период отправки значения на сервер (в секундах)
 
 ## Modbus object `propertyList.modbus`
 
