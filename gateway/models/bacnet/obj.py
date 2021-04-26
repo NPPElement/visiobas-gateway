@@ -7,7 +7,7 @@ from .obj_property import ObjProperty
 
 
 class BACnetObjPropertyListModel(BaseModel):
-    poll_interval: float = Field(default=60, alias='pollInterval',
+    send_interval: float = Field(default=60, alias='sendPeriod',
                                  description='Period to internal object poll')
 
     def __repr__(self) -> str:
