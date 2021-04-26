@@ -25,6 +25,8 @@
 |--------|----|-------|--------|--------|-----------|
 |`device_ids`|`Json`|-|yes|TODO|Список id опрашиваемых девайсов
 
+---
+
 ## Device
 
 |Property|Type|Default|Required|Possible|Description|
