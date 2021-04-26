@@ -32,6 +32,7 @@ class DevicePropertyListJsonModel(BaseModel):
     rtu: DeviceRTUPropertyListModel = Field(default=None)
     protocol: Protocol = Field(...)
     address: IPv4Address = Field(default=None)
+    port: int = Field(default=None)
 
     def __repr__(self) -> str:
         return str(self.__dict__)
