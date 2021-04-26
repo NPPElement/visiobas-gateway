@@ -36,6 +36,9 @@ class DevicePropertyListJsonModel(BaseModel):
     address: IPv4Address = Field(default=None)
     port: int = Field(default=None)
 
+    # todo check
+    internal_period: float = Field(default=0.3, alias='internalPeriod')
+
     def __repr__(self) -> str:
         return str(self.__dict__)
 
