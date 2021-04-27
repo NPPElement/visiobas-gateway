@@ -25,9 +25,9 @@ class DeviceRTUPropertyListModel(BaseModel):
     def __repr__(self) -> str:
         return str(self.__dict__)
 
-    @validator('parity')  # todo remove. Hotfix for support 'None' in `parity`
-    def set_correct_parity(cls, v):
-        return Defaults.Parity
+    # @validator('parity')  # todo remove. Hotfix for support 'None' in `parity`
+    # def set_correct_parity(cls, v):
+    #     return Defaults.Parity
 
 
 class DevicePropertyListJsonModel(BaseModel):

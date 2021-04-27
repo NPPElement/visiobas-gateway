@@ -47,6 +47,6 @@ class BACnetObjModel(BaseBACnetObjModel):
     # def set_default_poll_interval(cls, v):
     #     return v or 60
 
-    @validator('resolution')  # todo deprecate
-    def set_default_resolution(cls, v):
-        return v or 0.1
+    # @validator('resolution')  # todo deprecate
+    # def set_default_resolution(cls, v):
+    #     return v or 0.1
