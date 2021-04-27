@@ -106,6 +106,11 @@ class ModbusRTUDevice(Thread):
             self._log.error(f'Modbus client init error: {e}', exc_info=True)
             raise e
 
+    def stop_polling(self):
+        self.client.close()
+        self._polling = False
+        self._log.info('Stopped poll')
+
     def run(self) -> None:
         self._log.info(f'{self} starting ...')
         while self._polling:

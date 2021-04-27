@@ -4,7 +4,7 @@ from multiprocessing import SimpleQueue
 from pathlib import Path
 from threading import Thread
 from time import sleep
-from typing import Sequence, Iterable
+from typing import Sequence, Iterable, Union
 
 from aiohttp.web_exceptions import HTTPServerError, HTTPClientError
 
@@ -187,10 +187,10 @@ class ModbusConnector(Thread, Connector):
             elif dev_id in self.rtu_device_ids:
                 # if not rtu_started:
                 self._start_rtu_device(dev_id=dev_id, objs=objs,
-                                           upd_interval=update_intervals[dev_id])
+                                       upd_interval=update_intervals[dev_id])
                 # rtu_started = True
                 # else:
-                    # unit = self.rtu_cfg[dev_id].get('unit')
+                # unit = self.rtu_cfg[dev_id].get('unit')
 
         _log.info('Devices updated')
 
@@ -235,7 +235,7 @@ class ModbusConnector(Thread, Connector):
         except Exception as e:
             _log.error(f'Device [{device_id}] starting error: {e}', exc_info=True)
 
-    def __stop_device(self, device_id: int) -> None:
+    def __stop_device(self, device_id: Union[int, str]) -> None:
         """ Stop Modbus device thread"""
         try:
             _log.debug(f'Device [{device_id}] stopping polling ...')
@@ -250,7 +250,7 @@ class ModbusConnector(Thread, Connector):
         except Exception as e:
             _log.error(f'Device stopping error: {e}')
 
-    def __stop_devices(self, devices_id: tuple) -> None:
+    def __stop_devices(self, devices_id: tuple[Union[int, str], ...]) -> None:
         """ Stop Modbus devices threads
         """
         try:
