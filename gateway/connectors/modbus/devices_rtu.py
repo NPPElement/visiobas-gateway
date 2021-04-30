@@ -175,11 +175,6 @@ class ModbusRTUDevice(Thread):
         self._verifier_queue.put(self.get_device_id(unit=unit))
         self._log.info(f'Device UNIT={unit} polled')
 
-    def stop_polling(self) -> None:
-        self.client.close()
-        self._polling = False
-        self._log.info('Stopping polling ...')
-
     def read(self, obj: ModbusObject, unit: int) -> list:
         """Read data from Modbus object."""
         read_cmd_codes = {1, 2, 3, 4}

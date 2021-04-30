@@ -140,8 +140,8 @@ class VisioHTTPClient(Thread):
                                               device_id=device_id,
                                               data=data,
                                               session=session
-                                              ) for
-                        server_data in post_servers_data]
+                                              )
+                        for server_data in post_servers_data]
             await asyncio.gather(*rq_tasks)
 
     async def __rq_post_device(self, post_server_data: VisioHTTPServerConfig,

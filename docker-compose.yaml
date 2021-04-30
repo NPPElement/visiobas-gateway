@@ -5,7 +5,7 @@ services:
     build:
       context: ./gateway
       dockerfile: Dockerfile
-    image: vb-gateway:1.0.0
+    image: vb-gateway:1.1.0
     logging:
       # driver: none
       driver: "json-file"
@@ -23,8 +23,8 @@ services:
       - PYTHONPATH=/
 
       # Logging
-      - LOG_LEVEL=DEBUG
-      - FILE_LOG_LEVEL=DEBUG
+      - LOG_LEVEL=INFO
+      - FILE_LOG_LEVEL=INFO
 
       # Provide 'TRUE' or 'FALSE' for enable\disable sending data via protocol
       - HTTP_ENABLE=TRUE
@@ -33,8 +33,8 @@ services:
       - BACNET_DEFAULT_UPDATE_PERIOD=10
       - MODBUS_DEFAULT_UPDATE_PERIOD=10
     volumes:
-      #- /opt/visiobas-gateway/gateway:/gateway
-      - /home/user/visiobas-gateway/gateway:/gateway
+      - /opt/visiobas-gateway/gateway:/gateway
+      # - /home/user/visiobas-gateway/gateway:/gateway
       - /dev:/dev # [1]
     command: python /gateway/run.py
     ports:
@@ -61,7 +61,7 @@ services:
 
     devices: # To detect Modbus RTU devices
       - "/dev/ttyS0:/dev/ttyS0"
-      # - "/dev/ttyUSB0:/dev/ttyUSB0"
+      - "/dev/ttyUSB0:/dev/ttyUSB0"
 
 
 # [1]: https://www.losant.com/blog/how-to-access-serial-devices-in-docker
