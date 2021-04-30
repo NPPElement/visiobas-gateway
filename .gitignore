@@ -5,7 +5,7 @@ venv
 *.DS_Store
 .DS_Store
 *address_cache
-http_config.env
+*.env
 gateway/utils/for_test.py
 *.yaml
 

@@ -4,17 +4,22 @@ It's the application for polling devices using various protocols and transmittin
 the visioBAS system.
 
 # Contents
+
 1. [Installation](#Installation)
-   - [Install Docker](#Install-Docker)
-   - [Install Docker Compose](#Install-Docker-Compose)
-   - [Install VisioBAS gateway](#Install-VisioBAS-Gateway)
+    - [Install Docker](#Install-Docker)
+    - [Install Docker Compose](#Install-Docker-Compose)
+    - [Install VisioBAS gateway](#Install-VisioBAS-Gateway)
 2. [Setting](#Setting)
+    - [Setting COM ports](#Setting-Serial-ports)
+    - [Setting configuration](#Setting-configuration)
 3. [Launch](#Launch)
 4. [Update](#Update)
 5. [Remove](#Remove)
 
 ## Installation
+
 ### Install Docker
+
 ``` shell
 # Only for Debian
 apt install gnupg
@@ -34,6 +39,7 @@ sudo systemctl status docker
 ```
 
 ### Install Docker Compose
+
 ``` shell
 sudo curl -L https://github.com/docker/compose/releases/download/1.21.2/docker-compose-`uname -s`-`uname -m` -o /usr/local/bin/docker-compose
 sudo chmod +x /usr/local/bin/docker-compose
@@ -41,6 +47,7 @@ docker-compose --version
 ```
 
 ### Install VisioBAS Gateway
+
 ``` shell
 cd /opt
 sudo git clone https://github.com/NPPElement/visiobas-gateway
@@ -48,15 +55,38 @@ cd visiobas-gateway
 ```
 
 ## Setting
+
+### Setting Serial ports
+
+```shell
+sudo apt-get install minicom  # install minicom
+dmesg | grep tty  # show ports
+sudo minicom -s # launch minicom
+# Setup serial ports from minicom, then save as dfl.
+
+sudo nano /etc/udev/rules.d/99-serial.rules
+# then write line: KERNEL=="ttyUSB[0-9]*",MODE="0666"
+
+# Explanations: https://www.losant.com/blog/how-to-access-serial-devices-in-docker
+
+# Before launch gateway, ensure user in the `dialout` group
+sudo usermod -a -G dialout username # add to `dialout` group
+id username # check user\group info
+```
+
+
+### Setting configuration
+
 - To configure it, you need to edit the file `docker-compose.yaml`. HTTP's settings must be
-specified in the `http_config.env`. HTTP's settings file
-template [here](http_config.env.template).
-- Logging level
-You can change the logging level in the `docker-compose.yaml` file. You can choose one of
-the following levels: `DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL`
+  specified in the `http_config.env`. HTTP's settings file
+  template [here](http_config.env.template).
+- Logging level You can change the logging level in the `docker-compose.yaml` file. You can
+  choose one of the following levels: `DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL`
 
 ## Launch
+
 From the `visiobas-gateway` directory
+
 ``` shell
 sudo docker-compose up -d
 
@@ -65,12 +95,15 @@ sudo docker-compose logs -f
 ```
 
 ## Update
+
 ``` shell
 sudo docker-compose down
 sudo docker-compose build
 sudo docker-compose up -d
 ```
+
 Or with full cleaning
+
 ``` shell
 sudo docker-compose down 
 sudo docker images
@@ -87,6 +120,7 @@ sudo docker-compose up --build
 ```
 
 ## Remove
+
 ``` shell
 # Delete all containers
 sudo docker ps -a -q | xargs -n 1 -I {} sudo docker rm -f {}
@@ -100,4 +134,5 @@ sudo systemctl restart docker
 ```
 
 ## License
+
 GPL-3.0 License
