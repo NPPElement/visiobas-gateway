@@ -38,6 +38,7 @@ class DevicePropertyListJsonModel(BaseModel):
 
     # todo check
     internal_period: float = Field(default=0.3, alias='internalPeriod')
+    reconnect_period: int = Field(default=5 * 60, alias='reconnectPeriod')
 
     def __repr__(self) -> str:
         return str(self.__dict__)

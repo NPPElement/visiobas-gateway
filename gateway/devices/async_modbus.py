@@ -22,7 +22,7 @@ VisioBASGateway = Any  # ...gateway_loop
 
 class AsyncModbusDevice:
     # upd_period_factor = 0.9  # todo provide from config
-    # delay_next_attempt = 60  # todo provide from config
+    delay_next_attempt = 60  # todo provide from config
 
     def __init__(self, device_obj: BACnetDeviceModel,  # 'BACnetDeviceModel'
                  gateway: 'VisioBASGateway'):
@@ -62,16 +62,7 @@ class AsyncModbusDevice:
             # ConnectionError: if client is not initialized.
         """
         self._LOG.debug('Creating pymodbus client', extra={'device_id': self.id})
-
-        # def start_loop(loop: asyncio.AbstractEventLoop):
-        #     asyncio.set_event_loop(loop)
-        #     loop.run_forever()
-
         try:
-            # loop = asyncio.new_event_loop()
-            # t = Thread(target=start_loop, name='pymodbus', args=[loop], daemon=True)
-            # t.start()  # Start the loop
-            # assert loop.is_running()
             loop = self._gateway.loop
             asyncio.set_event_loop(loop=self._gateway.loop)
 
@@ -94,9 +85,6 @@ class AsyncModbusDevice:
                     bytesize=self._device_obj.property_list.rtu.bytesize,
                     parity=self._device_obj.property_list.rtu.parity,
                     stopbits=self._device_obj.property_list.rtu.stopbits,
-                    # retries=self.retries,
-                    # retry_on_empty=self._device_obj.property_list.rtu.retry_on_empty,
-                    # retry_on_invalid=self._device_obj.property_list.rtu.retry_on_invalid,
                     loop=loop,
                     timeout=self.timeout
                 )
@@ -106,7 +94,12 @@ class AsyncModbusDevice:
             self._LOG.warning(f'Cannot create client: {e}', extra={'device_id': self.id})
         else:
             self._LOG.debug('Client created', extra={'device_id': self.id})
-        # await self._gateway.async_add_job(self.connect_client)
+
+    @property
+    def is_client_connected(self) -> bool:
+        if hasattr(self._client, 'protocol') and self._client.protocol is not None:
+            return True
+        return False
 
     def __repr__(self) -> str:
         return f'{self.__class__.__name__}[{self.id}]'
@@ -147,22 +140,12 @@ class AsyncModbusDevice:
         return self._device_obj.timeout
 
     @property
+    def reconnect_period(self) -> int:
+        return self._device_obj.property_list.reconnect_period
+
+    @property
     def retries(self) -> int:
         return self._device_obj.retries
-
-    # @property
-    # def is_client_initialized(self) -> bool:
-    #     if hasattr(self._client, 'protocol') and self._client.protocol is not None:
-    #         return True
-    #     return False
-
-    # async def connect_client(self) -> None:
-    #     """Connects to the modbus server."""
-    #     if self.is_client_initialized:
-    #         # self._connected = await self._client.connect()
-    #         self._log.debug(f'Connected to modbus device', extra={'device_id': self.id})
-    #     else:
-    #         self._log.warning(f'Failed to connect to device', extra={'device_id': self.id})
 
     def load_objects(self, objs: Collection[ModbusObjModel]) -> None:
         """Loads object to poll.
@@ -193,8 +176,6 @@ class AsyncModbusDevice:
 
     @property
     def read_funcs(self) -> dict[int, Callable]:
-        # if not self.is_client_initialized:
-        #     raise ConnectionError('Ensure client connected')
         read_funcs = {1: self._client.protocol.read_coils,
                       2: self._client.protocol.read_discrete_inputs,
                       3: self._client.protocol.read_holding_registers,
@@ -203,8 +184,6 @@ class AsyncModbusDevice:
 
     @property
     def write_funcs(self) -> dict[int, Callable]:
-        # if not self.is_client_initialized:
-        #     raise ConnectionError('Ensure client connected')
         write_funcs = {5: self._client.protocol.write_coil,
                        6: self._client.protocol.write_register,
                        15: self._client.protocol.write_coils,
@@ -272,45 +251,42 @@ class AsyncModbusDevice:
 
     async def start_periodic_polls(self) -> None:
         """Starts periodic polls for all periods."""
-        self._LOG.debug(f'Objects = {self._objects}')
 
-        # start_poll_tasks = [self.periodic_poll(objs=objs, period=period)
-        #                     for period, objs in self._objects.items()]
-        # await asyncio.gather(*start_poll_tasks)
-        for period, objs in self._objects.items():
-            await self.scheduler.spawn(self.periodic_poll(objs=objs, period=period))
-        self._LOG.debug('Periodic polls started')
+        if self.is_client_connected:
+            for period, objs in self._objects.items():
+                await self.scheduler.spawn(self.periodic_poll(objs=objs, period=period))
+            self._LOG.debug('Periodic polls started')
+        else:
+            self._LOG.info('pymodbus client is not connected. '
+                           f'Sleeping {self.reconnect_period} sec before next try')
+            await asyncio.sleep(delay=self.reconnect_period)
+            await self._gateway.async_add_job(self.create_client)
+            self._gateway.async_add_job(self.start_periodic_polls)
 
     async def periodic_poll(self, objs: Collection[ModbusObjModel], period: int) -> None:
-        try:
-            self._LOG.debug(f'Periodic poll task created for period {period}')
-            await self._poll_objects(objs=objs)
-            await asyncio.sleep(delay=period)
+        self._LOG.debug(f'Periodic poll task created for period {period}')
+        await self._poll_objects(objs=objs)
+        await asyncio.sleep(delay=period)
 
-            await self.scheduler.spawn(self.periodic_poll(objs=objs, period=period))
-            # self._poll_tasks[period] = self._loop.create_task(
-            #     self.periodic_poll(objs=objs, period=period))
-        except Exception as e:
-            self._LOG.exception(repr(e))
+        await self.scheduler.spawn(self.periodic_poll(objs=objs, period=period))
+        # self._poll_tasks[period] = self._loop.create_task(
+        #     self.periodic_poll(objs=objs, period=period))
 
     async def _read_and_log(self, obj: ModbusObjModel) -> None:
         # fixme temp
         try:
-            self._LOG.debug(f'Reading...')
             value = await self.read(obj=obj)
             self._LOG.debug(f'Read {value}')
         except Exception as e:
             self._LOG.exception(f'Cannot read and log {e}')
 
     async def _poll_objects(self, objs: Collection[ModbusObjModel]) -> None:
-        """Polls objects."""
-        try:
-            read_requests = [self._read_and_log(obj=obj)
-                             for obj in objs]
-            self._LOG.debug('Performing read tasks...')
-            await asyncio.gather(*read_requests)
-        except Exception as e:
-            self._LOG.exception(repr(e))
+        """Polling objects."""
+        read_tasks = [self._read_and_log(obj=obj)
+                      for obj in objs]
+        self._LOG.debug('Performing read tasks...')
+        await self.scheduler.spawn(asyncio.gather(*read_tasks))
+        # await asyncio.gather(*read_tasks)
 
     # async def start_poll(self):
     #     self._log.info(f'{self} started')
