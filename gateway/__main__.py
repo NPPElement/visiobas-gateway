@@ -31,8 +31,8 @@ logging.basicConfig(format=LOG_FORMAT,
 #              stream=sys.stderr
 #              )
 
-async def load_and_run(cfg_path: Path):
-    gateway = VisioBASGateway.from_yaml(yaml_path=cfg_path)
+async def load_and_run(cfg_path: Path) -> None:
+    gateway = await VisioBASGateway.from_yaml(yaml_path=cfg_path)
     await gateway.async_run()
 
 
