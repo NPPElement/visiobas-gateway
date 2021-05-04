@@ -7,7 +7,6 @@ import aiohttp
 
 from .http_config import VisioHTTPConfig
 from .http_node import VisioHTTPNode
-# from ...connectors import BaseConnector
 from ...models import ObjType
 
 _log = getLogger(__name__)
@@ -53,7 +52,7 @@ class VisioBASHTTPClient:
 
         with yaml_path.open() as cfg_file:
             config = yaml.load(cfg_file, Loader=yaml.FullLoader)
-            _log.info(f'Creating {cls.__name__} from {yaml_path} ...')
+            _log.info(f'Creating {cls.__name__} from {yaml_path}...')
         return cls(gateway=gateway, config=config)
 
     @property
@@ -302,7 +301,7 @@ class VisioBASHTTPClient:
         :param post_nodes:
         :return: can continue with current authorizations
         """
-        _log.debug(f'Logging in to {get_node}, {post_nodes} ...')
+        _log.debug(f'Logging in to GET:{get_node}, POST:{post_nodes}...')
 
         res = await asyncio.gather(
             self._login_node(node=get_node),
@@ -313,7 +312,7 @@ class VisioBASHTTPClient:
         successfully_authorized = bool(is_get_authorized and is_post_authorized)
 
         if successfully_authorized:
-            _log.info(f'Successfully authorized to {get_node}, {post_nodes}')
+            _log.info(f'Successfully authorized to GET:{get_node}, POST:{post_nodes}')
         else:
             _log.warning('Failed authorizations!')
         return successfully_authorized
@@ -323,7 +322,7 @@ class VisioBASHTTPClient:
         :param node: node on witch the authorization is performed
         :return: is node authorized
         """
-        _log.debug(f'Authorization to {node} ...')
+        _log.debug(f'Authorization to {node}...')
         try:
             is_authorized = await self._login_server(server=node.cur_server)
             if not is_authorized:
@@ -360,7 +359,7 @@ class VisioBASHTTPClient:
                                  auth_user_id=auth_data['auth_user_id']
                                  )
             if server.is_authorized:
-                _log.debug(f'Successfully authorization to {server}')
+                _log.debug(f'Successfully authorized to {server}')
             else:
                 _log.warning(f'Failed authorization to {server}')
         except aiohttp.ClientError as e:

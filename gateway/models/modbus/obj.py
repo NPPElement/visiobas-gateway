@@ -1,7 +1,6 @@
 from pydantic import Field, Json, BaseModel
 
 from .func_code import ModbusFunc
-# from .obj_property_list import ModbusPropertyListJsonModel
 from ..bacnet.obj import BACnetObjModel, BACnetObjPropertyListModel
 from ..bacnet.obj_property import ObjProperty
 
@@ -9,7 +8,8 @@ from ..bacnet.obj_property import ObjProperty
 class ModbusObjPropertyListModel(BaseModel):
     address: int = Field(gt=0)
     quantity: int = Field(gt=0)
-    func_read: ModbusFunc = Field(..., alias='functionRead')
+    func_read: ModbusFunc = Field(default=ModbusFunc.READ_HOLDING_REGISTERS,
+                                  alias='functionRead')
     func_write: ModbusFunc = Field(default=ModbusFunc.WRITE_REGISTER, alias='functionWrite')
 
     # For recalculate A*X+B (X - value)
@@ -17,7 +17,7 @@ class ModbusObjPropertyListModel(BaseModel):
     offset: float = Field(default=.0, description='Adding `B` for recalculate A*X+B')
 
     data_type: str = Field(..., alias='dataType')  # todo Enum
-    data_length: int = Field(default=16, gt=1, lt=64, alias='dataLength',
+    data_length: int = Field(default=16, gt=1, lt=64, alias='dataLength',  # todo calc default: quantity *16
                              description='The number of bits in which the value is stored')
 
     byte_order: str = Field(default='little', alias='byteOrder')
@@ -47,4 +47,4 @@ class ModbusObjModel(BACnetObjModel):
     #     return ModbusPropertyListWrap.parse_raw(pl)
 
     def __repr__(self) -> str:
-        return f'ModbusObj{self.__dict__}'
+        return f'ModbusObj'  # {self.__dict__}' # todo
