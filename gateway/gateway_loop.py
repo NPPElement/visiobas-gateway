@@ -9,8 +9,9 @@ from gateway.clients import VisioBASHTTPClient, VisioBASMQTTClient
 from gateway.devices.async_modbus import AsyncModbusDevice
 from gateway.models import ObjType, BACnetDeviceModel, ModbusObjModel, Protocol
 from gateway.utils import read_address_cache, get_file_logger
-
+from gateway.verifier import BACnetVerifier
 # _log = getLogger(__name__)
+
 
 _LOG = get_file_logger(__name__)
 
@@ -44,7 +45,7 @@ class VisioBASGateway:
         self.http_client: VisioBASHTTPClient = None
         self.mqtt_client: VisioBASMQTTClient = None
         self.http_api_server = None
-        self.verifier = None  # verifier(non-threaded)
+        self.verifier = BACnetVerifier(config=config.get('verifier'))
 
         self._devices: dict[int, Union[AsyncModbusDevice]] = {}
 
@@ -204,8 +205,10 @@ class VisioBASGateway:
 
             # objs in the list, so get [0] element in `dev_obj_data[0]` below
             dev_obj = await self.async_add_job(self._parse_device_obj, dev_obj_data[0])
-            # device = await self.async_add_job(self.device_factory, dev_obj)
+
             device = await self.device_factory(dev_obj=dev_obj)
+
+            # fixme use for task in asyncio.as_completed(tasks):
             objs_data = await self.http_client.get_objs(dev_id=dev_id,
                                                         obj_types=device.types_to_rq)
             _LOG.debug('Objects to poll downloaded', extra={'device_id': dev_id})
