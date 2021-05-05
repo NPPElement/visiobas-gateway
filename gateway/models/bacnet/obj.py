@@ -1,4 +1,5 @@
-from typing import Optional, Union
+from datetime import datetime
+from typing import Optional, Union, Any
 
 from pydantic import Field, BaseModel
 
@@ -21,16 +22,45 @@ class BACnetObjPropertyListJsonModel(BaseModel):
         return str(self.__dict__)
 
 
+class LastValue:
+    def __init__(self, resolution: float, value=None):
+        self.resolution = resolution
+
+        whole_part, fractional_part = str(resolution).split('.', maxsplit=1)
+        self.ndigits = len(fractional_part)
+
+        self.value = value
+        self.updated: datetime = None  # when it was updated
+
+    def __get__(self, instance, owner):
+        return self.value
+
+    def __set__(self, instance, value: Union[float, int, str]) -> None:
+        self.updated = datetime.now()
+        if isinstance(value, (float, int)):
+            self.value = self._round(value=value)
+        elif isinstance(value, str):
+            self.value = value
+        else:
+            raise NotImplemented
+
+    def _round(self, value: Union[float, int]) -> float:
+        return round(
+            round(value / self.resolution) * self.resolution,
+            ndigits=self.ndigits)
+
+
 class BACnetObjModel(BaseBACnetObjModel):
-    pv: float = Field(alias=ObjProperty.presentValue.id_str, description='Present value')
+    resolution: Optional[float] = Field(default=0.1, alias=ObjProperty.resolution.id_str)
+    pv: Any = Field(default=LastValue(resolution=resolution),
+                    alias=ObjProperty.presentValue.id_str,
+                    description='Present value')
     sf: Union[int, list[bool]] = Field(default=0b0000, alias=ObjProperty.statusFlags.id_str,
                                        description='Status flags')
     pa: Union[str, tuple, None] = Field(alias=ObjProperty.priorityArray.id_str,
                                         description='Priority array')
     reliability: Union[int, str, None] = Field(default=0,
                                                alias=ObjProperty.reliability.id_str)
-
-    resolution: Optional[float] = Field(default=0.1, alias=ObjProperty.resolution.id_str)
 
     # todo find public property
     # send_interval: Optional[float] = Field(default=60,
@@ -41,7 +71,7 @@ class BACnetObjModel(BaseBACnetObjModel):
     property_list: BACnetObjPropertyListJsonModel = Field(
         ..., alias=ObjProperty.propertyList.id_str)
 
-    _last_value = None
+    # value = LastValue(resolution=resolution, value=None)
 
     def __repr__(self) -> str:
         return f'BACnetObj{self.__dict__}'
@@ -67,7 +97,6 @@ class BACnetObjModel(BaseBACnetObjModel):
             str_ += ' ' + str(self.reliability)
 
         return str_
-
 
     @staticmethod
     def _convert_pa_to_str(pa: tuple) -> str:
