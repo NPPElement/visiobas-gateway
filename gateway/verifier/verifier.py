@@ -1,22 +1,27 @@
 from logging import getLogger
 
-from ..models import ObjProperty, StatusFlag, BACnetObjModel
+from ..models import StatusFlag, BACnetObjModel
 
 _LOG = getLogger(__name__)
 
 
 class BACnetVerifier:
+    def __init__(self, config: dict):
+        self._config = config
+
+    @property
+    def override_threshold(self) -> int:
+        return self._config.get('override_threshold', 8)
+
     def __repr__(self) -> str:
         return self.__class__.__name__
 
-    def verify(self, obj: BACnetObjModel) -> BACnetObjModel:
+    def verify(self, obj: BACnetObjModel) -> None:
         self.verify_sf(obj=obj)
         self.verify_pv(obj=obj)
 
         if obj.pa is not None:
             self.verify_pa(obj=obj)
-
-        return obj
 
     @staticmethod
     def verify_sf(obj: BACnetObjModel) -> None:
@@ -52,17 +57,16 @@ class BACnetVerifier:
             obj.sf = obj.sf | StatusFlag.FAULT.value
             obj.reliability = 'empty'
 
-    @staticmethod
-    def verify_pa(obj: BACnetObjModel) -> None:
+    def verify_pa(self, obj: BACnetObjModel) -> None:
         """Sets OVERRIDE status flag if priority array contains override priority."""
 
         # todo: move priorities into Enum
-        MANUAL_LIFE_SAFETY = 9 - 1
-        AUTOMATIC_LIFE_SAFETY = 10 - 1
-        OVERRIDE_PRIORITIES = {MANUAL_LIFE_SAFETY,
-                               AUTOMATIC_LIFE_SAFETY, }
+        # MANUAL_LIFE_SAFETY = 9 - 1
+        # AUTOMATIC_LIFE_SAFETY = 10 - 1
+        # OVERRIDE_PRIORITIES = {MANUAL_LIFE_SAFETY,
+        #                        AUTOMATIC_LIFE_SAFETY, }
         for i in range(len(obj.pa)):
-            if obj.pa[i] is not None and i in OVERRIDE_PRIORITIES:
+            if obj.pa[i] is not None and i >= self.override_threshold:
                 obj.sf |= StatusFlag.OVERRIDEN.value
 
     # def send_properties(self, device_id: int,
@@ -99,70 +103,3 @@ class BACnetVerifier:
             _LOG.warning(f'HTTP Sending Error: {e}',
                          exc_info=True
                          )
-
-    def _send_via_mqtt(self, device_id: int, obj_name: str,
-                       properties: dict[ObjProperty, ...]) -> None:
-        """Send verified string via MQTT."""
-        topic = obj_name.replace(':', '/').replace('.', '/')
-        payload = self._to_str_mqtt(device_id=device_id,
-                                    properties=properties
-                                    )
-        self._mqtt_queue.put((topic, payload))
-
-    # @staticmethod
-    # def _to_str_mqtt(device_id: int, properties: dict[ObjProperty, ...]) -> str:
-    #     """Convert properties with statusFlags == 0 to str, for send via MQTT."""
-    #     assert properties[ObjProperty.statusFlags] == 0
-    #
-    #     return '{0} {1} {2} {3} {4}'.format(device_id,
-    #                                         properties[ObjProperty.objectIdentifier],
-    #                                         properties[ObjProperty.objectType].id,
-    #                                         properties[ObjProperty.presentValue],
-    #                                         properties[ObjProperty.statusFlags]
-    #                                         )
-
-    # @staticmethod
-    # def _to_str_http(properties: dict[ObjProperty, ...]) -> str:
-    #     """Convert properties with statusFlags != 0 to str, for send via HTTP."""
-    #     assert properties[ObjProperty.statusFlags] != 0
-    #
-    #     def convert_pa_to_str(pa: tuple) -> str:
-    #         """Convert priority array tuple to str.
-    #
-    #         Result example: ,,,,,,,,40.5,,,,,,49.2,
-    #         """
-    #         return ','.join(
-    #             ['' if priority is None else str(priority)
-    #              for priority in pa]
-    #         )
-    #
-    #     try:
-    #         general_properties_str = '{0} {1} {2}'.format(
-    #             properties[ObjProperty.objectIdentifier],
-    #             properties[ObjProperty.objectType].id,
-    #             properties[ObjProperty.presentValue]
-    #         )
-    #
-    #         if ObjProperty.priorityArray in properties:
-    #             pa_str = convert_pa_to_str(properties[ObjProperty.priorityArray])
-    #             pa_sf_str = '{0} {1}'.format(pa_str, properties[ObjProperty.statusFlags])
-    #
-    #             general_properties_str += ' ' + pa_sf_str
-    #             # return general_properties_str
-    #         else:
-    #             general_properties_str += ' {0}'.format(
-    #                 properties[ObjProperty.statusFlags]
-    #             )
-    #
-    #         if ObjProperty.reliability in properties:
-    #             general_properties_str += ' {0}'.format(
-    #                 properties[ObjProperty.reliability]
-    #             )
-    #
-    #         # if ObjProperty.outOfService in verified_objects_properties:
-    #         #     ...
-    #         return general_properties_str
-    #
-    #     except KeyError:
-    #         raise KeyError('Please provide all required properties. '
-    #                        f'Properties received: {properties}')
