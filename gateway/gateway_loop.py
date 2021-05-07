@@ -1,6 +1,6 @@
 import asyncio
 from pathlib import Path
-from typing import Callable, Any, Optional, Iterable, Union, Awaitable
+from typing import Callable, Any, Optional, Iterable, Union, Awaitable, Collection
 
 import aiojobs
 from pydantic import ValidationError
@@ -11,7 +11,7 @@ from gateway.models import ObjType, BACnetDeviceModel, ModbusObjModel, Protocol
 from gateway.utils import read_address_cache, get_file_logger
 from gateway.verifier import BACnetVerifier
 # _log = getLogger(__name__)
-
+from models import BACnetObjModel
 
 _LOG = get_file_logger(__name__)
 
@@ -269,6 +269,18 @@ class VisioBASGateway:
         """
         # todo get from gateway object
         return read_address_cache(path=self.MODBUS_ADDRESS_CACHE_PATH).keys()
+
+    async def verify_objects(self, objs: Collection[BACnetObjModel]) -> None:
+        """Verify objects in executor pool."""
+        await self.async_add_job(self.verifier.verify_objects(objs=objs))
+
+    async def send_objects(self, objs: Collection[BACnetObjModel]) -> None:
+        """Sends objects to server."""
+        dev_id = int()   # todo
+        str_ = str()  # todo
+        await self.http_client.post_device(nodes=self.http_client.post_nodes,
+                                           device_id=dev_id,
+                                           data=str_)
 
     async def device_factory(self, dev_obj: BACnetDeviceModel) -> Union[AsyncModbusDevice]:
         """Creates device for provided protocol.

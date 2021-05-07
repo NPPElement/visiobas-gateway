@@ -1,4 +1,5 @@
 from logging import getLogger
+from typing import Collection
 
 from ..models import StatusFlag, BACnetObjModel
 
@@ -15,6 +16,9 @@ class BACnetVerifier:
 
     def __repr__(self) -> str:
         return self.__class__.__name__
+
+    def verify_objects(self, objs: Collection[BACnetObjModel]):
+        [self.verify(obj=obj) for obj in objs]
 
     def verify(self, obj: BACnetObjModel) -> None:
         self.verify_sf(obj=obj)

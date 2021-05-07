@@ -30,7 +30,7 @@ class AsyncModbusDevice:
         self._device_obj = device_obj
 
         # self._log = getLogger(name=f'{self.id}')
-        self._LOG = get_file_logger(logger_name=str(self))
+        self._LOG = get_file_logger(name=str(self))
 
         self._loop: asyncio.AbstractEventLoop = None
         self._client: Union[AsyncModbusSerialClient, AsyncModbusTCPClient] = None
@@ -300,6 +300,8 @@ class AsyncModbusDevice:
                                                 'time_spent': _t_delta.seconds,
                                                 'objects_polled': len(objs)
                                                 })
+        await self._gateway.verify_objects(objs=objs)
+        await self._gateway.send_objects(objs=objs)
 
     # async def start_poll(self):
     #     self._log.info(f'{self} started')
