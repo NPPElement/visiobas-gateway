@@ -4,6 +4,7 @@ interval: # Delays, used in HTTP (in seconds)
 
 timeout: 30
 
+# Mirrors optional.
 
 get_node: # for GET requests
   primary: # Main server for GET requests:
@@ -27,10 +28,10 @@ post:
         login: login
         password: password
 
-      mirror: # Mirror of main server for POST requests:
-        url: http://post1-mirror.com:8080
-        login: login
-        password: password
+#      mirror: # Mirror of main server for POST requests:
+#        url: http://post1-mirror.com:8080
+#        login: login
+#        password: password
 
   - node2:
       primary: # Main server for POST requests:
