@@ -14,18 +14,18 @@ LOG_MB_COUNT = int(os.environ.get('LOG_FILE_SIZE', 50))
 LOG_FILE_SIZE = LOG_MB_COUNT * _MEGABYTE
 
 
-def get_file_logger(logger_name: str, size_bytes: int = LOG_FILE_SIZE,
+def get_file_logger(name: str, size_bytes: int = LOG_FILE_SIZE,
                     log_format: str = LOG_FORMAT) -> Logger:
     log_level = environ.get('FILE_LOG_LEVEL', 'DEBUG')
 
     # if log_format is None:
     #     log_format = LOG_FORMAT
 
-    logger = getLogger(logger_name)
+    logger = getLogger(name)
     logger.setLevel(level=log_level)
     logger.handlers = []  # Remove all handlers
 
-    _log_file_path = BASE_DIR / f'logs/{logger_name}.log'
+    _log_file_path = BASE_DIR / f'logs/{name}.log'
     file_handler = RotatingFileHandler(filename=_log_file_path,
                                        mode='a',
                                        maxBytes=size_bytes,
