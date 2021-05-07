@@ -1,10 +1,13 @@
-from .http_config import VisioHTTPConfig
+from typing import Optional
+
+from .http_config import HTTPServerConfig
 
 
 class VisioHTTPNode:
     """Represent Visio HTTP node (primary server + mirror server)."""
 
-    def __init__(self, primary: VisioHTTPConfig, mirror: VisioHTTPConfig):
+    def __init__(self, primary: HTTPServerConfig,
+                 mirror: Optional[HTTPServerConfig] = None):
         self.primary = primary
         self.mirror = mirror
 
@@ -15,16 +18,28 @@ class VisioHTTPNode:
         return self.cur_server.is_authorized
 
     def __repr__(self) -> str:
-        _auth_status = f'Authorized' if self.is_authorized else 'Unauthorized'
-        return str(self.cur_server)
+        # _auth_status = f'Authorized' if self.is_authorized else 'Unauthorized'
+        return repr(self.cur_server)
 
-    def switch_to_mirror(self) -> None:
-        """ Switches communication to mirror if the primary server is unavailable """
-        self.cur_server = self.mirror
+    def switch_to_mirror(self) -> bool:
+        """Switches communication to mirror if the primary server is unavailable.
+
+        Returns:
+            Was switched or not
+        """
+        if self.mirror:
+            self.cur_server = self.mirror
+            return True
+        return False
 
     @classmethod
-    def from_dict(cls, cfg: dict):
+    def from_dict(cls, config: dict):
         """Create HTTP node from dict."""
-        return cls(primary=VisioHTTPConfig.from_dict(cfg=cfg['primary']),
-                   mirror=VisioHTTPConfig.from_dict(cfg=cfg['mirror'])
-                   )
+        primary_server_cfg = HTTPServerConfig(**config['primary'])
+        try:
+            mirror_server_cfg = HTTPServerConfig(**config['mirror'])
+        except KeyError:
+            mirror_server_cfg = None
+
+        return cls(primary=primary_server_cfg,
+                   mirror=mirror_server_cfg)

@@ -1,54 +1,44 @@
 interval: # Delays, used in HTTP (in seconds)
-  update: 3600
+  # update: 3600
   next_attempt: 60
 
-
-#send_by:  # One method must be selected at the same time
-#  http: true
-#  websocket: false
 timeout: 30
 
 
 get_node: # for GET requests
   primary: # Main server for GET requests:
-    host: get-main.com
-    port: 8080
+    url: http://get-main.com:8080
     login: login
     password: password
 
   mirror: # Mirror of main server for GET requests:
-    host: get-mirror.com
-    port: 8080
+    url: http://get-mirror.com:8080
     login: login
     password: password
 
 
 # By default, the gateway will not send post requests to the GET server.
 # If you need to send POST requests to the receiving server,
-# you need to explicitly write that here.
+# you need to explicitly write it below.
 post:
   - node1:
       primary: # Main server for POST requests:
-        host: post1-main.com
-        port: 8080
+        url: http://post1-main.com:8080
         login: login
         password: password
 
       mirror: # Mirror of main server for POST requests:
-        host: post1-mirror.com
-        port: 8080
+        url: http://post1-mirror.com:8080
         login: login
         password: password
 
   - node2:
       primary: # Main server for POST requests:
-        host: post2-main.com
-        port: 8080
+        url: http://post2-main.com:8080
         login: login
         password: password
 
       mirror: # Mirror of main server for POST requests:
-        host: post2-mirror.com
-        port: 8080
+        url: http://post2-mirror.com:8080
         login: login
         password: password
