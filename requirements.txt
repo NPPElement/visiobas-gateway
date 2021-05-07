@@ -1,12 +1,12 @@
 aiohttp==3.7.4.post0
 aiojobs~=0.3.0
 PyYAML==5.4.1
-setuptools==56.0.0
+setuptools==56.1.0
 paho-mqtt~=1.5.1
 pydantic~=1.8.1
 pymodbus==2.5.1
 pyserial-asyncio==0.5
-
+yarl~=1.6.3
 
 # aiomisc==14.0.3
 
@@ -15,3 +15,6 @@ pyserial-asyncio==0.5
 # marshmallow~=3.10.0  # todo: use pydantic everywhere?
 # netifaces==0.10.9
 # aiohttp-apispec==2.2.1
+bacpypes~=0.18.4
+aiomisc~=14.0.3
+BAC0~=20.11.21
