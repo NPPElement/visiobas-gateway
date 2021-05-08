@@ -1,10 +1,12 @@
 from typing import Optional
 
-from .http_config import HTTPServerConfig
+from ...models import HTTPServerConfig
 
 
 class VisioHTTPNode:
     """Represent Visio HTTP node (primary server + mirror server)."""
+
+    __slots__ = ['primary', 'mirror', 'cur_server', ]
 
     def __init__(self, primary: HTTPServerConfig,
                  mirror: Optional[HTTPServerConfig] = None):
@@ -17,8 +19,10 @@ class VisioHTTPNode:
     def is_authorized(self) -> bool:
         return self.cur_server.is_authorized
 
+    def __str__(self) -> str:
+        return str(self.cur_server)
+
     def __repr__(self) -> str:
-        # _auth_status = f'Authorized' if self.is_authorized else 'Unauthorized'
         return repr(self.cur_server)
 
     def switch_to_mirror(self) -> bool:

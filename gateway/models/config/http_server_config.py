@@ -36,9 +36,12 @@ class HTTPServerConfig(BaseModel):
     def __hash__(self) -> int:
         return hash((self.url, self.login))
 
-    def __repr__(self) -> str:
+    def __str__(self) -> str:
         _auth_status = 'Authorized' if self.is_authorized else 'Unauthorized'
-        return f'<[{_auth_status}]:{self.url}>'
+        return f'[{_auth_status}:{self.url.host}]'
+
+    def __repr__(self) -> str:
+        return str(self)
 
     # @property
     # def is_authorized(self) -> bool:

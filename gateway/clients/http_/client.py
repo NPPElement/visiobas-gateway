@@ -5,7 +5,7 @@ from typing import Iterable, Any, Union, Collection
 import aiohttp
 from yarl import URL
 
-from .http_config import HTTPServerConfig
+from models import HTTPServerConfig
 from .http_node import VisioHTTPNode
 from ...models import ObjType
 from ...utils import get_file_logger
@@ -50,7 +50,7 @@ class VisioBASHTTPClient:
 
         with yaml_path.open() as cfg_file:
             config = yaml.load(cfg_file, Loader=yaml.FullLoader)
-            _LOG.info(f'Creating {cls.__name__} from {yaml_path}...')
+            _LOG.info(f'Creating {cls.__name__} from {yaml_path}')
         return cls(gateway=gateway, config=config)
 
     @property
@@ -277,17 +277,17 @@ class VisioBASHTTPClient:
         if server.is_authorized:
             return True
 
-        _LOG.debug(f'Authorization to {repr(server)}...')
+        _LOG.debug(f'Authorization to {server}...')
         try:
             auth_data = await self._rq(method='POST',
                                        url=server.url / self._AUTH_URL,
                                        json=server.auth_payload)
             server.set_auth_data(**auth_data)
-            _LOG.debug(f'Successfully authorized to {repr(server)}')
+            _LOG.debug(f'Successfully authorized to {server}')
         except aiohttp.ClientError as e:
-            _LOG.warning(f'Failed authorization to {repr(server)}: {e}')
+            _LOG.warning(f'Failed authorization to {server}: {e}')
         except Exception as e:
-            _LOG.exception(f'Failed authorization to  {repr(server)}: {e}',
+            _LOG.exception(f'Failed authorization to  {server}: {e}',
                            extra={'url': server.url, 'exception': str(e)})
         finally:
             return server.is_authorized
