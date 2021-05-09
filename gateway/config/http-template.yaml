@@ -1,0 +1,43 @@
+timeout: 30  # seconds default=30
+retry: 60  # seconds default=60
+
+
+# Mirrors optional.
+
+get_node: # for GET requests
+  primary: # Main server for GET requests:
+    url: http://get-main.com:8080
+    login: login
+    password: password
+
+  mirror: # Mirror of main server for GET requests:
+    url: http://get-mirror.com:8080
+    login: login
+    password: password
+
+
+# By default, the gateway will not send post requests to the GET server.
+# If you need to send POST requests to the receiving server,
+# you need to explicitly write it below.
+post:
+  - node1:
+      primary: # Main server for POST requests:
+        url: http://post1-main.com:8080
+        login: login
+        password: password
+
+#      mirror: # Mirror of main server for POST requests:
+#        url: http://post1-mirror.com:8080
+#        login: login
+#        password: password
+
+  - node2:
+      primary: # Main server for POST requests:
+        url: http://post2-main.com:8080
+        login: login
+        password: password
+
+      mirror: # Mirror of main server for POST requests:
+        url: http://post2-mirror.com:8080
+        login: login
+        password: password
