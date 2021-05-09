@@ -1,5 +1,7 @@
-from .http_server_config import HTTPServerConfig
+from .http import VisioHTTPClientConfig
+from .http_node import HTTPNodeConfig
+from .http_server import HTTPServerConfig
 
 __all__ = [
-    'HTTPServerConfig',
+    'HTTPServerConfig', 'HTTPNodeConfig', 'VisioHTTPClientConfig',
 ]

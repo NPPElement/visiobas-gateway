@@ -1,5 +1,5 @@
 from hashlib import md5
-from typing import Optional, Union
+from typing import Optional
 
 from pydantic import BaseModel, Field, validator, HttpUrl
 from yarl import URL
