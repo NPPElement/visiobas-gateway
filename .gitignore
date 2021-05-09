@@ -17,5 +17,5 @@ build
 gateway/config/http.yaml
 gateway/config/mqtt.yaml
 
-# *.yaml
+*.yaml
 *.env

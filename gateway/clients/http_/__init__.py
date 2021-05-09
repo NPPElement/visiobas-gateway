@@ -1,7 +1,7 @@
 from .client import VisioBASHTTPClient
 
-from .http_node import VisioHTTPNode
+from models.config.http_node import HTTPNodeConfig
 
-__all__ = ['VisioHTTPNode',
+__all__ = ['HTTPNodeConfig',
            'VisioBASHTTPClient'
            ]

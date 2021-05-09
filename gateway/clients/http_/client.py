@@ -1,13 +1,11 @@
 import asyncio
 from pathlib import Path
-from typing import Iterable, Any, Union, Collection
+from typing import Iterable, Any, Union, Collection, Optional
 
 import aiohttp
 from yarl import URL
 
-from models import HTTPServerConfig
-from .http_node import VisioHTTPNode
-from ...models import ObjType
+from ...models import (ObjType, HTTPServerConfig, HTTPNodeConfig, VisioHTTPClientConfig)
 from ...utils import get_file_logger
 
 _LOG = get_file_logger(name=__name__)
@@ -25,14 +23,14 @@ class VisioBASHTTPClient:
     _GET_URL = 'vbas/gate/get'
     _POST_URL = 'vbas/gate/light'
 
-    def __init__(self, gateway: 'VisioBASGateway', config: dict):
+    def __init__(self, gateway: 'VisioBASGateway', config: VisioHTTPClientConfig):
         self.gateway = gateway
         self._config = config
-        self._timeout = aiohttp.ClientTimeout(total=self._config.get('timeout', 30))
+        self._timeout = aiohttp.ClientTimeout(total=self._config.timeout)
         self._session = aiohttp.ClientSession(timeout=self.timeout)
 
-        self._get_node = VisioHTTPNode.from_dict(config=self._config['get_node'])
-        self._post_nodes = [VisioHTTPNode.from_dict(config=list(node.values()).pop())
+        self._get_node = HTTPNodeConfig.from_dict(config=self._config['get_node'])
+        self._post_nodes = [HTTPNodeConfig.from_dict(config=list(node.values()).pop())
                             for node in self._config['post']]
 
         self._upd_task = None
@@ -43,15 +41,26 @@ class VisioBASHTTPClient:
         return self.__class__.__name__
 
     @classmethod
-    def from_yaml(cls, gateway: 'VisioBASGateway',
-                  yaml_path: Path) -> 'VisioBASHTTPClient':
-        """Create HTTP client with configuration read from YAML file."""
-        import yaml
-
-        with yaml_path.open() as cfg_file:
-            config = yaml.load(cfg_file, Loader=yaml.FullLoader)
-            _LOG.info(f'Creating {cls.__name__} from {yaml_path}')
+    def from_json(cls, gateway: 'VisioBASGateway', *, path: Optional[Path] = None,
+                  json_str: Optional[str] = None) -> 'VisioBASHTTPClient':
+        """Creates HTTP client with configuration read from JSON-file/-string."""
+        if path:
+            json_str = path.read_text()
+        config = VisioHTTPClientConfig.parse_raw(json_str)
         return cls(gateway=gateway, config=config)
+
+    # @classmethod
+    # def from_yaml(cls, gateway: 'VisioBASGateway', path: Path) -> 'VisioBASHTTPClient':
+    #     """Creates HTTP client with configuration read from YAML file."""
+    #     import yaml
+    #
+    #     with path.open() as cfg_file:
+    #         config_dct = yaml.load(cfg_file, Loader=yaml.FullLoader)
+    #     _LOG.info(f'Creating {cls.__name__} from {path}')
+    #     _LOG.debug(f'Config dict: {config_dct}')
+    #
+    #     config = VisioHTTPClientConfig(**config_dct)
+    #     return cls(gateway=gateway, config=config)
 
     @property
     def timeout(self) -> aiohttp.ClientTimeout:
@@ -63,22 +72,18 @@ class VisioBASHTTPClient:
 
     @property
     def retry_delay(self) -> int:
-        return self._config['delay'].get('retry', 60)
+        return self._config.retry
 
     @property
-    def upd_delay(self) -> int:
-        return self._config['delay'].get('update', 60 * 60)
-
-    @property
-    def get_node(self) -> VisioHTTPNode:
+    def get_node(self) -> HTTPNodeConfig:
         return self._get_node
 
     @property
-    def post_nodes(self) -> Collection[VisioHTTPNode]:
+    def post_nodes(self) -> Collection[HTTPNodeConfig]:
         return self._post_nodes
 
     @property
-    def all_nodes(self) -> list[VisioHTTPNode]:
+    def all_nodes(self) -> list[HTTPNodeConfig]:
         return [self._get_node, *self._post_nodes]
 
     async def setup(self) -> None:
@@ -161,15 +166,15 @@ class VisioBASHTTPClient:
             If provided several types - returns tuple of objects.
         """
         rq_tasks = [self._rq(method='GET',
-                             url=self.get_node.cur_server.url / self._GET_URL / str(
+                             url=self.get_node.current.url / self._GET_URL / str(
                                  dev_id) / obj_type.name_dashed,
-                             headers=self.get_node.cur_server.auth_headers)
+                             headers=self.get_node.current.auth_headers)
                     for obj_type in obj_types]
         data = await asyncio.gather(*rq_tasks)
 
         return data[0] if len(obj_types) == 1 else data
 
-    async def logout(self, nodes: Iterable[VisioHTTPNode]) -> bool:
+    async def logout(self, nodes: Iterable[HTTPNodeConfig]) -> bool:
         """Perform log out from nodes.
         :param nodes:
         :return: is logout successful
@@ -177,13 +182,13 @@ class VisioBASHTTPClient:
         _LOG.debug(f'Logging out from: {nodes} ...')
         try:
             logout_tasks = [self._rq(method='GET',
-                                     url=node.cur_server.url / self._LOGOUT_URL,
-                                     headers=node.cur_server.auth_headers
+                                     url=node.current.url / self._LOGOUT_URL,
+                                     headers=node.current.auth_headers
                                      ) for node in nodes]
             res = await asyncio.gather(*logout_tasks)
 
             # forget auth data
-            [node.cur_server.clear_auth_data() for node in nodes]
+            [node.current.clear_auth_data() for node in nodes]
 
             _LOG.info(f'Logout from {nodes}: {res}')
             return True
@@ -211,8 +216,8 @@ class VisioBASHTTPClient:
             if not self._authorized:
                 await asyncio.sleep(delay=retry)
 
-    async def login(self, get_node: VisioHTTPNode,
-                    post_nodes: Iterable[VisioHTTPNode]) -> bool:
+    async def login(self, get_node: HTTPNodeConfig,
+                    post_nodes: Iterable[HTTPNodeConfig]) -> bool:
         """Perform authorization to all nodes.
         :param get_node:
         :param post_nodes:
@@ -236,7 +241,7 @@ class VisioBASHTTPClient:
             _LOG.warning('Failed authorizations!')
         return successfully_authorized
 
-    async def _login_node(self, node: VisioHTTPNode) -> bool:
+    async def _login_node(self, node: HTTPNodeConfig) -> bool:
         """Perform authorization to node (primary server or mirror)
 
         Args:
@@ -249,11 +254,11 @@ class VisioBASHTTPClient:
         """
         _LOG.debug(f'Authorization to {repr(node)}')
         try:
-            is_authorized = await self._login_server(server=node.cur_server)
+            is_authorized = await self._login_server(server=node.current)
             if not is_authorized:
-                switched = node.switch_to_mirror()
+                switched = node.switch_server()
                 if switched:
-                    is_authorized = await self._login_server(server=node.cur_server)
+                    is_authorized = await self._login_server(server=node.current)
             if is_authorized:
                 _LOG.info(f'Successfully authorized to {repr(node)}')
             else:
@@ -292,7 +297,7 @@ class VisioBASHTTPClient:
         finally:
             return server.is_authorized
 
-    async def post_device(self, nodes: Collection[VisioHTTPNode],
+    async def post_device(self, nodes: Collection[HTTPNodeConfig],
                           device_id: int, data: str) -> bool:
         """Perform POST requests with data to nodes.
         :param nodes:
@@ -303,8 +308,8 @@ class VisioBASHTTPClient:
         try:
             post_tasks = [
                 self._rq(method='POST',
-                         url=node.cur_server.url / self._POST_URL / str(device_id),
-                         headers=node.cur_server.auth_headers,
+                         url=node.current.url / self._POST_URL / str(device_id),
+                         headers=node.current.auth_headers,
                          data=data
                          ) for node in nodes
             ]

@@ -97,7 +97,7 @@ class VisioBASGateway:
     async def async_setup(self) -> None:
         """Set up Gateway and spawn update task."""
         self.http_client = VisioBASHTTPClient.from_yaml(
-            gateway=self, yaml_path=self.HTTP_CFG_PATH)
+            gateway=self, path=self.HTTP_CFG_PATH)
         # await self.http_client.setup()
         # self.mqtt_client = VisioBASMQTTClient.from_yaml(
         #     gateway=self, yaml_path=self.MQTT_CFG_PATH)
