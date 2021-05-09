@@ -29,11 +29,7 @@ class VisioBASHTTPClient:
         self._timeout = aiohttp.ClientTimeout(total=self._config.timeout)
         self._session = aiohttp.ClientSession(timeout=self.timeout)
 
-        self._get_node = HTTPNodeConfig.from_dict(config=self._config['get_node'])
-        self._post_nodes = [HTTPNodeConfig.from_dict(config=list(node.values()).pop())
-                            for node in self._config['post']]
-
-        self._upd_task = None
+        # self._upd_task = None
         self._authorized = False
         # self._stopped = False
 
@@ -76,15 +72,11 @@ class VisioBASHTTPClient:
 
     @property
     def get_node(self) -> HTTPNodeConfig:
-        return self._get_node
+        return self._config.get_node
 
     @property
-    def post_nodes(self) -> Collection[HTTPNodeConfig]:
-        return self._post_nodes
-
-    @property
-    def all_nodes(self) -> list[HTTPNodeConfig]:
-        return [self._get_node, *self._post_nodes]
+    def post_nodes(self) -> set[HTTPNodeConfig]:
+        return self._config.post_nodes
 
     async def setup(self) -> None:
         """Wait for authorization then spawn a periodic update task."""
@@ -166,9 +158,9 @@ class VisioBASHTTPClient:
             If provided several types - returns tuple of objects.
         """
         rq_tasks = [self._rq(method='GET',
-                             url=self.get_node.current.url / self._GET_URL / str(
+                             url=self.get_node.primary.url / self._GET_URL / str(
                                  dev_id) / obj_type.name_dashed,
-                             headers=self.get_node.current.auth_headers)
+                             headers=self.get_node.primary.auth_headers)
                     for obj_type in obj_types]
         data = await asyncio.gather(*rq_tasks)
 
@@ -182,13 +174,13 @@ class VisioBASHTTPClient:
         _LOG.debug(f'Logging out from: {nodes} ...')
         try:
             logout_tasks = [self._rq(method='GET',
-                                     url=node.current.url / self._LOGOUT_URL,
-                                     headers=node.current.auth_headers
+                                     url=node.primary.url / self._LOGOUT_URL,
+                                     headers=node.primary.auth_headers
                                      ) for node in nodes]
             res = await asyncio.gather(*logout_tasks)
 
-            # forget auth data
-            [node.current.clear_auth_data() for node in nodes]
+            # clear auth data
+            [node.primary.clear_auth_data() for node in nodes]
 
             _LOG.info(f'Logout from {nodes}: {res}')
             return True
@@ -210,14 +202,14 @@ class VisioBASHTTPClient:
             retry: time to sleep after failed authorization before next attempt
         """
         while not self._authorized:
-            self._authorized = await self.login(get_node=self._get_node,
-                                                post_nodes=self._post_nodes,
+            self._authorized = await self.login(get_node=self.get_node,
+                                                post_nodes=self.post_nodes,
                                                 )
             if not self._authorized:
                 await asyncio.sleep(delay=retry)
 
     async def login(self, get_node: HTTPNodeConfig,
-                    post_nodes: Iterable[HTTPNodeConfig]) -> bool:
+                    post_nodes: Collection[HTTPNodeConfig]) -> bool:
         """Perform authorization to all nodes.
         :param get_node:
         :param post_nodes:
@@ -254,11 +246,11 @@ class VisioBASHTTPClient:
         """
         _LOG.debug(f'Authorization to {repr(node)}')
         try:
-            is_authorized = await self._login_server(server=node.current)
+            is_authorized = await self._login_server(server=node.primary)
             if not is_authorized:
                 switched = node.switch_server()
                 if switched:
-                    is_authorized = await self._login_server(server=node.current)
+                    is_authorized = await self._login_server(server=node.primary)
             if is_authorized:
                 _LOG.info(f'Successfully authorized to {repr(node)}')
             else:
@@ -308,8 +300,8 @@ class VisioBASHTTPClient:
         try:
             post_tasks = [
                 self._rq(method='POST',
-                         url=node.current.url / self._POST_URL / str(device_id),
-                         headers=node.current.auth_headers,
+                         url=node.primary.url / self._POST_URL / str(device_id),
+                         headers=node.primary.auth_headers,
                          data=data
                          ) for node in nodes
             ]

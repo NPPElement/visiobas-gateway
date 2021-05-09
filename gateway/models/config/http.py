@@ -1,4 +1,6 @@
-from pydantic import BaseModel, Field
+from typing import Union
+
+from pydantic import BaseModel, Field, validator
 
 from .http_node import HTTPNodeConfig
 
@@ -8,9 +10,12 @@ class VisioHTTPClientConfig(BaseModel):
     retry: int = Field(default=60)
 
     get_node: HTTPNodeConfig
-    post_nodes: dict[str, HTTPNodeConfig]
+    # in validation: dict[str, HTTPNodeConfig] -> set[HTTPNodeConfig]
+    post_nodes: Union[dict[str, HTTPNodeConfig], set[HTTPNodeConfig]]
 
     class Config:
         arbitrary_types_allowed = True
 
-
+    @validator('post_nodes')
+    def dict_to_list(cls, v: dict[int, HTTPNodeConfig]) -> set[HTTPNodeConfig]:
+        return set(v.values())

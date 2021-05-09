@@ -32,6 +32,9 @@ class HTTPNodeConfig(BaseModel):
     def __repr__(self) -> str:
         return repr(self.primary)
 
+    def __hash__(self) -> int:
+        return hash(self.primary)
+
     def switch_server(self) -> bool:
         """Switches communication to mirror if the primary server is unavailable.
 
