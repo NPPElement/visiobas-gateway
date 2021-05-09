@@ -1,0 +1,37 @@
+{
+  "timeout": 30,
+  "retry": 60,
+  "get_node": {
+    "primary": {
+      "url": "http://get-main.com:8080",
+      "login": "login",
+      "password": "password"
+    },
+    "mirror": {
+      "url": "http://get-mirror.com:8080",
+      "login": "login",
+      "password": "password"
+    }
+  },
+  "post_nodes": {
+    "1": {
+      "primary": {
+        "url": "http://post1-main.com:8080",
+        "login": "login",
+        "password": "password"
+      },
+      "mirror": {
+        "url": "http://post1-mirror.com:8080",
+        "login": "login",
+        "password": "password"
+      }
+    },
+    "2": {
+      "primary": {
+        "url": "http://post2-main.com:8080",
+        "login": "login",
+        "password": "password"
+      }
+    }
+  }
+}
