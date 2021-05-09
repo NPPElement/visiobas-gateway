@@ -19,11 +19,9 @@ class VisioGatewayConfig(BaseModel):
 
     # Paths
     base_dir = Path(__file__).resolve().parent.parent.parent.parent
-    default_cfg_dir = Path(os.getenv('cfg_dir', str(base_dir / 'config')))
-    cfg_dir: Path = Field(default=default_cfg_dir)
-
-    http_cfg_path = cfg_dir / 'http.json'
-    mqtt_cfg_path = cfg_dir / 'mqtt.json'
+    cfg_dir: Path = Field(default=Path(os.getenv('cfg_dir', str(base_dir / 'config'))))
+    http_cfg_path: Path = Field(default=cfg_dir / 'http.json')
+    mqtt_cfg_path: Path = Field(default=cfg_dir / 'mqtt.json')
 
     http: Optional[VisioHTTPConfig] = Field(
         default=VisioHTTPConfig.parse_raw(http_cfg_path.read_text()))
