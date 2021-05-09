@@ -5,7 +5,7 @@ from typing import Iterable, Any, Union, Collection, Optional
 import aiohttp
 from yarl import URL
 
-from ...models import (ObjType, HTTPServerConfig, HTTPNodeConfig, VisioHTTPClientConfig)
+from ...models import (ObjType, HTTPServerConfig, HTTPNodeConfig, VisioHTTPConfig)
 from ...utils import get_file_logger
 
 _LOG = get_file_logger(name=__name__)
@@ -23,7 +23,7 @@ class VisioBASHTTPClient:
     _GET_URL = 'vbas/gate/get'
     _POST_URL = 'vbas/gate/light'
 
-    def __init__(self, gateway: 'VisioBASGateway', config: VisioHTTPClientConfig):
+    def __init__(self, gateway: 'VisioBASGateway', config: VisioHTTPConfig):
         self.gateway = gateway
         self._config = config
         self._timeout = aiohttp.ClientTimeout(total=self._config.timeout)
@@ -42,7 +42,7 @@ class VisioBASHTTPClient:
         """Creates HTTP client with configuration read from JSON-file/-string."""
         if path:
             json_str = path.read_text()
-        config = VisioHTTPClientConfig.parse_raw(json_str)
+        config = VisioHTTPConfig.parse_raw(json_str)
         return cls(gateway=gateway, config=config)
 
     # @classmethod

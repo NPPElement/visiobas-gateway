@@ -1,5 +1,5 @@
 from .bacnet import (ObjType, ObjProperty, StatusFlag, BACnetObjModel, BACnetDeviceModel)
-from .config import HTTPServerConfig, HTTPNodeConfig, VisioHTTPClientConfig
+from .config import HTTPServerConfig, HTTPNodeConfig, VisioHTTPConfig
 from .modbus import (ModbusObjModel, ModbusFunc, MODBUS_READ_FUNCTIONS,
                      MODBUS_WRITE_FUNCTIONS)
 from .mqtt import ResultCode, Qos
@@ -15,5 +15,5 @@ __all__ = ['ObjType', 'ObjProperty', 'StatusFlag',
 
            'Protocol',
 
-           'HTTPServerConfig', 'HTTPNodeConfig', 'VisioHTTPClientConfig',
+           'HTTPServerConfig', 'HTTPNodeConfig', 'VisioHTTPConfig',
            ]

@@ -1,7 +1,7 @@
 from hashlib import md5
 from typing import Optional
 
-from pydantic import BaseModel, Field, validator, HttpUrl
+from pydantic import BaseModel, Field, validator, HttpUrl, SecretStr
 from yarl import URL
 
 
@@ -18,8 +18,8 @@ class HTTPServerConfig(BaseModel):
 
     # todo: add validator for URL?
     """
-    login: str = Field(...)
-    password: str = Field(...)
+    login: SecretStr = Field(...)
+    password: SecretStr = Field(...)
     url: HttpUrl = Field(...)  # in validation: HttpUlr -> URL
 
     auth_data: Optional[AuthData] = None

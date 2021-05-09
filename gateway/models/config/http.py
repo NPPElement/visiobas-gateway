@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field, validator
 from .http_node import HTTPNodeConfig
 
 
-class VisioHTTPClientConfig(BaseModel):
+class VisioHTTPConfig(BaseModel):
     timeout: int = Field(default=10)  # todo: get from main properties
     retry: int = Field(default=60)
 
