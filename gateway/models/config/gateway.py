@@ -2,7 +2,7 @@ import os
 from pathlib import Path
 from typing import Optional
 
-from pydantic import BaseModel, Field, HttpUrl, validator
+from pydantic import BaseModel, Field, HttpUrl, validator, DirectoryPath, FilePath
 from yarl import URL
 
 from .http import VisioHTTPConfig
@@ -18,16 +18,17 @@ class VisioGatewayConfig(BaseModel):
     api_url: HttpUrl = Field(default='http://localhost:7070')
 
     # Paths
-    base_dir = Path(__file__).resolve().parent.parent.parent.parent
-    cfg_dir: Path = Field(default=Path(os.getenv('cfg_dir', str(base_dir / 'config'))))
-    http_cfg_path: Path = Field(default=cfg_dir / 'http.json')
-    mqtt_cfg_path: Path = Field(default=cfg_dir / 'mqtt.json')
+    _BASE_DIR = Path(__file__).resolve().parent.parent.parent.parent
+    config_dir: DirectoryPath = Field(
+        default=Path(os.getenv('CONFIG_DIR', _BASE_DIR / 'config')))
+
+    http_config_path: FilePath = Field(default=config_dir / 'http.json')
+    mqtt_config_path: FilePath = Field(default=config_dir / 'mqtt.json')
 
     http: Optional[VisioHTTPConfig] = Field(
-        default=VisioHTTPConfig.parse_raw(http_cfg_path.read_text()))
+        default=VisioHTTPConfig.parse_raw(http_config_path.read_text()))
     mqtt: Optional = Field(default=None)  # todo
 
     @validator('api_url')
     def cast_url(cls, v: HttpUrl) -> URL:
         return URL(v)
-
