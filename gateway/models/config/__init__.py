@@ -1,10 +1,9 @@
-from .gateway import VisioGatewayConfig
-from .http import VisioHTTPConfig
-from .http_node import HTTPNodeConfig
+from .gateway_settings import GatewaySettings
 from .http_server import HTTPServerConfig
+from .http_settings import HTTPSettings
 
 __all__ = [
-    'HTTPServerConfig', 'HTTPNodeConfig', 'VisioHTTPConfig',
+    'HTTPServerConfig', 'HTTPSettings',
 
-    'VisioGatewayConfig',
+    'GatewaySettings',
 ]
