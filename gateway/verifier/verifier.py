@@ -7,12 +7,8 @@ _LOG = getLogger(__name__)
 
 
 class BACnetVerifier:
-    def __init__(self, config: dict):
-        self._config = config
-
-    @property
-    def override_threshold(self) -> int:
-        return self._config.get('override_threshold', 8)
+    def __init__(self, override_threshold: int = 8):
+        self.override_threshold = override_threshold
 
     def __repr__(self) -> str:
         return self.__class__.__name__

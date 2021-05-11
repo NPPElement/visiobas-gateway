@@ -21,11 +21,11 @@ class VisioBASHTTPClient:
     _GET_URL = '/vbas/gate/get/'
     _POST_URL = 'vbas/gate/light'
 
-    def __init__(self, gateway: 'VisioBASGateway', config: HTTPSettings):
+    def __init__(self, gateway: 'VisioBASGateway', settings: HTTPSettings):
         self.gateway = gateway
-        self._config = config
-        self._timeout = aiohttp.ClientTimeout(total=config.timeout)
-        self._session = aiohttp.ClientSession(timeout=config.timeout)
+        self._config = settings
+        self._timeout = aiohttp.ClientTimeout(total=settings.timeout)
+        self._session = aiohttp.ClientSession(timeout=settings.timeout)
 
         # self._upd_task = None
         self._authorized = False

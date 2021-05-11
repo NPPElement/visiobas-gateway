@@ -11,7 +11,7 @@ from gateway.models import ObjType, BACnetDeviceModel, ModbusObjModel, Protocol
 from gateway.utils import read_address_cache, get_file_logger
 from gateway.verifier import BACnetVerifier
 # _log = getLogger(__name__)
-from models import BACnetObjModel, HTTPSettings
+from models import BACnetObjModel, HTTPSettings, GatewaySettings
 
 _LOG = get_file_logger(__name__)
 
@@ -29,13 +29,13 @@ class VisioBASGateway:
     MODBUS_ADDRESS_CACHE_PATH = BASE_DIR / 'devices/modbus_address_cache'
     MODBUS_RTU_ADDRESS_CACHE_PATH = 'connectors/modbus/rtu.yaml'
 
-    def __init__(self, config: dict):
+    def __init__(self, settings: GatewaySettings):
         # self.loop = asyncio.new_event_loop()
         self.loop: asyncio.AbstractEventLoop = asyncio.get_running_loop()
 
-        self.pymodbus_loop: asyncio.AbstractEventLoop = None
+        # self.pymodbus_loop: asyncio.AbstractEventLoop = None
         # self._pending_tasks: list = []
-        self.config = config
+        self.settings = settings
 
         self._stopped: asyncio.Event = None
         self._upd_task: asyncio.Task = None
@@ -45,31 +45,31 @@ class VisioBASGateway:
         self.http_client: VisioBASHTTPClient = None
         self.mqtt_client: VisioBASMQTTClient = None
         self.http_api_server = None
-        self.verifier = BACnetVerifier(config=config.get('verifier'))
+        self.verifier = BACnetVerifier(override_threshold=settings.override_threshold)
 
         self._devices: dict[int, Union[AsyncModbusDevice]] = {}
 
     @classmethod
-    async def create(cls, config: dict) -> 'VisioBASGateway':
-        gateway = cls(config=config)
+    async def create(cls, settings: GatewaySettings) -> 'VisioBASGateway':
+        gateway = cls(settings=settings)
         gateway._scheduler = await aiojobs.create_scheduler(close_timeout=60,
                                                             limit=100)
         return gateway
 
-    @classmethod
-    async def from_yaml(cls, yaml_path: Path) -> 'VisioBASGateway':
-        # todo add a pydantic model of config and use it
-        """Create gateway with configuration, read from YAML file."""
-        import yaml
-
-        with yaml_path.open() as cfg_file:
-            cfg = yaml.load(cfg_file, Loader=yaml.FullLoader)
-        gateway = await cls.create(config=cfg)
-        return gateway
+    # @classmethod
+    # async def from_yaml(cls, yaml_path: Path) -> 'VisioBASGateway':
+    #     # todo add a pydantic model of config and use it
+    #     """Create gateway with configuration, read from YAML file."""
+    #     import yaml
+    #
+    #     with yaml_path.open() as cfg_file:
+    #         cfg = yaml.load(cfg_file, Loader=yaml.FullLoader)
+    #     gateway = await cls.create(config=cfg)
+    #     return gateway
 
     @property
     def upd_period(self) -> int:
-        return self.config.get('upd_period', 3600)
+        return self.settings.update_period
 
     @property
     def devices(self) -> dict[int, Union[AsyncModbusDevice]]:
@@ -96,8 +96,7 @@ class VisioBASGateway:
 
     async def async_setup(self) -> None:
         """Set up Gateway and spawn update task."""
-        self.http_client = VisioBASHTTPClient(gateway=self,
-                                              config=HTTPSettings())
+        self.http_client = VisioBASHTTPClient(gateway=self, settings=HTTPSettings())
         # await self.http_client.setup()
         # self.mqtt_client = VisioBASMQTTClient.from_yaml(
         #     gateway=self, yaml_path=self.MQTT_CFG_PATH)
