@@ -5,6 +5,7 @@ from pydantic import Field, BaseModel
 
 from .base_obj import BaseBACnetObjModel
 from .obj_property import ObjProperty
+from .status_flags import StatusFlags
 
 
 class BACnetObjPropertyListModel(BaseModel):
@@ -55,8 +56,9 @@ class BACnetObjModel(BaseBACnetObjModel):
     pv: Any = Field(default=LastValue(resolution=resolution),
                     alias=ObjProperty.presentValue.id_str,
                     description='Present value')
-    sf: Union[int, list[bool]] = Field(default=0b0000, alias=ObjProperty.statusFlags.id_str,
-                                       description='Status flags')
+    sf: StatusFlags = Field(default=StatusFlags(flags=0b0000),
+                            # alias=ObjProperty.statusFlags.id_str, # todo read from server?
+                            description='Status flags')
     pa: Union[str, tuple, None] = Field(alias=ObjProperty.priorityArray.id_str,
                                         description='Priority array')
     reliability: Union[int, str, None] = Field(default=0,
@@ -71,7 +73,10 @@ class BACnetObjModel(BaseBACnetObjModel):
     property_list: BACnetObjPropertyListJsonModel = Field(
         ..., alias=ObjProperty.propertyList.id_str)
 
-    # value = LastValue(resolution=resolution, value=None)
+    value = Field(default=LastValue(resolution=resolution, value=None))
+
+    class Config:
+        arbitrary_types_allowed = True
 
     def __repr__(self) -> str:
         return f'BACnetObj{self.__dict__}'
@@ -91,7 +96,7 @@ class BACnetObjModel(BaseBACnetObjModel):
             pa_str = self._convert_pa_to_str(pa=self.pa)
             str_ += ' ' + pa_str
 
-        str_ += ' ' + str(self.sf)
+        str_ += ' ' + str(self.sf.for_http)  # SF with 3 disabled flags!
 
         if self.reliability:
             str_ += ' ' + str(self.reliability)
@@ -108,11 +113,3 @@ class BACnetObjModel(BaseBACnetObjModel):
             ['' if priority is None else str(priority)
              for priority in pa]
         )
-
-    # @validator('poll_interval')
-    # def set_default_poll_interval(cls, v):
-    #     return v or 60
-
-    # @validator('resolution')  # todo deprecate
-    # def set_default_resolution(cls, v):
-    #     return v or 0.1
