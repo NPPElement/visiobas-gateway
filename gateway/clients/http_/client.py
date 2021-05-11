@@ -1,5 +1,5 @@
 import asyncio
-from typing import Any, Union, Collection
+from typing import Any, Union, Collection, Optional
 
 import aiohttp
 
@@ -147,16 +147,19 @@ class VisioBASHTTPClient:
 
         return data[0] if len(obj_types) == 1 else data
 
-    async def logout(self, servers: Collection[HTTPServerConfig]) -> bool:
+    async def logout(self, servers: Optional[Collection[HTTPServerConfig]] = None) -> bool:
         """Performs log out from servers.
 
         Args:
             servers: Servers to perform logout.
+                    If None - perform logout from all servers.
 
         Returns:
             True: Successful logout
             False: Failed logout
         """
+        servers = servers or [self.server_get, *self.servers_post]
+
         _LOG.debug(f'Logging out from: {servers} ...')
         try:
             logout_tasks = [self._rq(method='GET',

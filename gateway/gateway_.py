@@ -11,7 +11,7 @@ from gateway.models import ObjType, BACnetDeviceModel, ModbusObjModel, Protocol
 from gateway.utils import read_address_cache, get_file_logger
 from gateway.verifier import BACnetVerifier
 # _log = getLogger(__name__)
-from models import BACnetObjModel
+from models import BACnetObjModel, HTTPSettings
 
 _LOG = get_file_logger(__name__)
 
@@ -96,8 +96,8 @@ class VisioBASGateway:
 
     async def async_setup(self) -> None:
         """Set up Gateway and spawn update task."""
-        self.http_client = VisioBASHTTPClient.from_yaml(
-            gateway=self, path=self.HTTP_CFG_PATH)
+        self.http_client = VisioBASHTTPClient(gateway=self,
+                                              config=HTTPSettings())
         # await self.http_client.setup()
         # self.mqtt_client = VisioBASMQTTClient.from_yaml(
         #     gateway=self, yaml_path=self.MQTT_CFG_PATH)
@@ -183,7 +183,7 @@ class VisioBASGateway:
         """
         # todo await self.mqtt_client.unsubscribe(self.mqtt_client.topics)
         # todo await stop_devices()
-        await self.http_client.logout(servers=self.http_client.all_nodes)
+        await self.http_client.logout()
 
     async def load_device(self, dev_id: int) -> None:
         """Tries to download an object of device from server.
