@@ -285,7 +285,12 @@ class AsyncModbusDevice:
         #     self.periodic_poll(objs=objs, period=period))
 
     async def _poll_objects(self, objs: Collection[ModbusObjModel], period: int) -> None:
-        """Polling objects."""
+        """Polls objects and set new periodic job in period.
+
+        Args:
+            objs: Objects to poll
+            period: Time to start new poll job.
+        """
         read_tasks = [self.read(obj=obj) for obj in objs]
         self._LOG.debug('Perform reading')
         _t0 = datetime.now()
