@@ -20,7 +20,7 @@ LOG_FORMAT = os.environ.get('LOG_FORMAT',
                             '%(levelname)-8s [%(asctime)s] %(name)s'
                             '.%(funcName)s(%(lineno)d): %(message)s'
                             )
-LOG_LEVEL = os.environ.get('LOG_LEVEL', 'DEBUG')
+LOG_LEVEL = os.getenv('GW_LOG_LEVEL', 'DEBUG')
 # _log = logging.getLogger(__name__)
 _log = get_file_logger(__name__)
 
