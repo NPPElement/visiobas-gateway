@@ -1,6 +1,6 @@
 import asyncio
 from pathlib import Path
-from typing import Callable, Any, Optional, Iterable, Union, Awaitable, Collection
+from typing import Callable, Any, Optional, Union, Awaitable, Collection
 
 import aiojobs
 from pydantic import ValidationError
@@ -8,7 +8,7 @@ from pydantic import ValidationError
 from gateway.clients import VisioBASHTTPClient, VisioBASMQTTClient
 from gateway.devices.async_modbus import AsyncModbusDevice
 from gateway.models import ObjType, BACnetDeviceModel, ModbusObjModel, Protocol
-from gateway.utils import read_address_cache, get_file_logger
+from gateway.utils import get_file_logger
 from gateway.verifier import BACnetVerifier
 # _log = getLogger(__name__)
 from models import BACnetObjModel, HTTPSettings, GatewaySettings
@@ -66,6 +66,10 @@ class VisioBASGateway:
     #         cfg = yaml.load(cfg_file, Loader=yaml.FullLoader)
     #     gateway = await cls.create(config=cfg)
     #     return gateway
+
+    @property
+    def poll_device_ids(self) -> list[int]:
+        return self.settings.poll_device_ids
 
     @property
     def upd_period(self) -> int:
@@ -160,11 +164,9 @@ class VisioBASGateway:
         """
         await self.http_client.wait_login()
 
-        # Update devices identifiers to poll
-        device_ids = await self.async_add_job(target=self._get_device_ids)
-
         # Load devices
-        load_device_tasks = [self.load_device(dev_id=dev_id) for dev_id in device_ids]
+        load_device_tasks = [self.load_device(dev_id=dev_id)
+                             for dev_id in self.poll_device_ids]
         await asyncio.gather(*load_device_tasks)
 
         start_poll_tasks = [self.start_device_poll(dev_id=dev_id)
@@ -260,22 +262,13 @@ class VisioBASGateway:
         # _log.debug('Objects to poll created', extra={'device_id': dev_obj.id})
         return objs
 
-    def _get_device_ids(self) -> Iterable[int]:
-        """Gets devise identifiers to poll.
-
-        Returns:
-            Device identifiers to poll.
-        """
-        # todo get from gateway object
-        return read_address_cache(path=self.MODBUS_ADDRESS_CACHE_PATH).keys()
-
     async def verify_objects(self, objs: Collection[BACnetObjModel]) -> None:
         """Verify objects in executor pool."""
         await self.async_add_job(self.verifier.verify_objects(objs=objs))
 
     async def send_objects(self, objs: Collection[BACnetObjModel]) -> None:
         """Sends objects to server."""
-        dev_id = int()   # todo
+        dev_id = int()  # todo
         str_ = str()  # todo
         await self.http_client.post_device(servers=self.http_client.servers_post,
                                            dev_id=dev_id,
