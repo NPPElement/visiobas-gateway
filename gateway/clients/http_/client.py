@@ -1,11 +1,9 @@
 import asyncio
-from pathlib import Path
-from typing import Iterable, Any, Union, Collection, Optional
+from typing import Any, Union, Collection
 
 import aiohttp
-from yarl import URL
 
-from ...models import (ObjType, HTTPServerConfig, HTTPNodeConfig, VisioHTTPConfig)
+from ...models import (ObjType, HTTPServerConfig, HTTPSettings)
 from ...utils import get_file_logger
 
 _LOG = get_file_logger(name=__name__)
@@ -19,15 +17,15 @@ class VisioBASHTTPClient:
     """Control interactions via HTTP."""
 
     _AUTH_URL = 'auth/rest/login'
-    _LOGOUT_URL = 'auth/secure/logout'
-    _GET_URL = 'vbas/gate/get'
+    _LOGOUT_URL = '/auth/secure/logout'
+    _GET_URL = '/vbas/gate/get/'
     _POST_URL = 'vbas/gate/light'
 
-    def __init__(self, gateway: 'VisioBASGateway', config: VisioHTTPConfig):
+    def __init__(self, gateway: 'VisioBASGateway', config: HTTPSettings):
         self.gateway = gateway
         self._config = config
-        self._timeout = aiohttp.ClientTimeout(total=self._config.timeout)
-        self._session = aiohttp.ClientSession(timeout=self.timeout)
+        self._timeout = aiohttp.ClientTimeout(total=config.timeout)
+        self._session = aiohttp.ClientSession(timeout=config.timeout)
 
         # self._upd_task = None
         self._authorized = False
@@ -35,28 +33,6 @@ class VisioBASHTTPClient:
 
     def __repr__(self) -> str:
         return self.__class__.__name__
-
-    @classmethod
-    def from_json(cls, gateway: 'VisioBASGateway', *, path: Optional[Path] = None,
-                  json_str: Optional[str] = None) -> 'VisioBASHTTPClient':
-        """Creates HTTP client with configuration read from JSON-file/-string."""
-        if path:
-            json_str = path.read_text()
-        config = VisioHTTPConfig.parse_raw(json_str)
-        return cls(gateway=gateway, config=config)
-
-    # @classmethod
-    # def from_yaml(cls, gateway: 'VisioBASGateway', path: Path) -> 'VisioBASHTTPClient':
-    #     """Creates HTTP client with configuration read from YAML file."""
-    #     import yaml
-    #
-    #     with path.open() as cfg_file:
-    #         config_dct = yaml.load(cfg_file, Loader=yaml.FullLoader)
-    #     _LOG.info(f'Creating {cls.__name__} from {path}')
-    #     _LOG.debug(f'Config dict: {config_dct}')
-    #
-    #     config = VisioHTTPClientConfig(**config_dct)
-    #     return cls(gateway=gateway, config=config)
 
     @property
     def timeout(self) -> aiohttp.ClientTimeout:
@@ -71,16 +47,16 @@ class VisioBASHTTPClient:
         return self._config.retry
 
     @property
-    def get_node(self) -> HTTPNodeConfig:
-        return self._config.get_node
+    def server_get(self) -> HTTPServerConfig:
+        return self._config.server_get
 
     @property
-    def post_nodes(self) -> set[HTTPNodeConfig]:
-        return self._config.post_nodes
+    def servers_post(self) -> list[HTTPServerConfig]:
+        return self._config.servers_post
 
     async def setup(self) -> None:
         """Wait for authorization then spawn a periodic update task."""
-        await self.authorize(retry=self.retry_delay)
+        await self.wait_login(retry=self.retry_delay)
 
         # self._upd_task = self.gateway.loop.create_task(self.periodic_update())
 
@@ -152,167 +128,161 @@ class VisioBASHTTPClient:
 
     async def get_objs(self, dev_id: int, obj_types: Collection[ObjType]
                        ) -> Union[tuple[Any], Any]:
-        """
+        """Requests objects of provided type
+
+        Args:
+            dev_id: device identifier
+            obj_types: types of objects
+
         Returns:
             If provided one type - returns objects of this type.
             If provided several types - returns tuple of objects.
         """
         rq_tasks = [self._rq(method='GET',
-                             url=self.get_node.primary.url / self._GET_URL / str(
-                                 dev_id) / obj_type.name_dashed,
-                             headers=self.get_node.primary.auth_headers)
+                             url=self.server_get.current_url + self._GET_URL + str(
+                                 dev_id) + '/' + obj_type.name_dashed,
+                             headers=self.server_get.auth_headers)
                     for obj_type in obj_types]
         data = await asyncio.gather(*rq_tasks)
 
         return data[0] if len(obj_types) == 1 else data
 
-    async def logout(self, nodes: Iterable[HTTPNodeConfig]) -> bool:
-        """Perform log out from nodes.
-        :param nodes:
-        :return: is logout successful
+    async def logout(self, servers: Collection[HTTPServerConfig]) -> bool:
+        """Performs log out from servers.
+
+        Args:
+            servers: Servers to perform logout.
+
+        Returns:
+            True: Successful logout
+            False: Failed logout
         """
-        _LOG.debug(f'Logging out from: {nodes} ...')
+        _LOG.debug(f'Logging out from: {servers} ...')
         try:
             logout_tasks = [self._rq(method='GET',
-                                     url=node.primary.url / self._LOGOUT_URL,
-                                     headers=node.primary.auth_headers
-                                     ) for node in nodes]
+                                     url=server.current_url + self._LOGOUT_URL,
+                                     headers=server.auth_headers
+                                     ) for server in servers]
             res = await asyncio.gather(*logout_tasks)
 
             # clear auth data
-            [node.primary.clear_auth_data() for node in nodes]
+            [server.clear_auth_data() for server in servers]
 
-            _LOG.info(f'Logout from {nodes}: {res}')
+            _LOG.info(f'Logout from {servers}: {res}')
             return True
 
         except aiohttp.ClientResponseError as e:
             _LOG.warning(f'Failure logout: {e}')
             return False
         except Exception as e:
-            _LOG.error(f'Logout error: {e}',
-                       exc_info=True
-                       )
+            _LOG.exception(f'Logout error: {e}')
             return False
 
     # todo use async_backoff decorator for retry?
-    async def authorize(self, retry: int = 60) -> None:
+    async def wait_login(self, retry: int = 60) -> None:
         """Ensures the authorization.
 
         Args:
-            retry: time to sleep after failed authorization before next attempt
+            retry: Time to sleep after failed authorization before next attempt
         """
         while not self._authorized:
-            self._authorized = await self.login(get_node=self.get_node,
-                                                post_nodes=self.post_nodes,
+            self._authorized = await self.login(get_server=self.server_get,
+                                                post_servers=self.servers_post,
                                                 )
             if not self._authorized:
                 await asyncio.sleep(delay=retry)
 
-    async def login(self, get_node: HTTPNodeConfig,
-                    post_nodes: Collection[HTTPNodeConfig]) -> bool:
-        """Perform authorization to all nodes.
-        :param get_node:
-        :param post_nodes:
-        :return: can continue with current authorizations
+    async def login(self, get_server: HTTPServerConfig,
+                    post_servers: Collection[HTTPServerConfig]) -> bool:
+        """Perform authorization to all servers, required for work.
+
+        Args:
+            get_server: Server to send GET requests
+            post_servers: Servers to send POST requests
+
+        Returns:
+            True: Can continue with current authorizations
+            False: Cannot continue
 
         # fixme: use `extra`
         """
-        _LOG.debug(f'Logging in to GET:{get_node}, POST:{post_nodes}...')
+        _LOG.debug(f'Logging in to GET:{get_server}, POST:{post_servers}...')
 
         res = await asyncio.gather(
-            self._login_node(node=get_node),
-            *[self._login_node(node=node) for node in post_nodes]
+            self._login_server(server=get_server),
+            *[self._login_server(server=node) for node in post_servers]
         )
         is_get_authorized = res[0]  # always one instance of get server -> [0]
         is_post_authorized = any(res[1:])
         successfully_authorized = bool(is_get_authorized and is_post_authorized)
 
         if successfully_authorized:
-            _LOG.info(f'Successfully authorized to GET:{get_node}, POST:{post_nodes}')
+            _LOG.info(f'Successfully authorized to GET:{get_server}, POST:{post_servers}')
         else:
             _LOG.warning('Failed authorizations!')
         return successfully_authorized
 
-    async def _login_node(self, node: HTTPNodeConfig) -> bool:
-        """Perform authorization to node (primary server or mirror)
-
-        Args:
-            node: Node to authorize
-
-        Returns:
-            Node is authorized
-
-        # fixme: use `extra`
-        """
-        _LOG.debug(f'Authorization to {repr(node)}')
-        try:
-            is_authorized = await self._login_server(server=node.primary)
-            if not is_authorized:
-                switched = node.switch_server()
-                if switched:
-                    is_authorized = await self._login_server(server=node.primary)
-            if is_authorized:
-                _LOG.info(f'Successfully authorized to {repr(node)}')
-            else:
-                _LOG.warning(f'Failed authorization to {repr(node)}')
-        except Exception as e:
-            _LOG.exception(f'Authorization error! Please check {repr(node)}: {e}')
-        finally:
-            return node.is_authorized
-
     async def _login_server(self, server: HTTPServerConfig) -> bool:
-        """Perform authorization to server.
+        """Perform authorization to server (primary server or mirror)
 
         Args:
             server: Server to authorize
 
         Returns:
-            Server is authorized
+            True: Server is authorized
+            False: Server is not authorized
 
         # fixme: use `extra`
         """
-        if server.is_authorized:
-            return True
-
-        _LOG.debug(f'Authorization to {server}...')
+        _LOG.debug(f'Authorization to {repr(server)}')
         try:
-            auth_data = await self._rq(method='POST',
-                                       url=server.url / self._AUTH_URL,
-                                       json=server.auth_payload)
-            server.set_auth_data(**auth_data)
-            _LOG.debug(f'Successfully authorized to {server}')
+            is_authorized = await self._rq(method='POST',
+                                           url=server.current_url + '/' + self._AUTH_URL,
+                                           json=server.auth_payload)
+            while not is_authorized and server.switch_server():
+                is_authorized = await self._rq(method='POST',
+                                               url=server.current_url + '/' + self._AUTH_URL,
+                                               json=server.auth_payload)
+            if is_authorized:
+                _LOG.info(f'Successfully authorized to {server}')
+            else:
+                _LOG.warning(f'Failed authorization to {server}')
         except aiohttp.ClientError as e:
             _LOG.warning(f'Failed authorization to {server}: {e}')
         except Exception as e:
             _LOG.exception(f'Failed authorization to  {server}: {e}',
-                           extra={'url': server.url, 'exception': str(e)})
+                           extra={'url': server.current_url, 'exception': str(e)})
         finally:
             return server.is_authorized
 
-    async def post_device(self, nodes: Collection[HTTPNodeConfig],
-                          device_id: int, data: str) -> bool:
-        """Perform POST requests with data to nodes.
-        :param nodes:
-        :param device_id:
-        :param data:
-        :return: is POST requests successful
+    async def post_device(self, servers: Collection[HTTPServerConfig],
+                          dev_id: int, data: str) -> bool:
+        """Performs POST requests with data to servers.
+
+        Args:
+            servers: servers to send POST requests to
+            dev_id: device identifier
+            data: body of POST request
+
+        Returns:
+            POST request is successful
         """
         try:
             post_tasks = [
                 self._rq(method='POST',
-                         url=node.primary.url / self._POST_URL / str(device_id),
-                         headers=node.primary.auth_headers,
+                         url=server.current_url + '/' + self._POST_URL + '/' + str(dev_id),
+                         headers=server.auth_headers,
                          data=data
-                         ) for node in nodes
+                         ) for server in servers
             ]
             await asyncio.gather(*post_tasks)
-            _LOG.debug(f'Successfully sent [{device_id}]\'s data to {nodes}')
+            _LOG.debug(f'Successfully sent [{dev_id}]\'s data to {servers}')
             return True
         except Exception as e:
             _LOG.exception(f'Failed to send: {e}')
             return False
 
-    async def _rq(self, method: str, url: Union[str, URL], **kwargs) -> Union[list, dict]:
+    async def _rq(self, method: str, url: str, **kwargs) -> Union[list, dict]:
         """Perform HTTP request and check response.
         :return: extracted data
         """

@@ -159,7 +159,7 @@ class VisioBASGateway:
             - Start devices poll
             - Connect to MQTT
         """
-        await self.http_client.authorize()
+        await self.http_client.wait_login()
 
         # Update devices identifiers to poll
         device_ids = await self.async_add_job(target=self._get_device_ids)
@@ -183,7 +183,7 @@ class VisioBASGateway:
         """
         # todo await self.mqtt_client.unsubscribe(self.mqtt_client.topics)
         # todo await stop_devices()
-        await self.http_client.logout(nodes=self.http_client.all_nodes)
+        await self.http_client.logout(servers=self.http_client.all_nodes)
 
     async def load_device(self, dev_id: int) -> None:
         """Tries to download an object of device from server.
@@ -278,8 +278,8 @@ class VisioBASGateway:
         """Sends objects to server."""
         dev_id = int()   # todo
         str_ = str()  # todo
-        await self.http_client.post_device(nodes=self.http_client.post_nodes,
-                                           device_id=dev_id,
+        await self.http_client.post_device(servers=self.http_client.servers_post,
+                                           dev_id=dev_id,
                                            data=str_)
 
     async def device_factory(self, dev_obj: BACnetDeviceModel) -> Union[AsyncModbusDevice]:
