@@ -135,6 +135,9 @@ class VisioBASGateway:
         Args:
             target: target to call.
             args: parameters for target to call.
+
+        Returns:
+            task or future object
         """
         if target is None:
             raise ValueError('None not allowed')
@@ -268,8 +271,11 @@ class VisioBASGateway:
 
     async def send_objects(self, objs: Collection[BACnetObjModel]) -> None:
         """Sends objects to server."""
-        dev_id = int()  # todo
-        str_ = str()  # todo
+        assert len(objs)
+
+        dev_id = list(objs)[0].device_id
+
+        str_ = ';'.join([obj.to_http_str() for obj in objs])
         await self.http_client.post_device(servers=self.http_client.servers_post,
                                            dev_id=dev_id,
                                            data=str_)
