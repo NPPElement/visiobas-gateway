@@ -5,6 +5,7 @@ from pydantic import Field, BaseModel
 
 from .base_obj import BaseBACnetObjModel
 from .obj_property import ObjProperty
+from .status_flags import StatusFlags
 
 
 class BACnetObjPropertyListModel(BaseModel):
@@ -55,8 +56,9 @@ class BACnetObjModel(BaseBACnetObjModel):
     pv: Any = Field(default=LastValue(resolution=resolution),
                     alias=ObjProperty.presentValue.id_str,
                     description='Present value')
-    sf: Union[int, list[bool]] = Field(default=0b0000, alias=ObjProperty.statusFlags.id_str,
-                                       description='Status flags')
+    sf: StatusFlags = Field(default=StatusFlags(flags=0b0000),
+                            # alias=ObjProperty.statusFlags.id_str, # todo read from server?
+                            description='Status flags')
     pa: Union[str, tuple, None] = Field(alias=ObjProperty.priorityArray.id_str,
                                         description='Priority array')
     reliability: Union[int, str, None] = Field(default=0,
