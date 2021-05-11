@@ -1,6 +1,7 @@
 import asyncio
 from ipaddress import IPv4Address
 from typing import Any, Callable, Union, Collection, Optional
+from datetime import datetime
 
 import aiojobs
 from pymodbus.client.asynchronous.schedulers import ASYNC_IO
@@ -22,7 +23,6 @@ VisioBASGateway = Any  # ...gateway_loop
 
 class AsyncModbusDevice:
     # upd_period_factor = 0.9  # todo provide from config
-    delay_next_attempt = 60  # todo provide from config
 
     def __init__(self, device_obj: BACnetDeviceModel,  # 'BACnetDeviceModel'
                  gateway: 'VisioBASGateway'):
@@ -30,7 +30,7 @@ class AsyncModbusDevice:
         self._device_obj = device_obj
 
         # self._log = getLogger(name=f'{self.id}')
-        self._LOG = get_file_logger(logger_name=str(self))
+        self._LOG = get_file_logger(name=str(self))
 
         self._loop: asyncio.AbstractEventLoop = None
         self._client: Union[AsyncModbusSerialClient, AsyncModbusTCPClient] = None
@@ -191,7 +191,7 @@ class AsyncModbusDevice:
         return write_funcs
 
     async def read(self, obj: ModbusObjModel) -> Union[float, int, str]:
-        """Read data from Modbus object."""
+        """Read data from Modbus object. Updates object and return value."""
         # todo: set reliability in fail cases
 
         read_cmd_code = obj.property_list.modbus.func_read
@@ -201,7 +201,7 @@ class AsyncModbusDevice:
         if read_cmd_code not in self.read_funcs:
             raise ValueError(f'Read functions must be one from {self.read_funcs.keys()}')
         try:
-            # Using lock because pymodbus doesn't manage async requests internally.
+            # Using lock because pymodbus doesn't handle async requests internally.
             # Maybe this will change in pymodbus v3.0.0
             async with self._lock:
                 data = await self.read_funcs[read_cmd_code.code](address=reg_address,
@@ -210,20 +210,31 @@ class AsyncModbusDevice:
             if not data.isError():
                 try:
                     value = await self.decode(value=data.registers, obj=obj)
-                    return value
-                except TypeError as e:
+                    obj.value = value
+                except (TypeError, Exception) as e:
                     self._LOG.warning(f'Decode error: {e}')
-                    return 'null'
+                    obj.value = 'null'
+                    obj.reliability = 'decode_error'
             else:
                 self._LOG.error(f'Received error response from {reg_address}')
-                return 'null'
-        except asyncio.TimeoutError as e:
-            self._LOG.error(f'reg: {reg_address} quantity: {quantity} '
-                            f'Read Timeout: {e}')
-            return 'null'
+                obj.value = 'null'
+                obj.reliability = '0x80_response'
+        except asyncio.TimeoutError:
+            self._LOG.warning('Read timeout',
+                              extra={'register': reg_address, 'quantity': quantity})
+            obj.value = 'null'
+            obj.reliability = 'timeout'
+        except ModbusException as e:
+            obj.value = 'null'
+            obj.reliability = str(e)
+            self._LOG.warning('Read error',
+                              extra={'register': reg_address,
+                                     'quantity': quantity,
+                                     'exception': str(e)})
         except Exception as e:
-            self._LOG.error(
-                f'Read error from reg: {reg_address}, quantity: {quantity} : {e}')
+            self._LOG.critical(f'Unexpected error: {e}')
+        finally:
+            return obj.value
 
     async def write(self, value, obj: ModbusObjModel) -> None:
         """Write data to Modbus object."""
@@ -235,7 +246,7 @@ class AsyncModbusDevice:
 
             # encoded_value = TODO encode here
 
-            # Using lock because pymodbus doesn't manage async requests internally.
+            # Using lock because pymodbus doesn't handle async requests internally.
             # Maybe this will change in pymodbus v3.0.0
             async with self._lock:
                 rq = await self.write_funcs[write_cmd_code.code](reg_address,
@@ -265,28 +276,37 @@ class AsyncModbusDevice:
 
     async def periodic_poll(self, objs: Collection[ModbusObjModel], period: int) -> None:
         self._LOG.debug(f'Periodic poll task created for period {period}')
-        await self._poll_objects(objs=objs)
+        await self.scheduler.spawn(self._poll_objects(objs=objs, period=period))
+        # await self._poll_objects(objs=objs)
         await asyncio.sleep(delay=period)
 
         await self.scheduler.spawn(self.periodic_poll(objs=objs, period=period))
         # self._poll_tasks[period] = self._loop.create_task(
         #     self.periodic_poll(objs=objs, period=period))
 
-    async def _read_and_log(self, obj: ModbusObjModel) -> None:
-        # fixme temp
-        try:
-            value = await self.read(obj=obj)
-            self._LOG.debug(f'Read {value}')
-        except Exception as e:
-            self._LOG.exception(f'Cannot read and log {e}')
+    async def _poll_objects(self, objs: Collection[ModbusObjModel], period: int) -> None:
+        """Polls objects and set new periodic job in period.
 
-    async def _poll_objects(self, objs: Collection[ModbusObjModel]) -> None:
-        """Polling objects."""
-        read_tasks = [self._read_and_log(obj=obj)
-                      for obj in objs]
-        self._LOG.debug('Performing read tasks...')
-        await self.scheduler.spawn(asyncio.gather(*read_tasks))
-        # await asyncio.gather(*read_tasks)
+        Args:
+            objs: Objects to poll
+            period: Time to start new poll job.
+        """
+        read_tasks = [self.read(obj=obj) for obj in objs]
+        self._LOG.debug('Perform reading')
+        _t0 = datetime.now()
+        # await self.scheduler.spawn(asyncio.gather(*read_tasks))
+        await asyncio.gather(*read_tasks)
+        _t_delta = datetime.now() - _t0
+        if _t_delta.seconds > period:
+            self._LOG.critical('POLL PERIOD IS TOO SHORT! Requests may interfere selves.')
+            # TODO implement period increasing algorithm
+        self._LOG.info('Objects polled', extra={'device_id': self.id,
+                                                'poll_period': period,
+                                                'time_spent': _t_delta.seconds,
+                                                'objects_polled': len(objs)
+                                                })
+        await self._gateway.verify_objects(objs=objs)
+        await self._gateway.send_objects(objs=objs)
 
     # async def start_poll(self):
     #     self._log.info(f'{self} started')

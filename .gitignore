@@ -14,9 +14,9 @@ build
 .DS_Store
 
 *address_cache
-gateway/config/*http.yaml
-gateway/config/*mqtt.yaml
-gateway/config/test-modbus-http.yaml
+#gateway/config/http.yaml
+#gateway/config/mqtt.yaml
+http_config.env
 
 *.yaml
-*.env
+# *.env

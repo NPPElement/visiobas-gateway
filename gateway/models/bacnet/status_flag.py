@@ -3,17 +3,17 @@ from enum import Enum, unique
 
 @unique
 class StatusFlag(Enum):
-    """StatusFlags represent by int.
+    """StatusFlag represent by int.
 
     Usage:
         - For enable flag FAULT use:
-            sf = sf | StatusFlags.FAULT.value
+            sf |= StatusFlag.FAULT.value
 
         - For disable flag IN_ALARM use:
-            sf = sf & ~StatusFlags.IN_ALARM.value
+            sf &= ~StatusFlag.IN_ALARM.value
 
         - For check flag OVERRIDEN use:
-            todo
+            flag_enabled = bool(sf & StatusFlag.OVERRIDEN.value)
     """
     # принимается ли значения сервером
     OUT_OF_SERVICE = 0b1000  # не слать на сервер

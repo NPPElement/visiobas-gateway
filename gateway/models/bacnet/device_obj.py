@@ -22,8 +22,11 @@ class DeviceRTUPropertyListModel(BaseModel):
     # retry_on_empty: bool = Field(default=True)  # works better
     # retry_on_invalid: bool = Field(default=True)  # works better
 
+    # def __str__(self) -> str:
+    #     return f'RTU-unit:{self.unit}'
+
     def __repr__(self) -> str:
-        return str(self.__dict__)
+        return str(self)
 
     # @validator('parity')  # todo remove. Hotfix for support 'None' in `parity`
     # def set_correct_parity(cls, v):
