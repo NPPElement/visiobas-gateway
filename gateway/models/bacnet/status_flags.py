@@ -77,5 +77,4 @@ class StatusFlags(BaseModel):
         return sf_copy
 
 
-if __name__ == '__main__':
-    sf = StatusFlag(value=0b0000)
+StatusFlags.update_forward_refs()
