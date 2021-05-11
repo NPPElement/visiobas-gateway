@@ -73,7 +73,7 @@ class BACnetObjModel(BaseBACnetObjModel):
     property_list: BACnetObjPropertyListJsonModel = Field(
         ..., alias=ObjProperty.propertyList.id_str)
 
-    # value = LastValue(resolution=resolution, value=None)
+    value = LastValue(resolution=resolution, value=None)
 
     def __repr__(self) -> str:
         return f'BACnetObj{self.__dict__}'
@@ -93,7 +93,7 @@ class BACnetObjModel(BaseBACnetObjModel):
             pa_str = self._convert_pa_to_str(pa=self.pa)
             str_ += ' ' + pa_str
 
-        str_ += ' ' + str(self.sf)
+        str_ += ' ' + str(self.sf.for_http)  # SF with 3 disabled flags!
 
         if self.reliability:
             str_ += ' ' + str(self.reliability)
@@ -110,11 +110,3 @@ class BACnetObjModel(BaseBACnetObjModel):
             ['' if priority is None else str(priority)
              for priority in pa]
         )
-
-    # @validator('poll_interval')
-    # def set_default_poll_interval(cls, v):
-    #     return v or 60
-
-    # @validator('resolution')  # todo deprecate
-    # def set_default_resolution(cls, v):
-    #     return v or 0.1
