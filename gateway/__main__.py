@@ -3,14 +3,16 @@ import logging
 import os
 import sys
 from pathlib import Path
+from typing import Optional
 
 from gateway import VisioBASGateway
+from gateway.models import GatewaySettings
 from gateway.utils import disable_loggers, get_file_logger
 
 # from aiomisc.log import basic_config
-from models import GatewaySettings
 
-BASE_DIR = Path(__file__).resolve().parent
+
+# BASE_DIR = Path(__file__).resolve().parent
 # GATEWAY_CFG_PATH = BASE_DIR / 'config/gateway.yaml'
 
 # Set logging
@@ -32,9 +34,9 @@ logging.basicConfig(format=LOG_FORMAT,
 #              stream=sys.stderr
 #              )
 
-async def load_and_run(cfg_path: Path) -> None:
-    # gateway = await VisioBASGateway.from_yaml(yaml_path=cfg_path)
-    gateway = VisioBASGateway(settings=GatewaySettings())
+async def load_and_run(env_path: Optional[Path] = None) -> None:
+    # todo add usage `env_path`
+    gateway = await VisioBASGateway.create(settings=GatewaySettings())
     await gateway.async_run()
 
 
@@ -54,7 +56,7 @@ def main():
                       'pymodbus.factory',
                       'pymodbus.payload',)
     disable_loggers(loggers=unused_loggers)
-    asyncio.run(load_and_run(cfg_path=GATEWAY_CFG_PATH), debug=True
+    asyncio.run(load_and_run(env_path=None), debug=True
                 )
 
 

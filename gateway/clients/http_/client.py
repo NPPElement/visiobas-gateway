@@ -13,7 +13,7 @@ _LOG = get_file_logger(name=__name__)
 VisioBASGateway = Any  # '...gateway_loop.VisioBASGateway'
 
 
-class VisioBASHTTPClient:
+class VisioHTTPClient:
     """Control interactions via HTTP."""
 
     _AUTH_URL = 'auth/rest/login'

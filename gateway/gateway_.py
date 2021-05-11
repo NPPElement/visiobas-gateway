@@ -5,13 +5,13 @@ from typing import Callable, Any, Optional, Union, Awaitable, Collection
 import aiojobs
 from pydantic import ValidationError
 
-from gateway.clients import VisioBASHTTPClient, VisioBASMQTTClient
+from gateway.clients import VisioHTTPClient, VisioBASMQTTClient
 from gateway.devices.async_modbus import AsyncModbusDevice
-from gateway.models import ObjType, BACnetDeviceModel, ModbusObjModel, Protocol
+from gateway.models import (ObjType, BACnetDeviceModel, ModbusObjModel, Protocol,
+                            BACnetObjModel, HTTPSettings, GatewaySettings)
 from gateway.utils import get_file_logger
 from gateway.verifier import BACnetVerifier
 # _log = getLogger(__name__)
-from models import BACnetObjModel, HTTPSettings, GatewaySettings
 
 _LOG = get_file_logger(__name__)
 
@@ -42,7 +42,7 @@ class VisioBASGateway:
 
         self._scheduler: aiojobs.Scheduler = None
 
-        self.http_client: VisioBASHTTPClient = None
+        self.http_client: VisioHTTPClient = None
         self.mqtt_client: VisioBASMQTTClient = None
         self.http_api_server = None
         self.verifier = BACnetVerifier(override_threshold=settings.override_threshold)
@@ -100,7 +100,7 @@ class VisioBASGateway:
 
     async def async_setup(self) -> None:
         """Set up Gateway and spawn update task."""
-        self.http_client = VisioBASHTTPClient(gateway=self, settings=HTTPSettings())
+        self.http_client = VisioHTTPClient(gateway=self, settings=HTTPSettings())
         # await self.http_client.setup()
         # self.mqtt_client = VisioBASMQTTClient.from_yaml(
         #     gateway=self, yaml_path=self.MQTT_CFG_PATH)
