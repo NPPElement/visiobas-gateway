@@ -1,6 +1,6 @@
 import unittest
 
-from models.config.http_server import HTTPServerConfig
+from models.settings.http_server import HTTPServerConfig
 
 
 class MyTestCase(unittest.TestCase):

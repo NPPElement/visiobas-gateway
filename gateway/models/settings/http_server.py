@@ -20,7 +20,7 @@ class HTTPServerConfig(BaseModel):
         return len(self.urls)
 
     @property
-    def current_server(self) -> AnyHttpUrl:
+    def current_url(self) -> AnyHttpUrl:
         return self.urls[self.current]
 
     @property
@@ -29,8 +29,8 @@ class HTTPServerConfig(BaseModel):
 
     @property
     def auth_payload(self) -> dict[str, str]:
-        return {'login': self.current_server.user,
-                'password': self.current_server.password}
+        return {'login': self.current_url.user,
+                'password': self.current_url.password}
 
     @property
     def auth_headers(self) -> Optional[dict[str, str]]:
@@ -38,7 +38,7 @@ class HTTPServerConfig(BaseModel):
             return {'Authorization': f'Bearer {self.auth_data.bearer_token}'}
 
     def __str__(self) -> str:
-        return str(self.current_server.host)
+        return str(self.current_url.host)
 
     def __repr__(self) -> str:
         return str(self)
@@ -49,12 +49,17 @@ class HTTPServerConfig(BaseModel):
     def clear_auth_data(self) -> None:
         self.auth_data = None
 
-    def switch_server(self) -> None:
+    def switch_server(self) -> bool:
         """Switches communication from current to next, if it exist.
 
         Uses in change server when current unavailable.
+
+        Returns:
+            True: If url switched to unused
+            False: If url switched to already used.
         """
         self.current = self.current + 1 if self.current < self.urls_len - 1 else 0
+        return True if self.current else False
 
     @validator('urls')
     def hash_passwords(cls, v: list[HttpUrl]) -> list[HttpUrl]:

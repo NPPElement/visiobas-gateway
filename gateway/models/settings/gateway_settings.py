@@ -2,7 +2,7 @@ from pathlib import Path
 
 from pydantic import (Field, DirectoryPath, BaseSettings, AnyHttpUrl, validator)
 
-from models.config.http_settings import HTTPSettings
+from models.settings.http_settings import HTTPSettings
 
 
 class GatewaySettings(BaseSettings):
