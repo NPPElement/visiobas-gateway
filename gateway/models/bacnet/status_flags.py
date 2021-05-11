@@ -15,11 +15,11 @@ class StatusFlag(Enum):
 
 
 class StatusFlags(BaseModel):
-    flags: Union[int, list[int], tuple[int]] = Field(default=0b0000)
+    flags: Union['StatusFlags', int, list[int], tuple[int]] = Field(default=0b0000)
 
     @validator('flags')
     def cast_flags(cls, v: Union[int, Collection[StatusFlag]]) -> int:
-        if isinstance(v, int):
+        if isinstance(v, (int, StatusFlags)):
             return v
         elif isinstance(v, (list, tuple)):
             sf_int = 0b0000
