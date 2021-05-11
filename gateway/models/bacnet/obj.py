@@ -73,7 +73,10 @@ class BACnetObjModel(BaseBACnetObjModel):
     property_list: BACnetObjPropertyListJsonModel = Field(
         ..., alias=ObjProperty.propertyList.id_str)
 
-    value = LastValue(resolution=resolution, value=None)
+    value = Field(default=LastValue(resolution=resolution, value=None))
+
+    class Config:
+        arbitrary_types_allowed = True
 
     def __repr__(self) -> str:
         return f'BACnetObj{self.__dict__}'
