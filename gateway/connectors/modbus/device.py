@@ -3,6 +3,8 @@ from pathlib import Path
 from threading import Thread
 from time import time, sleep
 
+from pymodbus.bit_read_message import ReadDiscreteInputsResponse
+from pymodbus.register_read_message import ReadHoldingRegistersResponse
 from pymodbus.client.sync import ModbusTcpClient
 
 from gateway.connectors.bacnet import ObjProperty
@@ -153,7 +155,14 @@ class ModbusTCPDevice(Thread):
 
         else:
             if not data.isError():
-                self.__logger.debug(f'From register: {reg_address} read: {data.registers}')
+                # TODO: add support for other funcs
+                if isinstance(data, ReadDiscreteInputsResponse):
+                    self.__logger.debug(f'From register: {reg_address} read: {data.getBit(0)}')
+                    return data.getBit(address=0)  # using one-bit registers
+                elif isinstance(data, ReadHoldingRegistersResponse):
+                    self.__logger.debug(f'From register: {reg_address} read: {data.registers}')
+                    return data.registers
+
                 return data.registers
             else:
                 self.__logger.error(f'Received error response from {reg_address}')
