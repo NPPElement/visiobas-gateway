@@ -175,13 +175,20 @@ class ModbusTCPDevice(Thread):
         if registers is None:
             return 'null'
 
-        if (properties.data_type == 'BOOL' and quantity == 1 and
-                properties.data_length == 1 and isinstance(properties.bit, int)):
+        data_type = properties.data_type.lower()
+
+        if (data_type == 'bool' and quantity == 1 and
+                properties.data_length == 1 and isinstance(properties.bit, (int, bool))):
             # bool: 1bit
             # TODO: Group bits into one request for BOOL
-            value = cast_to_bit(register=registers, bit=properties.bit)
+            if registers is False:
+                value = 0
+            elif registers is True:
+                value = 1
+            else:
+                value = cast_to_bit(register=registers, bit=properties.bit)
 
-        elif (properties.data_type == 'BOOL' and quantity == 1 and
+        elif (data_type == 'bool' and quantity == 1 and
               properties.data_length == 16):
             # bool: 16bit
             value = int(bool(registers[0]))
@@ -190,17 +197,17 @@ class ModbusTCPDevice(Thread):
             # expected only: int16 | uint16 |  fixme: BYTE?
             value = registers[0]
 
-        elif (properties.data_type == 'FLOAT' and
+        elif (data_type == 'float' and
               quantity == 2 and properties.data_length == 32):  # float32
             value = round(cast_2_registers(registers=registers,
                                            byteorder='>', wordorder='<',  # fixme use obj
                                            type_name=properties.data_type),
                           ndigits=6)
-        elif ((properties.data_type == 'INT' or properties.data_type == 'UINT') and
+        elif ((data_type == 'int' or data_type == 'UINT') and
               quantity == 2 and properties.data_length == 32):  # int32 | uint32
             value = cast_2_registers(registers=registers,
                                      byteorder='<', wordorder='>',  # fixme use obj
-                                     type_name=properties.data_type)
+                                     type_name=data_type)
         else:
             raise NotImplementedError('What to do with that type '
                                       f'not yet defined: {registers, quantity, properties}')
