@@ -177,8 +177,7 @@ class ModbusTCPDevice(Thread):
 
         data_type = properties.data_type.lower()
 
-        if (data_type == 'bool' and quantity == 1 and
-                properties.data_length == 1 and isinstance(properties.bit, (int, bool))):
+        if data_type == 'bool' and quantity == 1 and properties.data_length == 1:
             # bool: 1bit
             # TODO: Group bits into one request for BOOL
             if registers is False:
