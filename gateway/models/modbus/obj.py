@@ -32,6 +32,9 @@ class ModbusObjPropertyListModel(BaseModel):
     # bitmask = int todo
     bit: Optional[int] = Field(default=None, ge=0, le=16)  # TODO: change to 'bitmask'
 
+    class Config:
+        arbitrary_types_allowed = True
+
     def __repr__(self) -> str:
         return str(self.__dict__)
 
