@@ -3,7 +3,9 @@ from pathlib import Path
 from threading import Thread
 from time import time, sleep
 
+from pymodbus.bit_read_message import ReadBitsResponseBase
 from pymodbus.client.sync import ModbusTcpClient
+from pymodbus.register_read_message import ReadRegistersResponseBase
 
 from gateway.connectors.bacnet import ObjProperty
 from gateway.connectors.modbus import (ModbusObject,
@@ -153,8 +155,14 @@ class ModbusTCPDevice(Thread):
 
         else:
             if not data.isError():
-                self.__logger.debug(f'From register: {reg_address} read: {data.registers}')
-                return data.registers
+                if isinstance(data, ReadBitsResponseBase):
+                    self.__logger.debug(
+                        f'From register: {reg_address} read: {data.bits}')
+                    return data.bits  # using one-bit registers
+                elif isinstance(data, ReadRegistersResponseBase):
+                    self.__logger.debug(
+                        f'From register: {reg_address} read: {data.registers}')
+                    return data.registers
             else:
                 self.__logger.error(f'Received error response from {reg_address}')
                 return None
@@ -166,13 +174,20 @@ class ModbusTCPDevice(Thread):
         if registers is None:
             return 'null'
 
-        if (properties.data_type == 'BOOL' and quantity == 1 and
-                properties.data_length == 1 and isinstance(properties.bit, int)):
+        data_type = properties.data_type.lower()
+
+        if data_type == 'bool' and quantity == 1 and properties.data_length == 1:
             # bool: 1bit
             # TODO: Group bits into one request for BOOL
-            value = cast_to_bit(register=registers, bit=properties.bit)
+            value = 1 if registers[0] else 0
+            # if registers is False:
+            #     value = 0
+            # elif registers is True:
+            #     value = 1
+            # else:
+            #     value = cast_to_bit(register=registers, bit=properties.bit)
 
-        elif (properties.data_type == 'BOOL' and quantity == 1 and
+        elif (data_type == 'bool' and quantity == 1 and
               properties.data_length == 16):
             # bool: 16bit
             value = int(bool(registers[0]))
@@ -181,17 +196,17 @@ class ModbusTCPDevice(Thread):
             # expected only: int16 | uint16 |  fixme: BYTE?
             value = registers[0]
 
-        elif (properties.data_type == 'FLOAT' and
+        elif (data_type == 'float' and
               quantity == 2 and properties.data_length == 32):  # float32
             value = round(cast_2_registers(registers=registers,
                                            byteorder='>', wordorder='<',  # fixme use obj
                                            type_name=properties.data_type),
                           ndigits=6)
-        elif ((properties.data_type == 'INT' or properties.data_type == 'UINT') and
+        elif ((data_type == 'int' or data_type == 'UINT') and
               quantity == 2 and properties.data_length == 32):  # int32 | uint32
             value = cast_2_registers(registers=registers,
                                      byteorder='<', wordorder='>',  # fixme use obj
-                                     type_name=properties.data_type)
+                                     type_name=data_type)
         else:
             raise NotImplementedError('What to do with that type '
                                       f'not yet defined: {registers, quantity, properties}')
