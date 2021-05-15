@@ -1,6 +1,6 @@
 aiohttp==3.7.4.post0
 BAC0==20.11.21
 bacpypes==0.18.4
-pymodbus==2.5.0
+pymodbus==2.5.2
 PyYAML==5.4.1
 
