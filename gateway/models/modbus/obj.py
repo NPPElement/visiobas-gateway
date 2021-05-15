@@ -1,4 +1,4 @@
-from typing import Union
+from typing import Union, Optional
 
 from pydantic import Field, Json, BaseModel, validator
 from pymodbus.constants import Endian
@@ -30,10 +30,15 @@ class ModbusObjPropertyListModel(BaseModel):
     repack: bool = Field(default=False)  # todo add to docs
 
     # bitmask = int todo
-    bit: int = Field(default=None)  # TODO: change to 'bitmask'
+    bit: Optional[int] = Field(default=None, ge=0, le=16)  # TODO: change to 'bitmask'
 
     def __repr__(self) -> str:
         return str(self.__dict__)
+
+    # @validator('bit')
+    # def check_bit(cls, v, values):
+    #     if 'data_length' in values and values['data_length'] > 1 and v is None:
+    #         raise ValueError('If `data_length`==1, `bit` value expected')
 
     @validator('byte_order')
     def cast_byte_order(cls, v: str) -> Endian:
