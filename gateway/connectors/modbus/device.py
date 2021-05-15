@@ -3,9 +3,9 @@ from pathlib import Path
 from threading import Thread
 from time import time, sleep
 
-from pymodbus.bit_read_message import ReadDiscreteInputsResponse
-from pymodbus.register_read_message import ReadHoldingRegistersResponse
+from pymodbus.bit_read_message import ReadBitsResponseBase
 from pymodbus.client.sync import ModbusTcpClient
+from pymodbus.register_read_message import ReadRegistersResponseBase
 
 from gateway.connectors.bacnet import ObjProperty
 from gateway.connectors.modbus import (ModbusObject,
@@ -156,14 +156,14 @@ class ModbusTCPDevice(Thread):
         else:
             if not data.isError():
                 # TODO: add support for other funcs
-                if isinstance(data, ReadDiscreteInputsResponse):
-                    self.__logger.debug(f'From register: {reg_address} read: {data.getBit(0)}')
-                    return data.getBit(address=0)  # using one-bit registers
-                elif isinstance(data, ReadHoldingRegistersResponse):
-                    self.__logger.debug(f'From register: {reg_address} read: {data.registers}')
+                if isinstance(data, ReadBitsResponseBase):
+                    self.__logger.debug(
+                        f'From register: {reg_address} read: {data.getBit(0)}')
+                    return data.bits  # using one-bit registers
+                elif isinstance(data, ReadRegistersResponseBase):
+                    self.__logger.debug(
+                        f'From register: {reg_address} read: {data.registers}')
                     return data.registers
-
-                return data.registers
             else:
                 self.__logger.error(f'Received error response from {reg_address}')
                 return None
@@ -180,12 +180,13 @@ class ModbusTCPDevice(Thread):
         if data_type == 'bool' and quantity == 1 and properties.data_length == 1:
             # bool: 1bit
             # TODO: Group bits into one request for BOOL
-            if registers is False:
-                value = 0
-            elif registers is True:
-                value = 1
-            else:
-                value = cast_to_bit(register=registers, bit=properties.bit)
+            value = 1 if registers[0] else 0
+            # if registers is False:
+            #     value = 0
+            # elif registers is True:
+            #     value = 1
+            # else:
+            #     value = cast_to_bit(register=registers, bit=properties.bit)
 
         elif (data_type == 'bool' and quantity == 1 and
               properties.data_length == 16):
