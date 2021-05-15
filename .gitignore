@@ -17,6 +17,7 @@ build
 #gateway/config/http.yaml
 #gateway/config/mqtt.yaml
 http_config.env
+gateway/config/prod/*
 
 *.yaml
 # *.env
