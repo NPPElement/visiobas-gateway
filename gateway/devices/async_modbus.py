@@ -1,16 +1,20 @@
 import asyncio
+from datetime import datetime
 from ipaddress import IPv4Address
 from typing import Any, Callable, Union, Collection, Optional
-from datetime import datetime
 
 import aiojobs
+from pymodbus.bit_read_message import ReadCoilsResponse, ReadDiscreteInputsResponse, \
+    ReadBitsResponseBase
 from pymodbus.client.asynchronous.schedulers import ASYNC_IO
 from pymodbus.client.asynchronous.serial import AsyncModbusSerialClient
 from pymodbus.client.asynchronous.tcp import AsyncModbusTCPClient
-from pymodbus.constants import Endian
 from pymodbus.exceptions import ModbusException
 from pymodbus.payload import BinaryPayloadDecoder
+from pymodbus.register_read_message import ReadHoldingRegistersResponse, \
+    ReadInputRegistersResponse, ReadRegistersResponseBase
 
+from models import DataType
 from ..models import BACnetDeviceModel, ModbusObjModel, ObjType, Protocol
 from ..utils import get_file_logger
 
@@ -204,14 +208,14 @@ class AsyncModbusDevice:
             # Using lock because pymodbus doesn't handle async requests internally.
             # Maybe this will change in pymodbus v3.0.0
             async with self._lock:
-                data = await self.read_funcs[read_cmd_code.code](address=reg_address,
+                resp = await self.read_funcs[read_cmd_code.code](address=reg_address,
                                                                  count=quantity,
                                                                  unit=self.unit)
-            if not data.isError():
+            if not resp.isError():
                 try:
-                    value = await self.decode(value=data.registers, obj=obj)
+                    value = await self.decode(resp=resp, obj=obj)
                     obj.value = value
-                except (TypeError, Exception) as e:
+                except (TypeError, ValueError, Exception) as e:
                     self._LOG.warning(f'Decode error: {e}')
                     obj.value = 'null'
                     obj.reliability = 'decode_error'
@@ -352,12 +356,22 @@ class AsyncModbusDevice:
     #     """
     #     self._verifier_queue.put(self.id)
 
-    async def decode(self, value: list[int], obj: ModbusObjModel) -> Union[float, int]:
-        return await self._gateway.add_job(self._decode_register, value, obj)
+    async def decode(self, resp: Union[ReadCoilsResponse,
+                                       ReadDiscreteInputsResponse,
+                                       ReadHoldingRegistersResponse,
+                                       ReadInputRegistersResponse],
+                     obj: ModbusObjModel) -> Union[bool, int, float]:
+        """Decodes non-error response from modbus read function."""
+        return await self._gateway.add_job(self._decode_response, resp, obj)
 
-    def _decode_register(self, value: list[int], obj: ModbusObjModel) -> Union[float, int]:
+    def _decode_response(self, resp: Union[ReadCoilsResponse,
+                                           ReadDiscreteInputsResponse,
+                                           ReadHoldingRegistersResponse,
+                                           ReadInputRegistersResponse],
+                         obj: ModbusObjModel) -> Union[bool, int, float]:
+
         data_length = obj.property_list.modbus.data_length
-        data_type = obj.property_list.modbus.data_type.lower()
+        data_type = obj.property_list.modbus.data_type
 
         reg_address = obj.property_list.modbus.address
         quantity = obj.property_list.modbus.quantity
@@ -365,37 +379,54 @@ class AsyncModbusDevice:
         scale = obj.property_list.modbus.scale
         offset = obj.property_list.modbus.offset
 
-        # todo process in parse
-        byte_order = Endian.Big if obj.property_list.modbus.byte_order == 'big' else Endian.Little
-        word_order = Endian.Big if obj.property_list.modbus.word_order == 'big' else Endian.Little
+        byte_order = obj.property_list.modbus.byte_order
+        word_order = obj.property_list.modbus.word_order
+
+        bit = obj.property_list.modbus.bit
+
         # repack = obj.property_list.modbus.repack
 
-        decoder = BinaryPayloadDecoder(payload=value, byteorder=byte_order,
-                                       wordorder=word_order)
+        if isinstance(resp, ReadBitsResponseBase):
+            data = resp.bits
+            return 1 if data[0] else 0  # TODO: add support several bits
+        elif isinstance(resp, ReadRegistersResponseBase):
+            data = resp.registers
 
-        decode_funcs = {
-            'bits': decoder.decode_bits,
-            'bool': None,  # todo
-            'string': decoder.decode_string,
-            8: {'int': decoder.decode_8bit_int,
-                'uint': decoder.decode_8bit_uint, },
-            16: {'int': decoder.decode_16bit_int,
-                 'uint': decoder.decode_16bit_uint,
-                 'float': decoder.decode_16bit_float, },
-            32: {'int': decoder.decode_32bit_int,
-                 'uint': decoder.decode_32bit_uint,
-                 'float': decoder.decode_32bit_float, },
-            64: {'int': decoder.decode_64bit_int,
-                 'uint': decoder.decode_64bit_uint,
-                 'float': decoder.decode_64bit_float, }
-        }
-        assert decode_funcs[data_length][data_type] is not None
-        decoded = decode_funcs[data_length][data_type]()
-        decoded_value = decoded * scale + offset
-        self._LOG.debug(f'Decoded {reg_address}({quantity})= {value} -> '
-                        f'{data_length}{data_type}= {decoded} -> '
-                        f'*{scale} +{offset} -> {decoded_value}')
-        return decoded_value
+            if data_type == DataType.BOOL:
+                if data_length == 1:
+                    return 1 if data[0] else 0
+                elif bit:
+                    return 1 if data[bit] else 0
+                else:
+                    return any(data)
+
+            decoder = BinaryPayloadDecoder(payload=data, byteorder=byte_order,
+                                           wordorder=word_order)
+            decode_funcs = {
+                DataType.BITS: decoder.decode_bits,
+                # DataType.BOOL: None,
+                DataType.STR: decoder.decode_string,
+                8: {DataType.INT: decoder.decode_8bit_int,
+                    DataType.UINT: decoder.decode_8bit_uint, },
+                16: {DataType.INT: decoder.decode_16bit_int,
+                     DataType.UINT: decoder.decode_16bit_uint,
+                     DataType.FLOAT: decoder.decode_16bit_float,
+                     # DataType.BOOL: None,
+                     },
+                32: {DataType.INT: decoder.decode_32bit_int,
+                     DataType.UINT: decoder.decode_32bit_uint,
+                     DataType.FLOAT: decoder.decode_32bit_float, },
+                64: {DataType.INT: decoder.decode_64bit_int,
+                     DataType.UINT: decoder.decode_64bit_uint,
+                     DataType.FLOAT: decoder.decode_64bit_float, }
+            }
+            assert decode_funcs[data_length][data_type] is not None
+            decoded = decode_funcs[data_length][data_type]()
+            decoded_value = decoded * scale + offset
+            self._LOG.debug(f'Decoded {reg_address}({quantity})= {data} -> '
+                            f'{data_length}{data_type}= {decoded} -> '
+                            f'*{scale} +{offset} -> {decoded_value}')
+            return decoded_value
 
     async def encode(self):
         pass
