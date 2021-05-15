@@ -157,7 +157,7 @@ class ModbusTCPDevice(Thread):
             if not data.isError():
                 if isinstance(data, ReadBitsResponseBase):
                     self.__logger.debug(
-                        f'From register: {reg_address} read: {data.getBit(0)}')
+                        f'From register: {reg_address} read: {data.bits}')
                     return data.bits  # using one-bit registers
                 elif isinstance(data, ReadRegistersResponseBase):
                     self.__logger.debug(

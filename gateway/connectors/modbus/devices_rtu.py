@@ -191,17 +191,10 @@ class ModbusRTUDevice(Thread):
                                                        unit=unit
                                                        )
         if not data.isError():
-            self._log.debug(
-                f'Successful reading UNIT={unit} address={address} '
-                f'quantity={quantity} registers={data.registers}'
-                # extra={'cmd_code': cmd_code,
-                #        'address': reg_address,
-                #        'quantity': data.registers
-                #        }
-            )
+            self._log.debug(f'Successful reading UNIT={unit} address={address}')
             if isinstance(data, ReadBitsResponseBase):
                 self._log.debug(
-                    f'From register: {address} read: {data.getBit(0)}')
+                    f'From register: {address} read: {data.bits}')
                 return data.bits  # using one-bit registers
             elif isinstance(data, ReadRegistersResponseBase):
                 self._log.debug(
