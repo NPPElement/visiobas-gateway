@@ -5,8 +5,10 @@ from pathlib import Path
 from threading import Thread
 from time import sleep, time
 
+from pymodbus.bit_read_message import ReadBitsResponseBase
 from pymodbus.client.sync import ModbusSerialClient
 from pymodbus.constants import Defaults
+from pymodbus.register_read_message import ReadRegistersResponseBase
 
 from gateway.connectors import ObjProperty
 from gateway.connectors.modbus import ModbusObject, cast_2_registers, cast_to_bit, \
@@ -197,7 +199,14 @@ class ModbusRTUDevice(Thread):
                 #        'quantity': data.registers
                 #        }
             )
-            return data.registers
+            if isinstance(data, ReadBitsResponseBase):
+                self._log.debug(
+                    f'From register: {address} read: {data.getBit(0)}')
+                return data.bits  # using one-bit registers
+            elif isinstance(data, ReadRegistersResponseBase):
+                self._log.debug(
+                    f'From register: {address} read: {data.registers}')
+                return data.registers
         else:
             self._log.warning(f'Read failed: {data} UNIT={unit} {obj}')
             # raise ValueError(data)
@@ -235,7 +244,8 @@ class ModbusRTUDevice(Thread):
                 properties.data_length == 1 and isinstance(properties.bit, int)):
             # bool: 1bit
             # TODO: Group bits into one request for BOOL
-            value = cast_to_bit(register=registers, bit=properties.bit)
+            # value = cast_to_bit(register=registers, bit=properties.bit)
+            value = 1 if registers[0] else 0
 
         elif (data_type == 'bool' and quantity == 1 and
               properties.data_length == 16):
