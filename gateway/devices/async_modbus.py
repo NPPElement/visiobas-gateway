@@ -15,8 +15,7 @@ from pymodbus.register_read_message import (ReadHoldingRegistersResponse,
                                             ReadInputRegistersResponse,
                                             ReadRegistersResponseBase)
 
-from models import DataType
-from ..models import BACnetDeviceModel, ModbusObjModel, ObjType, Protocol
+from ..models import BACnetDeviceModel, ModbusObjModel, ObjType, Protocol, DataType
 from ..utils import get_file_logger
 
 # aliases # TODO
