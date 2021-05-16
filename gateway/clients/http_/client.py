@@ -215,8 +215,11 @@ class VisioHTTPClient:
             self._login_server(server=get_server),
             *[self._login_server(server=server) for server in post_servers]
         )
+        _LOG.debug(f'res: {res}')
         is_get_authorized = res[0]  # always one instance of get server -> [0]
+
         is_post_authorized = any(res[1:])
+        _LOG.debug(f'POST auth: {is_post_authorized}')
         successfully_authorized = bool(is_get_authorized and is_post_authorized)
 
         if successfully_authorized:
