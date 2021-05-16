@@ -213,7 +213,7 @@ class VisioHTTPClient:
 
         res = await asyncio.gather(
             self._login_server(server=get_server),
-            *[self._login_server(server=node) for node in post_servers]
+            *[self._login_server(server=server) for server in post_servers]
         )
         is_get_authorized = res[0]  # always one instance of get server -> [0]
         is_post_authorized = any(res[1:])
@@ -291,7 +291,8 @@ class VisioHTTPClient:
         """
         # todo: need re-raise?
         _LOG.debug(f'{method}: {url}')
-        async with self._session.request(method=method, url=url, **kwargs) as resp:
+        async with self._session.request(method=method, url=url, timeout=self.timeout,
+                                         **kwargs) as resp:
             data = await self._extract_response_data(response=resp)
             return data
 
