@@ -4,15 +4,16 @@ from ipaddress import IPv4Address
 from typing import Any, Callable, Union, Collection, Optional
 
 import aiojobs
-from pymodbus.bit_read_message import ReadCoilsResponse, ReadDiscreteInputsResponse, \
-    ReadBitsResponseBase
+from pymodbus.bit_read_message import (ReadCoilsResponse, ReadDiscreteInputsResponse,
+                                       ReadBitsResponseBase)
 from pymodbus.client.asynchronous.schedulers import ASYNC_IO
 from pymodbus.client.asynchronous.serial import AsyncModbusSerialClient
 from pymodbus.client.asynchronous.tcp import AsyncModbusTCPClient
 from pymodbus.exceptions import ModbusException
 from pymodbus.payload import BinaryPayloadDecoder
-from pymodbus.register_read_message import ReadHoldingRegistersResponse, \
-    ReadInputRegistersResponse, ReadRegistersResponseBase
+from pymodbus.register_read_message import (ReadHoldingRegistersResponse,
+                                            ReadInputRegistersResponse,
+                                            ReadRegistersResponseBase)
 
 from models import DataType
 from ..models import BACnetDeviceModel, ModbusObjModel, ObjType, Protocol
