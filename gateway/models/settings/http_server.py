@@ -1,7 +1,7 @@
 from hashlib import md5
 from typing import Optional
 
-from pydantic import Field, BaseModel, HttpUrl, validator, AnyHttpUrl, BaseSettings
+from pydantic import Field, BaseModel, validator, AnyHttpUrl
 
 
 class AuthData(BaseModel):
@@ -15,13 +15,29 @@ class HTTPServerConfig(BaseModel):
     current = 0
     auth_data: Optional[AuthData] = None
 
+    @validator('urls')
+    def hash_passwords(cls, v: list[AnyHttpUrl]) -> list[AnyHttpUrl]:
+        for url in v:
+            if not url.password:
+                raise ValueError('Password expected')
+            if not url.user:
+                raise ValueError('User expected')
+            if not url.port:
+                raise ValueError('Port expected')
+        return v
+
     @property
     def urls_len(self) -> int:
         return len(self.urls)
 
     @property
-    def current_url(self) -> AnyHttpUrl:
-        return self.urls[self.current]
+    def _current_url(self) -> AnyHttpUrl:
+        return self.urls[self.current]  # current url
+
+    @property
+    def current_url(self) -> str:
+        url_ = self._current_url
+        return url_.scheme + '://' + url_.host + ':' + url_.port
 
     @property
     def is_authorized(self) -> bool:
@@ -29,8 +45,8 @@ class HTTPServerConfig(BaseModel):
 
     @property
     def auth_payload(self) -> dict[str, str]:
-        return {'login': self.current_url.user,
-                'password': self.current_url.password}
+        return {'login': self._current_url.user,
+                'password': self._get_hash(self._current_url.password)}
 
     @property
     def auth_headers(self) -> Optional[dict[str, str]]:
@@ -38,7 +54,7 @@ class HTTPServerConfig(BaseModel):
             return {'Authorization': f'Bearer {self.auth_data.bearer_token}'}
 
     def __str__(self) -> str:
-        return str(self.current_url.host)
+        return str(self._current_url.host)
 
     def __repr__(self) -> str:
         return str(self)
@@ -61,8 +77,6 @@ class HTTPServerConfig(BaseModel):
         self.current = self.current + 1 if self.current < self.urls_len - 1 else 0
         return True if self.current else False
 
-    @validator('urls')
-    def hash_passwords(cls, v: list[HttpUrl]) -> list[HttpUrl]:
-        for url in v:
-            url.password = md5(url.password.encode()).hexdigest()
-        return v
+    @staticmethod
+    def _get_hash(password: str) -> str:
+        return md5(password.encode()).hexdigest()
