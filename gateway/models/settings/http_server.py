@@ -65,7 +65,7 @@ class HTTPServerConfig(BaseModel):
     def clear_auth_data(self) -> None:
         self.auth_data = None
 
-    def switch_server(self) -> bool:
+    def switch_current(self) -> bool:
         """Switches communication from current to next, if it exist.
 
         Uses in change server when current unavailable.

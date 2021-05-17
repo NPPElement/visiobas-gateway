@@ -215,11 +215,8 @@ class VisioHTTPClient:
             self._login_server(server=get_server),
             *[self._login_server(server=server) for server in post_servers]
         )
-        _LOG.debug(f'res: {res}')
         is_get_authorized = res[0]  # always one instance of get server -> [0]
-
         is_post_authorized = any(res[1:])
-        _LOG.debug(f'POST auth: {is_post_authorized}')
         successfully_authorized = bool(is_get_authorized and is_post_authorized)
 
         if successfully_authorized:
@@ -240,16 +237,22 @@ class VisioHTTPClient:
 
         # fixme: use `extra`
         """
-        _LOG.debug(f'Authorization to {repr(server)}')
+        _LOG.debug(f'Authorization to {server}')
         try:
-            is_authorized = await self._rq(method='POST',
+            # auth_data = await self._rq(method='POST',
+            #                            url=server.current_url + '/' + self._AUTH_URL,
+            #                            json=server.auth_payload)
+            # server.set_auth_data(**auth_data)
+            while not server.is_authorized:  # and server.switch_server():
+                auth_data = await self._rq(method='POST',
                                            url=server.current_url + '/' + self._AUTH_URL,
                                            json=server.auth_payload)
-            while not is_authorized and server.switch_server():
-                is_authorized = await self._rq(method='POST',
-                                               url=server.current_url + '/' + self._AUTH_URL,
-                                               json=server.auth_payload)
-            if is_authorized:
+                server.set_auth_data(**auth_data)
+
+                if not server.switch_current():
+                    break
+
+            if server.is_authorized:
                 _LOG.info(f'Successfully authorized to {server}')
             else:
                 _LOG.warning(f'Failed authorization to {server}')
