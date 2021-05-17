@@ -19,7 +19,9 @@ class StatusFlags(BaseModel):
 
     @validator('flags')
     def cast_flags(cls, v: Union[int, Collection[StatusFlag]]) -> int:
-        if isinstance(v, (int, StatusFlags)):
+        if isinstance(v, int):
+            return v
+        elif isinstance(v, StatusFlags):
             return v.flags
         elif isinstance(v, (list, tuple)):
             sf_int = 0b0000
