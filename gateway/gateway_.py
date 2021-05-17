@@ -267,7 +267,7 @@ class VisioBASGateway:
 
     async def verify_objects(self, objs: Collection[BACnetObjModel]) -> None:
         """Verify objects in executor pool."""
-        await self.async_add_job(self.verifier.verify_objects(objs=objs))
+        await self.async_add_job(self.verifier.verify_objects, objs)
 
     async def send_objects(self, objs: Collection[BACnetObjModel]) -> None:
         """Sends objects to server."""
