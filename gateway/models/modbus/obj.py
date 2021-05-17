@@ -10,7 +10,7 @@ from ..bacnet.obj_property import ObjProperty
 
 
 class ModbusObjPropertyListModel(BaseModel):
-    address: int = Field(gt=0)
+    address: int = Field(ge=0)
     quantity: int = Field(gt=0)
     func_read: ModbusFunc = Field(default=ModbusFunc.READ_HOLDING_REGISTERS,
                                   alias='functionRead')
