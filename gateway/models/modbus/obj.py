@@ -21,7 +21,7 @@ class ModbusObjPropertyListModel(BaseModel):
     offset: float = Field(default=.0, description='Adding `B` for recalculate A*X+B')
 
     data_type: Union[DataType, str] = Field(..., alias='dataType')  # todo Enum
-    data_length: int = Field(default=16, gt=1, lt=64, alias='dataLength',
+    data_length: int = Field(default=16, ge=1, lt=64, alias='dataLength',
                              # todo calc default: quantity *16
                              description='The number of bits in which the value is stored')
 
