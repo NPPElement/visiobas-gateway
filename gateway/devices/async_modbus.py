@@ -406,12 +406,13 @@ class AsyncModbusDevice:
                 else:
                     return any(data)
 
-            decoder = BinaryPayloadDecoder(payload=data, byteorder=byte_order,
-                                           wordorder=word_order)
+            decoder = BinaryPayloadDecoder.fromRegisters(
+                registers=data, byteorder=byte_order,
+                wordorder=word_order)
             decode_funcs = {
                 DataType.BITS: decoder.decode_bits,
                 # DataType.BOOL: None,
-                DataType.STR: decoder.decode_string,
+                # DataType.STR: decoder.decode_string,
                 8: {DataType.INT: decoder.decode_8bit_int,
                     DataType.UINT: decoder.decode_8bit_uint, },
                 16: {DataType.INT: decoder.decode_16bit_int,

@@ -5,7 +5,7 @@ from enum import Enum, unique
 class DataType(Enum):
     BITS = 'bits'
     BOOL = 'bool'
-    STR = 'str'
+    # STR = 'str'  # not supported yet
     INT = 'int'
     UINT = 'uint'
     FLOAT = 'float'
