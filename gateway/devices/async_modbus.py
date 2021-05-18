@@ -14,6 +14,7 @@ from pymodbus.payload import BinaryPayloadDecoder
 from pymodbus.register_read_message import (ReadHoldingRegistersResponse,
                                             ReadInputRegistersResponse,
                                             ReadRegistersResponseBase)
+from pymodbus.transaction import ModbusRtuFramer
 
 from ..models import (BACnetDeviceModel, ModbusObjModel, ObjType, Protocol, DataType,
                       ModbusReadFunc, ModbusWriteFunc)
@@ -71,10 +72,12 @@ class AsyncModbusDevice:
             loop = self._gateway.loop
             asyncio.set_event_loop(loop=self._gateway.loop)
 
-            if self.protocol is Protocol.MODBUS_TCP:
+            if self.protocol in {Protocol.MODBUS_TCP, Protocol.MODBUS_RTUOVERTCP}:
+                framer = ModbusRtuFramer if self.protocol is Protocol.MODBUS_RTUOVERTCP else None
                 self._loop, self._client = AsyncModbusTCPClient(
                     scheduler=ASYNC_IO,
                     host=self.address, port=self.port,
+                    framer=framer,
                     retries=self.retries,
                     retry_on_empty=True,
                     retry_on_invalid=True,

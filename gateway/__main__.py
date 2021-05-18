@@ -53,6 +53,7 @@ def main():
                       'pymodbus.client.asynchronous.async_io',
                       'pymodbus.transaction',
                       'pymodbus.framer.socket_framer',
+                      'pymodbus.framer.rtu_framer',
                       'pymodbus.factory',
                       'pymodbus.payload',)
     disable_loggers(loggers=unused_loggers)

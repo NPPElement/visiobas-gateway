@@ -6,6 +6,7 @@ class Protocol(Enum):
     BACNET = 'BACnet'
     MODBUS_TCP = 'ModbusTCP'
     MODBUS_RTU = 'ModbusRTU'
+    MODBUS_RTUOVERTCP = 'ModbusRTUoverTCP'
 
     def __new__(cls, *values):
         obj = object.__new__(cls)
