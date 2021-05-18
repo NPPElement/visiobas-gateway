@@ -79,7 +79,7 @@ class AsyncModbusDevice:
                 framer = ModbusRtuFramer if self.protocol is Protocol.MODBUS_RTUOVERTCP else None
                 self._loop, self._client = AsyncModbusTCPClient(
                     scheduler=ASYNC_IO,
-                    host=self.address, port=self.port,
+                    host=str(self.address), port=self.port,
                     framer=framer,
                     retries=self.retries,
                     retry_on_empty=True,
@@ -285,7 +285,7 @@ class AsyncModbusDevice:
         await self.scheduler.spawn(self._poll_objects(objs=objs, period=period))
         # await self._poll_objects(objs=objs)
         await asyncio.sleep(delay=period)
-        
+
         # Period of poll may change in the polling
         await self.scheduler.spawn(
             self.periodic_poll(objs=objs, period=objs.pop().property_list.send_interval))

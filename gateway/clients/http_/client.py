@@ -296,7 +296,7 @@ class VisioHTTPClient:
         :return: extracted data
         """
         # todo: need re-raise?
-        _LOG.debug(f'{method}: {url} {kwargs}')
+        _LOG.debug(f'{method}: {url} {kwargs.get("data")}')
         async with self._session.request(method=method, url=url, timeout=self.timeout,
                                          **kwargs) as resp:
             data = await self._extract_response_data(response=resp)
