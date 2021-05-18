@@ -1,5 +1,8 @@
+import asyncio
 from logging import getLogger
 from typing import Collection
+
+from pymodbus.exceptions import ModbusException
 
 from ..models import StatusFlags, StatusFlag, BACnetObjModel
 
@@ -17,11 +20,30 @@ class BACnetVerifier:
         [self.verify(obj=obj) for obj in objs]
 
     def verify(self, obj: BACnetObjModel) -> None:
-        self.verify_sf(obj=obj)
-        self.verify_pv(obj=obj)
+        if obj.exception:
+            self.process_exception(obj=obj)
+        else:
+            self.verify_sf(obj=obj)
+            self.verify_pv(obj=obj)
 
-        if obj.pa is not None:
-            self.verify_pa(obj=obj)
+            if obj.pa is not None:
+                self.verify_pa(obj=obj)
+
+    @staticmethod
+    def process_exception(obj: BACnetObjModel) -> None:
+        obj.pv = 'null'
+        obj.sf.enable(flag=StatusFlag.FAULT)
+
+        if isinstance(obj.exception, asyncio.TimeoutError):
+            obj.reliability = 'timeout'
+        elif isinstance(obj.exception, ModbusException):
+            obj.reliability = 'modbus-' + str(obj.exception).replace(' ', '-')
+        elif isinstance(obj.exception, (TypeError, ValueError)):
+            obj.reliability = 'decode-error'
+        else:
+            obj.reliability = str(obj.exception).replace(' ', '-')
+
+        obj.exception = None
 
     @staticmethod
     def verify_sf(obj: BACnetObjModel) -> None:
@@ -46,7 +68,6 @@ class BACnetVerifier:
             obj.pv = 'null'
             obj.sf.enable(flag=StatusFlag.FAULT)
             obj.reliability = 3
-
         elif isinstance(obj.pv, str) and not obj.pv.strip():
             obj.pv = 'null'
             obj.sf.enable(flag=StatusFlag.FAULT)

@@ -16,7 +16,7 @@ from pymodbus.register_read_message import (ReadHoldingRegistersResponse,
                                             ReadRegistersResponseBase)
 
 from ..models import (BACnetDeviceModel, ModbusObjModel, ObjType, Protocol, DataType,
-                      ModbusFunc)
+                      ModbusReadFunc, ModbusWriteFunc)
 from ..utils import get_file_logger
 
 # aliases # TODO
@@ -180,36 +180,32 @@ class AsyncModbusDevice:
         return dct
 
     @property
-    def read_funcs(self) -> dict[ModbusFunc, Callable]:
+    def read_funcs(self) -> dict[ModbusReadFunc, Callable]:
         read_funcs = {
-            ModbusFunc.READ_COILS: self._client.protocol.read_coils,
-            ModbusFunc.READ_DISCRETE_INPUTS: self._client.protocol.read_discrete_inputs,
-            ModbusFunc.READ_HOLDING_REGISTERS: self._client.protocol.read_holding_registers,
-            ModbusFunc.READ_INPUT_REGISTERS: self._client.protocol.read_input_registers,
+            ModbusReadFunc.READ_COILS: self._client.protocol.read_coils,
+            ModbusReadFunc.READ_DISCRETE_INPUTS: self._client.protocol.read_discrete_inputs,
+            ModbusReadFunc.READ_HOLDING_REGISTERS: self._client.protocol.read_holding_registers,
+            ModbusReadFunc.READ_INPUT_REGISTERS: self._client.protocol.read_input_registers,
         }
         return read_funcs
 
     @property
-    def write_funcs(self) -> dict[ModbusFunc, Callable]:
+    def write_funcs(self) -> dict[ModbusWriteFunc, Callable]:
         write_funcs = {
-            ModbusFunc.WRITE_COIL: self._client.protocol.write_coil,
-            ModbusFunc.WRITE_REGISTER: self._client.protocol.write_register,
-            ModbusFunc.WRITE_COILS: self._client.protocol.write_coils,
-            ModbusFunc.WRITE_REGISTERS: self._client.protocol.write_registers,
+            ModbusWriteFunc.WRITE_COIL: self._client.protocol.write_coil,
+            ModbusWriteFunc.WRITE_REGISTER: self._client.protocol.write_register,
+            ModbusWriteFunc.WRITE_COILS: self._client.protocol.write_coils,
+            ModbusWriteFunc.WRITE_REGISTERS: self._client.protocol.write_registers,
         }
         return write_funcs
 
-    async def read(self, obj: ModbusObjModel) -> Union[float, int, str]:
+    async def read(self, obj: ModbusObjModel) -> Optional[Union[float, int, str]]:
         """Read data from Modbus object. Updates object and return value."""
         # todo: set reliability in fail cases
 
         read_func = obj.property_list.modbus.func_read
         address = obj.property_list.modbus.address
         quantity = obj.property_list.modbus.quantity
-
-        if read_func not in self.read_funcs:
-            raise ValueError(f'Expect read function one from {self.read_funcs.keys()} '
-                             f'provided: {read_func}')
         try:
             # Using lock because pymodbus doesn't handle async requests internally.
             # Maybe this will change in pymodbus v3.0.0
@@ -218,33 +214,21 @@ class AsyncModbusDevice:
                                                         count=quantity,
                                                         unit=self.unit)
             if not resp.isError():
-                try:
-                    value = await self.decode(resp=resp, obj=obj)
-                    obj.value = value
-                except (TypeError, ValueError, Exception) as e:
-                    self._LOG.warning(f'Decode error: {e}')
-                    obj.value = 'null'
-                    obj.reliability = 'decode_error'
+                value = await self.decode(resp=resp, obj=obj)
+                obj.pv = value
             else:
-                self._LOG.error(f'Received error response from {address}')
-                obj.value = 'null'
-                obj.reliability = '0x80_response'
-        except asyncio.TimeoutError:
-            self._LOG.warning('Read timeout',
-                              extra={'register': address, 'quantity': quantity})
-            obj.value = 'null'
-            obj.reliability = 'timeout'
-        except ModbusException as e:
-            obj.value = 'null'
-            obj.reliability = str(e)
+                raise ModbusException('0x80-error-response')
+        except (TypeError, ValueError,
+                asyncio.TimeoutError, ModbusException,
+                Exception) as e:
+            obj.exception = e
             self._LOG.warning('Read error',
                               extra={'register': address,
                                      'quantity': quantity,
+                                     'exception_type': type(e),
                                      'exception': str(e)})
-        except Exception as e:
-            self._LOG.critical(f'Unexpected error: {e}')
-        finally:
-            return obj.value
+        else:
+            return obj.pv
 
     async def write(self, value, obj: ModbusObjModel) -> None:
         """Write data to Modbus object."""
@@ -355,12 +339,6 @@ class AsyncModbusDevice:
     #                 self._log.exception(e, exc_info=True)
     #     else:
     #         self._log.info(f'{self} stopped')
-
-    # def _put_device_end_to_verifier(self) -> None:
-    #     """device_id in queue means that device polled.
-    #     Should send collected objects to HTTP
-    #     """
-    #     self._verifier_queue.put(self.id)
 
     async def decode(self, resp: Union[ReadCoilsResponse,
                                        ReadDiscreteInputsResponse,
