@@ -4,7 +4,7 @@ from pydantic import Field, Json, BaseModel, validator
 from pymodbus.constants import Endian
 
 from .data_type import DataType
-from .func_code import ModbusFunc
+from .func_code import ModbusReadFunc, ModbusWriteFunc
 from ..bacnet.obj import BACnetObjModel, BACnetObjPropertyListModel
 from ..bacnet.obj_property import ObjProperty
 
@@ -12,9 +12,10 @@ from ..bacnet.obj_property import ObjProperty
 class ModbusObjPropertyListModel(BaseModel):
     address: int = Field(ge=0)
     quantity: int = Field(gt=0)
-    func_read: ModbusFunc = Field(default=ModbusFunc.READ_HOLDING_REGISTERS,
-                                  alias='functionRead')
-    func_write: ModbusFunc = Field(default=ModbusFunc.WRITE_REGISTER, alias='functionWrite')
+    func_read: ModbusReadFunc = Field(default=ModbusReadFunc.READ_HOLDING_REGISTERS,
+                                      alias='functionRead')
+    func_write: ModbusWriteFunc = Field(default=ModbusWriteFunc.WRITE_REGISTER,
+                                        alias='functionWrite')
 
     # For recalculate A*X+B (X - value)
     scale: float = Field(default=1., description='Multiplier `A` for recalculate A*X+B')
