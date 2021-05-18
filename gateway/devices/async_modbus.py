@@ -170,20 +170,20 @@ class AsyncModbusDevice:
 
     # @staticmethod
     def _sort_objects_by_period(self, objs: Collection[ModbusObjModel]
-                                ) -> dict[int, list[ModbusObjModel]]:
+                                ) -> dict[int, set[ModbusObjModel]]:
         """Creates dict from objects, where key is period, value is collection
         of objects with that period.
 
         Returns:
-            dict, where key is period, value is collection of objects with that period.
+            dict, where key is period, value is set of objects with that period.
         """
         dct = {}
         for obj in objs:
             poll_period = obj.property_list.send_interval
             try:
-                dct[poll_period].append(obj)
+                dct[poll_period].add(obj)
             except KeyError:
-                dct[poll_period] = [obj]
+                dct[poll_period] = {obj}
         self._LOG.debug('Objects to poll are grouped by periods')
         return dct
 
@@ -280,13 +280,15 @@ class AsyncModbusDevice:
             await self._gateway.async_add_job(self.create_client)
             self._gateway.async_add_job(self.start_periodic_polls)
 
-    async def periodic_poll(self, objs: Collection[ModbusObjModel], period: int) -> None:
+    async def periodic_poll(self, objs: set[ModbusObjModel], period: int) -> None:
         self._LOG.debug(f'Periodic poll task created for period {period}')
         await self.scheduler.spawn(self._poll_objects(objs=objs, period=period))
         # await self._poll_objects(objs=objs)
         await asyncio.sleep(delay=period)
-
-        await self.scheduler.spawn(self.periodic_poll(objs=objs, period=period))
+        
+        # Period of poll may change in the polling
+        await self.scheduler.spawn(
+            self.periodic_poll(objs=objs, period=objs.pop().property_list.send_interval))
         # self._poll_tasks[period] = self._loop.create_task(
         #     self.periodic_poll(objs=objs, period=period))
 
@@ -304,8 +306,10 @@ class AsyncModbusDevice:
         await asyncio.gather(*read_tasks)
         _t_delta = datetime.now() - _t0
         if _t_delta.seconds > period:
-            self._LOG.critical('POLL PERIOD IS TOO SHORT! Requests may interfere selves.')
-            # TODO implement period increasing algorithm
+            self._LOG.warning(
+                'Poll period is too short: Requests may interfere selves. Increased to x2!')
+            for obj in objs:
+                obj.property_list.send_interval *= 2
         self._LOG.info('Objects polled', extra={'device_id': self.id,
                                                 'poll_period': period,
                                                 'time_spent': _t_delta.seconds,
