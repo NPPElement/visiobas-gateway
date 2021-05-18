@@ -34,8 +34,7 @@ logging.basicConfig(format=LOG_FORMAT,
 #              stream=sys.stderr
 #              )
 
-async def load_and_run(env_path: Optional[Path] = None) -> None:
-    # todo add usage `env_path`
+async def load_and_run() -> None:
     gateway = await VisioBASGateway.create(settings=GatewaySettings())
     await gateway.async_run()
 
@@ -49,15 +48,16 @@ def main():
                       'bacpypes.iocb._statelog',
                       'bacpypes.task',
 
-                      'pymodbus.client.sync',
-                      'pymodbus.client.asynchronous.async_io',
-                      'pymodbus.transaction',
-                      'pymodbus.framer.socket_framer',
-                      'pymodbus.framer.rtu_framer',
-                      'pymodbus.factory',
-                      'pymodbus.payload',)
+                      # 'pymodbus.client.sync',
+                      # 'pymodbus.client.asynchronous.async_io',
+                      # 'pymodbus.transaction',
+                      # 'pymodbus.framer.socket_framer',
+                      # 'pymodbus.framer.rtu_framer',
+                      # 'pymodbus.factory',
+                      # 'pymodbus.payload',
+                      )
     disable_loggers(loggers=unused_loggers)
-    asyncio.run(load_and_run(env_path=None))
+    asyncio.run(load_and_run())
 
 
 if __name__ == '__main__':
