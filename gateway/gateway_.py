@@ -307,7 +307,9 @@ class VisioBASGateway:
 
             _LOG.debug('Device object created', extra={'device_id': device.id})
             return device
-        except (AttributeError, Exception) as e:
+        except (AttributeError, ValidationError) as e:  # , Exception) as e:
+            _LOG.warning(f'Failed device creation {e}', extra={'device_id': dev_obj.id})
+        except Exception as e:
             _LOG.exception(f'Failed device creation {e}', extra={'device_id': dev_obj.id})
 
     @staticmethod
