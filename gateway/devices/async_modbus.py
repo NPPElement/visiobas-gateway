@@ -215,10 +215,10 @@ class AsyncModbusDevice:
 
             # Using lock because pymodbus doesn't handle async requests internally.
             # Maybe this will change in pymodbus v3.0.0
-            async with self._lock:
-                resp = await self.read_funcs[read_func](address=address,
-                                                        count=quantity,
-                                                        unit=self.unit)
+            # async with self._lock:
+            resp = await self.read_funcs[read_func](address=address,
+                                                    count=quantity,
+                                                    unit=self.unit)
             if not resp.isError():
                 value = await self.decode(resp=resp, obj=obj)
                 obj.pv = value
@@ -291,11 +291,12 @@ class AsyncModbusDevice:
             objs: Objects to poll
             period: Time to start new poll job.
         """
-        read_tasks = [self.read(obj=obj) for obj in objs]
-        self._LOG.debug('Perform reading')
-        _t0 = datetime.now()
-        # await self.scheduler.spawn(asyncio.gather(*read_tasks))
-        await asyncio.gather(*read_tasks)
+        async with self._lock:
+            read_tasks = [self.read(obj=obj) for obj in objs]
+            self._LOG.debug('Perform reading')
+            _t0 = datetime.now()
+            # await self.scheduler.spawn(asyncio.gather(*read_tasks))
+            await asyncio.gather(*read_tasks)
         _t_delta = datetime.now() - _t0
         if _t_delta.seconds > period:
             self._LOG.critical('POLL PERIOD IS TOO SHORT! Requests may interfere selves.')
