@@ -6,15 +6,12 @@ from gateway.models.modbus import ModbusObjModel
 class TestToStr(unittest.TestCase):
     def setUp(self) -> None:
         self._set_AI_BI_objects_data()
+        self.ai_obj = ModbusObjModel(**self.AI_obj_data)
+        self.bi_obj = ModbusObjModel(**self.BI_obj_data)
+        print(self.ai_obj, self.bi_obj, sep='\n')
 
-    def test_parse(self):
-        ai_obj = ModbusObjModel(**self.AI_obj_data)
-        bi_obj = ModbusObjModel(**self.BI_obj_data)
-
-        print(ai_obj, bi_obj, sep='\n')
-
-    # def test_(self):
-    #     pass  # todo
+    def test_to_http_str(self):
+        print(self.ai_obj.to_http_str())
 
     def _set_AI_BI_objects_data(self) -> None:
         self.AI_obj_data = {'103': 'no-fault-detected',

@@ -73,7 +73,8 @@ class BACnetObjModel(BaseBACnetObjModel):
     property_list: BACnetObjPropertyListJsonModel = Field(
         ..., alias=ObjProperty.propertyList.id_str)
 
-    value = Field(default=LastValue(resolution=resolution, value=None))
+    # value = Field(default=LastValue(resolution=resolution, value=None))
+    exception: Optional[Exception] = None
 
     class Config:
         arbitrary_types_allowed = True
@@ -96,7 +97,7 @@ class BACnetObjModel(BaseBACnetObjModel):
             pa_str = self._convert_pa_to_str(pa=self.pa)
             str_ += ' ' + pa_str
 
-        str_ += ' ' + str(self.sf.for_http)  # SF with 3 disabled flags!
+        str_ += ' ' + str(self.sf.for_http.flags)  # SF with 3 disabled flags!
 
         if self.reliability:
             str_ += ' ' + str(self.reliability)
