@@ -11,6 +11,7 @@ from gateway.models import (ObjType, BACnetDeviceModel, ModbusObjModel, Protocol
                             BACnetObjModel, HTTPSettings, GatewaySettings)
 from gateway.utils import get_file_logger
 from gateway.verifier import BACnetVerifier
+
 # _log = getLogger(__name__)
 
 _LOG = get_file_logger(__name__)
@@ -291,7 +292,8 @@ class VisioBASGateway:
         """
         try:
             protocol = dev_obj.property_list.protocol
-            if protocol in {Protocol.MODBUS_TCP, Protocol.MODBUS_RTU}:
+            if protocol in {Protocol.MODBUS_TCP, Protocol.MODBUS_RTU,
+                            Protocol.MODBUS_RTUOVERTCP}:
                 device = await AsyncModbusDevice.create(device_obj=dev_obj, gateway=self)
 
                 # await device.create_client()

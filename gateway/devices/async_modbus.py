@@ -33,6 +33,8 @@ class AsyncModbusDevice:
     # create after add ModbusRTU device to avoid attaching to a different loop
     _serial_lock: Optional[asyncio.Lock] = None
 
+    # todo: serial port counter
+
     def __init__(self, device_obj: BACnetDeviceModel,  # 'BACnetDeviceModel'
                  gateway: 'VisioBASGateway'):
         self._gateway = gateway
@@ -138,7 +140,8 @@ class AsyncModbusDevice:
 
     @property
     def unit(self) -> int:
-        if self._device_obj.property_list.protocol is Protocol.MODBUS_RTU:
+        if self._device_obj.property_list.protocol in {Protocol.MODBUS_RTU,
+                                                       Protocol.MODBUS_RTUOVERTCP}:
             return self._device_obj.property_list.rtu.unit
         else:
             return 0x01
