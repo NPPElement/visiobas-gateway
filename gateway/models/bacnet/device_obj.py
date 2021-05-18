@@ -1,4 +1,5 @@
 from ipaddress import IPv4Address
+from typing import Optional
 
 from pydantic import Field, BaseModel, Json, validator
 from pymodbus.constants import Defaults
@@ -11,8 +12,8 @@ from ..protocol import Protocol
 
 class DeviceRTUPropertyListModel(BaseModel):
     unit: int = Field(...)  # address of serial device
-    port: str = Field(...)  # interface for serial devices
-    baudrate: int = Field(9600, gt=0, lt=115200)  # default=Defaults.Baudrate
+    port: Optional[str] = Field(default=None)  # interface for serial devices
+    baudrate: int = Field(default=9600, gt=0, lt=115200)  # default=Defaults.Baudrate
     stopbits: int = Field(default=Defaults.Stopbits)
     bytesize: int = Field(default=Defaults.Bytesize)
     # timeout: float = Field(default=1)  # 3s is too much
@@ -28,16 +29,12 @@ class DeviceRTUPropertyListModel(BaseModel):
     def __repr__(self) -> str:
         return str(self)
 
-    # @validator('parity')  # todo remove. Hotfix for support 'None' in `parity`
-    # def set_correct_parity(cls, v):
-    #     return Defaults.Parity
-
 
 class DevicePropertyListJsonModel(BaseModel):
-    rtu: DeviceRTUPropertyListModel = Field(default=None)
+    rtu: Optional[DeviceRTUPropertyListModel] = Field(default=None)
     protocol: Protocol = Field(...)
-    address: IPv4Address = Field(default=None)
-    port: int = Field(default=None)
+    address: Optional[IPv4Address] = Field(default=None)
+    port: Optional[int] = Field(default=None)
 
     # todo check
     internal_period: float = Field(default=0.3, alias='internalPeriod')
@@ -45,6 +42,13 @@ class DevicePropertyListJsonModel(BaseModel):
 
     def __repr__(self) -> str:
         return str(self.__dict__)
+
+    @validator('rtu')
+    def port_in_rtu_required(cls, v: DeviceRTUPropertyListModel, values):
+        if values['protocol'] is Protocol.MODBUS_RTU and not v.port:
+            raise ValueError('ModbusRTU required port')
+        return v
+
 
 
 class BACnetDeviceModel(BaseBACnetObjModel):
