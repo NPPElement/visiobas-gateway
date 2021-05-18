@@ -138,9 +138,8 @@ class AsyncModbusDevice:
 
     @property
     def unit(self) -> int:
-        unit = self._device_obj.property_list.rtu.unit
-        if isinstance(unit, int) and not isinstance(unit, bool):
-            return unit
+        if self._device_obj.property_list.protocol is Protocol.MODBUS_RTU:
+            return self._device_obj.property_list.rtu.unit
         else:
             return 0x01
 
@@ -234,11 +233,11 @@ class AsyncModbusDevice:
                 asyncio.TimeoutError, ModbusException,
                 Exception) as e:
             obj.exception = e
-            self._LOG.warning('Read error',
-                              extra={'register': address,
-                                     'quantity': quantity,
-                                     'exception_type': type(e),
-                                     'exception': str(e)})
+            self._LOG.exception(f'Read error: {e}',
+                                extra={'register': address,
+                                       'quantity': quantity,
+                                       'exception_type': type(e),
+                                       'exception': str(e)})
         else:
             return obj.pv
 
