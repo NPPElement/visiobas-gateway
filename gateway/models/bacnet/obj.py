@@ -59,10 +59,10 @@ class BACnetObjModel(BaseBACnetObjModel):
     sf: StatusFlags = Field(default=StatusFlags(flags=0b0000),
                             # alias=ObjProperty.statusFlags.id_str, # todo read from server?
                             description='Status flags')
-    pa: Union[str, tuple, None] = Field(alias=ObjProperty.priorityArray.id_str,
-                                        description='Priority array')
-    reliability: Union[int, str, None] = Field(default=0,
-                                               alias=ObjProperty.reliability.id_str)
+    pa: Optional[Union[str, tuple]] = Field(alias=ObjProperty.priorityArray.id_str,
+                                            description='Priority array')
+    reliability: Optional[Union[int, str]] = Field(default=0,
+                                                   alias=ObjProperty.reliability.id_str)
 
     # todo find public property
     # send_interval: Optional[float] = Field(default=60,
@@ -93,7 +93,7 @@ class BACnetObjModel(BaseBACnetObjModel):
         str_ = '{0} {1} {2}'.format(self.id,
                                     self.type.id,
                                     self.pv, )
-        if self.pa is not None:
+        if self.pa:
             pa_str = self._convert_pa_to_str(pa=self.pa)
             str_ += ' ' + pa_str
 
