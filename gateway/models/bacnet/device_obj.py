@@ -31,8 +31,8 @@ class DeviceRTUPropertyListModel(BaseModel):
 
 
 class DevicePropertyListJsonModel(BaseModel):
-    rtu: Optional[DeviceRTUPropertyListModel] = Field(default=None)
     protocol: Protocol = Field(...)
+    rtu: Optional[DeviceRTUPropertyListModel] = Field(default=None)
     address: Optional[IPv4Address] = Field(default=None)
     port: Optional[int] = Field(default=None)
 
