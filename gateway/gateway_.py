@@ -231,7 +231,7 @@ class VisioBASGateway:
 
             self._devices.update({device.id: device})
             _LOG.info(f'Device loaded', extra={'device_id': dev_id})
-        except AttributeError as e:
+        except (ValidationError, AttributeError) as e:
             _LOG.exception(f'Cannot load device: {e}', extra={'device_id': dev_id})
 
     async def start_device_poll(self, dev_id: int) -> None:
@@ -307,7 +307,7 @@ class VisioBASGateway:
 
             _LOG.debug('Device object created', extra={'device_id': device.id})
             return device
-        except Exception as e:
+        except (AttributeError, Exception) as e:
             _LOG.exception(f'Failed device creation {e}', extra={'device_id': dev_obj.id})
 
     @staticmethod
