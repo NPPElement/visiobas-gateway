@@ -56,8 +56,7 @@ def main():
                       'pymodbus.factory',
                       'pymodbus.payload',)
     disable_loggers(loggers=unused_loggers)
-    asyncio.run(load_and_run(env_path=None), debug=True
-                )
+    asyncio.run(load_and_run(env_path=None))
 
 
 if __name__ == '__main__':

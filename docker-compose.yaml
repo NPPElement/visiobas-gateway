@@ -27,6 +27,7 @@ services:
       - PYTHONPATH=/
 
       # Logging
+      - PYTHONASYNCIODEBUG=0
       #- GW_LOG_FORMAT="%(levelname)-8s [%(asctime)s] [%(threadName)s] %(name)s.%(funcName)s(%(lineno)d): %(message)s"
       - GW_LOG_LEVEL=DEBUG
       - GW_LOG_FILE_SIZE=50 # in MB
