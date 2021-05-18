@@ -361,7 +361,7 @@ class AsyncModbusDevice:
                                        ReadInputRegistersResponse],
                      obj: ModbusObjModel) -> Union[bool, int, float]:
         """Decodes non-error response from modbus read function."""
-        return await self._gateway.add_job(self._decode_response, resp, obj)
+        return await self._gateway.async_add_job(self._decode_response, resp, obj)
 
     def _decode_response(self, resp: Union[ReadCoilsResponse,
                                            ReadDiscreteInputsResponse,
