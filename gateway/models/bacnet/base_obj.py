@@ -18,5 +18,8 @@ class BaseBACnetObjModel(BaseModel):
 
     # todo add MQTT topic property
 
+    def __hash__(self) -> int:
+        return hash((self.type, self.id, self.device_id))
+
     # def __repr__(self) -> str:
     #     return str(self.__dict__)
