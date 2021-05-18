@@ -29,7 +29,9 @@ VisioBASGateway = Any  # ...gateway_loop
 
 class AsyncModbusDevice:
     # upd_period_factor = 0.9  # todo provide from config
-    _serial_lock = asyncio.Lock()
+
+    # create after add ModbusRTU device to avoid attaching to a different loop
+    _serial_lock: Optional[asyncio.Lock] = None
 
     def __init__(self, device_obj: BACnetDeviceModel,  # 'BACnetDeviceModel'
                  gateway: 'VisioBASGateway'):
@@ -97,6 +99,8 @@ class AsyncModbusDevice:
                     loop=loop,
                     timeout=self.timeout
                 )
+                if not self._serial_lock:
+                    self._serial_lock = asyncio.Lock()
             else:
                 raise NotImplementedError('Other methods not support yet.')
         except ModbusException as e:
