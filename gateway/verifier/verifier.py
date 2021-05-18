@@ -35,7 +35,7 @@ class BACnetVerifier:
         obj.pv = 'null'
         obj.sf.enable(flag=StatusFlag.FAULT)
 
-        if isinstance(obj.exception, asyncio.TimeoutError):
+        if isinstance(obj.exception, (asyncio.TimeoutError, asyncio.CancelledError)):
             obj.reliability = 'timeout'
         elif isinstance(obj.exception, ModbusException):
             obj.reliability = 'modbus-' + str(obj.exception).replace(' ', '-')

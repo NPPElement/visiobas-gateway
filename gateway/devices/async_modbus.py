@@ -230,7 +230,8 @@ class AsyncModbusDevice:
             else:
                 raise ModbusException('0x80-error-response')
         except (TypeError, ValueError,
-                asyncio.TimeoutError, ModbusException,
+                asyncio.TimeoutError, asyncio.CancelledError,
+                ModbusException,
                 Exception) as e:
             obj.exception = e
             self._LOG.exception(f'Read error: {e}',
