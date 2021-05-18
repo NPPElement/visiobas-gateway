@@ -275,7 +275,7 @@ class VisioBASGateway:
 
         dev_id = list(objs)[0].device_id
 
-        str_ = ';'.join([obj.to_http_str() for obj in objs])
+        str_ = ';'.join([obj.to_http_str() for obj in objs]) + ';'
         await self.http_client.post_device(servers=self.http_client.servers_post,
                                            dev_id=dev_id,
                                            data=str_)

@@ -12,6 +12,8 @@ class ModbusReadFunc(Enum):
     READ_HOLDING_REGISTERS = 0x03, '0x03'
     READ_INPUT_REGISTERS = 0x04, '0x04'
 
+    READ_FILE = 0x14, '0x14'  # not implemented to usage
+
     def __new__(cls, *values):
         obj = object.__new__(cls)
         for other_value in values:

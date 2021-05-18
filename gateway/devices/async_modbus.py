@@ -207,6 +207,9 @@ class AsyncModbusDevice:
         address = obj.property_list.modbus.address
         quantity = obj.property_list.modbus.quantity
         try:
+            if read_func == ModbusReadFunc.READ_FILE:
+                raise ModbusException('func-not-support')  # todo: implement 0x14 func
+
             # Using lock because pymodbus doesn't handle async requests internally.
             # Maybe this will change in pymodbus v3.0.0
             async with self._lock:
