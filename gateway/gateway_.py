@@ -48,7 +48,6 @@ class VisioBASGateway:
         self.verifier = BACnetVerifier(override_threshold=settings.override_threshold)
 
         self._devices: dict[int, Union[AsyncModbusDevice]] = {}
-        self.modbus_rtu_lock = asyncio.Lock()
 
     @classmethod
     async def create(cls, settings: GatewaySettings) -> 'VisioBASGateway':

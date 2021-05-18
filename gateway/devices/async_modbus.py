@@ -29,6 +29,7 @@ VisioBASGateway = Any  # ...gateway_loop
 
 class AsyncModbusDevice:
     # upd_period_factor = 0.9  # todo provide from config
+    _serial_lock = asyncio.Lock()
 
     def __init__(self, device_obj: BACnetDeviceModel,  # 'BACnetDeviceModel'
                  gateway: 'VisioBASGateway'):
@@ -60,10 +61,6 @@ class AsyncModbusDevice:
 
         await dev._gateway.async_add_job(dev.create_client)
         return dev
-
-    @property
-    def rtu_lock(self) -> asyncio.Lock:
-        return self._gateway.modbus_rtu_lock
 
     def create_client(self) -> None:
         """Initializes asynchronous modbus client.
@@ -219,7 +216,7 @@ class AsyncModbusDevice:
 
             # Using lock because pymodbus doesn't handle async requests internally.
             # Maybe this will change in pymodbus v3.0.0
-            lock = self.rtu_lock if self.protocol is Protocol.MODBUS_RTU else self._lock
+            lock = self._serial_lock if self.protocol is Protocol.MODBUS_RTU else self._lock
             async with lock:
                 resp = await self.read_funcs[read_func](address=address,
                                                         count=quantity,
