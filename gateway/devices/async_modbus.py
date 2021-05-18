@@ -232,13 +232,21 @@ class AsyncModbusDevice:
         except (TypeError, ValueError,
                 asyncio.TimeoutError, asyncio.CancelledError,
                 ModbusException,
-                Exception) as e:
+                ) as e:
+            obj.exception = e
+            self._LOG.warning(f'Read error: {e}',
+                              extra={'register': address,
+                                     'quantity': quantity,
+                                     'exception_type': type(e),
+                                     'exception': str(e)})
+        except Exception as e:
             obj.exception = e
             self._LOG.exception(f'Read error: {e}',
                                 extra={'register': address,
                                        'quantity': quantity,
                                        'exception_type': type(e),
                                        'exception': str(e)})
+
         else:
             return obj.pv
 
