@@ -97,7 +97,7 @@ class BACnetObjModel(BaseBACnetObjModel):
             pa_str = self._convert_pa_to_str(pa=self.pa)
             str_ += ' ' + pa_str
 
-        str_ += ' ' + str(self.sf.for_http.flags)  # SF with 3 disabled flags!
+        str_ += ' ' + str(self.sf.for_http.flags)  # SF with disabled flags!
 
         if self.reliability:
             str_ += ' ' + str(self.reliability)
