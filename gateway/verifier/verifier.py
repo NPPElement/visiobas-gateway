@@ -57,7 +57,7 @@ class BACnetVerifier:
         elif obj.pv == 'inactive':
             obj.pv = 0
 
-        elif obj.pv is None:
+        elif obj.pv in {'null', None}:
             obj.pv = 'null'
             obj.sf.enable(flag=StatusFlag.FAULT)
             # obj.reliability todo is reliability set?
