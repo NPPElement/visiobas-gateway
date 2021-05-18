@@ -61,6 +61,10 @@ class AsyncModbusDevice:
         await dev._gateway.async_add_job(dev.create_client)
         return dev
 
+    @property
+    def rtu_lock(self) -> asyncio.Lock:
+        return self._gateway.modbus_rtu_lock
+
     def create_client(self) -> None:
         """Initializes asynchronous modbus client.
 
@@ -215,10 +219,11 @@ class AsyncModbusDevice:
 
             # Using lock because pymodbus doesn't handle async requests internally.
             # Maybe this will change in pymodbus v3.0.0
-            # async with self._lock:
-            resp = await self.read_funcs[read_func](address=address,
-                                                    count=quantity,
-                                                    unit=self.unit)
+            lock = self.rtu_lock if self.protocol is Protocol.MODBUS_RTU else self._lock
+            async with lock:
+                resp = await self.read_funcs[read_func](address=address,
+                                                        count=quantity,
+                                                        unit=self.unit)
             if not resp.isError():
                 value = await self.decode(resp=resp, obj=obj)
                 obj.pv = value
@@ -291,12 +296,11 @@ class AsyncModbusDevice:
             objs: Objects to poll
             period: Time to start new poll job.
         """
-        async with self._lock:
-            read_tasks = [self.read(obj=obj) for obj in objs]
-            self._LOG.debug('Perform reading')
-            _t0 = datetime.now()
-            # await self.scheduler.spawn(asyncio.gather(*read_tasks))
-            await asyncio.gather(*read_tasks)
+        read_tasks = [self.read(obj=obj) for obj in objs]
+        self._LOG.debug('Perform reading')
+        _t0 = datetime.now()
+        # await self.scheduler.spawn(asyncio.gather(*read_tasks))
+        await asyncio.gather(*read_tasks)
         _t_delta = datetime.now() - _t0
         if _t_delta.seconds > period:
             self._LOG.critical('POLL PERIOD IS TOO SHORT! Requests may interfere selves.')
