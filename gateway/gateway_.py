@@ -231,7 +231,7 @@ class VisioBASGateway:
 
             self._devices.update({device.id: device})
             _LOG.info(f'Device loaded', extra={'device_id': dev_id})
-        except (ValidationError, AttributeError) as e:
+        except (ValidationError, AttributeError, Exception) as e:
             _LOG.exception(f'Cannot load device: {e}', extra={'device_id': dev_id})
 
     async def start_device_poll(self, dev_id: int) -> None:
@@ -288,7 +288,6 @@ class VisioBASGateway:
             Created device.
         # Raises:
         #     ValueError: if unexpected protocol provided.
-        #     # todo add parse model error
         """
         try:
             protocol = dev_obj.property_list.protocol
@@ -307,7 +306,7 @@ class VisioBASGateway:
 
             _LOG.debug('Device object created', extra={'device_id': device.id})
             return device
-        except (AttributeError, ValidationError) as e:  # , Exception) as e:
+        except (AttributeError, ValueError, ValidationError) as e:  # , Exception) as e:
             _LOG.warning(f'Failed device creation {e}', extra={'device_id': dev_obj.id})
         except Exception as e:
             _LOG.exception(f'Failed device creation {e}', extra={'device_id': dev_obj.id})

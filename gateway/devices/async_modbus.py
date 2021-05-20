@@ -30,7 +30,7 @@ VisioBASGateway = Any  # ...gateway_loop
 class AsyncModbusDevice:
     # upd_period_factor = 0.9  # todo provide from config
 
-    # create after add ModbusRTU device to avoid attaching to a different loop
+    # creates after add ModbusRTU device to avoid attaching to a different loop
     _serial_lock: Optional[asyncio.Lock] = None
 
     # todo: serial port counter
@@ -163,15 +163,14 @@ class AsyncModbusDevice:
         return self._device_obj.retries
 
     def load_objects(self, objs: Collection[ModbusObjModel]) -> None:
-        """Loads object to poll.
-        Group by poll period.
-        """
+        """Groups objects by poll period and loads them into device for polling."""
+        assert len(objs)
         objs = self._sort_objects_by_period(objs=objs)
         self._objects = objs
-        self._LOG.debug('Objects to poll are loaded to device')
+        self._LOG.debug('Objects are grouped by period and loads to the device')
 
-    # @staticmethod
-    def _sort_objects_by_period(self, objs: Collection[ModbusObjModel]
+    @staticmethod
+    def _sort_objects_by_period(objs: Collection[ModbusObjModel]
                                 ) -> dict[int, set[ModbusObjModel]]:
         """Creates dict from objects, where key is period, value is collection
         of objects with that period.
@@ -186,8 +185,60 @@ class AsyncModbusDevice:
                 dct[poll_period].add(obj)
             except KeyError:
                 dct[poll_period] = {obj}
-        self._LOG.debug('Objects to poll are grouped by periods')
         return dct
+
+    async def start_periodic_polls(self) -> None:
+        """Starts periodic polls for all periods."""
+
+        if self.is_client_connected:
+            for period, objs in self._objects.items():
+                await self.scheduler.spawn(self.periodic_poll(objs=objs, period=period))
+            self._LOG.debug('Periodic polls started')
+        else:
+            self._LOG.info('pymodbus client is not connected. '
+                           f'Sleeping {self.reconnect_period} sec before next try')
+            await asyncio.sleep(delay=self.reconnect_period)
+            await self._gateway.async_add_job(self.create_client)
+            # self._gateway.async_add_job(self.start_periodic_polls)
+            await self.scheduler.spawn(self.start_periodic_polls())
+
+    async def periodic_poll(self, objs: set[ModbusObjModel], period: int) -> None:
+        self._LOG.debug(f'Periodic poll task created for period {period}')
+        await self.scheduler.spawn(self._poll_objects(objs=objs, period=period))
+        # await self._poll_objects(objs=objs)
+        await asyncio.sleep(delay=period)
+
+        # Period of poll may change in the polling
+        await self.scheduler.spawn(
+            self.periodic_poll(objs=objs, period=objs.pop().property_list.send_interval))
+        # self._poll_tasks[period] = self._loop.create_task(
+        #     self.periodic_poll(objs=objs, period=period))
+
+    async def _poll_objects(self, objs: Collection[ModbusObjModel], period: int) -> None:
+        """Polls objects and set new periodic job in period.
+
+        Args:
+            objs: Objects to poll
+            period: Time to start new poll job.
+        """
+        read_tasks = [self.read(obj=obj) for obj in objs]
+        self._LOG.debug('Perform reading')
+        _t0 = datetime.now()
+        # await self.scheduler.spawn(asyncio.gather(*read_tasks))
+        await asyncio.gather(*read_tasks)
+        _t_delta = datetime.now() - _t0
+        if _t_delta.seconds > period:
+            self._LOG.warning(
+                'Poll period is too short: Requests may interfere selves. Increased to x2!')
+            for obj in objs:
+                obj.property_list.send_interval *= 2
+        self._LOG.info('Objects polled', extra={'device_id': self.id,
+                                                'poll_period': period,
+                                                'time_spent': _t_delta.seconds,
+                                                'objects_polled': len(objs)
+                                                })
+        await self._gateway.verify_objects(objs=objs)
+        await self._gateway.send_objects(objs=objs)
 
     @property
     def read_funcs(self) -> dict[ModbusReadFunc, Callable]:
@@ -238,17 +289,13 @@ class AsyncModbusDevice:
                 ) as e:
             obj.exception = e
             self._LOG.warning(f'Read error: {e}',
-                              extra={'register': address,
-                                     'quantity': quantity,
-                                     'exception_type': type(e),
-                                     'exception': str(e)})
+                              extra={'register': address, 'quantity': quantity,
+                                     'exception_type': type(e), 'exception': str(e)})
         except Exception as e:
             obj.exception = e
-            self._LOG.exception(f'Read error: {e}',
-                                extra={'register': address,
-                                       'quantity': quantity,
-                                       'exception_type': type(e),
-                                       'exception': str(e)})
+            self._LOG.exception(f'Unexpected read error: {e}',
+                                extra={'register': address, 'quantity': quantity,
+                                       'exception_type': type(e), 'exception': str(e)})
 
         else:
             return obj.pv
@@ -276,58 +323,6 @@ class AsyncModbusDevice:
                 # raise rq  # fixme: isn't exception
         except Exception as e:
             self._LOG.exception(e)
-
-    async def start_periodic_polls(self) -> None:
-        """Starts periodic polls for all periods."""
-
-        if self.is_client_connected:
-            for period, objs in self._objects.items():
-                await self.scheduler.spawn(self.periodic_poll(objs=objs, period=period))
-            self._LOG.debug('Periodic polls started')
-        else:
-            self._LOG.info('pymodbus client is not connected. '
-                           f'Sleeping {self.reconnect_period} sec before next try')
-            await asyncio.sleep(delay=self.reconnect_period)
-            await self._gateway.async_add_job(self.create_client)
-            self._gateway.async_add_job(self.start_periodic_polls)
-
-    async def periodic_poll(self, objs: set[ModbusObjModel], period: int) -> None:
-        self._LOG.debug(f'Periodic poll task created for period {period}')
-        await self.scheduler.spawn(self._poll_objects(objs=objs, period=period))
-        # await self._poll_objects(objs=objs)
-        await asyncio.sleep(delay=period)
-
-        # Period of poll may change in the polling
-        await self.scheduler.spawn(
-            self.periodic_poll(objs=objs, period=objs.pop().property_list.send_interval))
-        # self._poll_tasks[period] = self._loop.create_task(
-        #     self.periodic_poll(objs=objs, period=period))
-
-    async def _poll_objects(self, objs: Collection[ModbusObjModel], period: int) -> None:
-        """Polls objects and set new periodic job in period.
-
-        Args:
-            objs: Objects to poll
-            period: Time to start new poll job.
-        """
-        read_tasks = [self.read(obj=obj) for obj in objs]
-        self._LOG.debug('Perform reading')
-        _t0 = datetime.now()
-        # await self.scheduler.spawn(asyncio.gather(*read_tasks))
-        await asyncio.gather(*read_tasks)
-        _t_delta = datetime.now() - _t0
-        if _t_delta.seconds > period:
-            self._LOG.warning(
-                'Poll period is too short: Requests may interfere selves. Increased to x2!')
-            for obj in objs:
-                obj.property_list.send_interval *= 2
-        self._LOG.info('Objects polled', extra={'device_id': self.id,
-                                                'poll_period': period,
-                                                'time_spent': _t_delta.seconds,
-                                                'objects_polled': len(objs)
-                                                })
-        await self._gateway.verify_objects(objs=objs)
-        await self._gateway.send_objects(objs=objs)
 
     # async def start_poll(self):
     #     self._log.info(f'{self} started')

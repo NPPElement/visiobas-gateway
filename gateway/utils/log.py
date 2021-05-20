@@ -1,5 +1,5 @@
 import os
-from logging import getLogger, Formatter, Logger, CRITICAL
+from logging import getLogger, Formatter, Logger
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
