@@ -1,4 +1,4 @@
-from .log import get_file_logger  # , disable_loggers
+from .log_file import get_file_logger  # , disable_loggers
 # from .singleton import Singleton
 from .utils import (read_address_cache,
                     cast_to_bit, cast_2_registers,
