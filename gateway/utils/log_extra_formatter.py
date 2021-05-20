@@ -7,11 +7,12 @@ class ExtraFormatter(Formatter):
     Adopted from: https://stackoverflow.com/questions/56559971/show-extra-fields-when-logging-to-console-in-python
     """
 
-    def_keys = ['name', 'msg', 'args', 'levelname', 'levelno',
+    def_keys = {'name', 'msg', 'args', 'levelname', 'levelno',
                 'pathname', 'filename', 'module', 'exc_info',
                 'exc_text', 'stack_info', 'lineno', 'funcName',
                 'created', 'msecs', 'relativeCreated', 'thread',
-                'threadName', 'processName', 'process', 'message', ]
+                'threadName', 'processName', 'process', 'message',
+                'asctime', }
 
     def format(self, record):
         string = super().format(record)
