@@ -1,5 +1,4 @@
 import asyncio
-from logging import getLogger
 from typing import Collection
 
 # todo: process optional imports
@@ -7,7 +6,7 @@ from pymodbus.exceptions import ModbusException
 
 from ..models import StatusFlags, StatusFlag, BACnetObjModel
 
-_LOG = getLogger(__name__)
+# TODO file logger
 
 
 class BACnetVerifier:
