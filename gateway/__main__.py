@@ -3,30 +3,32 @@ import logging
 import os
 import sys
 
-from gateway import VisioBASGateway
-from gateway.models import GatewaySettings
-from gateway.utils import  get_file_logger  # disable_loggers,
-
 # from aiomisc.log import basic_config
-
-
-# BASE_DIR = Path(__file__).resolve().parent
-# GATEWAY_CFG_PATH = BASE_DIR / 'config/gateway.yaml'
+from gateway.gateway_ import VisioBASGateway
+from gateway.models import GatewaySettings
+from utils.log_extra_formatter import ExtraFormatter
 
 # Set logging
-LOG_FORMAT = os.environ.get('LOG_FORMAT',
-                            '%(levelname)-8s [%(asctime)s] %(name)s'
-                            '.%(funcName)s(%(lineno)d): %(message)s'
-                            )
 LOG_LEVEL = os.getenv('GW_LOG_LEVEL', 'DEBUG')
-# _log = logging.getLogger(__name__)
-_log = get_file_logger(__name__)
-_log.propagate = False
+LOG_FORMAT = os.environ.get('LOG_FORMAT', '%(levelname)-8s [%(asctime)s] %(name)s'
+                                          '.%(funcName)s(%(lineno)d): %(message)s')
 
-logging.basicConfig(format=LOG_FORMAT,
-                    level=LOG_LEVEL,
-                    stream=sys.stdout, )
+loggers_to_disable = ['pymodbus', ]  # 'BAC0_Root', 'bacpypes',]
+for name in loggers_to_disable:
+    _logger = logging.getLogger(name=name)
+    _logger.propagate = False
 
+root_log = logging.getLogger()
+root_log.setLevel(LOG_LEVEL)
+hdlr = logging.StreamHandler(stream=sys.stderr)
+fmt = ExtraFormatter(fmt=LOG_FORMAT)
+hdlr.setFormatter(fmt=fmt)
+root_log.addHandler(hdlr=hdlr)
+
+
+# logging.basicConfig(format=LOG_FORMAT,
+#                     level=LOG_LEVEL,
+#                     stream=sys.stdout)
 
 # basic_config(level=logging.DEBUG, buffered=True, flush_interval=2,
 #              # log_format=_log_fmt,
@@ -39,7 +41,6 @@ async def load_and_run() -> None:
 
 
 def main():
-    # lib_logs_to_disable = ['BAC0_Root', 'bacpypes', 'pymodbus',]
     # unused_loggers = ('BAC0_Root.BAC0.scripts.Base.Base',
     #                   'BAC0_Root.BAC0.scripts.Lite.Lite',
     #                   'BAC0_Root.BAC0.tasks.UpdateCOV.Update_local_COV',
