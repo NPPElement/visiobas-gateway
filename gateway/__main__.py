@@ -6,7 +6,7 @@ import sys
 # from aiomisc.log import basic_config
 from gateway.gateway_ import VisioBASGateway
 from gateway.models import GatewaySettings
-from utils.log_extra_formatter import ExtraFormatter
+from gateway.utils import ExtraFormatter
 
 # Set logging
 LOG_LEVEL = os.getenv('GW_LOG_LEVEL', 'DEBUG')

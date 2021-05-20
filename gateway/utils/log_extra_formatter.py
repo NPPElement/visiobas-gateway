@@ -1,7 +1,7 @@
-import logging
+from logging import Formatter
 
 
-class ExtraFormatter(logging.Formatter):
+class ExtraFormatter(Formatter):
 
     def format(self, record):
         string = super().format(record)

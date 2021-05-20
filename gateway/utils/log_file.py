@@ -3,7 +3,7 @@ from logging import getLogger, Logger
 from logging.handlers import RotatingFileHandler
 from typing import Optional, Union, Any
 
-from .log_extra_formatter import ExtraFormatter
+# from .log_extra_formatter import ExtraFormatter
 from gateway import BASE_DIR
 
 _MEGABYTE = 1024 ** 2
