@@ -12,11 +12,13 @@ class BaseBACnetObjModel(BaseModel):
     device_id: int = Field(..., gt=0, alias=ObjProperty.deviceId.id_str)
     id: int = Field(..., ge=0, alias=ObjProperty.objectIdentifier.id_str)
 
-    # name: str = Field(..., alias=ObjProperty.objectName.id_str) deprecated
+    name: str = Field(..., alias=ObjProperty.objectName.id_str)
 
     property_list: Json = Field(alias=ObjProperty.propertyList.id_str)
 
-    # todo add MQTT topic property
+    @property
+    def mqtt_topic(self) -> str:
+        return self.name.replace(':', '/').replace('.', '/')
 
     def __hash__(self) -> int:
         return hash((self.type, self.id, self.device_id))
