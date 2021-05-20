@@ -1,4 +1,4 @@
-from .log import get_file_logger, disable_loggers
+from .log import get_file_logger  # , disable_loggers
 # from .singleton import Singleton
 from .utils import (read_address_cache,
                     cast_to_bit, cast_2_registers,
@@ -10,7 +10,7 @@ __all__ = ['read_address_cache',
            'get_fault_obj_properties',
            'cast_2_registers',
            'get_file_logger',
-           'disable_loggers',
+           #'disable_loggers',
 
            # 'Singleton',
            ]

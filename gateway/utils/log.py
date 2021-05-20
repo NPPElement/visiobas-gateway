@@ -36,10 +36,10 @@ def get_file_logger(name: str, size_bytes: int = LOG_FILE_SIZE,
     return logger
 
 
-def disable_loggers(loggers: tuple[str, ...]) -> None:
-    """Disables loggers."""
-
-    for logger in loggers:
-        logger = getLogger(logger)
-        logger.setLevel(level=CRITICAL)
-        logger.handlers = []
+# def disable_loggers(loggers: tuple[str, ...]) -> None:
+#     """Disables loggers."""
+#
+#     for logger in loggers:
+#         logger = getLogger(logger)
+#         logger.setLevel(level=CRITICAL)
+#         logger.handlers = []

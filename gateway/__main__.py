@@ -2,12 +2,10 @@ import asyncio
 import logging
 import os
 import sys
-from pathlib import Path
-from typing import Optional
 
 from gateway import VisioBASGateway
 from gateway.models import GatewaySettings
-from gateway.utils import disable_loggers, get_file_logger
+from gateway.utils import  get_file_logger  # disable_loggers,
 
 # from aiomisc.log import basic_config
 
@@ -23,6 +21,7 @@ LOG_FORMAT = os.environ.get('LOG_FORMAT',
 LOG_LEVEL = os.getenv('GW_LOG_LEVEL', 'DEBUG')
 # _log = logging.getLogger(__name__)
 _log = get_file_logger(__name__)
+_log.propagate = False
 
 logging.basicConfig(format=LOG_FORMAT,
                     level=LOG_LEVEL,
@@ -40,23 +39,24 @@ async def load_and_run() -> None:
 
 
 def main():
-    unused_loggers = ('BAC0_Root.BAC0.scripts.Base.Base',
-                      'BAC0_Root.BAC0.scripts.Lite.Lite',
-                      'BAC0_Root.BAC0.tasks.UpdateCOV.Update_local_COV',
-                      'BAC0_Root.BAC0.tasks.TaskManager.Manager',
-                      'BAC0_Root.BAC0.tasks.RecurringTask.RecurringTask',
-                      'bacpypes.iocb._statelog',
-                      'bacpypes.task',
-
-                      # 'pymodbus.client.sync',
-                      # 'pymodbus.client.asynchronous.async_io',
-                      # 'pymodbus.transaction',
-                      # 'pymodbus.framer.socket_framer',
-                      # 'pymodbus.framer.rtu_framer',
-                      # 'pymodbus.factory',
-                      # 'pymodbus.payload',
-                      )
-    disable_loggers(loggers=unused_loggers)
+    # lib_logs_to_disable = ['BAC0_Root', 'bacpypes', 'pymodbus',]
+    # unused_loggers = ('BAC0_Root.BAC0.scripts.Base.Base',
+    #                   'BAC0_Root.BAC0.scripts.Lite.Lite',
+    #                   'BAC0_Root.BAC0.tasks.UpdateCOV.Update_local_COV',
+    #                   'BAC0_Root.BAC0.tasks.TaskManager.Manager',
+    #                   'BAC0_Root.BAC0.tasks.RecurringTask.RecurringTask',
+    #                   'bacpypes.iocb._statelog',
+    #                   'bacpypes.task',
+    #
+    #                   # 'pymodbus.client.sync',
+    #                   # 'pymodbus.client.asynchronous.async_io',
+    #                   # 'pymodbus.transaction',
+    #                   # 'pymodbus.framer.socket_framer',
+    #                   # 'pymodbus.framer.rtu_framer',
+    #                   # 'pymodbus.factory',
+    #                   # 'pymodbus.payload',
+    #                   )
+    # disable_loggers(loggers=unused_loggers)
     asyncio.run(load_and_run())
 
 
