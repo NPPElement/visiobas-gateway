@@ -1,5 +1,4 @@
 import asyncio
-from pathlib import Path
 from typing import Callable, Any, Optional, Union, Awaitable, Collection
 
 import aiojobs
@@ -20,15 +19,15 @@ _LOG = get_file_logger(__name__)
 class VisioBASGateway:
     """VisioBAS IoT Gateway."""
 
-    BASE_DIR = Path(__file__).resolve().parent
-    CFG_DIR = BASE_DIR / 'config'
-
-    HTTP_CFG_PATH = CFG_DIR / 'http.yaml'
-    MQTT_CFG_PATH = CFG_DIR / 'mqtt.yaml'
-
-    BACNET_ADDRESS_CACHE_PATH = BASE_DIR / 'connectors/bacnet/address_cache'
-    MODBUS_ADDRESS_CACHE_PATH = BASE_DIR / 'devices/modbus_address_cache'
-    MODBUS_RTU_ADDRESS_CACHE_PATH = 'connectors/modbus/rtu.yaml'
+    # BASE_DIR = Path(__file__).resolve().parent
+    # CFG_DIR = BASE_DIR / 'config'
+    #
+    # HTTP_CFG_PATH = CFG_DIR / 'http.yaml'
+    # MQTT_CFG_PATH = CFG_DIR / 'mqtt.yaml'
+    #
+    # BACNET_ADDRESS_CACHE_PATH = BASE_DIR / 'connectors/bacnet/address_cache'
+    # MODBUS_ADDRESS_CACHE_PATH = BASE_DIR / 'devices/modbus_address_cache'
+    # MODBUS_RTU_ADDRESS_CACHE_PATH = 'connectors/modbus/rtu.yaml'
 
     def __init__(self, settings: GatewaySettings):
         # self.loop = asyncio.new_event_loop()
