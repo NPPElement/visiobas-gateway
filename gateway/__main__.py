@@ -41,23 +41,6 @@ async def load_and_run() -> None:
 
 
 def main():
-    # unused_loggers = ('BAC0_Root.BAC0.scripts.Base.Base',
-    #                   'BAC0_Root.BAC0.scripts.Lite.Lite',
-    #                   'BAC0_Root.BAC0.tasks.UpdateCOV.Update_local_COV',
-    #                   'BAC0_Root.BAC0.tasks.TaskManager.Manager',
-    #                   'BAC0_Root.BAC0.tasks.RecurringTask.RecurringTask',
-    #                   'bacpypes.iocb._statelog',
-    #                   'bacpypes.task',
-    #
-    #                   # 'pymodbus.client.sync',
-    #                   # 'pymodbus.client.asynchronous.async_io',
-    #                   # 'pymodbus.transaction',
-    #                   # 'pymodbus.framer.socket_framer',
-    #                   # 'pymodbus.framer.rtu_framer',
-    #                   # 'pymodbus.factory',
-    #                   # 'pymodbus.payload',
-    #                   )
-    # disable_loggers(loggers=unused_loggers)
     asyncio.run(load_and_run())
 
 
