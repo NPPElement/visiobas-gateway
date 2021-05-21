@@ -228,14 +228,9 @@ class VisioBASGateway:
         Returns:
             Parsed and validated device object, if no errors throw.
         """
-        #try:
         dev_obj = BACnetDeviceModel(**dev_data)
-        _LOG.debug('Device object parsed',
-                    extra={'device_object': str(dev_obj)})
+        _LOG.debug('Device object parsed', extra={'device_object': dev_obj})
         return dev_obj
-        # except ValidationError as e:
-        #     _LOG.warning('Not valid device data',
-        #                  extra={'device_data': dev_data, 'exc': e, })
 
     def _extract_objects(self, objs_data: tuple, dev_obj: BACnetDeviceModel
                          ) -> list[ModbusObjModel]:
