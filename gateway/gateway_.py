@@ -222,20 +222,20 @@ class VisioBASGateway:
         _LOG.info('Device polling started', extra={'device_id': dev_id})
 
     @staticmethod
-    def _parse_device_obj(dev_data: dict) -> BACnetDeviceModel:
+    def _parse_device_obj(dev_data: dict) -> Optional[BACnetDeviceModel]:
         """Parses and validate device object data from JSON.
 
         Returns:
-            Parsed and validated device object.
+            Parsed and validated device object, if no errors throw.
         """
-        try:
-            dev_obj = BACnetDeviceModel(**dev_data)
-            _LOG.debug('Device object parsed',
-                       extra={'device_object': str(dev_obj)})
-            return dev_obj
-        except ValidationError as e:
-            _LOG.warning('Not valid device data',
-                         extra={'device_data': dev_data, 'exc': e, })
+        #try:
+        dev_obj = BACnetDeviceModel(**dev_data)
+        _LOG.debug('Device object parsed',
+                    extra={'device_object': str(dev_obj)})
+        return dev_obj
+        # except ValidationError as e:
+        #     _LOG.warning('Not valid device data',
+        #                  extra={'device_data': dev_data, 'exc': e, })
 
     def _extract_objects(self, objs_data: tuple, dev_obj: BACnetDeviceModel
                          ) -> list[ModbusObjModel]:
@@ -264,7 +264,8 @@ class VisioBASGateway:
                                            dev_id=dev_id,
                                            data=str_)
 
-    async def device_factory(self, dev_obj: BACnetDeviceModel) -> Union[AsyncModbusDevice]:
+    async def device_factory(self, dev_obj: BACnetDeviceModel
+                             ) -> Optional[Union[AsyncModbusDevice]]:
         """Creates device for provided protocol.
 
         Returns:
@@ -291,7 +292,7 @@ class VisioBASGateway:
 
     @staticmethod
     def object_factory(dev_obj: BACnetDeviceModel, obj_data: dict[str, Any]
-                       ) -> Optional[Union[ModbusObjModel]]:
+                       ) -> Optional[Union[ModbusObjModel, BACnetObjModel]]:
         """Creates object for provided protocol data.
 
         Returns:
