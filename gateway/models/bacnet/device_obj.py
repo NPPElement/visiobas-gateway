@@ -50,7 +50,6 @@ class DevicePropertyListJsonModel(BaseModel):
         return v
 
 
-
 class BACnetDeviceModel(BaseBACnetObjModel):
     timeout: int = Field(..., alias=ObjProperty.apduTimeout.id_str)
     retries: int = Field(default=2, alias=ObjProperty.numberOfApduRetries.id_str)
@@ -61,8 +60,11 @@ class BACnetDeviceModel(BaseBACnetObjModel):
     property_list: Json[DevicePropertyListJsonModel] = Field(
         ..., alias=ObjProperty.propertyList.id_str)
 
+    def __str__(self) -> str:
+        return self.__class__.__name__ + str(self.__dict__)
+
     def __repr__(self) -> str:
-        return f'DeviceObj{self.__dict__}'
+        return str(self)
 
     # @validator('property_list')
     # def parse_rtu_pl(cls, pl: str) -> DevicePropertyListWrap:
