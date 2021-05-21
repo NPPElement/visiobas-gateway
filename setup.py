@@ -6,10 +6,10 @@ from pathlib import Path
 from pkg_resources import parse_requirements
 from setuptools import find_packages, setup
 
+from gateway import __version__, __author__, __email__, __license__, __maintainer__
+
 _req_path = Path().cwd() / 'requirements.txt'
 requirements = [str(r) for r in parse_requirements(_req_path.read_text())]
-
-# from gateway import __version__, __author__, __email__, __license__
 
 # module_name = 'visiobas_gateway'
 #
@@ -20,22 +20,13 @@ requirements = [str(r) for r in parse_requirements(_req_path.read_text())]
 # ).load_module()
 
 
-# def load_requirements(fname: str) -> list[str]:
-#     requirements = []
-#     with open(fname, 'r') as fp:
-#         for req in parse_requirements(fp.read()):
-#             extras = '[{}]'.format(','.join(req.extras)) if req.extras else ''
-#             requirements.append(
-#                 '{}{}{}'.format(req.name, extras, req.specifier)
-#             )
-#     return requirements
-
-
 setup(name='visiobas-gateway',
-      version='3.0.0',
-      author='VisioBAS, Ovtsin Matvey',
-      # author_email=__email__,
-      license='GNU General Public License v3.0',
+      version=__version__,
+      author=__author__,
+      author_email=__email__,
+      maintainer=__maintainer__,
+      maintainer_email=__email__,
+      license=__license__,
       description='VisiBAS IoT gateway.',
       long_description=open('README.md').read(),
       url='https://github.com/NPPElement/visiobas-gateway',
@@ -46,7 +37,7 @@ setup(name='visiobas-gateway',
                    'Programming Language :: Python :: Implementation :: CPython',
                    ],
       python_requires='>=3.9',
-      packages=find_packages(exclude=('tests', )),
+      packages=find_packages(exclude=('tests',)),
       install_requires=requirements,
       # extras_require={'dev': load_requirements('requirements.dev.txt')},
       entry_points={'console_scripts': ['gateway = gateway.__main__:main',
