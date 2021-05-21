@@ -187,6 +187,12 @@ class AsyncModbusDevice:
                 dct[poll_period] = {obj}
         return dct
 
+    async def stop(self) -> None:
+        """Waits for finish of all polling tasks with timeout, and stop polling.
+        Closes client.
+        """
+        # TODO:
+
     async def start_periodic_polls(self) -> None:
         """Starts periodic polls for all periods."""
 
@@ -333,10 +339,11 @@ class AsyncModbusDevice:
         """Decodes non-error response from modbus read function."""
         return await self._gateway.async_add_job(self._decode_response, resp, obj)
 
-    def _decode_response(self, resp: Union[ReadCoilsResponse,
-                                           ReadDiscreteInputsResponse,
-                                           ReadHoldingRegistersResponse,
-                                           ReadInputRegistersResponse],
+    @staticmethod
+    def _decode_response(resp: Union[ReadCoilsResponse,
+                                     ReadDiscreteInputsResponse,
+                                     ReadHoldingRegistersResponse,
+                                     ReadInputRegistersResponse],
                          obj: ModbusObjModel) -> Union[bool, int, float]:
 
         data_length = obj.property_list.modbus.data_length
