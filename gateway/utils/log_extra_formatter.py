@@ -19,5 +19,5 @@ class ExtraFormatter(Formatter):
         extra = {k: v for k, v in record.__dict__.items()
                  if k not in self.def_keys}
         if len(extra) > 0:
-            string += " - extra: " + str(extra)
+            string += ' | extra:' + str(extra)
         return string

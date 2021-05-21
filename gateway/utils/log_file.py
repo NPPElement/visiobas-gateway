@@ -6,14 +6,14 @@ from typing import Optional, Union, Any
 from gateway import BASE_DIR
 from .log_extra_formatter import ExtraFormatter
 
-_MEGABYTE = 1024 ** 2
+_MEGABYTE = 10 ** 6
 
 
 def get_file_logger(name: str,
                     filename: Optional[Any] = None,
                     level: Optional[Union[int, str]] = None,
-                    log_size_bytes: Optional[int] = None,
-                    log_format: Optional[str] = None
+                    size_mb: Optional[int] = None,
+                    fmt: Optional[str] = None
                     ) -> Logger:
     """Returns Logger with RotatingFileHandler.
 
@@ -24,9 +24,9 @@ def get_file_logger(name: str,
         filename:
         level: logging level.
             Default: DEBUG
-        log_size_bytes: Size of file in MB.
+        size_mb: Size of file in MB.
             Default: 50 MB
-        log_format: Using format of logs
+        fmt: Using format of logs
 
     Returns:
         Logger with RotatingFileHandler.
@@ -34,20 +34,19 @@ def get_file_logger(name: str,
 
     log_level = level or os.getenv('GW_LOG_FILE_LEVEL', 'DEBUG')
     log_filename = filename or BASE_DIR / f'logs/{name}.log'
-    log_size_bytes = log_size_bytes or int(os.getenv('GW_LOG_FILE_SIZE', 50)) * _MEGABYTE
-    log_format = log_format or os.getenv('GW_LOG_FORMAT',
-                                         '%(levelname)-8s [%(asctime)s] %(name)s'
-                                         '.%(funcName)s(%(lineno)d): %(message)s')
+    size_mb = (size_mb or int(os.getenv('GW_LOG_FILE_SIZE', 50))) * _MEGABYTE
+    fmt = fmt or os.getenv('GW_LOG_FORMAT', '%(levelname)-8s [%(asctime)s] %(name)s'
+                                            '.%(funcName)s(%(lineno)d): %(message)s')
     logger = getLogger(name)
     logger.setLevel(level=log_level)
     # logger.handlers = []  # Remove all handlers
 
     file_handler = RotatingFileHandler(filename=log_filename,
                                        mode='a',
-                                       maxBytes=log_size_bytes,
+                                       maxBytes=size_mb,
                                        backupCount=1,
                                        encoding='utf-8', )
-    formatter = ExtraFormatter(fmt=log_format)
+    formatter = ExtraFormatter(fmt=fmt)
     file_handler.setFormatter(fmt=formatter)
     logger.addHandler(file_handler)
 
