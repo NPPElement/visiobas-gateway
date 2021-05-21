@@ -212,8 +212,7 @@ class VisioBASGateway:
         except (ValidationError, AttributeError, Exception) as e:
             _LOG.exception('Cannot load device',
                            extra={'device_id': dev_id,
-                                  'exc_type': type(e), 'exc_info': e,
-                                  'exc_traceback': e.__traceback__})
+                                  'exc_type': type(e), 'exc': e, })
 
     async def start_device_poll(self, dev_id: int) -> None:
         """Starts poll of device."""
@@ -235,8 +234,7 @@ class VisioBASGateway:
         except ValidationError as e:
             _LOG.warning('Not valid device data',
                          extra={'device_data': dev_data,
-                                'exc_type': type(e), 'exc_info': e,
-                                'exc_traceback': e.__traceback__})
+                                'exc_type': type(e), 'exc': e, })
 
     def _extract_objects(self, objs_data: tuple, dev_obj: BACnetDeviceModel
                          ) -> list[ModbusObjModel]:
@@ -278,14 +276,15 @@ class VisioBASGateway:
                 device = await AsyncModbusDevice.create(device_obj=dev_obj, gateway=self)
             elif protocol == Protocol.BACNET:
                 device = None  # todo
+            else:
+                raise NotImplementedError('Device factory not implemented')
 
             _LOG.debug('Device object created', extra={'device_id': device.id})
             return device
         except (AttributeError, ValidationError, Exception) as e:
-            _LOG.warning('Failed device creation',
-                         extra={'device_id': dev_obj.id,
-                                'exc_type': type(e), 'exc_info': e,
-                                'exc_traceback': e.__traceback__})
+            _LOG.exception('Failed device creation',
+                           extra={'device_id': dev_obj.id,
+                                  'exc_type': type(e), 'exc': e, })
         # except Exception as e:
         #     _LOG.exception(f'Failed device creation {e}', extra={'device_id': dev_obj.id})
 
@@ -312,5 +311,4 @@ class VisioBASGateway:
             _LOG.exception('Failed polling object creation',
                            extra={'device_id': dev_obj.id,
                                   'object_data': obj_data,
-                                  'exc_type': type(e), 'exc_info': e,
-                                  'exc_traceback': e.__traceback__})
+                                  'exc_type': type(e), 'exc': e, })

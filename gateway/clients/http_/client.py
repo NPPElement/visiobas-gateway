@@ -176,10 +176,10 @@ class VisioHTTPClient:
             return True
 
         except aiohttp.ClientResponseError as e:
-            _LOG.warning('Failure logout', extra={'exc_type': type(e), 'exc_info': e, })
+            _LOG.warning('Failure logout', extra={'exc_type': type(e), 'exc': e, })
             return False
         except Exception as e:
-            _LOG.exception('Logout error:', extra={'exc_type': type(e), 'exc_info': e, })
+            _LOG.exception('Logout error:', extra={'exc_type': type(e), 'exc': e, })
             return False
 
     # todo use async_backoff decorator for retry?
@@ -254,11 +254,11 @@ class VisioHTTPClient:
         except aiohttp.ClientError as e:
             _LOG.warning('Failed authorization',
                          extra={'url': server.current_url, 'exc_type': type(e),
-                                'exc_info': e, })
+                                'exc': e, })
         except Exception as e:
             _LOG.exception('Failed authorization to  {server}: {e}',
                            extra={'url': server.current_url, 'exc_type': type(e),
-                                  'exc_info': e, })
+                                  'exc': e, })
         finally:
             return server.is_authorized
 
@@ -289,7 +289,7 @@ class VisioHTTPClient:
         except Exception as e:
             _LOG.exception('Failed to send',
                            extra={'device_id': dev_id, 'exc_type': type(e),
-                                  'exc_info': e, })
+                                  'exc': e, })
             return False
 
     async def _rq(self, method: str, url: str, **kwargs) -> Union[list, dict]:
@@ -323,7 +323,7 @@ class VisioHTTPClient:
                 except LookupError as e:
                     # fixme
                     _LOG.warning(f'Data extracting failed (most likely in logout)',
-                                 extra={'exc_type': type(e),  'exc_info': e, })
+                                 extra={'exc_type': type(e),  'exc': e, })
             else:
                 raise aiohttp.ClientError(f'Failure response: {response.url}\n{_json}')
         # else:

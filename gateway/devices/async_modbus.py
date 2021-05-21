@@ -106,8 +106,7 @@ class AsyncModbusDevice:
         except ModbusException as e:
             _LOG.warning('Cannot create client',
                          extra={'device_id': self.id,
-                                'exc_type': type(e), 'exc_info': e,
-                                'exc_traceback': e.__traceback__})
+                                'exc_type': type(e), 'exc': e, })
         else:
             _LOG.debug('Client created', extra={'device_id': self.id})
 
@@ -298,7 +297,7 @@ class AsyncModbusDevice:
             _LOG.warning('Read error',
                          extra={'device_id': self.id,
                                 'register': address, 'quantity': quantity,
-                                'exc_type': type(e), 'exc_info': e,
+                                'exc_type': type(e), 'exc': e,
                                 # 'exc_traceback': e.__traceback__
                                 })
         # except Exception as e:
