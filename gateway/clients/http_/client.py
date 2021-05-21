@@ -160,7 +160,7 @@ class VisioHTTPClient:
         """
         servers = servers or [self.server_get, *self.servers_post]
 
-        _LOG.debug(f'Logging out from: {servers} ...')
+        _LOG.debug('Logging out', extra={'servers': servers})
         try:
             logout_tasks = [self._rq(method='GET',
                                      url=server.current_url + self._LOGOUT_URL,
@@ -171,14 +171,15 @@ class VisioHTTPClient:
             # clear auth data
             [server.clear_auth_data() for server in servers]
 
-            _LOG.info(f'Logout from {servers}: {res}')
+            _LOG.info('Logged out',
+                      extra={'servers': servers, 'result': res})
             return True
 
         except aiohttp.ClientResponseError as e:
-            _LOG.warning(f'Failure logout: {e}')
+            _LOG.warning('Failure logout', extra={'exc_type': type(e), 'exc_info': e, })
             return False
         except Exception as e:
-            _LOG.exception(f'Logout error: {e}')
+            _LOG.exception('Logout error:', extra={'exc_type': type(e), 'exc_info': e, })
             return False
 
     # todo use async_backoff decorator for retry?
@@ -206,10 +207,9 @@ class VisioHTTPClient:
         Returns:
             True: Can continue with current authorizations
             False: Cannot continue
-
-        # fixme: use `extra`
         """
-        _LOG.debug(f'Logging in to GET:{get_server}, POST:{post_servers}...')
+        _LOG.debug('Logging in to servers',
+                   extra={'server_get': get_server, 'servers_post': post_servers})
 
         res = await asyncio.gather(
             self._login_server(server=get_server),
@@ -220,7 +220,7 @@ class VisioHTTPClient:
         successfully_authorized = bool(is_get_authorized and is_post_authorized)
 
         if successfully_authorized:
-            _LOG.info(f'Successfully authorized to GET:{get_server}, POST:{post_servers}')
+            _LOG.info('Successfully authorized')
         else:
             _LOG.warning('Failed authorizations!')
         return successfully_authorized
@@ -234,15 +234,10 @@ class VisioHTTPClient:
         Returns:
             True: Server is authorized
             False: Server is not authorized
-
-        # fixme: use `extra`
         """
-        _LOG.debug(f'Authorization to {server}')
+        _LOG.debug('Perform authorization', extra={'server': server})
         try:
-            # auth_data = await self._rq(method='POST',
-            #                            url=server.current_url + '/' + self._AUTH_URL,
-            #                            json=server.auth_payload)
-            # server.set_auth_data(**auth_data)
+
             while not server.is_authorized:  # and server.switch_server():
                 auth_data = await self._rq(method='POST',
                                            url=server.current_url + '/' + self._AUTH_URL,
@@ -253,14 +248,17 @@ class VisioHTTPClient:
                     break
 
             if server.is_authorized:
-                _LOG.info(f'Successfully authorized to {server}')
+                _LOG.info('Successfully authorized', extra={'server': server})
             else:
-                _LOG.warning(f'Failed authorization to {server}')
+                _LOG.warning('Failed authorization', extra={'server': server})
         except aiohttp.ClientError as e:
-            _LOG.warning(f'Failed authorization to {server}: {e}')
+            _LOG.warning('Failed authorization',
+                         extra={'url': server.current_url, 'exc_type': type(e),
+                                'exc_info': e, })
         except Exception as e:
-            _LOG.exception(f'Failed authorization to  {server}: {e}',
-                           extra={'url': server.current_url, 'exception': str(e)})
+            _LOG.exception('Failed authorization to  {server}: {e}',
+                           extra={'url': server.current_url, 'exc_type': type(e),
+                                  'exc_info': e, })
         finally:
             return server.is_authorized
 
@@ -285,10 +283,13 @@ class VisioHTTPClient:
                          ) for server in servers
             ]
             await asyncio.gather(*post_tasks)
-            _LOG.debug(f'Successfully sent [{dev_id}]\'s data to {servers}')
+            _LOG.debug('Successfully sent data',
+                       extra={'device_id': dev_id, 'servers': servers})
             return True
         except Exception as e:
-            _LOG.exception(f'Failed to send: {e}')
+            _LOG.exception('Failed to send',
+                           extra={'device_id': dev_id, 'exc_type': type(e),
+                                  'exc_info': e, })
             return False
 
     async def _rq(self, method: str, url: str, **kwargs) -> Union[list, dict]:
@@ -296,7 +297,8 @@ class VisioHTTPClient:
         :return: extracted data
         """
         # todo: need re-raise?
-        _LOG.debug(f'{method}: {url} {kwargs.get("data")}')
+        _LOG.debug('Perform request',
+                   extra={'method': method, 'url': url, 'data': kwargs.get('data')})
         async with self._session.request(method=method, url=url, timeout=self.timeout,
                                          **kwargs) as resp:
             data = await self._extract_response_data(response=resp)
@@ -314,18 +316,16 @@ class VisioHTTPClient:
             response.raise_for_status()
             _json = await response.json()
             if _json['success']:
-                _LOG.debug(f'Successfully response: {response.url}')
+                _LOG.debug('Successfully response',
+                           extra={'url': response.url})
                 try:
                     return _json['data']
                 except LookupError as e:
                     # fixme
-                    _LOG.warning(f'Extracting failed (most likely in logout): {e}',
-                                 # exc_info=True
-                                 )
+                    _LOG.warning(f'Data extracting failed (most likely in logout)',
+                                 extra={'exc_type': type(e),  'exc_info': e, })
             else:
-                raise aiohttp.ClientError(
-                    f'Failure response: {response.url}\n{_json}'
-                )
+                raise aiohttp.ClientError(f'Failure response: {response.url}\n{_json}')
         # else:
         #     # todo: switch to another server
         #     # _log.warning('Server response status error: '
