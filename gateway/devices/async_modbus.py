@@ -105,8 +105,7 @@ class AsyncModbusDevice:
                 raise NotImplementedError('Other methods not support yet.')
         except ModbusException as e:
             _LOG.warning('Cannot create client',
-                         extra={'device_id': self.id,
-                                'exc_type': type(e), 'exc': e, })
+                         extra={'device_id': self.id, 'exc': e, })
         else:
             _LOG.debug('Client created', extra={'device_id': self.id})
 
@@ -226,7 +225,6 @@ class AsyncModbusDevice:
             period: Time to start new poll job.
         """
         read_tasks = [self.read(obj=obj) for obj in objs]
-        _LOG.debug('Perform reading', extra={'device_id': self.id})
         _t0 = datetime.now()
         # await self.scheduler.spawn(asyncio.gather(*read_tasks))
         await asyncio.gather(*read_tasks)
@@ -296,16 +294,11 @@ class AsyncModbusDevice:
             obj.exception = e
             _LOG.warning('Read error',
                          extra={'device_id': self.id,
-                                'register': address, 'quantity': quantity,
-                                'exc_type': type(e), 'exc': e,
-                                # 'exc_traceback': e.__traceback__
-                                })
-        # except Exception as e:
-        #     obj.exception = e
-        #     self._LOG.exception(f'Unexpected read error: {e}',
-        #                         extra={'register': address, 'quantity': quantity,
-        #                                'exception': e, 'exception_info': str(e),
-        #                                'exception_traceback': e.__traceback__})
+                                'register': address, 'quantity': quantity, 'exc': e, })
+        except Exception as e:
+            obj.exception = e
+            _LOG.exception(f'Unexpected read error: {e}',
+                           extra={'register': address, 'quantity': quantity, 'exc': e, })
 
         else:
             return obj.pv  # return not used now. Updates object

@@ -209,10 +209,12 @@ class VisioBASGateway:
 
             self._devices.update({device.id: device})
             _LOG.info('Device loaded', extra={'device_id': dev_id})
-        except (ValidationError, AttributeError, Exception) as e:
-            _LOG.exception('Cannot load device',
-                           extra={'device_id': dev_id,
-                                  'exc_type': type(e), 'exc': e, })
+        except (ValidationError, AttributeError) as e:
+            _LOG.warning('Cannot load device',
+                         extra={'device_id': dev_id, 'exc': e, })
+        except Exception as e:
+            _LOG.exception('Unhandled load device exception',
+                           extra={'device_id': dev_id, 'exc': e, })
 
     async def start_device_poll(self, dev_id: int) -> None:
         """Starts poll of device."""
@@ -233,8 +235,7 @@ class VisioBASGateway:
             return dev_obj
         except ValidationError as e:
             _LOG.warning('Not valid device data',
-                         extra={'device_data': dev_data,
-                                'exc_type': type(e), 'exc': e, })
+                         extra={'device_data': dev_data, 'exc': e, })
 
     def _extract_objects(self, objs_data: tuple, dev_obj: BACnetDeviceModel
                          ) -> list[ModbusObjModel]:
@@ -281,12 +282,12 @@ class VisioBASGateway:
 
             _LOG.debug('Device object created', extra={'device_id': device.id})
             return device
-        except (AttributeError, ValidationError, Exception) as e:
-            _LOG.exception('Failed device creation',
-                           extra={'device_id': dev_obj.id,
-                                  'exc_type': type(e), 'exc': e, })
-        # except Exception as e:
-        #     _LOG.exception(f'Failed device creation {e}', extra={'device_id': dev_obj.id})
+        except (AttributeError, ValidationError) as e:
+            _LOG.warning('Failed device creation',
+                         extra={'device_id': dev_obj.id, 'exc': e, })
+        except Exception as e:
+            _LOG.exception('Unhandled failed device creation',
+                           extra={'device_id': dev_obj.id, 'exc': e, })
 
     @staticmethod
     def object_factory(dev_obj: BACnetDeviceModel, obj_data: dict[str, Any]
@@ -307,8 +308,11 @@ class VisioBASGateway:
                 # unknown protocols logging by `pydantic` on enter
                 raise NotImplementedError('Not implemented protocol factory.')
             return obj
-        except (ValidationError, Exception) as e:
-            _LOG.exception('Failed polling object creation',
+        except ValidationError as e:
+            _LOG.warning('Failed polling object creation',
+                         extra={'device_id': dev_obj.id,
+                                'object_data': obj_data, 'exc': e, })
+        except Exception as e:
+            _LOG.exception('Unhandled object creation exception',
                            extra={'device_id': dev_obj.id,
-                                  'object_data': obj_data,
-                                  'exc_type': type(e), 'exc': e, })
+                                  'object_data': obj_data, 'exc': e, })
