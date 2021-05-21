@@ -45,8 +45,8 @@
 
 |Property|Type|Default|Required|Possible|Description|
 |--------|----|-------|--------|--------|-----------|
-|`protocol`|`str`|-|yes|'BACnet', 'ModbusTCP', 'ModbusRTU'|По какому протоколу опрашивается девайс
-|`address`|`str`|-|for TCP|'10.20.30.40', ...|IP адрес девайса (для RTU не заполняется)
+|`protocol`|`str`|-|yes|'BACnet', 'ModbusTCP', 'ModbusRTU', 'ModbusRTUoverTCP'|По какому протоколу опрашивается девайс
+|`address`|`str`|-|for TCP|'10.20.30.40', ...|IP адрес девайса
 |`port`|`int`|-|for TCP|-|Порт
 |`rtu`|`JSON`|-|for RTU|-|Заполняется для `protocol`='ModbusRTU' (см. таблицу ниже)
 |`pollInterval`|`float`|0.5|-|-|Интервал 'внутреннего' опроса девайса в секундах (если значение не изменилось, то не будет отправлено)
