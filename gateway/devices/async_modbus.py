@@ -32,10 +32,23 @@ _LOG = get_file_logger(name=__name__, size_mb=500)
 class AsyncModbusDevice:
     # upd_period_factor = 0.9  # todo provide from config
 
-    # creates after add ModbusRTU device to avoid attaching to a different loop
-    _serial_lock: Optional[asyncio.Lock] = None
+    _serial_port_devices: Optional[
+        dict[int, 'AsyncModbusDevice']] = {}  # key it is device id
+    _tcp_devices: Optional[dict[int, 'AsyncModbusDevice']] = {}  # key it is serial port
 
-    # todo: serial port device holder
+    def __new__(cls, *args, **kwargs):
+        dev_obj: BACnetDeviceModel = kwargs.get('device_obj', None)
+
+        if dev_obj and dev_obj.property_list.protocol is Protocol.MODBUS_RTU:
+            serial_port = dev_obj.property_list.rtu.port
+            if cls._serial_port_devices.get(serial_port) is None:
+                cls._serial_port_devices[serial_port] = super().__new__(cls)
+        elif dev_obj and dev_obj.property_list.protocol in {Protocol.MODBUS_TCP,
+                                                            Protocol.MODBUS_RTUOVERTCP}:
+            if cls._tcp_devices.get(dev_obj.id, None) is None:
+                cls._tcp_devices[dev_obj.id] = super().__new__(cls)
+        else:
+            raise ValueError('Unhandled error!')
 
     def __init__(self, device_obj: BACnetDeviceModel,  # 'BACnetDeviceModel'
                  gateway: 'VisioBASGateway'):
@@ -99,8 +112,6 @@ class AsyncModbusDevice:
                     loop=loop,
                     timeout=self.timeout
                 )
-                if not self._serial_lock:
-                    self._serial_lock = asyncio.Lock()
             else:
                 raise NotImplementedError('Other methods not support yet.')
         except ModbusException as e:
@@ -284,8 +295,7 @@ class AsyncModbusDevice:
 
             # Using lock because pymodbus doesn't handle async requests internally.
             # Maybe this will change in pymodbus v3.0.0
-            lock = self._serial_lock if self.protocol is Protocol.MODBUS_RTU else self._lock
-            async with lock:
+            async with self._lock:
                 resp = await self.read_funcs[read_func](address=address,
                                                         count=quantity,
                                                         unit=self.unit)
