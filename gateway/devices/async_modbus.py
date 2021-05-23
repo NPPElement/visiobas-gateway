@@ -191,7 +191,8 @@ class AsyncModbusDevice:
         """Waits for finish of all polling tasks with timeout, and stop polling.
         Closes client.
         """
-        # TODO:
+        await self.scheduler.close()
+        _LOG.info('Device stopped', extra={'device_id': self.id})
 
     async def start_periodic_polls(self) -> None:
         """Starts periodic polls for all periods."""
