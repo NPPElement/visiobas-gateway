@@ -6,6 +6,7 @@ from typing import Any, Callable, Union, Collection, Optional
 import aiojobs
 from pymodbus.bit_read_message import (ReadCoilsResponse, ReadDiscreteInputsResponse,
                                        ReadBitsResponseBase)
+from pymodbus.client.asynchronous.async_io import AsyncioModbusSerialClient
 from pymodbus.client.asynchronous.schedulers import ASYNC_IO
 from pymodbus.client.asynchronous.serial import AsyncModbusSerialClient
 from pymodbus.client.asynchronous.tcp import AsyncModbusTCPClient
@@ -32,26 +33,28 @@ _LOG = get_file_logger(name=__name__, size_mb=500)
 class AsyncModbusDevice:
     # upd_period_factor = 0.9  # todo provide from config
 
-    _serial_port_devices: Optional[
-        dict[int, 'AsyncModbusDevice']] = {}  # key it is device id
-    _tcp_devices: Optional[dict[int, 'AsyncModbusDevice']] = {}  # key it is serial port
+    _serial_clients: dict[str: AsyncioModbusSerialClient] = {}  # ket it is serial port name
 
-    def __new__(cls, *args, **kwargs):
-        dev_obj: BACnetDeviceModel = kwargs.get('device_obj', None)
-        _LOG.debug('Call __new__()', extra={'device_object': dev_obj})
-
-        if dev_obj and dev_obj.property_list.protocol is Protocol.MODBUS_RTU:
-            serial_port = dev_obj.property_list.rtu.port
-            if cls._serial_port_devices.get(serial_port) is None:
-                cls._serial_port_devices[serial_port] = super().__new__(cls)
-            return cls._serial_port_devices[serial_port]
-        elif dev_obj and dev_obj.property_list.protocol in {Protocol.MODBUS_TCP,
-                                                            Protocol.MODBUS_RTUOVERTCP}:
-            if cls._tcp_devices.get(dev_obj.id, None) is None:
-                cls._tcp_devices[dev_obj.id] = super().__new__(cls)
-            return cls._tcp_devices[dev_obj.id]
-        else:
-            raise ValueError('Unhandled error!')
+    # _serial_port_devices: Optional[
+    #     dict[int, 'AsyncModbusDevice']] = {}  # key it is device id
+    # _tcp_devices: Optional[dict[int, 'AsyncModbusDevice']] = {}  # key it is serial port
+    #
+    # def __new__(cls, *args, **kwargs):
+    #     dev_obj: BACnetDeviceModel = kwargs.get('device_obj', None)
+    #     _LOG.debug('Call __new__()', extra={'device_object': dev_obj})
+    #
+    #     if dev_obj and dev_obj.property_list.protocol is Protocol.MODBUS_RTU:
+    #         serial_port = dev_obj.property_list.rtu.port
+    #         if cls._serial_port_devices.get(serial_port) is None:
+    #             cls._serial_port_devices[serial_port] = super().__new__(cls)
+    #         return cls._serial_port_devices[serial_port]
+    #     elif dev_obj and dev_obj.property_list.protocol in {Protocol.MODBUS_TCP,
+    #                                                         Protocol.MODBUS_RTUOVERTCP}:
+    #         if cls._tcp_devices.get(dev_obj.id, None) is None:
+    #             cls._tcp_devices[dev_obj.id] = super().__new__(cls)
+    #         return cls._tcp_devices[dev_obj.id]
+    #     else:
+    #         raise ValueError('Unhandled error!')
 
     def __init__(self, device_obj: BACnetDeviceModel,  # 'BACnetDeviceModel'
                  gateway: 'VisioBASGateway'):
@@ -104,17 +107,26 @@ class AsyncModbusDevice:
                     timeout=self.timeout
                 )
             elif self.protocol is Protocol.MODBUS_RTU:
-                self._loop, self._client = AsyncModbusSerialClient(
-                    scheduler=ASYNC_IO,
-                    method='rtu',
-                    port=self._device_obj.property_list.rtu.port,
-                    baudrate=self._device_obj.property_list.rtu.baudrate,
-                    bytesize=self._device_obj.property_list.rtu.bytesize,
-                    parity=self._device_obj.property_list.rtu.parity,
-                    stopbits=self._device_obj.property_list.rtu.stopbits,
-                    loop=loop,
-                    timeout=self.timeout
-                )
+                if not self._serial_clients.get(self.serial_port):
+                    _LOG.debug('Serial port not used yet. Create client.',
+                               extra={'device_id': self.id,
+                                      'serial_port': self.serial_port, })
+                    self._loop, self._client = AsyncModbusSerialClient(
+                        scheduler=ASYNC_IO,
+                        method='rtu',
+                        port=self._device_obj.property_list.rtu.port,
+                        baudrate=self._device_obj.property_list.rtu.baudrate,
+                        bytesize=self._device_obj.property_list.rtu.bytesize,
+                        parity=self._device_obj.property_list.rtu.parity,
+                        stopbits=self._device_obj.property_list.rtu.stopbits,
+                        loop=loop,
+                        timeout=self.timeout
+                    )
+                else:
+                    _LOG.debug('Serial port already using. Set client',
+                               extra={'device_id': self.id,
+                                      'serial_port': self.serial_port, })
+                    self._client = self._serial_clients[self.serial_port]
             else:
                 raise NotImplementedError('Other methods not support yet.')
         except ModbusException as e:
@@ -142,6 +154,10 @@ class AsyncModbusDevice:
     @property
     def port(self) -> int:
         return self._device_obj.property_list.port
+
+    @property
+    def serial_port(self) -> str:
+        return self._device_obj.property_list.rtu.port
 
     @property
     def types_to_rq(self) -> tuple[ObjType, ...]:  # todo hide type

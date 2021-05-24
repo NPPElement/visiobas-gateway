@@ -148,6 +148,7 @@ class VisioBASGateway:
                              for dev_id in self.poll_device_ids]
         await asyncio.gather(*load_device_tasks)
 
+        # Run polling tasks
         start_poll_tasks = [self.start_device_poll(dev_id=dev_id)
                             for dev_id in self._devices.keys()]
         await asyncio.gather(*start_poll_tasks)
@@ -281,10 +282,10 @@ class VisioBASGateway:
 
             _LOG.debug('Device object created', extra={'device_id': device.id})
             return device
-        except (ValidationError, ) as e:  # AttributeError
+        except (ValidationError, AttributeError) as e:
             _LOG.warning('Failed device creation',
                          extra={'device_id': dev_obj.id, 'exc': e, })
-        except (AttributeError, Exception) as e:
+        except Exception as e:
             _LOG.exception('Unhandled failed device creation',
                            extra={'device_id': dev_obj.id, 'exc': e, })
 
