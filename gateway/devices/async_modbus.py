@@ -43,10 +43,14 @@ class AsyncModbusDevice:
             serial_port = dev_obj.property_list.rtu.port
             if cls._serial_port_devices.get(serial_port) is None:
                 cls._serial_port_devices[serial_port] = super().__new__(cls)
+            else:
+                return cls._serial_port_devices[serial_port]
         elif dev_obj and dev_obj.property_list.protocol in {Protocol.MODBUS_TCP,
                                                             Protocol.MODBUS_RTUOVERTCP}:
             if cls._tcp_devices.get(dev_obj.id, None) is None:
                 cls._tcp_devices[dev_obj.id] = super().__new__(cls)
+            else:
+                return cls._tcp_devices[dev_obj.id]
         else:
             raise ValueError('Unhandled error!')
 
