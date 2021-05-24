@@ -38,6 +38,7 @@ class AsyncModbusDevice:
 
     def __new__(cls, *args, **kwargs):
         dev_obj: BACnetDeviceModel = kwargs.get('device_obj', None)
+        _LOG.debug('Call __new__()', extra={'device_object': dev_obj})
 
         if dev_obj and dev_obj.property_list.protocol is Protocol.MODBUS_RTU:
             serial_port = dev_obj.property_list.rtu.port
