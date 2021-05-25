@@ -190,7 +190,8 @@ class VisioBASGateway:
                 return None
 
             # objs in the list, so get [0] element in `dev_obj_data[0]` below
-            dev_obj = await self.async_add_job(self._parse_device_obj, dev_obj_data[0])
+            # request one type - 'device', so [0] element of tuple below
+            dev_obj = await self.async_add_job(self._parse_device_obj, dev_obj_data[0][0])
 
             device = await self.device_factory(dev_obj=dev_obj)
 
