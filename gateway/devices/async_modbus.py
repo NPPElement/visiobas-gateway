@@ -126,6 +126,7 @@ class AsyncModbusDevice:
                         loop=loop,
                         timeout=self.timeout
                     )
+                    self._serial_clients.update({self.serial_port: self._client})
                     self._serial_locks.update({self.serial_port: asyncio.Lock()})
                 else:
                     _LOG.debug('Serial port already using. Set client',
