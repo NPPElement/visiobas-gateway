@@ -371,7 +371,7 @@ class AsyncModbusDevice:
                                                                  value,
                                                                  unit=self.unit)
             if not rq.isError():
-                pass # todo: collapse
+                pass  # todo: collapse
             else:
                 raise ModbusException(self._0X80_FUNC_CODE)
         except ModbusException as e:
@@ -458,7 +458,8 @@ class AsyncModbusDevice:
             decoded = decode_funcs[data_length][data_type]()
             scaled = decoded * scale + offset
             _LOG.debug('Decoded',
-                       extra={'reg_address': reg_address, 'quantity': quantity,
+                       extra={'device_id': obj.device_id, 'object_id': obj.id,
+                              'register_address': reg_address, 'quantity': quantity,
                               'value_raw': data, 'data_length': data_length,
                               'data_type': data_type,
                               'value_decoded': decoded, 'value_scaled': scaled})
