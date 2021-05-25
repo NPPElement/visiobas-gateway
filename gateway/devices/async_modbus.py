@@ -33,7 +33,9 @@ _LOG = get_file_logger(name=__name__, size_mb=500)
 class AsyncModbusDevice:
     # upd_period_factor = 0.9  # todo provide from config
 
-    _serial_clients: dict[str: AsyncioModbusSerialClient] = {}  # ket it is serial port name
+    # Keys is serial port names.
+    _serial_clients: dict[str: AsyncioModbusSerialClient] = {}
+    _serial_locks: dict[str: asyncio.Lock] = {}
 
     # _serial_port_devices: Optional[
     #     dict[int, 'AsyncModbusDevice']] = {}  # key it is device id
@@ -122,6 +124,7 @@ class AsyncModbusDevice:
                         loop=loop,
                         timeout=self.timeout
                     )
+                    self._serial_locks.add({self.serial_port: asyncio.Lock()})
                 else:
                     _LOG.debug('Serial port already using. Set client',
                                extra={'device_id': self.id,
@@ -152,12 +155,18 @@ class AsyncModbusDevice:
         return self._device_obj.property_list.address
 
     @property
-    def port(self) -> int:
+    def port(self) -> Optional[int]:
         return self._device_obj.property_list.port
 
     @property
-    def serial_port(self) -> str:
-        return self._device_obj.property_list.rtu.port
+    def serial_port(self) -> Optional[str]:
+        """
+
+        Returns:
+            Serial port name if exists. Else None.
+        """
+        if self.protocol is Protocol.MODBUS_RTU:
+            return self._device_obj.property_list.rtu.port
 
     @property
     def types_to_rq(self) -> tuple[ObjType, ...]:  # todo hide type
@@ -314,7 +323,9 @@ class AsyncModbusDevice:
 
             # Using lock because pymodbus doesn't handle async requests internally.
             # Maybe this will change in pymodbus v3.0.0
-            async with self._lock:
+
+            lock = self._serial_locks.get(self.serial_port) or self._lock
+            async with lock:
                 resp = await self.read_funcs[read_func](address=address,
                                                         count=quantity,
                                                         unit=self.unit)
@@ -325,7 +336,7 @@ class AsyncModbusDevice:
                 raise ModbusException('0x80-error-response')
         except (TypeError, ValueError,
                 asyncio.TimeoutError, asyncio.CancelledError,
-                ModbusException, Exception
+                ModbusException,  # Exception
                 ) as e:
             obj.exception = e
             _LOG.warning('Read error',
