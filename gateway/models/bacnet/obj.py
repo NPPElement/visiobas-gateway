@@ -61,7 +61,7 @@ class BACnetObjModel(BaseBACnetObjModel):
                             description='Status flags')
     pa: Optional[Union[str, tuple]] = Field(alias=ObjProperty.priorityArray.id_str,
                                             description='Priority array')
-    reliability: Optional[Union[int, str]] = Field(default=0,
+    reliability: Optional[Union[int, str]] = Field(default=None,
                                                    alias=ObjProperty.reliability.id_str)
 
     # todo find public property
@@ -99,7 +99,7 @@ class BACnetObjModel(BaseBACnetObjModel):
 
         str_ += ' ' + str(self.sf.for_http.flags)  # SF with disabled flags!
 
-        if self.reliability:
+        if self.reliability and self.reliability != 'no-fault-detected':
             str_ += ' ' + str(self.reliability)
 
         return str_
