@@ -215,10 +215,10 @@ class VisioBASGateway:
 
             self._devices.update({device.id: device})
             _LOG.info('Device loaded', extra={'device_id': dev_id})
-        except (ValidationError, AttributeError, TypeError) as e:
+        except (ValidationError, AttributeError,) as e:
             _LOG.warning('Cannot load device',
                          extra={'device_id': dev_id, 'exc': e, })
-        except Exception as e:
+        except (TypeError, Exception) as e:
             _LOG.exception('Unhandled load device exception',
                            extra={'device_id': dev_id, 'exc': e, })
 
