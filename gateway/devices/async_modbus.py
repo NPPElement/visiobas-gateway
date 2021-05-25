@@ -73,7 +73,6 @@ class AsyncModbusDevice:
 
         self._polling = True
         self._objects: dict[int, set[ModbusObjModel]] = {}  # todo hide type
-        # self._poll_tasks: dict[int, asyncio.Task] = {}
 
         self._connected = False
 
@@ -83,7 +82,11 @@ class AsyncModbusDevice:
 
         dev = cls(device_obj=device_obj, gateway=gateway)
         dev.scheduler = await aiojobs.create_scheduler(close_timeout=60, limit=100)
-        await dev._gateway.async_add_job(dev.create_client)
+
+        if dev.protocol is Protocol.MODBUS_RTU:
+            cls._serial_locks.update({dev.serial_port: asyncio.Lock()})
+        async with dev.lock:
+            await dev._gateway.async_add_job(dev.create_client)
         _LOG.debug('Device created', extra={'device_id': dev.id})
         return dev
 
@@ -111,29 +114,27 @@ class AsyncModbusDevice:
                     timeout=self.timeout
                 )
             elif self.protocol is Protocol.MODBUS_RTU:
-                async with self.lock:
-                    if not self._serial_clients.get(self.serial_port):
-                        _LOG.debug('Serial port not using. Creating client',
-                                   extra={'device_id': self.id,
-                                          'serial_port': self.serial_port, })
-                        self._loop, self._client = AsyncModbusSerialClient(
-                            scheduler=ASYNC_IO,
-                            method='rtu',
-                            port=self.serial_port,
-                            baudrate=self._device_obj.property_list.rtu.baudrate,
-                            bytesize=self._device_obj.property_list.rtu.bytesize,
-                            parity=self._device_obj.property_list.rtu.parity,
-                            stopbits=self._device_obj.property_list.rtu.stopbits,
-                            loop=loop,
-                            timeout=self.timeout
-                        )
-                        self._serial_clients.update({self.serial_port: self._client})
-                        self._serial_locks.update({self.serial_port: asyncio.Lock()})
-                    else:
-                        _LOG.debug('Serial port already using. Getting client',
-                                   extra={'device_id': self.id,
-                                          'serial_port': self.serial_port, })
-                        self._client = self._serial_clients[self.serial_port]
+                if not self._serial_clients.get(self.serial_port):
+                    _LOG.debug('Serial port not using. Creating client',
+                               extra={'device_id': self.id,
+                                      'serial_port': self.serial_port, })
+                    self._loop, self._client = AsyncModbusSerialClient(
+                        scheduler=ASYNC_IO,
+                        method='rtu',
+                        port=self.serial_port,
+                        baudrate=self._device_obj.property_list.rtu.baudrate,
+                        bytesize=self._device_obj.property_list.rtu.bytesize,
+                        parity=self._device_obj.property_list.rtu.parity,
+                        stopbits=self._device_obj.property_list.rtu.stopbits,
+                        loop=loop,
+                        timeout=self.timeout
+                    )
+                    self._serial_clients.update({self.serial_port: self._client})
+                else:
+                    _LOG.debug('Serial port already using. Getting client',
+                               extra={'device_id': self.id,
+                                      'serial_port': self.serial_port, })
+                    self._client = self._serial_clients[self.serial_port]
                 _LOG.debug('Current serial ports',
                            extra={'serial_ports_dict': self._serial_clients})
             else:
