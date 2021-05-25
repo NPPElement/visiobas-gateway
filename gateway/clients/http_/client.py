@@ -127,7 +127,7 @@ class VisioHTTPClient:
     #     )
 
     async def get_objs(self, dev_id: int, obj_types: Collection[ObjType]
-                       ) -> Union[tuple[Any, Exception], Union[Any, Exception]]:
+                       ) -> tuple[Union[Any, Exception], ...]:
         """Requests objects of provided type.
 
         If one of requests failed - return error with responses.
@@ -147,7 +147,8 @@ class VisioHTTPClient:
                     for obj_type in obj_types]
         data = await asyncio.gather(*rq_tasks, return_exceptions=True)
 
-        return data[0] if len(obj_types) == 1 else data
+        return data
+        # return data[0] if len(obj_types) == 1 else data
 
     async def logout(self, servers: Optional[Collection[HTTPServerConfig]] = None) -> bool:
         """Performs log out from servers.
