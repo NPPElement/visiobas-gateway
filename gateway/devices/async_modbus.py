@@ -37,6 +37,8 @@ class AsyncModbusDevice:
     _serial_clients: dict[str: AsyncioModbusSerialClient] = {}
     _serial_locks: dict[str: asyncio.Lock] = {}
 
+    _creation_lock = asyncio.Lock()
+
     _0X80_FUNC_CODE = '0x80-error-code'
 
     # _serial_port_devices: Optional[
@@ -79,13 +81,11 @@ class AsyncModbusDevice:
     @classmethod
     async def create(cls, device_obj: BACnetDeviceModel, gateway: 'VisioBASGateway'
                      ) -> 'AsyncModbusDevice':
-
         dev = cls(device_obj=device_obj, gateway=gateway)
-        dev.scheduler = await aiojobs.create_scheduler(close_timeout=60, limit=100)
 
-        if dev.protocol is Protocol.MODBUS_RTU:
+        async with cls._creation_lock:
             cls._serial_locks.update({dev.serial_port: asyncio.Lock()})
-        async with dev.lock:
+            dev.scheduler = await aiojobs.create_scheduler(close_timeout=60, limit=100)
             await dev._gateway.async_add_job(dev.create_client)
         _LOG.debug('Device created', extra={'device_id': dev.id})
         return dev
@@ -420,7 +420,7 @@ class AsyncModbusDevice:
 
         # repack = obj.property_list.modbus.repack
 
-        # TODO: Add decode with different byteorder in VisioDecoder class
+        # TODO: Add decode with different byteorder in bytes VisioDecoder class
 
         if isinstance(resp, ReadBitsResponseBase):
             data = resp.bits
