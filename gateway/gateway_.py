@@ -300,7 +300,8 @@ class VisioBASGateway:
         """
         try:
             protocol = dev_obj.property_list.protocol
-            if protocol in {Protocol.MODBUS_TCP, Protocol.MODBUS_RTU}:
+            if protocol in {Protocol.MODBUS_TCP, Protocol.MODBUS_RTU,
+                            Protocol.MODBUS_RTUOVERTCP}:
                 obj = ModbusObjModel(**obj_data)  # todo switch to parse_raw
             elif protocol == Protocol.BACNET:
                 obj = None  # todo
