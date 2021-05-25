@@ -1,6 +1,7 @@
 import asyncio
 from typing import Callable, Any, Optional, Union, Awaitable, Collection
 
+import aiohttp
 import aiojobs
 from pydantic import ValidationError
 
@@ -245,7 +246,7 @@ class VisioBASGateway:
         """
         objs = [self.object_factory(dev_obj=dev_obj, obj_data=obj_data)
                 for obj_data in objs_data
-                if not None]
+                if not None and not isinstance(obj_data, (aiohttp.ClientError, Exception))]
         return objs
 
     async def verify_objects(self, objs: Collection[BACnetObjModel]) -> None:

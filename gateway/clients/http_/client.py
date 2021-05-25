@@ -127,23 +127,25 @@ class VisioHTTPClient:
     #     )
 
     async def get_objs(self, dev_id: int, obj_types: Collection[ObjType]
-                       ) -> Union[tuple[Any], Any]:
-        """Requests objects of provided type
+                       ) -> Union[tuple[Any, Exception], Union[Any, Exception]]:
+        """Requests objects of provided type.
+
+        If one of requests failed - return error with responses.
 
         Args:
             dev_id: device identifier
             obj_types: types of objects
 
         Returns:
-            If provided one type - returns objects of this type.
-            If provided several types - returns tuple of objects.
+            If provided one type - returns objects of this type or exception.
+            If provided several types - returns tuple of objects, exceptions.
         """
         rq_tasks = [self._rq(method='GET',
                              url=self.server_get.current_url + self._GET_URL + str(
                                  dev_id) + '/' + obj_type.name_dashed,
                              headers=self.server_get.auth_headers)
                     for obj_type in obj_types]
-        data = await asyncio.gather(*rq_tasks)
+        data = await asyncio.gather(*rq_tasks, return_exceptions=True)
 
         return data[0] if len(obj_types) == 1 else data
 
