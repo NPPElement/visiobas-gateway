@@ -37,6 +37,8 @@ class AsyncModbusDevice:
     _serial_clients: dict[str: AsyncioModbusSerialClient] = {}
     _serial_locks: dict[str: asyncio.Lock] = {}
 
+    _0X80_FUNC_CODE = '0x80-error-code'
+
     # _serial_port_devices: Optional[
     #     dict[int, 'AsyncModbusDevice']] = {}  # key it is device id
     # _tcp_devices: Optional[dict[int, 'AsyncModbusDevice']] = {}  # key it is serial port
@@ -124,7 +126,7 @@ class AsyncModbusDevice:
                         loop=loop,
                         timeout=self.timeout
                     )
-                    self._serial_locks.add({self.serial_port: asyncio.Lock()})
+                    self._serial_locks.update({self.serial_port: asyncio.Lock()})
                 else:
                     _LOG.debug('Serial port already using. Set client',
                                extra={'device_id': self.id,
@@ -149,6 +151,10 @@ class AsyncModbusDevice:
 
     def __len__(self) -> int:
         return len(self._objects)
+
+    @property
+    def lock(self) -> asyncio.Lock:
+        return self._serial_locks.get(self.serial_port) or self._lock
 
     @property
     def address(self) -> Optional[IPv4Address]:
@@ -323,9 +329,7 @@ class AsyncModbusDevice:
 
             # Using lock because pymodbus doesn't handle async requests internally.
             # Maybe this will change in pymodbus v3.0.0
-
-            lock = self._serial_locks.get(self.serial_port) or self._lock
-            async with lock:
+            async with self.lock:
                 resp = await self.read_funcs[read_func](address=address,
                                                         count=quantity,
                                                         unit=self.unit)
@@ -333,10 +337,10 @@ class AsyncModbusDevice:
                 value = await self.decode(resp=resp, obj=obj)
                 obj.pv = value
             else:
-                raise ModbusException('0x80-error-response')
+                raise ModbusException(self._0X80_FUNC_CODE)
         except (TypeError, ValueError,
                 asyncio.TimeoutError, asyncio.CancelledError,
-                ModbusException,  # Exception
+                ModbusException,
                 ) as e:
             obj.exception = e
             _LOG.warning('Read error',
@@ -350,27 +354,34 @@ class AsyncModbusDevice:
         else:
             return obj.pv  # return not used now. Updates object
 
-    # async def write(self, value, obj: ModbusObjModel) -> None:
-    #     """Write data to Modbus object."""
-    #     try:
-    #         write_cmd_code = obj.property_list.modbus.func_write
-    #         reg_address = obj.property_list.modbus.address
-    #
-    #         # encoded_value = TODO encode here
-    #
-    #         # Using lock because pymodbus doesn't handle async requests internally.
-    #         # Maybe this will change in pymodbus v3.0.0
-    #         async with self._lock:
-    #             rq = await self.write_funcs[write_cmd_code.code](reg_address,
-    #                                                              value,
-    #                                                              unit=self.unit)
-    #         if not rq.isError():
-    #             self._LOG.debug(f'Successfully write: {reg_address}: {value}')
-    #         else:
-    #             self._LOG.warning(f'Failed write: {rq}')
-    #             # raise rq  # fixme: isn't exception
-    #     except Exception as e:
-    #         self._LOG.exception(e)
+    async def write(self, value, obj: ModbusObjModel) -> None:
+        """Write data to Modbus object."""
+        write_cmd_code = obj.property_list.modbus.func_write
+        reg_address = obj.property_list.modbus.address
+        quantity = obj.property_list.modbus.quantity
+        try:
+            # encoded_value = TODO encode here
+
+            # Using lock because pymodbus doesn't handle async requests internally.
+            # Maybe this will change in pymodbus v3.0.0
+            async with self.lock:
+                rq = await self.write_funcs[write_cmd_code.code](reg_address,
+                                                                 value,
+                                                                 unit=self.unit)
+            if not rq.isError():
+                pass # todo: collapse
+            else:
+                raise ModbusException(self._0X80_FUNC_CODE)
+        except ModbusException as e:
+            _LOG.warning('Failed write',
+                         extra={'device_id': self.id,
+                                'register': reg_address, 'quantity': quantity, 'exc': e, })
+        except Exception as e:
+            _LOG.exception('Unhandled error', extra={'device_id': self.id, 'exc': e, })
+        else:
+            _LOG.debug(f'Successfully write',
+                       extra={'device_id': self.id, 'address': reg_address,
+                              'value': value})
 
     async def decode(self, resp: Union[ReadCoilsResponse,
                                        ReadDiscreteInputsResponse,
@@ -402,6 +413,8 @@ class AsyncModbusDevice:
         bit = obj.property_list.modbus.bit
 
         # repack = obj.property_list.modbus.repack
+
+        # TODO: Add decode with different byteorder in VisioDecoder class
 
         if isinstance(resp, ReadBitsResponseBase):
             data = resp.bits
