@@ -339,7 +339,7 @@ class AsyncModbusDevice:
                 obj.pv = value
             else:
                 raise ModbusException(self._0X80_FUNC_CODE)
-        except (TypeError, ValueError,
+        except (TypeError, ValueError, AttributeError,
                 asyncio.TimeoutError, asyncio.CancelledError,
                 ModbusException,
                 ) as e:
@@ -350,7 +350,8 @@ class AsyncModbusDevice:
         except Exception as e:
             obj.exception = e
             _LOG.exception(f'Unexpected read error: {e}',
-                           extra={'register': address, 'quantity': quantity, 'exc': e, })
+                           extra={'device_id': self.id,
+                                  'register': address, 'quantity': quantity, 'exc': e, })
 
         else:
             return obj.pv  # return not used now. Updates object
