@@ -18,7 +18,7 @@ _LOG = get_file_logger(__name__)
 class VisioBASGateway:
     """VisioBAS IoT Gateway."""
 
-    serial_creation_lock = asyncio.Lock()
+    # serial_creation_lock = asyncio.Lock()
 
     def __init__(self, settings: GatewaySettings):
         # self.loop = asyncio.new_event_loop()
@@ -152,9 +152,14 @@ class VisioBASGateway:
         await asyncio.gather(*load_device_tasks)
 
         # Run polling tasks
-        start_poll_tasks = [self.start_device_poll(dev_id=dev_id)
-                            for dev_id in self._devices.keys()]
-        await asyncio.gather(*start_poll_tasks)
+        # start_poll_tasks = [self.start_device_poll(dev_id=dev_id)
+        #                     for dev_id in self._devices.keys()]
+        # await asyncio.gather(*start_poll_tasks)
+
+        # Create devices by one to prevent creations of several serial clients
+        for dev_id in self._devices.keys():
+            await self.start_device_poll(dev_id=dev_id)
+
         # todo await self.mqtt_client.subscribe(self.mqtt_client.topics)
         _LOG.info('Start tasks performed')
 
@@ -195,7 +200,7 @@ class VisioBASGateway:
             # request one type - 'device', so [0] element of tuple below
             dev_obj = await self.async_add_job(self._parse_device_obj, dev_obj_data[0][0])
 
-            device = await self.device_factory(dev_obj=dev_obj)
+            device = await self.async_add_job(self.device_factory, dev_obj)
 
             # fixme use for task in asyncio.as_completed(tasks):
             objs_data = await self.http_client.get_objs(dev_id=dev_id,

@@ -83,10 +83,10 @@ class AsyncModbusDevice:
                      ) -> 'AsyncModbusDevice':
         dev = cls(device_obj=device_obj, gateway=gateway)
 
-        async with gateway.serial_creation_lock:
-            cls._serial_locks.update({dev.serial_port: asyncio.Lock()})
-            dev.scheduler = await aiojobs.create_scheduler(close_timeout=60, limit=100)
-            await dev._gateway.async_add_job(dev.create_client)
+        # async with gateway.serial_creation_lock:
+        cls._serial_locks.update({dev.serial_port: asyncio.Lock()})
+        dev.scheduler = await aiojobs.create_scheduler(close_timeout=60, limit=100)
+        await dev._gateway.async_add_job(dev.create_client)
         _LOG.debug('Device created', extra={'device_id': dev.id})
         return dev
 
