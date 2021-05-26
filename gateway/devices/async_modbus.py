@@ -87,7 +87,7 @@ class AsyncModbusDevice:
         _LOG.debug('Device created', extra={'device_id': dev.id})
         return dev
 
-    def create_client(self) -> None:
+    async def create_client(self) -> None:
         """Initializes asynchronous modbus client.
 
         Raises:
