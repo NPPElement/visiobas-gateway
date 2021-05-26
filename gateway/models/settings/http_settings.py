@@ -12,6 +12,6 @@ class HTTPSettings(BaseSettings):
 
     class Config:
         arbitrary_types_allowed = True
-        env_prefix = 'GW_HTTP_'
+        env_prefix = 'GTW_HTTP_'
         env_file = '.env'
         env_file_encoding = 'utf-8'

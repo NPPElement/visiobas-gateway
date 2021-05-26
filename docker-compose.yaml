@@ -28,16 +28,16 @@ services:
 
       # Logging
       - PYTHONASYNCIODEBUG=0
-      #- GW_LOG_FORMAT="%(levelname)-8s [%(asctime)s] [%(threadName)s] %(name)s.%(funcName)s(%(lineno)d): %(message)s"
-      - GW_LOG_LEVEL=DEBUG
-      - GW_LOG_FILE_SIZE=50 # in MB
-      - GW_LOG_FILE_LEVEL=DEBUG
+      #- GTW_LOG_FORMAT="%(levelname)-8s [%(asctime)s] [%(threadName)s] %(name)s.%(funcName)s(%(lineno)d): %(message)s"
+      - GTW_LOG_LEVEL=DEBUG
+      - GTW_LOG_FILE_SIZE=50 # in MB
+      - GTW_LOG_FILE_LEVEL=DEBUG
     volumes:
-      #- /opt/visiobas-gateway/gateway/config:/usr/share/python3/gw/lib/python3.9/site-packages/gateway/config
-      #- /opt/visiobas-gateway/logs:/usr/share/python3/gw/gateway/logs
-      - /opt/visiobas-gateway/gateway:/usr/share/python3/gw/lib/python3.9/site-packages/gateway
+      #- /opt/visiobas-gateway/gateway/config:/usr/share/python3/gtw/lib/python3.9/site-packages/gateway/config
+      #- /opt/visiobas-gateway/logs:/usr/share/python3/gtw/gateway/logs
+      - /opt/visiobas-gateway/gateway:/usr/share/python3/gtw/lib/python3.9/site-packages/gateway
       - /dev:/dev # [1]
-      # - /home/user/visiobas-gateway/gateway:/usr/share/python3/gw/lib/python3.9/site-packages/gateway
+      # - /home/user/visiobas-gateway/gateway:/usr/share/python3/gtw/lib/python3.9/site-packages/gateway
     # command: python -OO __main__.py
     networks:
       - backend

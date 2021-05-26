@@ -26,7 +26,7 @@ class GatewaySettings(BaseSettings):
     # mqtt: Optional = Field(default=None)  # todo
 
     class Config:
-        env_prefix = 'GW_'
+        env_prefix = 'GTW_'
         env_file = '.env'
         env_file_encoding = 'utf-8'
 
