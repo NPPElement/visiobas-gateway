@@ -282,8 +282,10 @@ class VisioBASGateway:
         """
         try:
             protocol = dev_obj.property_list.protocol
-            if protocol in {Protocol.MODBUS_TCP, Protocol.MODBUS_RTU,
-                            Protocol.MODBUS_RTUOVERTCP}:
+
+            if protocol in {Protocol.MODBUS_TCP, Protocol.MODBUS_RTUOVERTCP}:
+                device = await AsyncModbusDevice.create(device_obj=dev_obj, gateway=self)
+            elif protocol is Protocol.MODBUS_RTU:
                 async with self._serial_creation_lock:
                     device = await AsyncModbusDevice.create(device_obj=dev_obj,
                                                             gateway=self)

@@ -87,7 +87,7 @@ class AsyncModbusDevice:
         _LOG.debug('Device created', extra={'device_id': dev.id})
         return dev
 
-    async def create_client(self) -> None:
+    def create_client(self) -> None:
         """Initializes asynchronous modbus client.
 
         Raises:
@@ -120,19 +120,19 @@ class AsyncModbusDevice:
                                extra={'device_id': self.id,
                                       'serial_port': self.serial_port, })
 
-                    async with self._serial_locks[self.serial_port]:
-                        self._loop, self._client = AsyncModbusSerialClient(
-                            scheduler=ASYNC_IO,
-                            method='rtu',
-                            port=self.serial_port,
-                            baudrate=self._device_obj.property_list.rtu.baudrate,
-                            bytesize=self._device_obj.property_list.rtu.bytesize,
-                            parity=self._device_obj.property_list.rtu.parity,
-                            stopbits=self._device_obj.property_list.rtu.stopbits,
-                            loop=loop,
-                            timeout=self.timeout
-                        )
-                        self._serial_clients.update({self.serial_port: self._client})
+                    # async with self._serial_locks[self.serial_port]:
+                    self._loop, self._client = AsyncModbusSerialClient(
+                        scheduler=ASYNC_IO,
+                        method='rtu',
+                        port=self.serial_port,
+                        baudrate=self._device_obj.property_list.rtu.baudrate,
+                        bytesize=self._device_obj.property_list.rtu.bytesize,
+                        parity=self._device_obj.property_list.rtu.parity,
+                        stopbits=self._device_obj.property_list.rtu.stopbits,
+                        loop=loop,
+                        timeout=self.timeout
+                    )
+                    self._serial_clients.update({self.serial_port: self._client})
                 else:
                     _LOG.debug('Serial port already using. Getting client',
                                extra={'device_id': self.id,
