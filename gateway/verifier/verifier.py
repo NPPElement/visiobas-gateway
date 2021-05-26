@@ -21,7 +21,7 @@ class BACnetVerifier:
         [self.verify(obj=obj) for obj in objs]
 
     def verify(self, obj: BACnetObj) -> None:
-        if obj.device_id in {4004, 4008}:  # fixme
+        if obj.device_id in {4012,}:  # fixme
             _LOG.debug('Got object', extra={'object': obj})
 
         if obj.exception:
@@ -33,7 +33,7 @@ class BACnetVerifier:
             if obj.pa is not None:
                 self.verify_pa(obj=obj)
 
-        if obj.device_id in {4004, 4008}:  # fixme
+        if obj.device_id in {4012, }:  # fixme
             _LOG.debug('Verified object', extra={'object': obj})
 
     @staticmethod
