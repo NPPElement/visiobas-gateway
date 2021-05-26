@@ -4,8 +4,8 @@ from typing import Collection
 # todo: process optional imports
 from pymodbus.exceptions import ModbusException
 
-from utils import get_file_logger
 from ..models import StatusFlags, StatusFlag, BACnetObjModel
+from ..utils import get_file_logger
 
 _LOG = get_file_logger(name=__name__)
 
