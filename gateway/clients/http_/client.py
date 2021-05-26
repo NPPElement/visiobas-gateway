@@ -288,8 +288,12 @@ class VisioHTTPClient:
             _LOG.debug('Successfully sent data',
                        extra={'device_id': dev_id, 'servers': servers})
             return True
+        except asyncio.TimeoutError as e:
+            _LOG.warning('Failed to send', extra={'device_id': dev_id, 'exc': e, })
+            return False
+
         except Exception as e:
-            _LOG.exception('Failed to send',
+            _LOG.exception('Unhandled failed to send',
                            extra={'device_id': dev_id, 'exc': e, })
             return False
 
