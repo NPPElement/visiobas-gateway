@@ -18,7 +18,7 @@ _LOG = get_file_logger(__name__)
 class VisioBASGateway:
     """VisioBAS IoT Gateway."""
 
-    # serial_creation_lock = asyncio.Lock()
+    _serial_creation_lock = asyncio.Lock()
 
     def __init__(self, settings: GatewaySettings):
         # self.loop = asyncio.new_event_loop()
@@ -284,7 +284,9 @@ class VisioBASGateway:
             protocol = dev_obj.property_list.protocol
             if protocol in {Protocol.MODBUS_TCP, Protocol.MODBUS_RTU,
                             Protocol.MODBUS_RTUOVERTCP}:
-                device = await AsyncModbusDevice.create(device_obj=dev_obj, gateway=self)
+                async with self._serial_creation_lock:
+                    device = await AsyncModbusDevice.create(device_obj=dev_obj,
+                                                            gateway=self)
             elif protocol == Protocol.BACNET:
                 device = None  # todo
             else:

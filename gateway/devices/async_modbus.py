@@ -82,8 +82,6 @@ class AsyncModbusDevice:
     async def create(cls, device_obj: BACnetDevice, gateway: 'VisioBASGateway'
                      ) -> 'AsyncModbusDevice':
         dev = cls(device_obj=device_obj, gateway=gateway)
-
-        # async with gateway.serial_creation_lock:
         dev.scheduler = await aiojobs.create_scheduler(close_timeout=60, limit=100)
         await dev._gateway.async_add_job(dev.create_client)
         _LOG.debug('Device created', extra={'device_id': dev.id})
@@ -113,23 +111,28 @@ class AsyncModbusDevice:
                     timeout=self.timeout
                 )
             elif self.protocol is Protocol.MODBUS_RTU:
-                if not self._serial_clients.get(self.serial_port):
+                if (
+                        not self._serial_clients.get(self.serial_port)
+                        and not self._serial_locks.get(self.serial_port)
+                ):
+                    self._serial_locks.update({self.serial_port: asyncio.Lock()})
                     _LOG.debug('Serial port not using. Creating client',
                                extra={'device_id': self.id,
                                       'serial_port': self.serial_port, })
-                    self._loop, self._client = AsyncModbusSerialClient(
-                        scheduler=ASYNC_IO,
-                        method='rtu',
-                        port=self.serial_port,
-                        baudrate=self._device_obj.property_list.rtu.baudrate,
-                        bytesize=self._device_obj.property_list.rtu.bytesize,
-                        parity=self._device_obj.property_list.rtu.parity,
-                        stopbits=self._device_obj.property_list.rtu.stopbits,
-                        loop=loop,
-                        timeout=self.timeout
-                    )
-                    self._serial_locks.update({self.serial_port: asyncio.Lock()})
-                    self._serial_clients.update({self.serial_port: self._client})
+
+                    async with self._serial_locks[self.serial_port]:
+                        self._loop, self._client = AsyncModbusSerialClient(
+                            scheduler=ASYNC_IO,
+                            method='rtu',
+                            port=self.serial_port,
+                            baudrate=self._device_obj.property_list.rtu.baudrate,
+                            bytesize=self._device_obj.property_list.rtu.bytesize,
+                            parity=self._device_obj.property_list.rtu.parity,
+                            stopbits=self._device_obj.property_list.rtu.stopbits,
+                            loop=loop,
+                            timeout=self.timeout
+                        )
+                        self._serial_clients.update({self.serial_port: self._client})
                 else:
                     _LOG.debug('Serial port already using. Getting client',
                                extra={'device_id': self.id,
