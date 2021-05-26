@@ -283,7 +283,8 @@ class VisioHTTPClient:
                          data=data
                          ) for server in servers
             ]
-            await asyncio.gather(*post_tasks)
+            await asyncio.gather(*post_tasks)  # , return_exceptions=True)
+            # TODO: What we should do with errors?
             _LOG.debug('Successfully sent data',
                        extra={'device_id': dev_id, 'servers': servers})
             return True
@@ -322,8 +323,8 @@ class VisioHTTPClient:
                     return _json['data']
                 except LookupError as e:
                     # fixme
-                    _LOG.warning(f'Data extracting failed (most likely in logout)',
-                                 extra={'exc': e, })
+                    _LOG.warning(f'Data extracting failed (most likely in logout)')  # ,
+                    # extra={'exc': e, })
             else:
                 raise aiohttp.ClientError(f'Failure response: {response.url}\n{_json}')
         # else:

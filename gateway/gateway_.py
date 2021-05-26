@@ -208,7 +208,8 @@ class VisioBASGateway:
             _LOG.debug('Polling objects downloaded', extra={'device_id': dev_id})
 
             extract_tasks = [self.async_add_job(self._extract_objects, obj_data, dev_obj)
-                             for obj_data in objs_data]
+                             for obj_data in objs_data
+                             if not isinstance(obj_data, aiohttp.ClientError)]
             objs_lists = await asyncio.gather(*extract_tasks)
             objs = [obj for lst in objs_lists for obj in lst]  # flat list of lists
 
