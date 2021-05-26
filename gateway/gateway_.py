@@ -200,7 +200,8 @@ class VisioBASGateway:
             # request one type - 'device', so [0] element of tuple below
             dev_obj = await self.async_add_job(self._parse_device_obj, dev_obj_data[0][0])
 
-            device = await self.async_add_job(self.device_factory, dev_obj)
+            # device = await self.async_add_job(self.device_factory, dev_obj)
+            device = await self.device_factory(dev_obj=dev_obj)
 
             # fixme use for task in asyncio.as_completed(tasks):
             objs_data = await self.http_client.get_objs(dev_id=dev_id,
