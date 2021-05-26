@@ -113,9 +113,8 @@ class AsyncModbusDevice:
             elif self.protocol is Protocol.MODBUS_RTU:
                 if (
                         not self._serial_clients.get(self.serial_port)
-                        and not self._serial_locks.get(self.serial_port)
+                        or not self._serial_locks.get(self.serial_port)
                 ):
-                    self._serial_locks.update({self.serial_port: asyncio.Lock()})
                     _LOG.debug('Serial port not using. Creating client',
                                extra={'device_id': self.id,
                                       'serial_port': self.serial_port, })
@@ -132,14 +131,22 @@ class AsyncModbusDevice:
                         loop=loop,
                         timeout=self.timeout
                     )
+                    self._serial_locks.update({self.serial_port: asyncio.Lock()})
                     self._serial_clients.update({self.serial_port: self._client})
-                else:
+                elif (
+                        self._serial_clients.get(self.serial_port)
+                        and self._serial_locks.get(self.serial_port)
+                ):
                     _LOG.debug('Serial port already using. Getting client',
                                extra={'device_id': self.id,
                                       'serial_port': self.serial_port, })
                     self._client = self._serial_clients[self.serial_port]
-                _LOG.debug('Current serial ports',
-                           extra={'serial_ports_dict': self._serial_clients})
+                else:
+                    raise RuntimeError('Unexpected behavior')
+
+                _LOG.debug('Current state of serial',
+                           extra={'serial_ports_dict': self._serial_clients,
+                                  'serial_clients_dict': self._serial_clients, })
             else:
                 raise NotImplementedError('Other methods not support yet.')
         except ModbusException as e:
