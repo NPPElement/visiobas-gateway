@@ -21,9 +21,6 @@ class BACnetVerifier:
         [self.verify(obj=obj) for obj in objs]
 
     def verify(self, obj: BACnetObj) -> None:
-        if obj.device_id in {4012,}:  # fixme
-            _LOG.debug('Got object', extra={'object': obj})
-
         if obj.exception:
             self.process_exception(obj=obj)
         else:
@@ -32,9 +29,6 @@ class BACnetVerifier:
 
             if obj.pa is not None:
                 self.verify_pa(obj=obj)
-
-        if obj.device_id in {4012, }:  # fixme
-            _LOG.debug('Verified object', extra={'object': obj})
 
     @staticmethod
     def process_exception(obj: BACnetObj) -> None:
@@ -60,9 +54,9 @@ class BACnetVerifier:
 
     @staticmethod
     def verify_pv(obj: BACnetObj) -> None:
-        if obj.pv == 'active':
+        if obj.pv in {True, 'active'}:
             obj.pv = 1
-        elif obj.pv == 'inactive':
+        elif obj.pv in {False, 'inactive'}:
             obj.pv = 0
 
         elif obj.pv in {'null', None}:
