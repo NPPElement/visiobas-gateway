@@ -10,8 +10,9 @@ from gateway.utils import ExtraFormatter
 
 # Set logging
 LOG_LEVEL = os.getenv('GW_LOG_LEVEL', 'DEBUG')
-LOG_FORMAT = os.environ.get('LOG_FORMAT', '%(levelname)-8s [%(asctime)s] %(name)s'
-                                          '.%(funcName)s(%(lineno)d): %(message)s')
+LOG_FORMAT = os.environ.get('LOG_FORMAT',
+                            '%(levelname)-8s [%(asctime)s] [%(threadName)s] %(name)s'
+                            '.%(funcName)s(%(lineno)d): %(message)s')
 
 loggers_to_disable = ['pymodbus', 'asyncio', ]  # 'BAC0_Root', 'bacpypes',]
 for name in loggers_to_disable:
