@@ -294,6 +294,7 @@ class AsyncModbusDevice:
                                 'period_old': period, 'period_new': period * 2})
             for obj in objs:
                 obj.property_list.send_interval *= 2
+
         _LOG.info('Objects polled',
                   extra={'device_id': self.id, 'period': period,
                          'time_spent': _t_delta.seconds, 'objects_polled': len(objs)})

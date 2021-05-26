@@ -4,9 +4,10 @@ from typing import Collection
 # todo: process optional imports
 from pymodbus.exceptions import ModbusException
 
+from utils import get_file_logger
 from ..models import StatusFlags, StatusFlag, BACnetObjModel
 
-# TODO file logger
+_LOG = get_file_logger(name=__name__)
 
 
 class BACnetVerifier:
@@ -20,6 +21,7 @@ class BACnetVerifier:
         [self.verify(obj=obj) for obj in objs]
 
     def verify(self, obj: BACnetObjModel) -> None:
+        _LOG.debug('Got object', extra={'object': obj})
         if obj.exception:
             self.process_exception(obj=obj)
         else:
