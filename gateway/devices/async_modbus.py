@@ -37,7 +37,7 @@ class AsyncModbusDevice:
     _serial_clients: dict[str: AsyncioModbusSerialClient] = {}
     _serial_locks: dict[str: asyncio.Lock] = {}
 
-    _creation_lock = asyncio.Lock()
+    # _creation_lock = asyncio.Lock()
 
     _0X80_FUNC_CODE = '0x80-error-code'
 
@@ -83,7 +83,7 @@ class AsyncModbusDevice:
                      ) -> 'AsyncModbusDevice':
         dev = cls(device_obj=device_obj, gateway=gateway)
 
-        async with cls._creation_lock:
+        async with gateway.serial_creation_lock:
             cls._serial_locks.update({dev.serial_port: asyncio.Lock()})
             dev.scheduler = await aiojobs.create_scheduler(close_timeout=60, limit=100)
             await dev._gateway.async_add_job(dev.create_client)
