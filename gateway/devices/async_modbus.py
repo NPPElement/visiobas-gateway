@@ -17,7 +17,7 @@ from pymodbus.register_read_message import (ReadHoldingRegistersResponse,
                                             ReadRegistersResponseBase)
 from pymodbus.transaction import ModbusRtuFramer
 
-from ..models import (BACnetDeviceModel, ModbusObjModel, ObjType, Protocol, DataType,
+from ..models import (BACnetDevice, ModbusObj, ObjType, Protocol, DataType,
                       ModbusReadFunc, ModbusWriteFunc)
 from ..utils import get_file_logger
 
@@ -62,7 +62,7 @@ class AsyncModbusDevice:
     #     else:
     #         raise ValueError('Unhandled error!')
 
-    def __init__(self, device_obj: BACnetDeviceModel,  # 'BACnetDeviceModel'
+    def __init__(self, device_obj: BACnetDevice,  # 'BACnetDeviceModel'
                  gateway: 'VisioBASGateway'):
         self._gateway = gateway
         self._device_obj = device_obj
@@ -74,12 +74,12 @@ class AsyncModbusDevice:
         self._lock = asyncio.Lock()
 
         self._polling = True
-        self._objects: dict[int, set[ModbusObjModel]] = {}  # todo hide type
+        self._objects: dict[int, set[ModbusObj]] = {}  # todo hide type
 
         self._connected = False
 
     @classmethod
-    async def create(cls, device_obj: BACnetDeviceModel, gateway: 'VisioBASGateway'
+    async def create(cls, device_obj: BACnetDevice, gateway: 'VisioBASGateway'
                      ) -> 'AsyncModbusDevice':
         dev = cls(device_obj=device_obj, gateway=gateway)
 
@@ -211,7 +211,7 @@ class AsyncModbusDevice:
     def retries(self) -> int:
         return self._device_obj.retries
 
-    def load_objects(self, objs: Collection[ModbusObjModel]) -> None:
+    def load_objects(self, objs: Collection[ModbusObj]) -> None:
         """Groups objects by poll period and loads them into device for polling."""
         assert len(objs)
 
@@ -220,8 +220,8 @@ class AsyncModbusDevice:
         _LOG.debug('Objects are grouped by period and loads to the device')
 
     @staticmethod
-    def _sort_objects_by_period(objs: Collection[ModbusObjModel]
-                                ) -> dict[int, set[ModbusObjModel]]:
+    def _sort_objects_by_period(objs: Collection[ModbusObj]
+                                ) -> dict[int, set[ModbusObj]]:
         """Creates dict from objects, where key is period, value is collection
         of objects with that period.
 
@@ -261,7 +261,7 @@ class AsyncModbusDevice:
             # self._gateway.async_add_job(self.start_periodic_polls)
             await self.scheduler.spawn(self.start_periodic_polls())
 
-    async def periodic_poll(self, objs: set[ModbusObjModel], period: int) -> None:
+    async def periodic_poll(self, objs: set[ModbusObj], period: int) -> None:
         await self.scheduler.spawn(self._poll_objects(objs=objs, period=period))
         _LOG.debug(f'Periodic polling task created',
                    extra={'device_id': self.id, 'period': period})
@@ -274,7 +274,7 @@ class AsyncModbusDevice:
         # self._poll_tasks[period] = self._loop.create_task(
         #     self.periodic_poll(objs=objs, period=period))
 
-    async def _poll_objects(self, objs: Collection[ModbusObjModel], period: int) -> None:
+    async def _poll_objects(self, objs: Collection[ModbusObj], period: int) -> None:
         """Polls objects and set new periodic job in period.
 
         Args:
@@ -321,7 +321,7 @@ class AsyncModbusDevice:
         }
         return write_funcs
 
-    async def read(self, obj: ModbusObjModel) -> Optional[Union[float, int, str]]:
+    async def read(self, obj: ModbusObj) -> Optional[Union[float, int, str]]:
         """Read data from Modbus object.
 
         Updates object and return value.
@@ -361,7 +361,7 @@ class AsyncModbusDevice:
         else:
             return obj.pv  # return not used now. Updates object
 
-    async def write(self, value, obj: ModbusObjModel) -> None:
+    async def write(self, value, obj: ModbusObj) -> None:
         """Write data to Modbus object."""
         write_cmd_code = obj.property_list.modbus.func_write
         reg_address = obj.property_list.modbus.address
@@ -394,7 +394,7 @@ class AsyncModbusDevice:
                                        ReadDiscreteInputsResponse,
                                        ReadHoldingRegistersResponse,
                                        ReadInputRegistersResponse],
-                     obj: ModbusObjModel) -> Union[bool, int, float]:
+                     obj: ModbusObj) -> Union[bool, int, float]:
         """Decodes non-error response from modbus read function."""
         return await self._gateway.async_add_job(self._decode_response, resp, obj)
 
@@ -403,7 +403,7 @@ class AsyncModbusDevice:
                                      ReadDiscreteInputsResponse,
                                      ReadHoldingRegistersResponse,
                                      ReadInputRegistersResponse],
-                         obj: ModbusObjModel) -> Union[bool, int, float]:
+                         obj: ModbusObj) -> Union[bool, int, float]:
 
         data_length = obj.property_list.modbus.data_length
         data_type = obj.property_list.modbus.data_type

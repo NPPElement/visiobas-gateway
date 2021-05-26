@@ -5,7 +5,7 @@ from pymodbus.constants import Endian
 
 from .data_type import DataType
 from .func_code import ModbusReadFunc, ModbusWriteFunc
-from ..bacnet.obj import BACnetObjModel, BACnetObjPropertyListModel
+from ..bacnet.obj import BACnetObj, BACnetObjPropertyListModel
 from ..bacnet.obj_property import ObjProperty
 
 
@@ -36,8 +36,11 @@ class ModbusObjPropertyListModel(BaseModel):
     class Config:
         arbitrary_types_allowed = True
 
-    def __repr__(self) -> str:
+    def __str__(self) -> str:
         return str(self.__dict__)
+
+    def __repr__(self) -> str:
+        return str(self)
 
     # @validator('bit')
     # def check_bit(cls, v, values):
@@ -62,11 +65,14 @@ class ModbusObjPropertyListModel(BaseModel):
 class ModbusPropertyListJsonModel(BACnetObjPropertyListModel):
     modbus: ModbusObjPropertyListModel = Field(...)
 
-    def __repr__(self) -> str:
+    def __str__(self) -> str:
         return str(self.__dict__)
 
+    def __repr__(self) -> str:
+        return str(self)
 
-class ModbusObjModel(BACnetObjModel):
+
+class ModbusObj(BACnetObj):
     property_list: Json[ModbusPropertyListJsonModel] = Field(
         alias=ObjProperty.propertyList.id_str)
 
@@ -74,5 +80,8 @@ class ModbusObjModel(BACnetObjModel):
     # def parse_property_list(cls, pl: str) -> ModbusPropertyListWrap:
     #     return ModbusPropertyListWrap.parse_raw(pl)
 
+    def __str__(self) -> str:
+        return str(self.__dict__)
+
     def __repr__(self) -> str:
-        return f'ModbusObj'  # {self.__dict__}' # todo
+        return str(self)

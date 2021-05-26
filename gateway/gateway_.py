@@ -7,8 +7,8 @@ from pydantic import ValidationError
 
 from gateway.clients import VisioHTTPClient, VisioBASMQTTClient
 from gateway.devices import AsyncModbusDevice
-from gateway.models import (ObjType, BACnetDeviceModel, ModbusObjModel, Protocol,
-                            BACnetObjModel, HTTPSettings, GatewaySettings)
+from gateway.models import (ObjType, BACnetDevice, ModbusObj, Protocol,
+                            BACnetObj, HTTPSettings, GatewaySettings)
 from gateway.utils import get_file_logger
 from gateway.verifier import BACnetVerifier
 
@@ -236,18 +236,18 @@ class VisioBASGateway:
         _LOG.info('Device polling started', extra={'device_id': dev_id})
 
     @staticmethod
-    def _parse_device_obj(dev_data: dict) -> Optional[BACnetDeviceModel]:
+    def _parse_device_obj(dev_data: dict) -> Optional[BACnetDevice]:
         """Parses and validate device object data from JSON.
 
         Returns:
             Parsed and validated device object, if no errors throw.
         """
-        dev_obj = BACnetDeviceModel(**dev_data)
+        dev_obj = BACnetDevice(**dev_data)
         _LOG.debug('Device object parsed', extra={'device_object': dev_obj})
         return dev_obj
 
-    def _extract_objects(self, objs_data: tuple, dev_obj: BACnetDeviceModel
-                         ) -> list[ModbusObjModel]:
+    def _extract_objects(self, objs_data: tuple, dev_obj: BACnetDevice
+                         ) -> list[ModbusObj]:
         """Parses and validate objects data from JSON.
 
         Returns:
@@ -258,11 +258,11 @@ class VisioBASGateway:
                 if not None and not isinstance(obj_data, (aiohttp.ClientError, Exception))]
         return objs
 
-    async def verify_objects(self, objs: Collection[BACnetObjModel]) -> None:
+    async def verify_objects(self, objs: Collection[BACnetObj]) -> None:
         """Verify objects in executor pool."""
         await self.async_add_job(self.verifier.verify_objects, objs)
 
-    async def send_objects(self, objs: Collection[BACnetObjModel]) -> None:
+    async def send_objects(self, objs: Collection[BACnetObj]) -> None:
         """Sends objects to server."""
         assert len(objs)
 
@@ -273,7 +273,7 @@ class VisioBASGateway:
                                            dev_id=dev_id,
                                            data=str_)
 
-    async def device_factory(self, dev_obj: BACnetDeviceModel
+    async def device_factory(self, dev_obj: BACnetDevice
                              ) -> Optional[Union[AsyncModbusDevice]]:
         """Creates device for provided protocol.
 
@@ -300,8 +300,8 @@ class VisioBASGateway:
                            extra={'device_id': dev_obj.id, 'exc': e, })
 
     @staticmethod
-    def object_factory(dev_obj: BACnetDeviceModel, obj_data: dict[str, Any]
-                       ) -> Optional[Union[ModbusObjModel, BACnetObjModel]]:
+    def object_factory(dev_obj: BACnetDevice, obj_data: dict[str, Any]
+                       ) -> Optional[Union[ModbusObj, BACnetObj]]:
         """Creates object for provided protocol data.
 
         Returns:
@@ -312,7 +312,7 @@ class VisioBASGateway:
             protocol = dev_obj.property_list.protocol
             if protocol in {Protocol.MODBUS_TCP, Protocol.MODBUS_RTU,
                             Protocol.MODBUS_RTUOVERTCP}:
-                obj = ModbusObjModel(**obj_data)  # todo switch to parse_raw
+                obj = ModbusObj(**obj_data)  # todo switch to parse_raw
             elif protocol == Protocol.BACNET:
                 obj = None  # todo
             else:

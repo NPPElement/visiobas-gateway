@@ -4,7 +4,7 @@ from typing import Collection
 # todo: process optional imports
 from pymodbus.exceptions import ModbusException
 
-from ..models import StatusFlags, StatusFlag, BACnetObjModel
+from ..models import StatusFlags, StatusFlag, BACnetObj
 from ..utils import get_file_logger
 
 _LOG = get_file_logger(name=__name__)
@@ -17,10 +17,10 @@ class BACnetVerifier:
     def __repr__(self) -> str:
         return self.__class__.__name__
 
-    def verify_objects(self, objs: Collection[BACnetObjModel]):
+    def verify_objects(self, objs: Collection[BACnetObj]):
         [self.verify(obj=obj) for obj in objs]
 
-    def verify(self, obj: BACnetObjModel) -> None:
+    def verify(self, obj: BACnetObj) -> None:
         _LOG.debug('Got object', extra={'object': obj})
         if obj.exception:
             self.process_exception(obj=obj)
@@ -32,7 +32,7 @@ class BACnetVerifier:
                 self.verify_pa(obj=obj)
 
     @staticmethod
-    def process_exception(obj: BACnetObjModel) -> None:
+    def process_exception(obj: BACnetObj) -> None:
         obj.pv = 'null'
         obj.sf.enable(flag=StatusFlag.FAULT)
 
@@ -50,11 +50,11 @@ class BACnetVerifier:
         obj.exception = None
 
     @staticmethod
-    def verify_sf(obj: BACnetObjModel) -> None:
+    def verify_sf(obj: BACnetObj) -> None:
         obj.sf = StatusFlags(flags=obj.sf)
 
     @staticmethod
-    def verify_pv(obj: BACnetObjModel) -> None:
+    def verify_pv(obj: BACnetObj) -> None:
         if obj.pv == 'active':
             obj.pv = 1
         elif obj.pv == 'inactive':
@@ -77,7 +77,7 @@ class BACnetVerifier:
             obj.sf.enable(flag=StatusFlag.FAULT)
             obj.reliability = 'empty'
 
-    def verify_pa(self, obj: BACnetObjModel) -> None:
+    def verify_pa(self, obj: BACnetObj) -> None:
         """Sets OVERRIDE status flag if priority array contains override priority."""
 
         # todo: move priorities into Enum

@@ -1,8 +1,8 @@
 from .data_type import DataType
 from .func_code import ModbusReadFunc, ModbusWriteFunc
-from .obj import ModbusObjModel
+from .obj import ModbusObj
 
 __all__ = [
     'ModbusReadFunc', 'ModbusWriteFunc',
-    'ModbusObjModel', 'DataType',
+    'ModbusObj', 'DataType',
 ]
