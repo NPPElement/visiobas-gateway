@@ -17,12 +17,10 @@ _LOG = get_file_logger(__name__)
 
 class VisioBASGateway:
     """VisioBAS IoT Gateway."""
-
-    _serial_creation_lock = asyncio.Lock()
-
     def __init__(self, settings: GatewaySettings):
         # self.loop = asyncio.new_event_loop()
         self.loop: asyncio.AbstractEventLoop = asyncio.get_running_loop()
+        self._serial_creation_lock = asyncio.Lock()
 
         # self._pending_tasks: list = []
         self.settings = settings
