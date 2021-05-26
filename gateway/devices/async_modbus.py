@@ -83,7 +83,7 @@ class AsyncModbusDevice:
                      ) -> 'AsyncModbusDevice':
         dev = cls(device_obj=device_obj, gateway=gateway)
         dev.scheduler = await aiojobs.create_scheduler(close_timeout=60, limit=100)
-        dev._gateway.add_job(dev.create_client)
+        await dev._gateway.async_add_job(dev.create_client)
         _LOG.debug('Device created', extra={'device_id': dev.id})
         return dev
 
@@ -145,8 +145,7 @@ class AsyncModbusDevice:
                     raise RuntimeError('Unexpected behavior')
 
                 _LOG.debug('Current state of serial',
-                           extra={'serial_ports_dict': self._serial_clients,
-                                  'serial_clients_dict': self._serial_clients, })
+                           extra={'serial_clients_dict': self._serial_clients, })
             else:
                 raise NotImplementedError('Other methods not support yet.')
         except ModbusException as e:
