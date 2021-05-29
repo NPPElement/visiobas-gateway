@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Optional, Union
 
-from pydantic import Field, BaseModel
+from pydantic import Field, BaseModel, PrivateAttr
 
 from .base_obj import BaseBACnetObjModel
 from .obj_property import ObjProperty
@@ -26,32 +26,32 @@ class BACnetObjPropertyListJsonModel(BaseModel):
         return str(self)
 
 
-class LastValue:
-    def __init__(self, resolution: float, value=None):
-        self.resolution = resolution
-
-        whole_part, fractional_part = str(resolution).split('.', maxsplit=1)
-        self.ndigits = len(fractional_part)
-
-        self.value = value
-        self.updated: datetime = None  # when it was updated
-
-    def __get__(self, instance, owner):
-        return self.value
-
-    def __set__(self, instance, value: Optional[Union[float, int, str]]) -> None:
-        self.updated = datetime.now()
-        if isinstance(value, (float, int)):
-            self.value = self._round(value=value)
-        elif isinstance(value, str) or value is None:
-            self.value = value
-        else:
-            raise NotImplemented
-
-    def _round(self, value: Union[float, int]) -> float:
-        return round(
-            round(value / self.resolution) * self.resolution,
-            ndigits=self.ndigits)
+# class LastValueDescriptor:
+#     def __init__(self, resolution: float, value=None):
+#         self.resolution = resolution
+#
+#         whole_part, fractional_part = str(resolution).split('.', maxsplit=1)
+#         self.ndigits = len(fractional_part)
+#
+#         self.value = value
+#         self.updated: datetime = None  # when it was updated
+#
+#     def __get__(self, instance, owner):
+#         return self.value
+#
+#     def __set__(self, instance, value: Optional[Union[float, int, str]]) -> None:
+#         self.updated = datetime.now()
+#         if isinstance(value, (float, int)):
+#             self.value = self._round(value=value)
+#         elif isinstance(value, str) or value is None:
+#             self.value = value
+#         else:
+#             raise NotImplemented
+#
+#     def _round(self, value: Union[float, int]) -> float:
+#         return round(
+#             round(value / self.resolution) * self.resolution,
+#             ndigits=self.ndigits)
 
 
 class BACnetObj(BaseBACnetObjModel):
@@ -66,7 +66,6 @@ class BACnetObj(BaseBACnetObjModel):
                                             description='Priority array')
     reliability: Optional[Union[int, str]] = Field(default=None,
                                                    alias=ObjProperty.reliability.id_str)
-    pv = LastValue(resolution=resolution)
 
     # todo find public property
     # send_interval: Optional[float] = Field(default=60,
@@ -76,13 +75,52 @@ class BACnetObj(BaseBACnetObjModel):
                                          alias=ObjProperty.segmentationSupported.id_str)
     property_list: BACnetObjPropertyListJsonModel = Field(
         ..., alias=ObjProperty.propertyList.id_str)
-
-    # value = Field(default=LastValue(resolution=resolution, value=None))
     exception: Optional[Exception] = None
+
+    _last_value: Optional[Union[int, float, str]] = PrivateAttr()
+    _updated_at: Optional[datetime] = PrivateAttr()
 
     class Config:
         arbitrary_types_allowed = True
-        keep_untouched = (LastValue, )
+
+    @property
+    def pv(self) -> Optional[Union[int, float, str]]:
+        return self._last_value
+
+    # @pv.setter
+    # def pv(self, value: Optional[Union[int, float, str]]):
+    #     # TODO: Make it by descriptor?
+    #
+    #     def _round(value_: Union[float, int], resolution: float) -> float:
+    #         whole_part, fractional_part = str(resolution).split('.', maxsplit=1)
+    #         digits = len(fractional_part)
+    #         return round(round(value_ / resolution) * resolution, ndigits=digits)
+    #
+    #     self._updated = datetime.now()
+    #
+    #     if isinstance(value, (float, int)):
+    #         self._pv = _round(value_=value, resolution=self.resolution)
+    #     elif isinstance(value, str) or value is None:
+    #         self._pv = value
+    #     else:
+    #         raise ValueError('Expected only int, float, str, None')
+
+    def set_pv(self, value: Optional[Union[int, float, str]]):
+        # TODO: Make it by setter or descriptor
+
+        def _round(value_: Union[float, int], resolution: float) -> float:
+            whole_part, fractional_part = str(resolution).split('.', maxsplit=1)
+            digits = len(fractional_part)
+            return round(round(value_ / resolution) * resolution, ndigits=digits)
+
+        self._updated_at = datetime.now()
+
+        if isinstance(value, (float, int)):
+            self._last_value = _round(value_=value, resolution=self.resolution)
+        elif isinstance(value, str) or value is None:
+            self._last_value = value
+        else:
+            raise ValueError('Expected only int, float, str, None')
 
     def __str__(self) -> str:
         return self.__class__.__name__ + str(self.__dict__)

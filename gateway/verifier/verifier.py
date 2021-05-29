@@ -32,13 +32,13 @@ class BACnetVerifier:
 
     @staticmethod
     def process_exception(obj: BACnetObj) -> None:
-        obj.pv = 'null'
+        obj.set_pv(value='null')
         obj.sf.enable(flag=StatusFlag.FAULT)
 
         if isinstance(obj.exception, (asyncio.TimeoutError, asyncio.CancelledError)):
             obj.reliability = 'timeout'
         elif isinstance(obj.exception, ModbusException):
-            obj.reliability = 'modbus-' + str(obj.exception).replace(' ', '-')
+            obj.reliability = str(obj.exception).replace(' ', '-')
         elif isinstance(obj.exception, (TypeError, ValueError)):
             obj.reliability = 'decode-error'
         else:
@@ -55,24 +55,24 @@ class BACnetVerifier:
     @staticmethod
     def verify_pv(obj: BACnetObj) -> None:
         if obj.pv in {True, 'active'}:
-            obj.pv = 1
+            obj.set_pv(value=1)
         elif obj.pv in {False, 'inactive'}:
-            obj.pv = 0
+            obj.set_pv(value=0)
 
         elif obj.pv in {'null', None}:
-            obj.pv = 'null'
+            obj.set_pv(value='null')
             obj.sf.enable(flag=StatusFlag.FAULT)
             # obj.reliability todo is reliability set?
         elif obj.pv == float('inf'):
-            obj.pv = 'null'
+            obj.set_pv(value='null')
             obj.sf.enable(flag=StatusFlag.FAULT)
             obj.reliability = 2
         elif obj.pv == float('-inf'):
-            obj.pv = 'null'
+            obj.set_pv(value='null')
             obj.sf.enable(flag=StatusFlag.FAULT)
             obj.reliability = 3
         elif isinstance(obj.pv, str) and not obj.pv.strip():
-            obj.pv = 'null'
+            obj.set_pv(value='null')
             obj.sf.enable(flag=StatusFlag.FAULT)
             obj.reliability = 'empty'
 

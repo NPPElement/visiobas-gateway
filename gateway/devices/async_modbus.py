@@ -27,6 +27,7 @@ from ..utils import get_file_logger
 
 VisioBASGateway = Any  # ...gateway_loop
 
+
 # _LOG = get_file_logger(name=__name__, size_mb=500)
 
 
@@ -117,8 +118,8 @@ class AsyncModbusDevice:
                         or not self._serial_locks.get(self.serial_port)
                 ):
                     self._LOG.debug('Serial port not using. Creating client',
-                               extra={'device_id': self.id,
-                                      'serial_port': self.serial_port, })
+                                    extra={'device_id': self.id,
+                                           'serial_port': self.serial_port, })
 
                     # async with self._serial_locks[self.serial_port]:
                     self._loop, self._client = AsyncModbusSerialClient(
@@ -139,19 +140,19 @@ class AsyncModbusDevice:
                         and self._serial_locks.get(self.serial_port)
                 ):
                     self._LOG.debug('Serial port already using. Getting client',
-                               extra={'device_id': self.id,
-                                      'serial_port': self.serial_port, })
+                                    extra={'device_id': self.id,
+                                           'serial_port': self.serial_port, })
                     self._client = self._serial_clients[self.serial_port]
                 else:
                     raise RuntimeError('Unexpected behavior')
 
                 self._LOG.debug('Current state of serial',
-                           extra={'serial_clients_dict': self._serial_clients, })
+                                extra={'serial_clients_dict': self._serial_clients, })
             else:
                 raise NotImplementedError('Other methods not support yet.')
         except ModbusException as e:
             self._LOG.warning('Cannot create client',
-                         extra={'device_id': self.id, 'exc': e, })
+                              extra={'device_id': self.id, 'exc': e, })
         else:
             self._LOG.debug('Client created', extra={'device_id': self.id})
 
@@ -264,8 +265,8 @@ class AsyncModbusDevice:
                 #            extra={'device_id': self.id, 'period': period})
         else:
             self._LOG.info('`pymodbus` client is not connected. Sleeping to next try',
-                      extra={'device_id': self.id,
-                             'seconds_to_next_try': self.reconnect_period})
+                           extra={'device_id': self.id,
+                                  'seconds_to_next_try': self.reconnect_period})
             await asyncio.sleep(delay=self.reconnect_period)
             await self._gateway.async_add_job(self.create_client)
             # self._gateway.async_add_job(self.start_periodic_polls)
@@ -274,9 +275,9 @@ class AsyncModbusDevice:
     async def periodic_poll(self, objs: set[ModbusObj], period: int) -> None:
         await self.scheduler.spawn(self._poll_objects(objs=objs, period=period))
         self._LOG.debug(f'Periodic polling task created',
-                   extra={'device_id': self.id, 'period': period,
-                          'jobs_active_count': self.scheduler.active_count,
-                          'jobs_pending_count': self.scheduler.pending_count, })
+                        extra={'device_id': self.id, 'period': period,
+                               'jobs_active_count': self.scheduler.active_count,
+                               'jobs_pending_count': self.scheduler.pending_count, })
         # await self._poll_objects(objs=objs)
         await asyncio.sleep(delay=period)
 
@@ -294,8 +295,8 @@ class AsyncModbusDevice:
             period: Time to start new poll job.
         """
         self._LOG.debug('Polling started',
-                   extra={'device_id': self.id, 'period': period,
-                          'objects_polled': len(objs)})
+                        extra={'device_id': self.id, 'period': period,
+                               'objects_polled': len(objs)})
         read_tasks = [self.read(obj=obj) for obj in objs]
         _t0 = datetime.now()
         # await self.scheduler.spawn(asyncio.gather(*read_tasks))
@@ -304,16 +305,17 @@ class AsyncModbusDevice:
         if _t_delta.seconds > period:
             # TODO: improve tactic
             self._LOG.warning('Polling period is too short! ',
-                         #'Requests may interfere selves. Increased to x2!',
-                         extra={'device_id': self.id,
-                                #'period_old': period, 'period_new': period * 2
-                                })
+                              # 'Requests may interfere selves. Increased to x2!',
+                              extra={'device_id': self.id,
+                                     # 'period_old': period, 'period_new': period * 2
+                                     })
             # for obj in objs:
             #     obj.property_list.send_interval *= 2
 
         self._LOG.info('Objects polled',
-                  extra={'device_id': self.id, 'period': period,
-                         'seconds_took': _t_delta.seconds, 'objects_polled': len(objs)})
+                       extra={'device_id': self.id, 'period': period,
+                              'seconds_took': _t_delta.seconds,
+                              'objects_polled': len(objs)})
         await self._gateway.verify_objects(objs=objs)
         await self._gateway.send_objects(objs=objs)
 
@@ -357,7 +359,7 @@ class AsyncModbusDevice:
                                                         unit=self.unit)
             if not resp.isError():
                 value = await self.decode(resp=resp, obj=obj)
-                obj.pv = value
+                obj.set_pv(value=value)
             else:
                 raise ModbusException(self._0X80_FUNC_CODE)
         except (TypeError, ValueError, AttributeError,
@@ -366,13 +368,14 @@ class AsyncModbusDevice:
                 ) as e:
             obj.exception = e
             self._LOG.warning('Read error',
-                         extra={'device_id': self.id,
-                                'register': address, 'quantity': quantity, 'exc': e, })
+                              extra={'device_id': self.id,
+                                     'register': address, 'quantity': quantity, 'exc': e, })
         except Exception as e:
             obj.exception = e
             self._LOG.exception(f'Unexpected read error: {e}',
-                           extra={'device_id': self.id,
-                                  'register': address, 'quantity': quantity, 'exc': e, })
+                                extra={'device_id': self.id,
+                                       'register': address, 'quantity': quantity,
+                                       'exc': e, })
 
         else:
             return obj.pv  # return not used now. Updates object
@@ -397,14 +400,15 @@ class AsyncModbusDevice:
                 raise ModbusException(self._0X80_FUNC_CODE)
         except ModbusException as e:
             self._LOG.warning('Failed write',
-                         extra={'device_id': self.id,
-                                'register': reg_address, 'quantity': quantity, 'exc': e, })
+                              extra={'device_id': self.id,
+                                     'register': reg_address, 'quantity': quantity,
+                                     'exc': e, })
         except Exception as e:
             self._LOG.exception('Unhandled error', extra={'device_id': self.id, 'exc': e, })
         else:
             self._LOG.debug(f'Successfully write',
-                       extra={'device_id': self.id, 'address': reg_address,
-                              'value': value})
+                            extra={'device_id': self.id, 'address': reg_address,
+                                   'value': value})
 
     async def decode(self, resp: Union[ReadCoilsResponse,
                                        ReadDiscreteInputsResponse,
@@ -414,11 +418,11 @@ class AsyncModbusDevice:
         """Decodes non-error response from modbus read function."""
         return await self._gateway.async_add_job(self._decode_response, resp, obj)
 
-    #@staticmethod
+    # @staticmethod
     def _decode_response(self, resp: Union[ReadCoilsResponse,
-                                     ReadDiscreteInputsResponse,
-                                     ReadHoldingRegistersResponse,
-                                     ReadInputRegistersResponse],
+                                           ReadDiscreteInputsResponse,
+                                           ReadHoldingRegistersResponse,
+                                           ReadInputRegistersResponse],
                          obj: ModbusObj) -> Union[bool, int, float]:
 
         data_length = obj.property_list.modbus.data_length
@@ -479,11 +483,11 @@ class AsyncModbusDevice:
             decoded = decode_funcs[data_length][data_type]()
             scaled = decoded * scale + offset
             self._LOG.debug('Decoded',
-                       extra={'device_id': obj.device_id, 'object_id': obj.id,
-                              'register_address': reg_address, 'quantity': quantity,
-                              'value_raw': data, 'data_length': data_length,
-                              'data_type': data_type,
-                              'value_decoded': decoded, 'value_scaled': scaled})
+                            extra={'device_id': obj.device_id, 'object_id': obj.id,
+                                   'register_address': reg_address, 'quantity': quantity,
+                                   'value_raw': data, 'data_length': data_length,
+                                   'data_type': data_type,
+                                   'value_decoded': decoded, 'value_scaled': scaled})
             return scaled
 
     async def encode(self):
