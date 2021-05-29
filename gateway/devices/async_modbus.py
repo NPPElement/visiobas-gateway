@@ -275,14 +275,14 @@ class AsyncModbusDevice:
         await self.scheduler.spawn(self._poll_objects(objs=objs, period=period))
         self._LOG.debug(f'Periodic polling task created',
                    extra={'device_id': self.id, 'period': period,
-                          'jobs_active_cound': self.scheduler.active_count,
+                          'jobs_active_count': self.scheduler.active_count,
                           'jobs_pending_count': self.scheduler.pending_count, })
         # await self._poll_objects(objs=objs)
         await asyncio.sleep(delay=period)
 
         # Period of poll may change in the polling
         await self.scheduler.spawn(
-            self.periodic_poll(objs=objs, period=objs.pop().property_list.send_interval))
+            self.periodic_poll(objs=objs, period=period))
         # self._poll_tasks[period] = self._loop.create_task(
         #     self.periodic_poll(objs=objs, period=period))
 
@@ -303,12 +303,13 @@ class AsyncModbusDevice:
         _t_delta = datetime.now() - _t0
         if _t_delta.seconds > period:
             # TODO: improve tactic
-            self._LOG.warning('Polling period is too short! '
-                         'Requests may interfere selves. Increased to x2!',
+            self._LOG.warning('Polling period is too short! ',
+                         #'Requests may interfere selves. Increased to x2!',
                          extra={'device_id': self.id,
-                                'period_old': period, 'period_new': period * 2})
-            for obj in objs:
-                obj.property_list.send_interval *= 2
+                                #'period_old': period, 'period_new': period * 2
+                                })
+            # for obj in objs:
+            #     obj.property_list.send_interval *= 2
 
         self._LOG.info('Objects polled',
                   extra={'device_id': self.id, 'period': period,
