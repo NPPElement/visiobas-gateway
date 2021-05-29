@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Optional, Union, Any
+from typing import Optional, Union
 
 from pydantic import Field, BaseModel
 
@@ -39,11 +39,11 @@ class LastValue:
     def __get__(self, instance, owner):
         return self.value
 
-    def __set__(self, instance, value: Union[float, int, str]) -> None:
+    def __set__(self, instance, value: Optional[Union[float, int, str]]) -> None:
         self.updated = datetime.now()
         if isinstance(value, (float, int)):
             self.value = self._round(value=value)
-        elif isinstance(value, str):
+        elif isinstance(value, str) or value is None:
             self.value = value
         else:
             raise NotImplemented
@@ -56,9 +56,9 @@ class LastValue:
 
 class BACnetObj(BaseBACnetObjModel):
     resolution: Optional[float] = Field(default=0.1, alias=ObjProperty.resolution.id_str)
-    pv: Any = Field(default=LastValue(resolution=resolution),
-                    alias=ObjProperty.presentValue.id_str,
-                    description='Present value')
+    pv: LastValue = Field(default=LastValue(resolution=resolution),
+                          alias=ObjProperty.presentValue.id_str,
+                          description='Present value')
     sf: StatusFlags = Field(default=StatusFlags(flags=0b0000),
                             # alias=ObjProperty.statusFlags.id_str, # todo read from server?
                             description='Status flags')
@@ -81,6 +81,7 @@ class BACnetObj(BaseBACnetObjModel):
 
     class Config:
         arbitrary_types_allowed = True
+        keep_untouched = True
 
     def __str__(self) -> str:
         return self.__class__.__name__ + str(self.__dict__)
