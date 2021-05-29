@@ -414,8 +414,8 @@ class AsyncModbusDevice:
         """Decodes non-error response from modbus read function."""
         return await self._gateway.async_add_job(self._decode_response, resp, obj)
 
-    @staticmethod
-    def _decode_response(resp: Union[ReadCoilsResponse,
+    #@staticmethod
+    def _decode_response(self, resp: Union[ReadCoilsResponse,
                                      ReadDiscreteInputsResponse,
                                      ReadHoldingRegistersResponse,
                                      ReadInputRegistersResponse],
@@ -478,13 +478,12 @@ class AsyncModbusDevice:
 
             decoded = decode_funcs[data_length][data_type]()
             scaled = decoded * scale + offset
-            # todo: return debug
-            # self._LOG.debug('Decoded',
-            #            extra={'device_id': obj.device_id, 'object_id': obj.id,
-            #                   'register_address': reg_address, 'quantity': quantity,
-            #                   'value_raw': data, 'data_length': data_length,
-            #                   'data_type': data_type,
-            #                   'value_decoded': decoded, 'value_scaled': scaled})
+            self._LOG.debug('Decoded',
+                       extra={'device_id': obj.device_id, 'object_id': obj.id,
+                              'register_address': reg_address, 'quantity': quantity,
+                              'value_raw': data, 'data_length': data_length,
+                              'data_type': data_type,
+                              'value_decoded': decoded, 'value_scaled': scaled})
             return scaled
 
     async def encode(self):
