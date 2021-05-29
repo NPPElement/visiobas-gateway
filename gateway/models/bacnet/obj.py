@@ -82,6 +82,7 @@ class BACnetObj(BaseBACnetObjModel):
 
     class Config:
         arbitrary_types_allowed = True
+        keep_untouched = (LastValue, )
 
     def __str__(self) -> str:
         return self.__class__.__name__ + str(self.__dict__)
