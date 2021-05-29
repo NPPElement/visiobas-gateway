@@ -486,7 +486,7 @@ class AsyncModbusDevice:
                             extra={'device_id': obj.device_id, 'object_id': obj.id,
                                    'register_address': reg_address, 'quantity': quantity,
                                    'value_raw': data, 'data_length': data_length,
-                                   'data_type': data_type,
+                                   'data_type': data_type, 'resolution': obj.resolution,
                                    'value_decoded': decoded, 'value_scaled': scaled})
             return scaled
 
