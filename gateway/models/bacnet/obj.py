@@ -19,8 +19,11 @@ class BACnetObjPropertyListModel(BaseModel):
 class BACnetObjPropertyListJsonModel(BaseModel):
     property_list: BACnetObjPropertyListModel = Field(default=None)
 
-    def __repr__(self) -> str:
+    def __str__(self) -> str:
         return str(self.__dict__)
+
+    def __repr__(self) -> str:
+        return str(self)
 
 
 class LastValue:
@@ -51,7 +54,7 @@ class LastValue:
             ndigits=self.ndigits)
 
 
-class BACnetObjModel(BaseBACnetObjModel):
+class BACnetObj(BaseBACnetObjModel):
     resolution: Optional[float] = Field(default=0.1, alias=ObjProperty.resolution.id_str)
     pv: Any = Field(default=LastValue(resolution=resolution),
                     alias=ObjProperty.presentValue.id_str,
@@ -61,7 +64,7 @@ class BACnetObjModel(BaseBACnetObjModel):
                             description='Status flags')
     pa: Optional[Union[str, tuple]] = Field(alias=ObjProperty.priorityArray.id_str,
                                             description='Priority array')
-    reliability: Optional[Union[int, str]] = Field(default=0,
+    reliability: Optional[Union[int, str]] = Field(default=None,
                                                    alias=ObjProperty.reliability.id_str)
 
     # todo find public property
@@ -79,8 +82,11 @@ class BACnetObjModel(BaseBACnetObjModel):
     class Config:
         arbitrary_types_allowed = True
 
+    def __str__(self) -> str:
+        return self.__class__.__name__ + str(self.__dict__)
+
     def __repr__(self) -> str:
-        return f'BACnetObj{self.__dict__}'
+        return str(self)
 
     def to_mqtt_str(self) -> str:
         return '{0} {1} {2} {3} {4}'.format(self.device_id,
@@ -99,7 +105,7 @@ class BACnetObjModel(BaseBACnetObjModel):
 
         str_ += ' ' + str(self.sf.for_http.flags)  # SF with disabled flags!
 
-        if self.reliability:
+        if self.reliability and self.reliability != 'no-fault-detected':
             str_ += ' ' + str(self.reliability)
 
         return str_

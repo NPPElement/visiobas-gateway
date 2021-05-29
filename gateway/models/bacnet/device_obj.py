@@ -40,8 +40,11 @@ class DevicePropertyListJsonModel(BaseModel):
     internal_period: float = Field(default=0.3, alias='internalPeriod')
     reconnect_period: int = Field(default=5 * 60, alias='reconnectPeriod')
 
-    def __repr__(self) -> str:
+    def __str__(self) -> str:
         return str(self.__dict__)
+
+    def __repr__(self) -> str:
+        return str(self)
 
     @validator('rtu')
     def port_in_rtu_required(cls, v: DeviceRTUPropertyListModel, values):
@@ -50,7 +53,7 @@ class DevicePropertyListJsonModel(BaseModel):
         return v
 
 
-class BACnetDeviceModel(BaseBACnetObjModel):
+class BACnetDevice(BaseBACnetObjModel):
     timeout: int = Field(..., alias=ObjProperty.apduTimeout.id_str)
     retries: int = Field(default=2, alias=ObjProperty.numberOfApduRetries.id_str)
 

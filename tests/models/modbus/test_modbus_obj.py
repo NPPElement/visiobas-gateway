@@ -1,13 +1,13 @@
 import unittest
 
-from gateway.models.modbus import ModbusObjModel
+from gateway.models.modbus import ModbusObj
 
 
 class TestToStr(unittest.TestCase):
     def setUp(self) -> None:
         self._set_AI_BI_objects_data()
-        self.ai_obj = ModbusObjModel(**self.AI_obj_data)
-        self.bi_obj = ModbusObjModel(**self.BI_obj_data)
+        self.ai_obj = ModbusObj(**self.AI_obj_data)
+        self.bi_obj = ModbusObj(**self.BI_obj_data)
         print(self.ai_obj, self.bi_obj, sep='\n')
 
     def test_to_http_str(self):

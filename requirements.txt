@@ -1,7 +1,7 @@
 aiohttp==3.7.4.post0
 aiojobs~=0.3.0
 PyYAML==5.4.1
-setuptools==56.2.0
+setuptools==57.0.0
 paho-mqtt~=1.5.1
 pydantic[dotenv]~=1.8.1
 pymodbus==2.5.2

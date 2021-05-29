@@ -127,25 +127,28 @@ class VisioHTTPClient:
     #     )
 
     async def get_objs(self, dev_id: int, obj_types: Collection[ObjType]
-                       ) -> Union[tuple[Any], Any]:
-        """Requests objects of provided type
+                       ) -> tuple[Union[Any, Exception], ...]:
+        """Requests objects of provided type.
+
+        If one of requests failed - return error with responses.
 
         Args:
             dev_id: device identifier
             obj_types: types of objects
 
         Returns:
-            If provided one type - returns objects of this type.
-            If provided several types - returns tuple of objects.
+            If provided one type - returns objects of this type or exception.
+            If provided several types - returns tuple of objects, exceptions.
         """
         rq_tasks = [self._rq(method='GET',
                              url=self.server_get.current_url + self._GET_URL + str(
                                  dev_id) + '/' + obj_type.name_dashed,
                              headers=self.server_get.auth_headers)
                     for obj_type in obj_types]
-        data = await asyncio.gather(*rq_tasks)
+        data = await asyncio.gather(*rq_tasks, return_exceptions=True)
 
-        return data[0] if len(obj_types) == 1 else data
+        return data
+        # return data[0] if len(obj_types) == 1 else data
 
     async def logout(self, servers: Optional[Collection[HTTPServerConfig]] = None) -> bool:
         """Performs log out from servers.
@@ -280,12 +283,17 @@ class VisioHTTPClient:
                          data=data
                          ) for server in servers
             ]
-            await asyncio.gather(*post_tasks)
+            await asyncio.gather(*post_tasks)  # , return_exceptions=True)
+            # TODO: What we should do with errors?
             _LOG.debug('Successfully sent data',
                        extra={'device_id': dev_id, 'servers': servers})
             return True
+        except asyncio.TimeoutError as e:
+            _LOG.warning('Failed to send', extra={'device_id': dev_id, 'exc': e, })
+            return False
+
         except Exception as e:
-            _LOG.exception('Failed to send',
+            _LOG.exception('Unhandled failed to send',
                            extra={'device_id': dev_id, 'exc': e, })
             return False
 
@@ -319,8 +327,8 @@ class VisioHTTPClient:
                     return _json['data']
                 except LookupError as e:
                     # fixme
-                    _LOG.warning(f'Data extracting failed (most likely in logout)',
-                                 extra={'exc': e, })
+                    _LOG.warning(f'Data extracting failed (most likely in logout)')  # ,
+                    # extra={'exc': e, })
             else:
                 raise aiohttp.ClientError(f'Failure response: {response.url}\n{_json}')
         # else:

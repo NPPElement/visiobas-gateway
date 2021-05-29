@@ -32,10 +32,10 @@ def get_file_logger(name: str,
         Logger with RotatingFileHandler.
     """
 
-    log_level = level or os.getenv('GW_LOG_FILE_LEVEL', 'DEBUG')
+    log_level = level or os.getenv('GTW_LOG_FILE_LEVEL', 'DEBUG')
     log_filename = filename or BASE_DIR / f'logs/{name}.log'
-    size_mb = (size_mb or int(os.getenv('GW_LOG_FILE_SIZE', 50))) * _MEGABYTE
-    fmt = fmt or os.getenv('GW_LOG_FORMAT', '%(levelname)-8s [%(asctime)s] %(name)s'
+    size_mb = (size_mb or int(os.getenv('GTW_LOG_FILE_SIZE', 50))) * _MEGABYTE
+    fmt = fmt or os.getenv('GTW_LOG_FORMAT', '%(levelname)-8s [%(asctime)s] %(name)s'
                                             '.%(funcName)s(%(lineno)d): %(message)s')
     logger = getLogger(name)
     logger.setLevel(level=log_level)
