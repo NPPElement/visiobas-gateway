@@ -17,8 +17,12 @@ class BaseBACnetObjModel(BaseModel):
     property_list: Json = Field(alias=ObjProperty.propertyList.id_str)
 
     @property
-    def mqtt_topic(self) -> str:
+    def replaced_name(self) -> str:
         return self.name.replace(':', '/').replace('.', '/')
+
+    @property
+    def mqtt_topic(self) -> str:
+        return self.replaced_name
 
     def __hash__(self) -> int:
         return hash((self.type, self.id, self.device_id))

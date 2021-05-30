@@ -1,12 +1,12 @@
 from .bacnet import (ObjType, ObjProperty, StatusFlag, StatusFlags, BACnetObj,
-                     BACnetDevice)
+                     BACnetDevice, BaseBACnetObjModel)
 from .modbus import (ModbusObj, ModbusReadFunc, ModbusWriteFunc, DataType)
 from .mqtt import ResultCode, Qos
 from .protocol import Protocol
 from .settings import (HTTPServerConfig, HTTPSettings, GatewaySettings)
 
 __all__ = ['ObjType', 'ObjProperty', 'StatusFlag', 'StatusFlags',
-           'BACnetObj', 'BACnetDevice',
+           'BACnetObj', 'BACnetDevice', 'BaseBACnetObjModel',
 
            'ModbusReadFunc', 'ModbusWriteFunc',
            'ModbusObj', 'DataType',
