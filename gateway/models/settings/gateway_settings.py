@@ -4,9 +4,11 @@ from pydantic import (Field, BaseSettings, AnyHttpUrl)
 
 
 class GatewaySettings(BaseSettings):
-    address: IPv4Address = Field(
-        ..., description="Gateway's address. "
-                         "Uses to set 'polled by' in polling device object.")
+
+    # todo: solve problem with 'polling by'
+    # address: IPv4Address = Field(
+    #     ..., description="Gateway's address. "
+    #                      "Uses to set 'polled by' in polling device object.")
 
     update_period: int = Field(default=3600, ge=1800)
     override_threshold: int = Field(
