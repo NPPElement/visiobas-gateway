@@ -93,6 +93,9 @@ class AsyncModbusDevice:
 
         Raises:
             # ConnectionError: if client is not initialized.
+
+        Async pymodbus not support `timeout` param. Default: 2 sec
+        See: https://github.com/riptideio/pymodbus/issues/349
         """
         self._LOG.debug('Creating pymodbus client', extra={'device_id': self.id})
         try:
@@ -360,7 +363,7 @@ class AsyncModbusDevice:
                 obj.pv = value
             else:
                 raise ModbusException(self._0X80_FUNC_CODE)
-        except (TypeError, ValueError, AttributeError,
+        except (TypeError, AttributeError,  # ValueError
                 asyncio.TimeoutError, asyncio.CancelledError,
                 ModbusException,
                 ) as e:
@@ -368,7 +371,7 @@ class AsyncModbusDevice:
             self._LOG.warning('Read error',
                          extra={'device_id': self.id,
                                 'register': address, 'quantity': quantity, 'exc': e, })
-        except Exception as e:
+        except (ValueError, Exception) as e:
             obj.exception = e
             self._LOG.exception(f'Unexpected read error: {e}',
                            extra={'device_id': self.id,
