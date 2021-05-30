@@ -56,7 +56,7 @@ class BACnetObjPropertyListJsonModel(BaseModel):
 
 class BACnetObj(BaseBACnetObjModel):
     resolution: Optional[Union[int, float]] = Field(
-        default=0.1, alias=ObjProperty.resolution.id_str, gt=0,
+        default=None, alias=ObjProperty.resolution.id_str, gt=0,
         description='''
         Indicates the smallest recognizable change in `Present_Value` in 
         engineering units (read-only).''')
@@ -107,7 +107,7 @@ class BACnetObj(BaseBACnetObjModel):
     def validate_resolution(cls, v: Optional[Union[int, float]], values
                             ) -> Optional[Union[int, float]]:
         if values['type'].is_analog and not v:
-            return 0.1  # default value
+            return 0.1  # default resolution value
         return v
 
     @property
@@ -143,7 +143,7 @@ class BACnetObj(BaseBACnetObjModel):
         """Sets presentValue with round by resolution.
         Use it to set new presentValue.
 
-        `pydantic` BaseModel not support descriptor, setter.
+        `pydantic` BaseModel not support parametrized descriptor, setter.
         See:
             - https://github.com/samuelcolvin/pydantic/pull/679  # custom descriptor
             - https://github.com/samuelcolvin/pydantic/issues/935
