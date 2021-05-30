@@ -6,7 +6,6 @@ paho-mqtt~=1.5.1
 pydantic[dotenv]~=1.8.1
 pymodbus==2.5.2
 pyserial-asyncio==0.5
-# yarl~=1.6.3
 # aiomisc==14.0.3
 
 # BAC0==21.2.5  # todo: use pure bacpypes

@@ -156,10 +156,17 @@ class BACnetObj(BaseBACnetObjModel):
             value: presentValue of object
         """
 
-        def _round(value_: Union[float, int], resolution: float) -> float:
-            whole_part, fractional_part = str(resolution).split('.', maxsplit=1)
-            digits = len(fractional_part)
-            return round(round(value_ / resolution) * resolution, ndigits=digits)
+        def _round(value_: Union[float, int],
+                   resolution: Union[int, float]) -> float:
+            assert isinstance(resolution, (int, float))
+
+            if isinstance(resolution, int):
+                # FIXME
+                return round(value_)
+            elif isinstance(resolution, float):
+                whole_part, fractional_part = str(resolution).split('.', maxsplit=1)
+                digits = len(fractional_part)
+                return round(round(value_ / resolution) * resolution, ndigits=digits)
 
         self._updated_at = datetime.now()
 
