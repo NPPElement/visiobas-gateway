@@ -4,7 +4,7 @@ from typing import Any, Union, Collection, Optional
 import aiohttp
 
 from ...models import (ObjType, HTTPServerConfig, HTTPSettings, ObjProperty,
-                       BaseBACnetObjModel)
+                       BaseBACnetObjModel, BACnetDevice)
 from ...utils import get_file_logger
 
 _LOG = get_file_logger(name=__name__)
@@ -25,7 +25,7 @@ class VisioHTTPClient:
 
     def __init__(self, gateway: 'VisioBASGateway', settings: HTTPSettings):
         self.gateway = gateway
-        self._config = settings
+        self._settings = settings
         self._timeout = aiohttp.ClientTimeout(total=settings.timeout)
         self._session = aiohttp.ClientSession(timeout=settings.timeout)
 
@@ -46,15 +46,15 @@ class VisioHTTPClient:
 
     @property
     def retry_delay(self) -> int:
-        return self._config.retry
+        return self._settings.retry
 
     @property
     def server_get(self) -> HTTPServerConfig:
-        return self._config.server_get
+        return self._settings.server_get
 
     @property
     def servers_post(self) -> list[HTTPServerConfig]:
-        return self._config.servers_post
+        return self._settings.servers_post
 
     async def setup(self) -> None:
         """Wait for authorization then spawn a periodic update task."""
@@ -127,6 +127,18 @@ class VisioHTTPClient:
     #     asyncio.run(
     #         self.logout(nodes=[self.get_node, *self.post_nodes])
     #     )
+
+    async def post_gateway_address(self, dev_obj: BACnetDevice) -> None:
+        """Post gateway address to polling device.
+
+        Args:
+            dev_obj: Polling device object
+        """
+        # fixme import replace to ''
+        await self.post_property(value=str(self.gateway.address),
+                                 property_=ObjProperty.deviceAddressBinding,
+                                 obj=dev_obj,
+                                 servers=self.servers_post)
 
     async def get_objs(self, dev_id: int, obj_types: Collection[ObjType]
                        ) -> tuple[Union[Any, Exception], ...]:
