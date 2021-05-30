@@ -111,11 +111,12 @@ class BACnetObj(BaseBACnetObjModel):
 
         `pydantic` BaseModel not support descriptor, setter.
         See:
+            - https://github.com/samuelcolvin/pydantic/pull/679  # custom descriptor
             - https://github.com/samuelcolvin/pydantic/issues/935
             - https://github.com/samuelcolvin/pydantic/issues/1577
-            - https://github.com/samuelcolvin/pydantic/pull/2625
+            - https://github.com/samuelcolvin/pydantic/pull/2625  # computed fields
 
-        TODO: Make it by setter or descriptor?
+        TODO: Make it by setter or descriptor with params?
 
         Args:
             value: presentValue of object
