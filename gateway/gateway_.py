@@ -163,10 +163,10 @@ class VisioBASGateway:
         for dev_id in self._devices.keys():
             await self.start_device_poll(dev_id=dev_id)
 
-        # Set gateway address of polling devices
-        gtw_addr_tasks = [self.http_client.post_gateway_address(dev_obj=dev.dev_obj)
-                          for dev in self._devices.values()]
-        await asyncio.gather(*gtw_addr_tasks)
+        # # Set gateway address of polling devices
+        # gtw_addr_tasks = [self.http_client.post_gateway_address(dev_obj=dev.dev_obj)
+        #                   for dev in self._devices.values()]
+        # await asyncio.gather(*gtw_addr_tasks)
 
         # todo await self.mqtt_client.subscribe(self.mqtt_client.topics)
         _LOG.info('Start tasks performed')

@@ -4,7 +4,7 @@ from typing import Any, Union, Collection, Optional
 import aiohttp
 
 from ...models import (ObjType, HTTPServerConfig, HTTPSettings, ObjProperty,
-                       BaseBACnetObjModel, BACnetDevice)
+                       BaseBACnetObjModel)
 from ...utils import get_file_logger
 
 _LOG = get_file_logger(name=__name__)
@@ -128,17 +128,19 @@ class VisioHTTPClient:
     #         self.logout(nodes=[self.get_node, *self.post_nodes])
     #     )
 
-    async def post_gateway_address(self, dev_obj: BACnetDevice) -> None:
-        """Post gateway address to polling device.
+    # async def post_gateway_address(self, dev_obj: BACnetDevice) -> None:
+    #     """Post gateway address to polling device.
+    #
+    #     Args:
+    #         dev_obj: Polling device object
 
-        Args:
-            dev_obj: Polling device object
-        """
-        # fixme import replace to ''
-        await self.post_property(value=str(self.gateway.address),
-                                 property_=ObjProperty.deviceAddressBinding,
-                                 obj=dev_obj,
-                                 servers=self.servers_post)
+    #     DEPRECATED
+    #     """
+    #     # fixme import replace to ''
+    #     await self.post_property(value={'gtw_address': str(self.gateway.address)},
+    #                              property_=ObjProperty.deviceAddressBinding,
+    #                              obj=dev_obj,
+    #                              servers=self.servers_post)
 
     async def get_objs(self, dev_id: int, obj_types: Collection[ObjType]
                        ) -> tuple[Union[Any, Exception], ...]:
@@ -312,7 +314,7 @@ class VisioHTTPClient:
                            extra={'device_id': dev_id, 'exc': e, })
             return False
 
-    async def post_property(self, value: Union[int, float, str],
+    async def post_property(self, value: Any,
                             property_: ObjProperty, obj: BaseBACnetObjModel,
                             # fixme import switch to ''
                             servers: Collection[HTTPServerConfig],
