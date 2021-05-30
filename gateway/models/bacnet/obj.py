@@ -105,8 +105,21 @@ class BACnetObj(BaseBACnetObjModel):
     #     else:
     #         raise ValueError('Expected only int, float, str, None')
 
-    def set_pv(self, value: Optional[Union[int, float, str]]):
-        # TODO: Make it by setter or descriptor
+    def set_pv(self, value: Optional[Union[int, float, str]]) -> None:
+        """Sets presentValue with round by resolution.
+        Use it to set new presentValue.
+
+        `pydantic` BaseModel not support descriptor, setter.
+        See:
+            - https://github.com/samuelcolvin/pydantic/issues/935
+            - https://github.com/samuelcolvin/pydantic/issues/1577
+            - https://github.com/samuelcolvin/pydantic/pull/2625
+
+        TODO: Make it by setter or descriptor?
+
+        Args:
+            value: presentValue of object
+        """
 
         def _round(value_: Union[float, int], resolution: float) -> float:
             whole_part, fractional_part = str(resolution).split('.', maxsplit=1)
