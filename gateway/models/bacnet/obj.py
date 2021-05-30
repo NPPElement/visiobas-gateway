@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Optional, Union
 
-from pydantic import Field, BaseModel, PrivateAttr
+from pydantic import Field, BaseModel, PrivateAttr, validator
 
 from .base_obj import BaseBACnetObjModel
 from .obj_property import ObjProperty
@@ -55,8 +55,8 @@ class BACnetObjPropertyListJsonModel(BaseModel):
 
 
 class BACnetObj(BaseBACnetObjModel):
-    resolution: Optional[float] = Field(
-        default=None, alias=ObjProperty.resolution.id_str,
+    resolution: Optional[Union[int, float]] = Field(
+        default=0.1, alias=ObjProperty.resolution.id_str, gt=0,
         description='''
         Indicates the smallest recognizable change in `Present_Value` in 
         engineering units (read-only).''')
@@ -102,6 +102,13 @@ class BACnetObj(BaseBACnetObjModel):
 
     class Config:
         arbitrary_types_allowed = True
+
+    @validator('resolution')
+    def validate_resolution(cls, v: Optional[Union[int, float]], values
+                            ) -> Optional[Union[int, float]]:
+        if values['type'].is_analog and not v:
+            raise ValueError('Objects of analog types required resolution')
+        return v
 
     @property
     def pv(self) -> Optional[Union[int, float, str]]:

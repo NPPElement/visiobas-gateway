@@ -186,8 +186,8 @@ class VisioHTTPClient:
             logout_tasks = [self._rq(method='GET',
                                      url=self._URL_LOGOUT.format(
                                          base_url=server.current_url),
-                                     headers=server.auth_headers
-                                     ) for server in servers]
+                                     headers=server.auth_headers)
+                            for server in servers]
             res = await asyncio.gather(*logout_tasks)
 
             # clear auth data
