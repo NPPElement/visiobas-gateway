@@ -55,8 +55,10 @@ class BACnetObjPropertyListJsonModel(BaseModel):
 
 
 class BACnetObj(BaseBACnetObjModel):
+    DEFAULT_RESOLUTION = 0.1
+
     resolution: Optional[Union[int, float]] = Field(
-        default=0.1, alias=ObjProperty.resolution.id_str, gt=0,
+        default=DEFAULT_RESOLUTION, alias=ObjProperty.resolution.id_str, gt=0,
         description='''
         Indicates the smallest recognizable change in `Present_Value` in 
         engineering units (read-only).''')
@@ -107,7 +109,7 @@ class BACnetObj(BaseBACnetObjModel):
     def validate_resolution(cls, v: Optional[Union[int, float]], values
                             ) -> Optional[Union[int, float]]:
         if values['type'].is_analog and not v:
-            raise ValueError('Objects of analog types required resolution')
+            return cls.DEFAULT_RESOLUTION
         return v
 
     @property
