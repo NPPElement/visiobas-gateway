@@ -3,7 +3,7 @@ from enum import Enum, unique
 from .obj_property import ObjProperty
 
 
-@unique
+# @unique  # FIXME
 class ObjType(Enum):
     """Represent types of BACnet objects."""
     ANALOG_INPUT = "analog-input", 0, 'analogInput'
