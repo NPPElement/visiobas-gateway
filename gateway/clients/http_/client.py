@@ -333,7 +333,7 @@ class VisioHTTPClient:
                        extra={'device_id': obj.device_id, 'property': property_,
                               'value': value, 'servers': servers, })
             return True
-        except asyncio.TimeoutError as e:
+        except (asyncio.TimeoutError, aiohttp.ClientError) as e:
             _LOG.warning('Failed to send property',
                          extra={'device_id': obj.device_id, 'property': property_,
                                 'value': value, 'servers': servers, 'exc': e, })
