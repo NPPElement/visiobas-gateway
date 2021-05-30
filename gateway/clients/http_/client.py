@@ -21,7 +21,7 @@ class VisioHTTPClient:
     _LOGOUT_URL = '/auth/secure/logout'
     _GET_URL = '/vbas/gate/get/'
     _POST_LIGHT_URL = 'vbas/gate/light'
-    _POST_PROPERTY_URL = '{base_url}/vbas/arm/saveObjectParam/{property_id}/Site/{replaced_object_name}'
+    _POST_PROPERTY_URL = '{base_url}/vbas/arm/saveObjectParam/{property_id}/{replaced_object_name}'
 
     def __init__(self, gateway: 'VisioBASGateway', settings: HTTPSettings):
         self.gateway = gateway
