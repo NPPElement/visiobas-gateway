@@ -55,17 +55,34 @@ class BACnetObjPropertyListJsonModel(BaseModel):
 
 
 class BACnetObj(BaseBACnetObjModel):
-    resolution: Optional[float] = Field(default=0.1, alias=ObjProperty.resolution.id_str)
+    resolution: Optional[float] = Field(
+        default=None, alias=ObjProperty.resolution.id_str,
+        description='''
+        Indicates the smallest recognizable change in `Present_Value` in 
+        engineering units (read-only).''')
     # pv: LastValue = Field(default=LastValue(resolution=resolution),
     #                       alias=ObjProperty.presentValue.id_str,
     #                       description='Present value')
-    sf: StatusFlags = Field(default=StatusFlags(flags=0b0000),
-                            # alias=ObjProperty.statusFlags.id_str, # todo read from server?
-                            description='Status flags')
-    pa: Optional[Union[str, tuple]] = Field(alias=ObjProperty.priorityArray.id_str,
-                                            description='Priority array')
-    reliability: Optional[Union[int, str]] = Field(default=None,
-                                                   alias=ObjProperty.reliability.id_str)
+    sf: StatusFlags = Field(
+        default=StatusFlags(flags=0b0000),
+        # alias=ObjProperty.statusFlags.id_str, # todo read from server?
+        description='''
+        Status flags. represents four Boolean flags that indicate the general "health" of 
+        an value. Three of the flags are associated with the values of other properties of 
+        this object. A more detailed status could be determined by reading the properties 
+        that are linked to these flags. The relationship between individual flags is 
+        not defined by the protocol.''')
+    pa: Optional[Union[str, tuple]] = Field(
+        alias=ObjProperty.priorityArray.id_str,
+        description='''
+        Priority array. This property is a read-only array that contains prioritized 
+        commands that are in effect for this object.''')
+    reliability: Optional[Union[int, str]] = Field(
+        default=None,
+        alias=ObjProperty.reliability.id_str,
+        description='''
+        Provides an indication of whether the `Present_Value` is "reliable" as far as 
+        the BACnet Device can determine and, if not, why.''')
 
     # todo find public property
     # send_interval: Optional[float] = Field(default=60,
@@ -74,9 +91,12 @@ class BACnetObj(BaseBACnetObjModel):
     segmentation_supported: bool = Field(default=False,
                                          alias=ObjProperty.segmentationSupported.id_str)
     property_list: BACnetObjPropertyListJsonModel = Field(
-        ..., alias=ObjProperty.propertyList.id_str)
-    exception: Optional[Exception] = None
+        ..., alias=ObjProperty.propertyList.id_str, description='''
+        This read-only property is a JSON of property identifiers, one property identifier 
+        for each property that exists within the object. The standard properties are not 
+        included in the JSON.''')
 
+    exception: Optional[Exception] = None
     _last_value: Optional[Union[int, float, str]] = PrivateAttr()
     _updated_at: Optional[datetime] = PrivateAttr()
 
@@ -85,6 +105,13 @@ class BACnetObj(BaseBACnetObjModel):
 
     @property
     def pv(self) -> Optional[Union[int, float, str]]:
+        """Indicates the current value, in engineering units, of the `TYPE`.
+        `Present_Value` shall be optionally commandable. If `Present_Value` is commandable
+        for a given object instance, then the `Priority_Array` and `Relinquish_Default`
+        properties shall also be present for that instance.
+
+        The `Present_Value` property shall be writable when `Out_Of_Service` is TRUE.
+        """
         return self._last_value
 
     # @pv.setter
@@ -129,12 +156,12 @@ class BACnetObj(BaseBACnetObjModel):
 
         self._updated_at = datetime.now()
 
-        if isinstance(value, (float, int)):
+        if isinstance(value, (float, int)) and self.type.is_analog:
             self._last_value = _round(value_=value, resolution=self.resolution)
-        elif isinstance(value, str) or value is None:
+        elif isinstance(value, str) or value is None or self.type.is_discrete:
             self._last_value = value
         else:
-            raise ValueError('Expected only int, float, str, None')
+            raise ValueError(f'Unexpected params: {locals()}')
 
     def __str__(self) -> str:
         return self.__class__.__name__ + str(self.__dict__)
