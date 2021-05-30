@@ -1,4 +1,5 @@
 import asyncio
+from ipaddress import IPv4Address
 from typing import Callable, Any, Optional, Union, Awaitable, Collection
 
 import aiohttp
@@ -43,6 +44,10 @@ class VisioBASGateway:
         gateway._scheduler = await aiojobs.create_scheduler(close_timeout=60,
                                                             limit=100)
         return gateway
+
+    @property
+    def address(self) -> IPv4Address:
+        return self.settings.address
 
     @property
     def poll_device_ids(self) -> list[int]:
@@ -157,6 +162,11 @@ class VisioBASGateway:
         # Create devices by one to prevent creations of several serial clients
         for dev_id in self._devices.keys():
             await self.start_device_poll(dev_id=dev_id)
+
+        # Set gateway address of polling devices
+        gtw_addr_tasks = [self.http_client.post_gateway_address(dev_obj=dev.dev_obj)
+                          for dev in self._devices.values()]
+        await asyncio.gather(*gtw_addr_tasks)
 
         # todo await self.mqtt_client.subscribe(self.mqtt_client.topics)
         _LOG.info('Start tasks performed')

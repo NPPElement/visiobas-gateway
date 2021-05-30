@@ -224,6 +224,10 @@ class AsyncModbusDevice:
     def retries(self) -> int:
         return self._device_obj.retries
 
+    @property
+    def dev_obj(self) -> BACnetDevice:
+        return self._device_obj
+
     def load_objects(self, objs: Collection[ModbusObj]) -> None:
         """Groups objects by poll period and loads them into device for polling."""
         assert len(objs)
