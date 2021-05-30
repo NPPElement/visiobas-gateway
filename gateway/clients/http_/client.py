@@ -3,7 +3,8 @@ from typing import Any, Union, Collection, Optional
 
 import aiohttp
 
-from ...models import (ObjType, HTTPServerConfig, HTTPSettings)
+from ...models import (ObjType, HTTPServerConfig, HTTPSettings, ObjProperty,
+                       BaseBACnetObjModel)
 from ...utils import get_file_logger
 
 _LOG = get_file_logger(name=__name__)
@@ -19,7 +20,8 @@ class VisioHTTPClient:
     _AUTH_URL = 'auth/rest/login'
     _LOGOUT_URL = '/auth/secure/logout'
     _GET_URL = '/vbas/gate/get/'
-    _POST_URL = 'vbas/gate/light'
+    _POST_LIGHT_URL = 'vbas/gate/light'
+    _POST_PROPERTY_URL = '{base_url}/vbas/arm/saveObjectParam/{property_id}/Site/{replaced_object_name}'
 
     def __init__(self, gateway: 'VisioBASGateway', settings: HTTPSettings):
         self.gateway = gateway
@@ -278,10 +280,11 @@ class VisioHTTPClient:
         try:
             post_tasks = [
                 self._rq(method='POST',
-                         url=server.current_url + '/' + self._POST_URL + '/' + str(dev_id),
+                         url=server.current_url + '/' + self._POST_LIGHT_URL + '/' + str(
+                             dev_id),
                          headers=server.auth_headers,
-                         data=data
-                         ) for server in servers
+                         data=data)
+                for server in servers
             ]
             await asyncio.gather(*post_tasks)  # , return_exceptions=True)
             # TODO: What we should do with errors?
@@ -295,6 +298,38 @@ class VisioHTTPClient:
         except Exception as e:
             _LOG.exception('Unhandled failed to send',
                            extra={'device_id': dev_id, 'exc': e, })
+            return False
+
+    async def post_property(self, value: Union[int, float, str],
+                            property_: ObjProperty, obj: BaseBACnetObjModel,
+                            # fixme import switch to ''
+                            servers: Collection[HTTPServerConfig],
+                            ) -> bool:
+        try:
+            post_tasks = [
+                self._rq(method='POST',
+                         url=self._POST_PROPERTY_URL.format(
+                             base_url=server.current_url,
+                             property_id=property_.id_str,
+                             replaced_object_name=obj.replaced_name),
+                         headers=server.auth_headers,
+                         data=value)
+                for server in servers
+            ]
+            await asyncio.gather(*post_tasks)
+            _LOG.debug('Successfully sent property',
+                       extra={'device_id': obj.device_id, 'property': property_,
+                              'value': value, 'servers': servers, })
+            return True
+        except asyncio.TimeoutError as e:
+            _LOG.warning('Failed to send property',
+                         extra={'device_id': obj.device_id, 'property': property_,
+                                'value': value, 'servers': servers, 'exc': e, })
+            return False
+        except Exception as e:
+            _LOG.exception('Unhandled failed to send property',
+                           extra={'device_id': obj.device_id, 'property': property_,
+                                  'value': value, 'servers': servers, 'exc': e, })
             return False
 
     async def _rq(self, method: str, url: str, **kwargs) -> Union[list, dict]:
