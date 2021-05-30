@@ -17,11 +17,11 @@ VisioBASGateway = Any  # '...gateway_loop.VisioBASGateway'
 class VisioHTTPClient:
     """Control interactions via HTTP."""
 
-    _AUTH_URL = 'auth/rest/login'
-    _LOGOUT_URL = '/auth/secure/logout'
-    _GET_URL = '/vbas/gate/get/'
-    _POST_LIGHT_URL = 'vbas/gate/light'
-    _POST_PROPERTY_URL = '{base_url}/vbas/arm/saveObjectParam/{property_id}/{replaced_object_name}'
+    _URL_LOGIN = '{base_url}/auth/rest/login'
+    _URL_LOGOUT = '{base_url}/auth/secure/logout'
+    _URL_GET = '{base_url}/vbas/gate/get/{device_id}/{object_type_dashed}'
+    _URL_POST_LIGHT = '{base_url}/vbas/gate/light/{device_id}'
+    _URL_POST_PROPERTY = '{base_url}/vbas/arm/saveObjectParam/{property_id}/{replaced_object_name}'
 
     def __init__(self, gateway: 'VisioBASGateway', settings: HTTPSettings):
         self.gateway = gateway
@@ -157,8 +157,10 @@ class VisioHTTPClient:
             If provided several types - returns tuple of objects, exceptions.
         """
         rq_tasks = [self._rq(method='GET',
-                             url=self.server_get.current_url + self._GET_URL + str(
-                                 dev_id) + '/' + obj_type.name_dashed,
+                             url=self._URL_GET.format(
+                                 base_url=self.server_get.current_url,
+                                 device_id=str(dev_id),
+                                 object_type_dashed=obj_type.name_dashed),
                              headers=self.server_get.auth_headers)
                     for obj_type in obj_types]
         data = await asyncio.gather(*rq_tasks, return_exceptions=True)
@@ -182,7 +184,8 @@ class VisioHTTPClient:
         _LOG.debug('Logging out', extra={'servers': servers})
         try:
             logout_tasks = [self._rq(method='GET',
-                                     url=server.current_url + self._LOGOUT_URL,
+                                     url=self._URL_LOGOUT.format(
+                                         base_url=server.current_url),
                                      headers=server.auth_headers
                                      ) for server in servers]
             res = await asyncio.gather(*logout_tasks)
@@ -259,7 +262,8 @@ class VisioHTTPClient:
 
             while not server.is_authorized:  # and server.switch_server():
                 auth_data = await self._rq(method='POST',
-                                           url=server.current_url + '/' + self._AUTH_URL,
+                                           url=self._URL_LOGIN.format(
+                                               base_url=server.current_url),
                                            json=server.auth_payload)
                 server.set_auth_data(**auth_data)
 
@@ -294,8 +298,9 @@ class VisioHTTPClient:
         try:
             post_tasks = [
                 self._rq(method='POST',
-                         url=server.current_url + '/' + self._POST_LIGHT_URL + '/' + str(
-                             dev_id),
+                         url=self._URL_POST_LIGHT.format(
+                             base_url=server.current_url,
+                             device_id=str(dev_id)),
                          headers=server.auth_headers,
                          data=data)
                 for server in servers
@@ -322,7 +327,7 @@ class VisioHTTPClient:
         try:
             post_tasks = [
                 self._rq(method='POST',
-                         url=self._POST_PROPERTY_URL.format(
+                         url=self._URL_POST_PROPERTY.format(
                              base_url=server.current_url,
                              property_id=property_.id_str,
                              replaced_object_name=obj.replaced_name),
