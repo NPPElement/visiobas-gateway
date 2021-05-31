@@ -33,6 +33,9 @@ class ObjType(Enum):
     PULSE_CONVERTER = "pulse-converter", 24, 'pulseConverter'
     ACCESS_POINT = "access-point", 33, 'accessPoint'
 
+
+    # todo add types from page 65
+
     # TODO: add JSON-input = 250
     # TODO: add JSON-output = 251
 
