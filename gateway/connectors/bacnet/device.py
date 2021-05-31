@@ -13,7 +13,7 @@ from BAC0.core.io.IOExceptions import (ReadPropertyException,
 from BAC0.scripts.Lite import Lite
 from bacpypes.basetypes import PriorityArray
 
-from ...models import BACnetObjModel, ObjProperty
+from ...models import BACnetObj, ObjProperty
 from ...utils import get_fault_obj_properties
 
 
@@ -30,7 +30,7 @@ class BACnetDevice(Thread):
                  address: str,
                  device_id: int,
                  network,
-                 objects: set[BACnetObjModel],
+                 objects: set[BACnetObj],
                  update_period: int):
         super().__init__()
         self.id = device_id
@@ -49,8 +49,8 @@ class BACnetDevice(Thread):
         self.address = address
         self.network: Lite = network
 
-        self.support_rpm: set[BACnetObjModel] = objects
-        self.not_support_rpm: set[BACnetObjModel] = set()
+        self.support_rpm: set[BACnetObj] = objects
+        self.not_support_rpm: set[BACnetObj] = set()
 
         # self.__objects_per_rpm = 25
         # todo: Should we use one RPM for several objects?
@@ -69,7 +69,7 @@ class BACnetDevice(Thread):
         return len(self.support_rpm) + len(self.not_support_rpm)
 
     @property
-    def objects(self) -> set[BACnetObjModel]:
+    def objects(self) -> set[BACnetObj]:
         return self.support_rpm | self.not_support_rpm
 
     def run(self):
@@ -185,7 +185,7 @@ class BACnetDevice(Thread):
         self._log.debug('All objects were polled. Send device_id to verifier')
         self._put_device_end_to_verifier()
 
-    def read_property(self, obj: BACnetObjModel, prop: ObjProperty):
+    def read_property(self, obj: BACnetObj, prop: ObjProperty):
         try:
             args = '{0} {1} {2} {3}'.format(self.address,
                                             obj.type.name,
@@ -203,7 +203,7 @@ class BACnetDevice(Thread):
             self._log.warning(f'RP Error: {e}')
             raise e
 
-    def write_property(self, value, prop: ObjProperty, priority: int, obj: BACnetObjModel,
+    def write_property(self, value, prop: ObjProperty, priority: int, obj: BACnetObj,
                        ) -> bool:
         """
         :return: is write successful
@@ -221,7 +221,7 @@ class BACnetDevice(Thread):
             self._log.warning(f'WP Error: {e}')
             raise e
 
-    def read_property_multiple(self, obj: BACnetObjModel,
+    def read_property_multiple(self, obj: BACnetObj,
                                properties: Sequence[ObjProperty]) -> dict:
         try:
             request = ' '.join([self.address,
@@ -243,7 +243,7 @@ class BACnetDevice(Thread):
             # self._log.warning(f'RPM Error: {e}')
             raise ReadPropertyMultipleException(e)
 
-    def __simulate_rpm(self, obj: BACnetObjModel,
+    def __simulate_rpm(self, obj: BACnetObj,
                        properties: Iterable[ObjProperty]) -> dict:
         values = {}
         for prop in properties:
@@ -269,7 +269,7 @@ class BACnetDevice(Thread):
 
         return values
 
-    def rpm(self, obj: BACnetObjModel) -> dict:
+    def rpm(self, obj: BACnetObj) -> dict:
         properties = {ObjProperty.deviceId: self.id,
                       ObjProperty.objectName: obj.name,
                       ObjProperty.objectType: obj.type,
@@ -286,7 +286,7 @@ class BACnetDevice(Thread):
             # self._log.warning(f'Read Error: {e}')
             raise e
 
-    def simulate_rpm(self, obj: BACnetObjModel) -> dict:
+    def simulate_rpm(self, obj: BACnetObj) -> dict:
         properties = {ObjProperty.deviceId: self.id,
                       ObjProperty.objectName: obj.name,
                       ObjProperty.objectType: obj.type,

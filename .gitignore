@@ -9,13 +9,9 @@ build
 *.pyc
 *.log
 *.log.1
+
 *.DS_Store
 .DS_Store
 
 *address_cache
-gateway/config/http.yaml
-gateway/config/mqtt.yaml
-gateway/config/test-modbus-http.yaml
-
-*.yaml
-*.env
+gateway/config/prod/*

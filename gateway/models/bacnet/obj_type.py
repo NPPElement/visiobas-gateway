@@ -1,9 +1,9 @@
-from enum import Enum, unique
+from enum import Enum  # , unique
 
 from .obj_property import ObjProperty
 
 
-# @unique
+# @unique  # FIXME
 class ObjType(Enum):
     """Represent types of BACnet objects."""
     ANALOG_INPUT = "analog-input", 0, 'analogInput'
@@ -33,7 +33,11 @@ class ObjType(Enum):
     PULSE_CONVERTER = "pulse-converter", 24, 'pulseConverter'
     ACCESS_POINT = "access-point", 33, 'accessPoint'
 
+
     # todo add types from page 65
+
+    # TODO: add JSON-input = 250
+    # TODO: add JSON-output = 251
 
     # SITE = "site", -1
     # FOLDER = "folder", -1
@@ -61,6 +65,16 @@ class ObjType(Enum):
     @property
     def name_dashed(self) -> str:
         return self.value[0]
+
+    @property
+    def is_analog(self) -> bool:
+        return True if self in {ObjType.ANALOG_INPUT,
+                                ObjType.ANALOG_OUTPUT,
+                                ObjType.ANALOG_VALUE, } else False
+
+    @property
+    def is_discrete(self) -> bool:
+        return not self.is_analog
 
     @property
     def properties(self) -> tuple[ObjProperty, ...]:

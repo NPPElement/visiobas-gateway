@@ -22,7 +22,7 @@ class VisioMQTTApi(DevObjMixin, ReadWriteMixin, I2CRWMixin):
 
     def rpc_value(self, params: dict, topic: str, gateway=None) -> None:
         if str(self._gateway) == 'VisioGateway':
-            self.rpc_value_gw(params=params, gateway=gateway)
+            self.rpc_value_gtw(params=params, gateway=gateway)
         elif str(self._gateway) == 'VisioPanel':
             self.rpc_value_panel(params=params, topic=topic)
         else:
@@ -63,7 +63,7 @@ class VisioMQTTApi(DevObjMixin, ReadWriteMixin, I2CRWMixin):
                      payload=payload,
                      )
 
-    def rpc_value_gw(self, params: dict, gateway) -> None:
+    def rpc_value_gtw(self, params: dict, gateway) -> None:
         priority = 11 if params.get('priority') is None else params['priority']
 
         device = self.get_device(dev_id=params['device_id'],

@@ -10,7 +10,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: visiobas-gateway:1.1.5
+    image: visiobas-gateway:3.0.0
     logging:
       #driver: none
       driver: "json-file"
@@ -18,20 +18,26 @@ services:
         max-file: "2"
         max-size: "1024k"
     restart: always
+    privileged: true # [1]
+    env_file:
+      - gateway/config/gateway.env
+      - gateway/config/http.env
     environment:
       - TZ=Europe/Moscow
       - PYTHONPATH=/
 
       # Logging
-      - LOG_LEVEL=DEBUG
-      #- FILE_LOG_LEVEL=DEBUG
+      - PYTHONASYNCIODEBUG=0
+      #- GTW_LOG_FORMAT="%(levelname)-8s [%(asctime)s] [%(threadName)s] %(name)s.%(funcName)s(%(lineno)d): %(message)s"
+      - GTW_LOG_LEVEL=DEBUG
+      - GTW_LOG_FILE_SIZE=50 # in MB
+      - GTW_LOG_FILE_LEVEL=DEBUG
     volumes:
-      - /opt/visiobas-gateway/gateway/config:/usr/share/python3/gw/lib/python3.9/site-packages/gateway/config
-      #- /opt/visiobas-gateway/logs:/usr/share/python3/gw/gateway/logs
-      - /opt/visiobas-gateway/gateway/connectors/bacnet/address_cache:/usr/share/python3/gw/lib/python3.9/site-packages/gateway/connectors/bacnet/address_cache
-      - /opt/visiobas-gateway/gateway/connectors/modbus/address_cache:/usr/share/python3/gw/lib/python3.9/site-packages/gateway/connectors/modbus/address_cache
-
-      #- /home/user/visiobas-gateway:/visiobas-gateway
+      #- /opt/visiobas-gateway/gateway/config:/usr/share/python3/gtw/lib/python3.9/site-packages/gateway/config
+      #- /opt/visiobas-gateway/logs:/usr/share/python3/gtw/gateway/logs
+      - /opt/visiobas-gateway/gateway:/usr/share/python3/gtw/lib/python3.9/site-packages/gateway
+      - /dev:/dev # [1]
+      # - /home/user/visiobas-gateway/gateway:/usr/share/python3/gtw/lib/python3.9/site-packages/gateway
     # command: python -OO __main__.py
     networks:
       - backend
@@ -41,3 +47,10 @@ services:
       - 7070:7070
       - 8080:8080
       - 47808:47808
+
+    devices: # To detect Modbus RTU devices
+      - "/dev/ttyS0:/dev/ttyS0"
+      # - "/dev/ttyUSB0:/dev/ttyUSB0"
+
+
+# [1]: https://www.losant.com/blog/how-to-access-serial-devices-in-docker
