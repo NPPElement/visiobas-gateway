@@ -21,17 +21,26 @@ class ModbusObjPropertyListModel(BaseModel):
     scale: float = Field(default=1., description='Multiplier `A` for recalculate A*X+B')
     offset: float = Field(default=.0, description='Adding `B` for recalculate A*X+B')
 
-    data_type: Union[DataType, str] = Field(..., alias='dataType')  # todo Enum
+    data_type: Union[DataType, str] = Field(..., alias='dataType')
     data_length: int = Field(default=16, ge=1, lt=64, alias='dataLength',
-                             # todo calc default: quantity *16
+                             # todo calc default: quantity * 16
                              description='The number of bits in which the value is stored')
 
     byte_order: Union[str, Endian] = Field(default='little', alias='byteOrder')
     word_order: Union[str, Endian] = Field(default='big', alias='wordOrder')
-    repack: bool = Field(default=False)  # todo add to docs
+    # repack: bool = Field(default=False)  # todo for encode
 
     # bitmask = int todo
-    bit: Optional[int] = Field(default=None, ge=0, le=16)  # TODO: change to 'bitmask'
+    bit: Optional[int] = Field(default=None, ge=0, le=16)  # TODO: change to 'bitmask'?
+
+    @validator('func_write')
+    def validate_consistent(cls, v: ModbusWriteFunc, values) -> ModbusWriteFunc:
+        if values['func_read'].for_register and v.for_register:
+            return v
+        elif values['func_read'].for_coil and v.for_coil:
+            return v
+        else:
+            raise ValueError('Make sure func_read and func_write are consistent.')
 
     class Config:
         arbitrary_types_allowed = True
@@ -81,3 +90,47 @@ class ModbusObj(BACnetObj):
 
     def __repr__(self) -> str:
         return str(self)
+
+    @property
+    def data_length(self) -> int:
+        return self.property_list.modbus.data_length
+
+    @property
+    def data_type(self) -> DataType:
+        return self.property_list.modbus.data_type
+
+    @property
+    def register_addr(self) -> int:
+        return self.property_list.modbus.address
+
+    @property
+    def quantity(self) -> int:
+        return self.property_list.modbus.quantity
+
+    @property
+    def scale(self) -> float:
+        return self.property_list.modbus.scale
+
+    @property
+    def offset(self) -> float:
+        return self.property_list.modbus.offset
+
+    @property
+    def byte_order(self) -> Endian:
+        return self.property_list.modbus.byte_order
+
+    @property
+    def word_order(self) -> Endian:
+        return self.property_list.modbus.word_order
+
+    @property
+    def bit(self) -> Optional[int]:
+        return self.property_list.modbus.bit
+
+    @property
+    def is_register(self) -> bool:
+        return self.property_list.modbus.write_func.for_register
+
+    @property
+    def is_coil(self) -> bool:
+        return self.property_list.modbus.write_func.for_coil
