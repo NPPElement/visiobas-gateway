@@ -19,12 +19,8 @@ class DeviceRTUPropertyListModel(BaseModel):
     # timeout: float = Field(default=1)  # 3s is too much
     parity: str = Field(default=Defaults.Parity)
 
-    # Unexpected in RTU
-    # retry_on_empty: bool = Field(default=True)  # works better
-    # retry_on_invalid: bool = Field(default=True)  # works better
-
-    # def __str__(self) -> str:
-    #     return f'RTU-unit:{self.unit}'
+    def __str__(self) -> str:
+        return str(self.__dict__)
 
     def __repr__(self) -> str:
         return str(self)
@@ -83,10 +79,6 @@ class BACnetDevice(BaseBACnetObjModel):
 
     def __repr__(self) -> str:
         return str(self)
-
-    # @validator('property_list')
-    # def parse_rtu_pl(cls, pl: str) -> DevicePropertyListWrap:
-    #     return DevicePropertyListWrap.parse_raw(pl)
 
     @property
     def types_to_rq(self) -> tuple[ObjType, ...]:

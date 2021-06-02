@@ -76,10 +76,6 @@ class ModbusObj(BACnetObj):
     property_list: Json[ModbusPropertyListJsonModel] = Field(
         alias=ObjProperty.propertyList.id_str)
 
-    # @validator('property_list')
-    # def parse_property_list(cls, pl: str) -> ModbusPropertyListWrap:
-    #     return ModbusPropertyListWrap.parse_raw(pl)
-
     def __str__(self) -> str:
         return str(self.__dict__)
 

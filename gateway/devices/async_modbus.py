@@ -17,7 +17,7 @@ from pymodbus.register_read_message import (ReadHoldingRegistersResponse,
                                             ReadRegistersResponseBase)
 from pymodbus.transaction import ModbusRtuFramer
 
-from ..models import (BACnetDevice, ModbusObj, ObjType, Protocol, DataType,
+from ..models import (BACnetDevice, BACnetObj, ModbusObj, ObjType, Protocol, DataType,
                       ModbusReadFunc, ModbusWriteFunc)
 from ..utils import get_file_logger
 
@@ -326,6 +326,16 @@ class AsyncModbusDevice:
         await self._gateway.verify_objects(objs=objs)
         await self._gateway.send_objects(objs=objs)
 
+        # fixme hotfix
+        await self._gateway.async_add_job(
+            self.clear_properties, objs
+        )
+
+    @staticmethod
+    def clear_properties(objs: Collection[BACnetObj]) -> None:
+        # fixme hotfix
+        [obj.clear_properties() for obj in objs]
+
     @property
     def read_funcs(self) -> dict[ModbusReadFunc, Callable]:
         read_funcs = {
@@ -375,8 +385,8 @@ class AsyncModbusDevice:
                 ) as e:
             obj.exception = e
             self._LOG.warning('Read error',
-                         extra={'device_id': self.id,
-                                'register': address, 'quantity': quantity, 'exc': e, })
+                              extra={'device_id': self.id,
+                                     'register': address, 'quantity': quantity, 'exc': e, })
         except (ValueError, Exception) as e:
             obj.exception = e
             self._LOG.exception(f'Unexpected read error: {e}',

@@ -139,6 +139,11 @@ class BACnetObj(BaseBACnetObjModel):
     #     else:
     #         raise ValueError('Expected only int, float, str, None')
 
+    def clear_properties(self) -> None:
+        self.sf = StatusFlags(flags=0b0000)
+        self.reliability = None
+
+
     def set_pv(self, value: Optional[Union[int, float, str]]) -> None:
         """Sets presentValue with round by resolution.
         Use it to set new presentValue.

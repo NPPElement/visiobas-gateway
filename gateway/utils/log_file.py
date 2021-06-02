@@ -20,7 +20,7 @@ def get_file_logger(name: str,
     If params is not specified they gets from environment, before default.
 
     Args:
-        name: name of logger (module). Should provide __name__.
+        name: name of logger (module). Should provide `__name__`.
         filename:
         level: logging level.
             Default: DEBUG
