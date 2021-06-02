@@ -6,7 +6,8 @@ from typing import Any, Callable, Union, Collection, Optional
 import aiojobs
 from pymodbus.bit_read_message import (ReadCoilsResponse, ReadDiscreteInputsResponse,
                                        ReadBitsResponseBase)
-from pymodbus.client.asynchronous.async_io import AsyncioModbusSerialClient
+from pymodbus.client.asynchronous.async_io import (AsyncioModbusSerialClient,
+                                                   AsyncioModbusTcpClient)
 from pymodbus.client.asynchronous.schedulers import ASYNC_IO
 from pymodbus.client.asynchronous.serial import AsyncModbusSerialClient
 from pymodbus.client.asynchronous.tcp import AsyncModbusTCPClient
@@ -70,7 +71,7 @@ class AsyncModbusDevice:
         self._LOG = get_file_logger(name=__name__ + str(self.id))
 
         self._loop: asyncio.AbstractEventLoop = None
-        self._client: Union[AsyncModbusSerialClient, AsyncModbusTCPClient] = None
+        self._client: Union[AsyncioModbusTcpClient, AsyncioModbusSerialClient] = None
         self.scheduler: aiojobs.Scheduler = None
 
         self._lock = asyncio.Lock()
@@ -512,10 +513,10 @@ class AsyncModbusDevice:
                                    'value_decoded': decoded, 'value_scaled': scaled})
             return scaled
 
-    async def encode(self):
+    async def encode(self, raw_value: Union[int, float]) -> Any:
         pass
 
-    def _encode_register(self):
+    def _encode_register(self, raw_value: Union[int, float]) -> Any:
         pass
 
     # @classmethod
