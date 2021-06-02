@@ -86,3 +86,7 @@ class BACnetDevice(BaseBACnetObjModel):
                 ObjType.BINARY_INPUT, ObjType.BINARY_OUTPUT, ObjType.BINARY_VALUE,
                 ObjType.MULTI_STATE_INPUT, ObjType.MULTI_STATE_OUTPUT,
                 ObjType.MULTI_STATE_VALUE,)
+
+    @property
+    def protocol(self) -> Protocol:
+        return self.property_list.protocol
