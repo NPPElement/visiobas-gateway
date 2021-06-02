@@ -1,22 +1,23 @@
 from http import HTTPStatus
-from logging import getLogger
+
 
 from aiohttp.web_exceptions import HTTPBadGateway
 from aiohttp.web_response import json_response
 from aiohttp_apispec import docs, request_schema, response_schema
 
-from ..base import BaseView
-from ...mixins import ReadWriteMixin
-from ...schema import JsonRPCSchema, JsonRPCPostResponseSchema
-from ....models import ObjProperty
+from ...base_view import BaseView
+from api.mixins import ReadWriteMixin
+from api.schema import JsonRPCSchema, JsonRPCPostResponseSchema
+from models import ObjProperty
+from ....utils import get_file_logger
 
-_log = getLogger(__name__)
+_LOG = get_file_logger(name=__name__)
 
 
 class JsonRPCView(BaseView, ReadWriteMixin):
     URL_PATH = r'/json-rpc'
 
-    @docs(summary='Write property to device object with check.')
+    @docs(summary='Write property to object with check.')
     @request_schema(JsonRPCSchema())
     @response_schema(JsonRPCPostResponseSchema, code=HTTPStatus.OK.value)
     async def post(self):
