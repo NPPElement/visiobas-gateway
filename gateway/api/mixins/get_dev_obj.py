@@ -1,34 +1,51 @@
 from functools import lru_cache
-from logging import getLogger
+from typing import Optional, Union
 
-_log = getLogger(__name__)
+from ...utils import get_file_logger
+
+_LOG = get_file_logger(name=__name__)
+
+# Aliases
+VisioBASGatewayAlias = '...gateway_.VisioBASGateway'
+DeviceAlias = Union['...devices.AsyncModbusDevice',]
+ObjAlias = Union['...models.BACnetObj',]
 
 
-class DevObjMixin:
-
+class GetDevObjMixin:
     @staticmethod
-    def get_device(dev_id: int, gateway):  # ->  Device(Thread)
-        """Returns device's thread (for interactions with object)."""
-        try:
-            for con in gateway.connectors.values():
-                if dev_id in con.polling_devices:
-                    return con.polling_devices[dev_id]
-            raise ValueError(f'Device[{dev_id}] not polling.')
-        except AttributeError as e:
-            _log.warning(f'Error: {e}',
-                         exc_info=True
-                         )
+    def get_device(dev_id: int, gtw: VisioBASGatewayAlias
+                   ) -> Optional[DeviceAlias]:
+        """Gets device instance from gateway instance.
+
+        Args:
+            dev_id: Device identifier.
+            gtw: Gateway instance.
+
+        Returns:
+             Device instance.
+        """
+        return gtw.devices.get(dev_id)
 
     @staticmethod
     @lru_cache(maxsize=25)
-    def get_obj(device, obj_type: int, obj_id: int):  # -> ProtocolObj
-        """Returns protocol's object."""
+    def get_obj(obj_id: int, obj_type_id: int, device: DeviceAlias
+                ) -> Optional[ObjAlias]:
+        """
+        Args:
+            obj_id: Object identifier.
+            obj_type_id: Object type identifier.
+            device: Device instance.
+
+        Returns:
+            Object instance.
+        """
         try:
             for obj in device.objects:
-                if obj.type.id == obj_type and obj.id == obj_id:
+                if obj.type.id == obj_type_id and obj.id == obj_id:
                     return obj
-            raise ValueError(f'Object type={obj_type} id={obj_id} not polling at {device}.')
+            # raise ValueError(
+            #     f'Object type={obj_type_id} id={obj_id} not polling at {device}.')
         except AttributeError as e:
-            _log.warning(f'Error: {e}',
-                         exc_info=True
-                         )
+            _LOG.warning('Unhandled error',
+                         extra={'device_id': device.id, 'object_id': obj_id,
+                                'exc': e, })
