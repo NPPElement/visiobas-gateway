@@ -140,5 +140,5 @@ class ModbusObj(BACnetObj):
         return self.property_list.modbus.func_read
 
     @property
-    def func_write(self) -> ModbusReadFunc:
+    def func_write(self) -> ModbusWriteFunc:
         return self.property_list.modbus.func_write
