@@ -12,7 +12,7 @@ from pymodbus.client.asynchronous.schedulers import ASYNC_IO
 from pymodbus.client.asynchronous.serial import AsyncModbusSerialClient
 from pymodbus.client.asynchronous.tcp import AsyncModbusTCPClient
 from pymodbus.exceptions import ModbusException
-from pymodbus.payload import BinaryPayloadDecoder
+from pymodbus.payload import BinaryPayloadDecoder, BinaryPayloadBuilder
 from pymodbus.register_read_message import (ReadHoldingRegistersResponse,
                                             ReadInputRegistersResponse,
                                             ReadRegistersResponseBase)
@@ -367,37 +367,37 @@ class AsyncModbusDevice:
 
         Updates object and return value.
         """
-        read_func = obj.property_list.modbus.func_read
-        address = obj.property_list.modbus.address
-        quantity = obj.property_list.modbus.quantity
         try:
-            if read_func == ModbusReadFunc.READ_FILE:
+            if obj.func_read is ModbusReadFunc.READ_FILE:
                 raise ModbusException('func-not-support')  # todo: implement 0x14 func
 
             # Using lock because pymodbus doesn't handle async requests internally.
             # Maybe this will change in pymodbus v3.0.0
             async with self.lock:
-                resp = await self.read_funcs[read_func](address=address,
-                                                        count=quantity,
-                                                        unit=self.unit)
-            if not resp.isError():
-                value = await self.decode(resp=resp, obj=obj)
-                obj.set_pv(value=value)
-            else:
+                resp = await self.read_funcs[obj.func_read](address=obj.register_addr,
+                                                            count=obj.quantity,
+                                                            unit=self.unit)
+            if resp.isError():
                 raise ModbusException(self._0X80_FUNC_CODE)
+
+            value = await self.decode(resp=resp, obj=obj)
+            obj.set_pv(value=value)
+
         except (TypeError, AttributeError,  # ValueError
                 asyncio.TimeoutError, asyncio.CancelledError,
                 ModbusException,
                 ) as e:
             obj.exception = e
             self._LOG.warning('Read error',
-                              extra={'device_id': self.id,
-                                     'register': address, 'quantity': quantity, 'exc': e, })
+                              extra={'device_id': self.id, 'object_id': obj.id,
+                                     'register': obj.register_addr,
+                                     'quantity': obj.quantity, 'exc': e, })
         except (ValueError, Exception) as e:
             obj.exception = e
             self._LOG.exception(f'Unexpected read error: {e}',
-                                extra={'device_id': self.id,
-                                       'register': address, 'quantity': quantity,
+                                extra={'device_id': self.id, 'object_id': obj.id,
+                                       'register': obj.register_addr,
+                                       'quantity': obj.quantity,
                                        'exc': e, })
 
         else:
@@ -405,40 +405,46 @@ class AsyncModbusDevice:
 
     async def write(self, value: Union[int, float], obj: ModbusObj) -> None:
         """Write data to Modbus object."""
-        write_cmd_code = obj.property_list.modbus.func_write
-        reg_address = obj.property_list.modbus.address
-        quantity = obj.property_list.modbus.quantity
         try:
-            # encoded_value = TODO encode here
+            payload = await self.build(value=value, obj=obj)
 
             # Using lock because pymodbus doesn't handle async requests internally.
             # Maybe this will change in pymodbus v3.0.0
             async with self.lock:
-                rq = await self.write_funcs[write_cmd_code.code](reg_address,
-                                                                 value,
-                                                                 unit=self.unit)
-            if not rq.isError():
-                pass  # todo: collapse
-            else:
+                rq = await self.write_funcs[obj.func_write](obj.register_addr,
+                                                            payload, unit=self.unit)
+            if rq.isError():
                 raise ModbusException(self._0X80_FUNC_CODE)
+
+            self._LOG.debug(f'Successfully write',
+                            extra={'device_id': self.id, 'object_id': obj.id,
+                                   'address': obj.register_addr, 'value': value, })
+            # obj.set_pv(value=value)
         except ModbusException as e:
             self._LOG.warning('Failed write',
-                              extra={'device_id': self.id,
-                                     'register': reg_address, 'quantity': quantity,
-                                     'exc': e, })
+                              extra={'device_id': self.id, 'object_id': obj.id,
+                                     'register': obj.register_addr,
+                                     'quantity': obj.quantity, 'exc': e, })
         except Exception as e:
-            self._LOG.exception('Unhandled error', extra={'device_id': self.id, 'exc': e, })
-        else:
-            self._LOG.debug(f'Successfully write',
-                            extra={'device_id': self.id, 'address': reg_address,
-                                   'value': value})
+            self._LOG.exception('Unhandled error',
+                                extra={'device_id': self.id, 'object_id': obj.id,
+                                       'register': obj.register_addr,
+                                       'quantity': obj.quantity, 'exc': e, })
 
     async def decode(self, resp: Union[ReadCoilsResponse,
                                        ReadDiscreteInputsResponse,
                                        ReadHoldingRegistersResponse,
                                        ReadInputRegistersResponse],
                      obj: ModbusObj) -> Union[bool, int, float]:
-        """Decodes non-error response from modbus read function."""
+        """Decodes non-error response from modbus read function.
+
+        Args:
+            resp: Response instance.
+            obj: Object instance.
+
+        Returns:
+            Decoded from register\bits and scaled value.
+        """
         return await self._gateway.async_add_job(self._decode_response, resp, obj)
 
     # @staticmethod
@@ -447,22 +453,15 @@ class AsyncModbusDevice:
                                            ReadHoldingRegistersResponse,
                                            ReadInputRegistersResponse],
                          obj: ModbusObj) -> Union[bool, int, float]:
+        """Decodes value from registers and scale them.
+        # TODO make 4 decoders for all combinations in bo, wo and use them?
+        Args:
+            resp: Read request response.
+            obj: Object instance
 
-        data_length = obj.property_list.modbus.data_length
-        data_type = obj.property_list.modbus.data_type
-
-        reg_address = obj.property_list.modbus.address
-        quantity = obj.property_list.modbus.quantity
-
-        scale = obj.property_list.modbus.scale
-        offset = obj.property_list.modbus.offset
-
-        byte_order = obj.property_list.modbus.byte_order
-        word_order = obj.property_list.modbus.word_order
-
-        bit = obj.property_list.modbus.bit
-
-        # repack = obj.property_list.modbus.repack
+        Returns:
+            Decoded from register\bits and scaled value.
+        """
 
         # TODO: Add decode with different byteorder in bytes VisioDecoder class
 
@@ -472,17 +471,17 @@ class AsyncModbusDevice:
         elif isinstance(resp, ReadRegistersResponseBase):
             data = resp.registers
 
-            if data_type == DataType.BOOL:
-                if data_length == 1:
+            if obj.data_type == DataType.BOOL:
+                if obj.data_length == 1:
                     return 1 if data[0] else 0
-                elif bit:
-                    return 1 if data[bit] else 0
+                elif obj.bit:
+                    return 1 if data[obj.bit] else 0
                 else:
                     return any(data)
 
             decoder = BinaryPayloadDecoder.fromRegisters(
-                registers=data, byteorder=byte_order,
-                wordorder=word_order)
+                registers=data, byteorder=obj.byte_order,
+                wordorder=obj.word_order)
             decode_funcs = {
                 DataType.BITS: decoder.decode_bits,
                 # DataType.BOOL: None,
@@ -501,28 +500,64 @@ class AsyncModbusDevice:
                      DataType.UINT: decoder.decode_64bit_uint,
                      DataType.FLOAT: decoder.decode_64bit_float, }
             }
-            assert decode_funcs[data_length][data_type] is not None
+            assert decode_funcs[obj.data_length][obj.data_type] is not None
 
-            decoded = decode_funcs[data_length][data_type]()
-            scaled = decoded * scale + offset
+            decoded = decode_funcs[obj.data_length][obj.data_type]()
+            scaled = decoded * obj.scale + obj.offset  # Scaling
             self._LOG.debug('Decoded',
                             extra={'device_id': obj.device_id, 'object_id': obj.id,
-                                   'register_address': reg_address, 'quantity': quantity,
-                                   'value_raw': data, 'data_length': data_length,
-                                   'data_type': data_type, 'resolution': obj.resolution,
+                                   'register_address': obj.register_addr,
+                                   'quantity': obj.quantity, 'data_length': obj.data_length,
+                                   'data_type': obj.data_type, 'value_raw': data,
                                    'value_decoded': decoded, 'value_scaled': scaled})
             return scaled
 
-    async def encode(self, raw_value: Union[int, float]) -> Any:
-        pass
+    async def build(self, value: Union[int, float], obj: ModbusObj
+                    ) -> list[Union[int, bytes, bool]]:
+        """Build payload with value.
 
-    def _encode_register(self, raw_value: Union[int, float]) -> Any:
-        pass
+        Args:
+            value: Value to write in object.
+            obj: Object instance.
 
-    # @classmethod
-    # def download(cls, dev_id: int) -> 'AsyncModbusDevice':
-    #     """Tries to download an object of device from server.
-    #     Then gets objects to poll and load them into device.
-    #
-    #     If fail get object from server - load it from local.
-    #     """
+        Returns:
+            Built payload.
+        """
+        return await self._gateway.async_add_job(self._build_payload, value, obj)
+
+    def _build_payload(self, value: Union[int, float], obj: ModbusObj
+                       ) -> list[Union[int, bytes, bool]]:
+        """
+        # TODO make 4 decoders for all combinations in bo, wo and use them?
+        Args:
+            value: Value to write in object.
+            obj: Object instance.
+
+        Returns:
+            Built payload.
+        """
+        value = int(value / obj.scale - obj.offset)  # Scaling
+        # In `pymodbus` example INT and UINT values presented by hex values.
+        value = hex(value) if obj.data_type in {DataType.INT, DataType.UINT} else value
+
+        builder = BinaryPayloadBuilder(byteorder=obj.byte_order, wordorder=obj.word_order)
+        build_funcs = {
+            8: {DataType.INT: builder.add_8bit_int,
+                DataType.UINT: builder.add_8bit_uint, },
+            16: {DataType.INT: builder.add_16bit_int,
+                 DataType.UINT: builder.add_16bit_uint,
+                 DataType.FLOAT: builder.add_16bit_float, },
+            32: {DataType.INT: builder.add_32bit_int,
+                 DataType.UINT: builder.add_32bit_uint,
+                 DataType.FLOAT: builder.add_32bit_float, },
+            64: {DataType.INT: builder.add_64bit_int,
+                 DataType.UINT: builder.add_64bit_uint,
+                 DataType.FLOAT: builder.add_64bit_float, },
+        }
+        assert build_funcs[obj.data_length][obj.data_type] is not None
+
+        build_funcs[obj.data_length][obj.data_type](value)
+
+        # FIXME: string not support now
+        payload = builder.to_coils() if obj.is_coil else builder.to_registers()
+        return payload
