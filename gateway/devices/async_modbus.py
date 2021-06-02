@@ -229,6 +229,11 @@ class AsyncModbusDevice:
     def dev_obj(self) -> BACnetDevice:
         return self._device_obj
 
+    @property
+    #  todo: cache?
+    def objects(self) -> set[ModbusObj]:
+        return {obj for objs_set in self._objects.values() for obj in objs_set}
+
     def load_objects(self, objs: Collection[ModbusObj]) -> None:
         """Groups objects by poll period and loads them into device for polling."""
         assert len(objs)
@@ -356,7 +361,7 @@ class AsyncModbusDevice:
         }
         return write_funcs
 
-    async def read(self, obj: ModbusObj) -> Optional[Union[float, int, str]]:
+    async def read(self, obj: ModbusObj) -> Optional[Union[float, int]]:
         """Read data from Modbus object.
 
         Updates object and return value.
@@ -397,7 +402,7 @@ class AsyncModbusDevice:
         else:
             return obj.pv  # return not used now. Updates object
 
-    async def write(self, value, obj: ModbusObj) -> None:
+    async def write(self, value: Union[int, float], obj: ModbusObj) -> None:
         """Write data to Modbus object."""
         write_cmd_code = obj.property_list.modbus.func_write
         reg_address = obj.property_list.modbus.address
