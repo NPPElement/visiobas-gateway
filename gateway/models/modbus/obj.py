@@ -134,3 +134,11 @@ class ModbusObj(BACnetObj):
     @property
     def is_coil(self) -> bool:
         return self.property_list.modbus.write_func.for_coil
+
+    @property
+    def func_read(self) -> ModbusReadFunc:
+        return self.property_list.modbus.func_read
+
+    @property
+    def func_write(self) -> ModbusReadFunc:
+        return self.property_list.modbus.func_write
