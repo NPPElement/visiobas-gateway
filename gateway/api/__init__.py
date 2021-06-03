@@ -1,7 +1,7 @@
 from .mixins import ReadWriteMixin, GetDevObjMixin  # , I2CRWMixin
-from .service import VisioGatewayApiService
+from .service import VisioGtwAPI
 
-__all__ = ['VisioGatewayApiService',
+__all__ = ['VisioGtwAPI',
            # 'ModbusRWMixin',
            # 'BACnetRWMixin',
            'ReadWriteMixin',

@@ -1,5 +1,6 @@
 from typing import Union, Any
 
+import aiomisc
 from aiohttp.web_app import Application
 from aiohttp_apispec import setup_aiohttp_apispec
 from aiomisc import entrypoint
@@ -14,7 +15,7 @@ _LOG = get_file_logger(name=__name__)
 JsonRPCViewAlias = Any  # '.jsonrpc.JsonRPCView'
 
 
-class VisioGatewayApiService(AIOHTTPService):
+class VisioGtwAPI(AIOHTTPService):
     """VisioBASGateway API."""
 
     def __init__(self, gateway, **kwargs):
@@ -61,7 +62,7 @@ class VisioGatewayApiService(AIOHTTPService):
 
 
 if __name__ == '__main__':
-    api = VisioGatewayApiService(gateway=None, host='localhost', port=7071)
+    api = VisioGtwAPI(gateway=None, host='localhost', port=7071)
 
     with entrypoint(api) as loop:
         loop.run_forever()
