@@ -11,10 +11,9 @@ ObjAlias = Union['...models.BACnetObj',
                  '...models.ModbusObj',]
 
 
-class ReadWriteMixin(ModbusRWMixin):  # BACnetRWMixin
-
-    def read(self, obj: ObjAlias, device: DeviceAlias,
-             prop: ObjProperty = ObjProperty.presentValue) -> Any:
+class ReadWriteMixin(ModbusRWMixin):  # todo BACnetRWMixin
+    async def read(self, obj: ObjAlias, device: DeviceAlias,
+                   prop: ObjProperty = ObjProperty.presentValue) -> Any:
         """
         Args:
             obj: Object instance.
@@ -29,21 +28,20 @@ class ReadWriteMixin(ModbusRWMixin):  # BACnetRWMixin
         if protocol in {Protocol.MODBUS_TCP,
                         Protocol.MODBUS_RTU,
                         Protocol.MODBUS_RTUOVERTCP, }:
-            protocol_read_func = self.read_modbus
+            protocol_read_coro = self.read_modbus
 
         # elif protocol is Protocol.BACNET:
         # protocol_read_func = self.read_bacnet
         else:
             raise NotImplementedError('Only BACnet, Modbus implemented. '
                                       f'Received: {device} {type(device)}')
-        value = protocol_read_func(obj=obj, device=device, prop=prop)
+        value = await protocol_read_coro(obj=obj, device=device, prop=prop)
         return value
 
-    def write(self, value: Optional[Union[int, float, str]],
-              obj: ObjAlias, device: DeviceAlias,
-              priority: int = 11,
-              prop: ObjProperty = ObjProperty.presentValue
-              ) -> None:
+    async def write(self, value: Optional[Union[int, float, str]],
+                    obj: ObjAlias, device: DeviceAlias,
+                    priority: int = 11, prop: ObjProperty = ObjProperty.presentValue
+                    ) -> None:
         """
         # TODO priority
 
@@ -59,19 +57,20 @@ class ReadWriteMixin(ModbusRWMixin):  # BACnetRWMixin
         if protocol in {Protocol.MODBUS_TCP,
                         Protocol.MODBUS_RTU,
                         Protocol.MODBUS_RTUOVERTCP, }:
-            protocol_write_func = self.write_modbus
+            protocol_write_coro = self.write_modbus
         # if protocol is Protocol.BACNET:
         #     protocol_write_func = self.write_bacnet
         else:
             raise NotImplementedError('Only BACnet, Modbus implemented. '
                                       f'Received: {device} {type(device)}')
-        protocol_write_func(value=value, prop=prop, priority=priority,
-                            obj=obj, device=device)
+        await protocol_write_coro(value=value, prop=prop, priority=priority,
+                                  obj=obj, device=device)
 
-    def write_with_check(self, value: Optional[Union[int, float, str]],
-                         obj: ObjAlias, device: DeviceAlias,
-                         priority: int = 11, prop: ObjProperty = ObjProperty.presentValue
-                         ) -> bool:
+    async def write_with_check(self, value: Optional[Union[int, float, str]],
+                               obj: ObjAlias, device: DeviceAlias,
+                               priority: int = 11,
+                               prop: ObjProperty = ObjProperty.presentValue
+                               ) -> bool:
         """
         # TODO: priority
         Args:
@@ -96,8 +95,8 @@ class ReadWriteMixin(ModbusRWMixin):  # BACnetRWMixin
         else:
             raise NotImplementedError('Only BACnet, Modbus implemented. '
                                       f'Received: {device} {type(device)}')
-        protocol_write_func(value=value, obj=obj, device=device,
-                            priority=priority, prop=prop)
-        read_value = protocol_read_func(obj=obj, device=device)
+        await protocol_write_func(value=value, obj=obj, device=device,
+                                  priority=priority, prop=prop)
+        read_value = await protocol_read_func(obj=obj, device=device)
 
         return value == read_value
