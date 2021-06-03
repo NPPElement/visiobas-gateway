@@ -1,4 +1,5 @@
 import asyncio
+import struct
 from datetime import datetime
 from ipaddress import IPv4Address
 from typing import Any, Callable, Union, Collection, Optional
@@ -414,7 +415,8 @@ class AsyncModbusDevice:
             # Maybe this will change in pymodbus v3.0.0
             async with self.lock:
                 rq = await self.write_funcs[obj.func_write](obj.register_addr,
-                                                            payload, unit=self.unit)
+                                                            payload, skip_encode=True,
+                                                            unit=self.unit)
             if rq.isError():
                 raise ModbusException(self._0X80_FUNC_CODE)
 
@@ -423,7 +425,7 @@ class AsyncModbusDevice:
                                    'object_type': obj.type,
                                    'address': obj.register_addr, 'value': value, })
             # obj.set_pv(value=value)
-        except ModbusException as e:
+        except (ModbusException, struct.error) as e:
             self._LOG.warning('Failed write',
                               extra={'device_id': self.id, 'object_id': obj.id,
                                      'object_type': obj.type,
