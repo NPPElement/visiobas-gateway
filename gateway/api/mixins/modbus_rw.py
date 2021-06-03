@@ -48,9 +48,9 @@ class ModbusRWMixin:
             priority: Priority of value.
         """
         if obj.func_write is None:
-            _LOG.exception('Attempt to write read only object',
-                           extra={'device_id': device.id, 'object_id': obj.id,
-                                  'object_type': obj.type, })
+            _LOG.warning('Attempt to write read only object',
+                         extra={'device_id': device.id, 'object_id': obj.id,
+                                'object_type': obj.type, })
             raise HTTPMethodNotAllowed(method='POST',
                                        allowed_methods=('Read not implemented yet',),
                                        reason='Read only object.')
