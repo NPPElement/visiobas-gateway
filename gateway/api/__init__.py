@@ -1,5 +1,4 @@
-from .mixins import ReadWriteMixin, GetDevObjMixin, I2CRWMixin
-from .models import ParamsModel
+from .mixins import ReadWriteMixin, GetDevObjMixin  # , I2CRWMixin
 from .service import VisioGatewayApiService
 
 __all__ = ['VisioGatewayApiService',
@@ -7,7 +6,5 @@ __all__ = ['VisioGatewayApiService',
            # 'BACnetRWMixin',
            'ReadWriteMixin',
            'GetDevObjMixin',
-           'I2CRWMixin',
-
-           'ParamsModel'
+           # 'I2CRWMixin',
            ]

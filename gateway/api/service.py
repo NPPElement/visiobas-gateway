@@ -1,13 +1,17 @@
-from logging import getLogger
+from typing import Union
 
 from aiohttp.web_app import Application
 from aiohttp_apispec import setup_aiohttp_apispec
 from aiomisc import entrypoint
 from aiomisc.service.aiohttp import AIOHTTPService
 
-from .handlers import HANDLERS
+from .jsonrpc import JSON_RPC_HANDLERS
+from ..utils import get_file_logger
 
-_LOG = getLogger(__name__)
+_LOG = get_file_logger(name=__name__)
+
+# Aliases
+JsonRPCViewAlias = '.jsonrpc.JsonRPCView'
 
 
 class VisioGatewayApiService(AIOHTTPService):
@@ -20,6 +24,10 @@ class VisioGatewayApiService(AIOHTTPService):
     def __repr__(self) -> str:
         return self.__class__.__name__
 
+    @property
+    def handlers(self) -> tuple[Union[JsonRPCViewAlias,], ...]:
+        return JSON_RPC_HANDLERS  # todo add rest handlers
+
     async def create_application(self) -> Application:
         """Creates an instance of the application, ready to run."""
         _LOG.debug('Creating app ...')
@@ -30,14 +38,14 @@ class VisioGatewayApiService(AIOHTTPService):
         app['gateway'] = self._gateway
 
         # Register handlers
-        for handler in HANDLERS:
+        for handler in self.handlers:
             _LOG.debug('Registering handler %r as %r',
                        handler.__name__, handler.URL_PATH)
             app.router.add_route('*', handler.URL_PATH, handler)
 
         # Swagger docs
-        setup_aiohttp_apispec(app=app, title='VisioBASGateway API', swagger_path='/',
-                              error_callback=None)
+        setup_aiohttp_apispec(app=app, title='VisioBASGateway API',
+                              swagger_path='/', error_callback=None)
         return app
 
     # async def start(self, app: Application, host: str, port: int) -> None:
