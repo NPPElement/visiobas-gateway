@@ -63,6 +63,17 @@ class VisioBASGateway:
     def devices(self) -> dict[int, Union[AsyncModbusDevice]]:
         return self._devices
 
+    def get_device(self, dev_id: int) -> Optional[Union[AsyncModbusDevice]]:
+        """Gets device instance.
+
+        Args:
+            dev_id: Device identifier.
+
+        Returns:
+            Device instance.
+        """
+        return self._devices.get(dev_id)
+
     @property
     def api_priority(self) -> int:
         return self.settings.api_priority

@@ -28,11 +28,11 @@ class JsonRPCView(BaseView, ReadWriteMixin):
         value = float(value_str) if '.' in value_str else int(value_str)
 
         dev = self.get_device(dev_id=dev_id)
-        obj = self.get_obj(device=dev, obj_type_id=obj_type_id, obj_id=obj_id)
+        obj = self.get_obj(dev=dev, obj_type_id=obj_type_id, obj_id=obj_id)
         try:
             _values_equal = await self.write_with_check(value=value,
                                                         prop=ObjProperty.presentValue,
-                                                        priority=self.gateway.api_priority,
+                                                        priority=self.gtw.api_priority,
                                                         obj=obj, device=dev)
             if _values_equal:
                 _LOG.debug('Read and written values are consistent',

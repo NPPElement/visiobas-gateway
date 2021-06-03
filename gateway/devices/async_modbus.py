@@ -1,6 +1,7 @@
 import asyncio
 import struct
 from datetime import datetime
+from functools import lru_cache
 from ipaddress import IPv4Address
 from typing import Any, Callable, Union, Collection, Optional
 
@@ -236,6 +237,20 @@ class AsyncModbusDevice:
     def objects(self) -> set[ModbusObj]:
         return {obj for objs_set in self._objects.values() for obj in objs_set}
 
+    @lru_cache(maxsize=10)
+    def get_object(self, obj_id: int, obj_type_id: int) -> Optional[ModbusObj]:
+        """Cache last 10 object instances.
+        Args:
+            obj_id: Object identifier.
+            obj_type_id: Object type identifier.
+
+        Returns:
+            Object instance.
+        """
+        for obj in self.objects:
+            if obj.type.id == obj_type_id and obj.id == obj_id:
+                return obj
+
     def load_objects(self, objs: Collection[ModbusObj]) -> None:
         """Groups objects by poll period and loads them into device for polling."""
         assert len(objs)
@@ -411,7 +426,7 @@ class AsyncModbusDevice:
         try:
             if obj.func_write is None:
                 raise ModbusException('Object cannot be overwritten')
-            
+
             payload = await self.build(value=value, obj=obj)
 
             # Using lock because pymodbus doesn't handle async requests internally.
