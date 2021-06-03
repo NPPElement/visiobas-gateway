@@ -429,7 +429,10 @@ class AsyncModbusDevice:
 
             payload = await self.build(value=value, obj=obj)
 
-            if obj.func_write is ModbusWriteFunc.WRITE_REGISTER:
+            if (
+                    obj.func_write is ModbusWriteFunc.WRITE_REGISTER
+                    and isinstance(payload, list)
+            ):
                 # TODO ?
                 assert len(payload) == 1
                 payload = payload[0]
