@@ -1,4 +1,4 @@
-from typing import Union
+from typing import Union, Any
 
 from aiohttp.web_app import Application
 from aiohttp_apispec import setup_aiohttp_apispec
@@ -11,7 +11,7 @@ from ..utils import get_file_logger
 _LOG = get_file_logger(name=__name__)
 
 # Aliases
-JsonRPCViewAlias = '.jsonrpc.JsonRPCView'
+JsonRPCViewAlias = Any  # '.jsonrpc.JsonRPCView'
 
 
 class VisioGatewayApiService(AIOHTTPService):
@@ -52,22 +52,16 @@ class VisioGatewayApiService(AIOHTTPService):
     #     _log.info('Starting runner ...')
     #     runner = AppRunner(app=app)
     #     await runner.setup()
-    #     site = TCPSite(runner=runner,
-    #                    host=host,
-    #                    port=port
-    #                    )
+    #     site = TCPSite(runner=runner, host=host, port=port)
     #     await site.start()
     #
-    #     while not self._stopped:
-    #         sleep_period = self._config.get('sleep_period', 60)
-    #         _log.debug(f'Sleep {sleep_period}')
-    #         await sleep(sleep_period)
+    #     wait stop() fixme
     #
     #     await runner.cleanup()
 
 
 if __name__ == '__main__':
-    api = VisioGatewayApiService(gateway=None, host='localhost', port=7071
-                                 )
+    api = VisioGatewayApiService(gateway=None, host='localhost', port=7071)
+
     with entrypoint(api) as loop:
         loop.run_forever()

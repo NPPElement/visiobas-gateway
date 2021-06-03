@@ -6,9 +6,8 @@ from .modbus_rw import ModbusRWMixin
 from ...models import ObjProperty, Protocol
 
 # Aliases
-DeviceAlias = Union['...devices.AsyncModbusDevice',]
-ObjAlias = Union['...models.BACnetObj',
-                 '...models.ModbusObj',]
+DeviceAlias = Any  # Union['...devices.AsyncModbusDevice',]
+ObjAlias = Any  # Union['...models.BACnetObj', '...models.ModbusObj',]
 
 
 class ReadWriteMixin(ModbusRWMixin):  # todo BACnetRWMixin

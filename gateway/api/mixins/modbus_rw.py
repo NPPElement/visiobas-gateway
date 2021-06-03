@@ -1,4 +1,4 @@
-from typing import Optional, Union
+from typing import Optional, Union, Any
 
 from ...devices import AsyncModbusDevice  # todo use alias
 from ...models import ObjProperty
@@ -7,8 +7,8 @@ from ...utils import get_file_logger
 _LOG = get_file_logger(name=__name__)
 
 # Aliases
-AsyncModbusDeviceAlias = '...devices.AsyncModbusDevice'
-ModbusObjAlias = '...models.ModbusObj'
+AsyncModbusDeviceAlias = Any  # '...devices.AsyncModbusDevice'
+ModbusObjAlias = Any  # '...models.ModbusObj'
 
 
 class ModbusRWMixin:

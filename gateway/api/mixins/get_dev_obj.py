@@ -1,14 +1,14 @@
 from functools import lru_cache
-from typing import Optional, Union
+from typing import Optional, Any
 
 from ...utils import get_file_logger
 
 _LOG = get_file_logger(name=__name__)
 
 # Aliases
-VisioBASGatewayAlias = '...gateway_.VisioBASGateway'
-DeviceAlias = Union['...devices.AsyncModbusDevice',]
-ObjAlias = Union['...models.BACnetObj',]
+VisioBASGatewayAlias = Any  # '...gateway_.VisioBASGateway'
+DeviceAlias = Any  # Union['...devices.AsyncModbusDevice',]
+ObjAlias = Any  # Union['...models.BACnetObj',]
 
 
 class GetDevObjMixin:

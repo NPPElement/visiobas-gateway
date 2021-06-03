@@ -1,4 +1,4 @@
-from typing import Union, Optional
+from typing import Union, Optional, Any
 
 from aiohttp.web_exceptions import HTTPNotFound
 from aiohttp.web_urldispatcher import View
@@ -9,9 +9,9 @@ from ..utils import get_file_logger
 _LOG = get_file_logger(name=__name__)
 
 # Aliases
-VisioBASGatewayAlias = '..gateway_.VisioBASGateway'
-DeviceAlias = Union['..devices.AsyncModbusDevice',]
-ObjAlias = Union['..models.BACnetObj',]
+VisioBASGatewayAlias = Any  # '..gateway_.VisioBASGateway'
+DeviceAlias = Any  # Union['..devices.AsyncModbusDevice',]
+ObjAlias = Any  # Union['..models.BACnetObj',]
 
 
 class BaseView(View, GetDevObjMixin):
