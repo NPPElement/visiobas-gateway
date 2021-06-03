@@ -1,5 +1,5 @@
 import asyncio
-from ipaddress import IPv4Address
+# from ipaddress import IPv4Address
 from typing import Callable, Any, Optional, Union, Awaitable, Collection
 
 import aiohttp
@@ -7,7 +7,7 @@ import aiojobs
 from aiomisc import entrypoint
 from pydantic import ValidationError
 
-from api import VisioGtwAPI
+from gateway.api import VisioGtwAPI
 from gateway.clients import VisioHTTPClient, VisioBASMQTTClient
 from gateway.devices import AsyncModbusDevice
 from gateway.models import (ObjType, BACnetDevice, ModbusObj, Protocol,
@@ -20,6 +20,7 @@ _LOG = get_file_logger(__name__)
 
 class VisioBASGateway:
     """VisioBAS IoT Gateway."""
+
     def __init__(self, settings: GatewaySettings):
         # self.loop = asyncio.new_event_loop()
         self.loop: asyncio.AbstractEventLoop = asyncio.get_running_loop()
