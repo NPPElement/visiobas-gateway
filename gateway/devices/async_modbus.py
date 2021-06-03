@@ -537,11 +537,16 @@ class AsyncModbusDevice:
             Built payload.
         """
         value = int(value / obj.scale - obj.offset)  # Scaling
+
         # In `pymodbus` example INT and UINT values presented by hex values.
-        value = hex(value) if obj.data_type in {DataType.INT, DataType.UINT} else value
+        # value = hex(value) if obj.data_type in {DataType.INT, DataType.UINT} else value
+
+        if obj.data_type is DataType.BOOL and obj.data_length == 1:
+            value = [value] + [0] * 7
 
         builder = BinaryPayloadBuilder(byteorder=obj.byte_order, wordorder=obj.word_order)
         build_funcs = {
+            1: {DataType.BOOL: builder.add_bits},
             8: {DataType.INT: builder.add_8bit_int,
                 DataType.UINT: builder.add_8bit_uint, },
             16: {DataType.INT: builder.add_16bit_int,
