@@ -572,7 +572,8 @@ class AsyncModbusDevice:
         build_funcs[obj.data_length][obj.data_type](scaled)
 
         # FIXME: string not support now
-        payload = builder.to_coils() if obj.is_coil else builder.to_registers()
+        # payload = builder.to_coils() if obj.is_coil else builder.to_registers()
+        payload = builder.build()
         self._LOG.debug('Encoded',
                         extra={'device_id': obj.device_id, 'object_id': obj.id,
                                'object_type': obj.type,
