@@ -508,37 +508,37 @@ class AsyncModbusDevice:
 
             if obj.data_type == DataType.BOOL:
                 if obj.data_length == 1:
-                    return 1 if data[0] else 0
+                    scaled = decoded = 1 if data[0] else 0
                 elif obj.bit:
-                    return 1 if data[obj.bit] else 0
+                    scaled = decoded = 1 if data[obj.bit] else 0
                 else:
-                    return any(data)
+                    scaled = decoded = any(data)
+            else:
+                decoder = BinaryPayloadDecoder.fromRegisters(
+                    registers=data, byteorder=obj.byte_order,
+                    wordorder=obj.word_order)
+                decode_funcs = {
+                    DataType.BITS: decoder.decode_bits,
+                    # DataType.BOOL: None,
+                    # DataType.STR: decoder.decode_string,
+                    8: {DataType.INT: decoder.decode_8bit_int,
+                        DataType.UINT: decoder.decode_8bit_uint, },
+                    16: {DataType.INT: decoder.decode_16bit_int,
+                         DataType.UINT: decoder.decode_16bit_uint,
+                         DataType.FLOAT: decoder.decode_16bit_float,
+                         # DataType.BOOL: None,
+                         },
+                    32: {DataType.INT: decoder.decode_32bit_int,
+                         DataType.UINT: decoder.decode_32bit_uint,
+                         DataType.FLOAT: decoder.decode_32bit_float, },
+                    64: {DataType.INT: decoder.decode_64bit_int,
+                         DataType.UINT: decoder.decode_64bit_uint,
+                         DataType.FLOAT: decoder.decode_64bit_float, }
+                }
+                assert decode_funcs[obj.data_length][obj.data_type] is not None
 
-            decoder = BinaryPayloadDecoder.fromRegisters(
-                registers=data, byteorder=obj.byte_order,
-                wordorder=obj.word_order)
-            decode_funcs = {
-                DataType.BITS: decoder.decode_bits,
-                # DataType.BOOL: None,
-                # DataType.STR: decoder.decode_string,
-                8: {DataType.INT: decoder.decode_8bit_int,
-                    DataType.UINT: decoder.decode_8bit_uint, },
-                16: {DataType.INT: decoder.decode_16bit_int,
-                     DataType.UINT: decoder.decode_16bit_uint,
-                     DataType.FLOAT: decoder.decode_16bit_float,
-                     # DataType.BOOL: None,
-                     },
-                32: {DataType.INT: decoder.decode_32bit_int,
-                     DataType.UINT: decoder.decode_32bit_uint,
-                     DataType.FLOAT: decoder.decode_32bit_float, },
-                64: {DataType.INT: decoder.decode_64bit_int,
-                     DataType.UINT: decoder.decode_64bit_uint,
-                     DataType.FLOAT: decoder.decode_64bit_float, }
-            }
-            assert decode_funcs[obj.data_length][obj.data_type] is not None
-
-            decoded = decode_funcs[obj.data_length][obj.data_type]()
-            scaled = decoded * obj.scale + obj.offset  # Scaling
+                decoded = decode_funcs[obj.data_length][obj.data_type]()
+                scaled = decoded * obj.scale + obj.offset  # Scaling
             self._LOG.debug('Decoded',
                             extra={'device_id': obj.device_id, 'object_id': obj.id,
                                    'object_type': obj.type,
