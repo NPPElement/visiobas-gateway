@@ -129,11 +129,11 @@ class ModbusObj(BACnetObj):
 
     @property
     def is_register(self) -> bool:
-        return self.property_list.modbus.write_func.for_register
+        return self.property_list.modbus.func_write.for_register
 
     @property
     def is_coil(self) -> bool:
-        return self.property_list.modbus.write_func.for_coil
+        return self.property_list.modbus.func_write.for_coil
 
     @property
     def func_read(self) -> ModbusReadFunc:
