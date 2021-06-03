@@ -557,7 +557,7 @@ class AsyncModbusDevice:
         return await self._gateway.async_add_job(self._build_payload, value, obj)
 
     def _build_payload(self, value: Union[int, float], obj: ModbusObj
-                       ) -> list[Union[int, bytes, bool]]:
+                       ) -> Union[int, list[Union[int, bytes, bool]]]:
         """
         # TODO make 4 decoders for all combinations in bo, wo and use them?
         Args:
@@ -572,20 +572,23 @@ class AsyncModbusDevice:
         # In `pymodbus` example INT and UINT values presented by hex values.
         # value = hex(value) if obj.data_type in {DataType.INT, DataType.UINT} else value
 
-        if obj.data_type is DataType.BOOL and obj.data_length == 1:
-            scaled = [scaled] + [0] * 7
+        if obj.data_type is DataType.BOOL and obj.data_length in {1, 16}:
+            # scaled = [scaled] + [0] * 7
+            return int(bool(scaled))
 
         builder = BinaryPayloadBuilder(byteorder=obj.byte_order, wordorder=obj.word_order,
                                        repack=True)
         build_funcs = {
-            1: {DataType.BOOL: builder.add_bits},
+            # 1: {DataType.BOOL: builder.add_bits},
             8: {DataType.INT: builder.add_8bit_int,
                 DataType.UINT: builder.add_8bit_uint,
-                DataType.BOOL: builder.add_bits, },
+                # DataType.BOOL: builder.add_bits,
+                },
             16: {DataType.INT: builder.add_16bit_int,
                  DataType.UINT: builder.add_16bit_uint,
                  DataType.FLOAT: builder.add_16bit_float,
-                 DataType.BOOL: builder.add_bits, },
+                 # DataType.BOOL: builder.add_bits,
+                 },
             32: {DataType.INT: builder.add_32bit_int,
                  DataType.UINT: builder.add_32bit_uint,
                  DataType.FLOAT: builder.add_32bit_float, },

@@ -65,3 +65,4 @@ class JsonRPCView(BaseView, ReadWriteMixin):
                            extra={'device_id': dev_id, 'object_id': obj_id,
                                   'obj_type_id': obj_type_id, 'exc': e, })
             return HTTPBadGateway(reason=f'Exception: {e}')
+        # TODO: traceback
