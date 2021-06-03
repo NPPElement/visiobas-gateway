@@ -43,12 +43,12 @@ class JsonRPCView(BaseView, ReadWriteMixin):
             if _values_equal:
                 _LOG.debug('Read and written values are consistent',
                            extra={'device_id': dev_id, 'object_id': obj_id,
-                                  obj_type_id: obj_type_id, 'value': value, })
+                                  'obj_type_id': obj_type_id, 'value': value, })
                 return json_response({'success': True}, status=HTTPStatus.OK.value)
             else:
                 _LOG.warning('Read and written values are not consistent.',
                              extra={'device_id': dev_id, 'object_id': obj_id,
-                                    obj_type_id: obj_type_id, 'value': value, })
+                                    'obj_type_id': obj_type_id, 'value': value, })
                 return json_response({  # todo: use error status code
                     'success': False,
                     'msg': 'Read and written values are not consistent.'
@@ -56,5 +56,7 @@ class JsonRPCView(BaseView, ReadWriteMixin):
                     status=HTTPStatus.BAD_GATEWAY.value
                 )
         except Exception as e:
-            return HTTPBadGateway(reason=f'Exception: {e}\nTraceback: '
-                                         f'{e.__traceback__.__dict__}')
+            _LOG.exception('Unhandled exception',
+                           extra={'device_id': dev_id, 'object_id': obj_id,
+                                  'obj_type_id': obj_type_id, 'exc': e, })
+            return HTTPBadGateway(reason=f'Exception: {e}')
