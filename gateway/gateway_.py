@@ -93,7 +93,7 @@ class VisioBASGateway:
         # self.mqtt_client = VisioBASMQTTClient.from_yaml(
         #     gateway=self, yaml_path=self.MQTT_CFG_PATH)
         self.api = VisioGtwAPI(gateway=self, host=self.settings.api_url.host,
-                               port=self.settings.api_url.port)
+                               port=int(self.settings.api_url.port))
         await self._scheduler.spawn(self.start_api())
         await self._scheduler.spawn(coro=self.periodic_update())
         # self._upd_task = self.loop.create_task(self.periodic_update())
