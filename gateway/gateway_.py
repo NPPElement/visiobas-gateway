@@ -61,6 +61,10 @@ class VisioBASGateway:
     def devices(self) -> dict[int, Union[AsyncModbusDevice]]:
         return self._devices
 
+    @property
+    def api_priority(self) -> int:
+        return self.settings.api_priority
+
     # def run(self) -> None:
     #     # if need, set event loop policy here
     #     asyncio.run(self.async_run(), debug=True)
