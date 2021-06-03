@@ -16,7 +16,7 @@ class ModbusObjPropertyListModel(BaseModel):
                                       alias='functionRead')
     func_write: Optional[ModbusWriteFunc] = Field(
         default=None, alias='functionWrite',
-        description='Function to write value. Object may be non-writable.')
+        description='Function to write value. None if read only object.')
 
     # For recalculate A*X+B (X - value)
     scale: float = Field(default=1., description='Multiplier `A` for recalculate A*X+B')
