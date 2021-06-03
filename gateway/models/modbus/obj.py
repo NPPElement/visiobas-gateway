@@ -35,6 +35,7 @@ class ModbusObjPropertyListModel(BaseModel):
 
     @validator('func_write')
     def validate_consistent(cls, v: ModbusWriteFunc, values) -> ModbusWriteFunc:
+        # TODO: add funcs mapping
         if values['func_read'].for_register and v.for_register:
             return v
         elif values['func_read'].for_coil and v.for_coil:
@@ -129,11 +130,11 @@ class ModbusObj(BACnetObj):
 
     @property
     def is_register(self) -> bool:
-        return self.property_list.modbus.func_write.for_register
+        return self.func_write.for_register
 
     @property
     def is_coil(self) -> bool:
-        return self.property_list.modbus.func_write.for_coil
+        return self.func_write.for_coil
 
     @property
     def func_read(self) -> ModbusReadFunc:
