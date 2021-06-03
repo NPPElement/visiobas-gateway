@@ -1,6 +1,6 @@
 from http import HTTPStatus
 
-from aiohttp.web_exceptions import HTTPBadGateway
+from aiohttp.web_exceptions import HTTPBadGateway, HTTPNotFound
 from aiohttp.web_response import json_response
 from aiohttp_apispec import docs, request_schema, response_schema
 
@@ -28,7 +28,13 @@ class JsonRPCView(BaseView, ReadWriteMixin):
         value = float(value_str) if '.' in value_str else int(value_str)
 
         dev = self.get_device(dev_id=dev_id)
+        if dev is None:
+            return HTTPNotFound(reason='Device not found.')
+
         obj = self.get_obj(dev=dev, obj_type_id=obj_type_id, obj_id=obj_id)
+        if obj is None:
+            return HTTPNotFound(reason='Object not found.')
+
         try:
             _values_equal = await self.write_with_check(value=value,
                                                         prop=ObjProperty.presentValue,
@@ -43,11 +49,12 @@ class JsonRPCView(BaseView, ReadWriteMixin):
                 _LOG.warning('Read and written values are not consistent.',
                              extra={'device_id': dev_id, 'object_id': obj_id,
                                     obj_type_id: obj_type_id, 'value': value, })
-                return json_response({
+                return json_response({  # todo: use error status code
                     'success': False,
                     'msg': 'Read and written values are not consistent.'
                 },
                     status=HTTPStatus.BAD_GATEWAY.value
                 )
         except Exception as e:
-            return HTTPBadGateway(reason=f'Exception: {e}\nTraceback: {e.__traceback__}')
+            return HTTPBadGateway(reason=f'Exception: {e}\nTraceback: '
+                                         f'{e.__traceback__.__dict__}')
