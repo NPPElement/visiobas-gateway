@@ -39,7 +39,7 @@ class ModbusRWMixin:
     async def write_modbus(value: Union[int, float],
                            obj: ModbusObjAlias, device: AsyncModbusDeviceAlias,
                            prop: ObjProperty = ObjProperty.presentValue,
-                           priority: int = 11, ) -> None:
+                           priority: int = 11) -> None:
         """
         Args:
             value: Value to write.

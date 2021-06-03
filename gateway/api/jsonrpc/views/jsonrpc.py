@@ -1,6 +1,6 @@
 from http import HTTPStatus
 
-from aiohttp.web_exceptions import HTTPBadGateway, HTTPNotFound
+from aiohttp.web_exceptions import HTTPBadGateway, HTTPNotFound, HTTPMethodNotAllowed
 from aiohttp.web_response import json_response
 from aiohttp_apispec import docs, request_schema, response_schema
 
@@ -55,6 +55,11 @@ class JsonRPCView(BaseView, ReadWriteMixin):
                 },
                     status=HTTPStatus.BAD_GATEWAY.value
                 )
+        except HTTPMethodNotAllowed as e:
+            _LOG.warning('Exception',
+                         extra={'device_id': dev_id, 'object_id': obj_id,
+                                'obj_type_id': obj_type_id, 'exc': e, })
+            return e
         except Exception as e:
             _LOG.exception('Unhandled exception',
                            extra={'device_id': dev_id, 'object_id': obj_id,
