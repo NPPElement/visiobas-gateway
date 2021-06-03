@@ -415,7 +415,7 @@ class AsyncModbusDevice:
             # Maybe this will change in pymodbus v3.0.0
             async with self.lock:
                 rq = await self.write_funcs[obj.func_write](obj.register_addr,
-                                                            payload, skip_encode=True,
+                                                            payload,  # skip_encode=True,
                                                             unit=self.unit)
             if rq.isError():
                 raise ModbusException(self._0X80_FUNC_CODE)
