@@ -409,6 +409,9 @@ class AsyncModbusDevice:
     async def write(self, value: Union[int, float], obj: ModbusObj) -> None:
         """Write data to Modbus object."""
         try:
+            if obj.func_write is None:
+                raise ModbusException('Object cannot be overwritten')
+            
             payload = await self.build(value=value, obj=obj)
 
             # Using lock because pymodbus doesn't handle async requests internally.

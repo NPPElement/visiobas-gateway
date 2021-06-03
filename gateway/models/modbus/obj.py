@@ -14,8 +14,9 @@ class ModbusObjPropertyListModel(BaseModel):
     quantity: int = Field(gt=0)
     func_read: ModbusReadFunc = Field(default=ModbusReadFunc.READ_HOLDING_REGISTERS,
                                       alias='functionRead')
-    func_write: ModbusWriteFunc = Field(default=ModbusWriteFunc.WRITE_REGISTER,
-                                        alias='functionWrite')
+    func_write: Optional[ModbusWriteFunc] = Field(
+        default=None, alias='functionWrite',
+        description='Function to write value. Object may be non-writable.')
 
     # For recalculate A*X+B (X - value)
     scale: float = Field(default=1., description='Multiplier `A` for recalculate A*X+B')
@@ -34,9 +35,11 @@ class ModbusObjPropertyListModel(BaseModel):
     bit: Optional[int] = Field(default=None, ge=0, le=16)  # TODO: change to 'bitmask'?
 
     @validator('func_write')
-    def validate_consistent(cls, v: ModbusWriteFunc, values) -> ModbusWriteFunc:
+    def validate_consistent(cls, v: ModbusWriteFunc, values) -> Optional[ModbusWriteFunc]:
         # TODO: add funcs mapping
-        if values['func_read'].for_register and v.for_register:
+        if v is None:
+            return v
+        elif values['func_read'].for_register and v.for_register:
             return v
         elif values['func_read'].for_coil and v.for_coil:
             return v
@@ -130,16 +133,16 @@ class ModbusObj(BACnetObj):
 
     @property
     def is_register(self) -> bool:
-        return self.func_write.for_register
+        return self.func_read.for_register
 
     @property
     def is_coil(self) -> bool:
-        return self.func_write.for_coil
+        return self.func_read.for_coil
 
     @property
     def func_read(self) -> ModbusReadFunc:
         return self.property_list.modbus.func_read
 
     @property
-    def func_write(self) -> ModbusWriteFunc:
+    def func_write(self) -> Optional[ModbusWriteFunc]:
         return self.property_list.modbus.func_write
