@@ -28,23 +28,14 @@ class BaseView(View):
             dev_id: Device identifier.
 
         Returns:
-            Device instance.
+            Device instance is exists.
         """
         try:
             return self.gtw.get_device(dev_id=dev_id, gtw=self.gtw)
         except (ValueError, AttributeError, Exception) as e:
-            _LOG.warning('Exception', extra={'gateway': self.gtw, 'device_id': dev_id,
-                                             'exc': e, })
+            _LOG.warning('Exception',
+                         extra={'gateway': self.gtw, 'device_id': dev_id, 'exc': e, })
             raise HTTPNotFound(reason=f'Exception: {e}\nTraceback: {e.__traceback__}')
-
-        # except ValueError as e:
-        #     raise HTTPNotFound(reason=str(e.args))
-        # except AttributeError as e:
-        #     _LOG.error(f'Error: {e}',
-        #                exc_info=True
-        #                )
-        #     raise HTTPNotFound(
-        #         reason=f'Invalid gateway {self.gateway} {type(self.gateway)}')
 
     @staticmethod
     def get_obj(obj_id: int, obj_type_id: int, dev: DeviceAlias) -> Optional[ObjAlias]:
@@ -55,7 +46,7 @@ class BaseView(View):
             obj_id: Object identifier.
 
         Returns:
-            Object instance.
+            Object instance if exist.
         """
         try:
             return dev.get_obj(obj_id=obj_id, obj_type_id=obj_type_id, dev=dev)
