@@ -1,8 +1,8 @@
 version: "3.3"
 
-networks:
-  backend:
-    driver: bridge
+#networks:
+#  backend:
+#    driver: bridge
 
 services:
   vb_gateway:
