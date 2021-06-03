@@ -104,7 +104,7 @@ class ModbusObj(BACnetObj):
         return self.property_list.modbus.data_type
 
     @property
-    def register_addr(self) -> int:
+    def address(self) -> int:
         return self.property_list.modbus.address
 
     @property

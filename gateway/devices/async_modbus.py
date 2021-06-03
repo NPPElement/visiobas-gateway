@@ -390,7 +390,7 @@ class AsyncModbusDevice:
             # Using lock because pymodbus doesn't handle async requests internally.
             # Maybe this will change in pymodbus v3.0.0
             async with self.lock:
-                resp = await self.read_funcs[obj.func_read](address=obj.register_addr,
+                resp = await self.read_funcs[obj.func_read](address=obj.address,
                                                             count=obj.quantity,
                                                             unit=self.unit)
             if resp.isError():
@@ -407,14 +407,14 @@ class AsyncModbusDevice:
             self._LOG.warning('Read error',
                               extra={'device_id': self.id, 'object_id': obj.id,
                                      'object_type': obj.type,
-                                     'register': obj.register_addr,
+                                     'register': obj.address,
                                      'quantity': obj.quantity, 'exc': e, })
         except (ValueError, Exception) as e:
             obj.exception = e
             self._LOG.exception(f'Unexpected read error: {e}',
                                 extra={'device_id': self.id, 'object_id': obj.id,
                                        'object_type': obj.type,
-                                       'register': obj.register_addr,
+                                       'register': obj.address,
                                        'quantity': obj.quantity,
                                        'exc': e, })
 
@@ -437,7 +437,7 @@ class AsyncModbusDevice:
             # Using lock because pymodbus doesn't handle async requests internally.
             # Maybe this will change in pymodbus v3.0.0
             async with self.lock:
-                rq = await self.write_funcs[obj.func_write](obj.register_addr,
+                rq = await self.write_funcs[obj.func_write](obj.address,
                                                             payload,  # skip_encode=True,
                                                             unit=self.unit)
             if rq.isError():
@@ -446,19 +446,19 @@ class AsyncModbusDevice:
             self._LOG.debug(f'Successfully write',
                             extra={'device_id': self.id, 'object_id': obj.id,
                                    'object_type': obj.type,
-                                   'address': obj.register_addr, 'value': value, })
+                                   'address': obj.address, 'value': value, })
             # obj.set_pv(value=value)
         except (ModbusException, struct.error) as e:
             self._LOG.warning('Failed write',
                               extra={'device_id': self.id, 'object_id': obj.id,
                                      'object_type': obj.type,
-                                     'register': obj.register_addr,
+                                     'register': obj.address,
                                      'quantity': obj.quantity, 'exc': e, })
         except Exception as e:
             self._LOG.exception('Unhandled error',
                                 extra={'device_id': self.id, 'object_id': obj.id,
                                        'object_type': obj.type,
-                                       'register': obj.register_addr,
+                                       'register': obj.address,
                                        'quantity': obj.quantity, 'exc': e, })
 
     async def decode(self, resp: Union[ReadCoilsResponse,
@@ -537,7 +537,7 @@ class AsyncModbusDevice:
             self._LOG.debug('Decoded',
                             extra={'device_id': obj.device_id, 'object_id': obj.id,
                                    'object_type': obj.type,
-                                   'register_address': obj.register_addr,
+                                   'register_address': obj.address,
                                    'quantity': obj.quantity, 'data_length': obj.data_length,
                                    'data_type': obj.data_type, 'value_raw': data,
                                    'value_decoded': decoded, 'value_scaled': scaled})
@@ -580,10 +580,12 @@ class AsyncModbusDevice:
         build_funcs = {
             1: {DataType.BOOL: builder.add_bits},
             8: {DataType.INT: builder.add_8bit_int,
-                DataType.UINT: builder.add_8bit_uint, },
+                DataType.UINT: builder.add_8bit_uint,
+                DataType.BOOL: builder.add_bits, },
             16: {DataType.INT: builder.add_16bit_int,
                  DataType.UINT: builder.add_16bit_uint,
-                 DataType.FLOAT: builder.add_16bit_float, },
+                 DataType.FLOAT: builder.add_16bit_float,
+                 DataType.BOOL: builder.add_bits, },
             32: {DataType.INT: builder.add_32bit_int,
                  DataType.UINT: builder.add_32bit_uint,
                  DataType.FLOAT: builder.add_32bit_float, },
@@ -604,7 +606,7 @@ class AsyncModbusDevice:
                                'object_type': obj.type,
                                'object_is_register': obj.is_register,
                                'objects_is_coil': obj.is_coil,
-                               'register_address': obj.register_addr,
+                               'register_address': obj.address,
                                'quantity': obj.quantity, 'data_length': obj.data_length,
                                'data_type': obj.data_type, 'value_raw': value,
                                'value_scaled': scaled, 'value_encoded': payload, })
