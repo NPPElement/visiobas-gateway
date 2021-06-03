@@ -451,7 +451,9 @@ class AsyncModbusDevice:
                                    'object_type': obj.type,
                                    'address': obj.address, 'value': value, })
             # obj.set_pv(value=value)
-        except (ModbusException, struct.error) as e:
+        except (ModbusException, struct.error,
+                asyncio.TimeoutError
+                ) as e:
             self._LOG.warning('Failed write',
                               extra={'device_id': self.id, 'object_id': obj.id,
                                      'object_type': obj.type,
