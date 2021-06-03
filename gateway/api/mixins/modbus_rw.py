@@ -2,7 +2,7 @@ from typing import Optional, Union, Any
 
 from aiohttp.web_exceptions import HTTPMethodNotAllowed
 
-from ...devices import AsyncModbusDevice  # todo use alias
+# from ...devices import AsyncModbusDevice
 from ...models import ObjProperty
 from ...utils import get_file_logger
 
@@ -15,7 +15,7 @@ ModbusObjAlias = Any  # '...models.ModbusObj'
 
 class ModbusRWMixin:
     @staticmethod
-    async def read_modbus(obj: ModbusObjAlias, device: AsyncModbusDevice,
+    async def read_modbus(obj: ModbusObjAlias, device: AsyncModbusDeviceAlias,
                           prop: ObjProperty = ObjProperty.presentValue
                           ) -> Optional[Union[int, float]]:
         """
@@ -37,7 +37,7 @@ class ModbusRWMixin:
 
     @staticmethod
     async def write_modbus(value: Union[int, float],
-                           obj: ModbusObjAlias, device: AsyncModbusDevice,
+                           obj: ModbusObjAlias, device: AsyncModbusDeviceAlias,
                            prop: ObjProperty = ObjProperty.presentValue,
                            priority: int = 11, ) -> None:
         """
