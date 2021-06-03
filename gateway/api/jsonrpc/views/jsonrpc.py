@@ -41,17 +41,17 @@ class JsonRPCView(BaseView, ReadWriteMixin):
                                                         priority=self.gtw.api_priority,
                                                         obj=obj, device=dev)
             if _values_equal:
-                _LOG.debug('Read and written values are consistent',
+                _LOG.debug('Successfully write. Values are consistent',
                            extra={'device_id': dev_id, 'object_id': obj_id,
                                   'obj_type_id': obj_type_id, 'value': value, })
                 return json_response({'success': True}, status=HTTPStatus.OK.value)
             else:
-                _LOG.warning('Read and written values are not consistent.',
+                _LOG.warning('Inconsistent written and read values',
                              extra={'device_id': dev_id, 'object_id': obj_id,
                                     'obj_type_id': obj_type_id, 'value': value, })
                 return json_response({  # todo: use error status code
                     'success': False,
-                    'msg': 'Read and written values are not consistent.'
+                    'msg': 'Inconsistent written and read values.'
                 },
                     status=HTTPStatus.BAD_GATEWAY.value
                 )
