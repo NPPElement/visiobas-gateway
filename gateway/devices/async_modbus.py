@@ -429,6 +429,11 @@ class AsyncModbusDevice:
 
             payload = await self.build(value=value, obj=obj)
 
+            if obj.func_write is ModbusWriteFunc.WRITE_REGISTER:
+                # TODO ?
+                assert len(payload) == 1
+                payload = payload[0]
+
             # Using lock because pymodbus doesn't handle async requests internally.
             # Maybe this will change in pymodbus v3.0.0
             async with self.lock:
@@ -592,6 +597,7 @@ class AsyncModbusDevice:
 
         # FIXME: string not support now
         payload = builder.to_coils() if obj.is_coil else builder.to_registers()
+
         # payload = builder.build()
         self._LOG.debug('Encoded',
                         extra={'device_id': obj.device_id, 'object_id': obj.id,
