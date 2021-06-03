@@ -50,7 +50,7 @@ services:
 
     devices: # To detect Modbus RTU devices
       - "/dev/ttyS0:/dev/ttyS0"
-      # - "/dev/ttyUSB0:/dev/ttyUSB0"
+      - "/dev/ttyUSB0:/dev/ttyUSB0"
 
 
 # [1]: https://www.losant.com/blog/how-to-access-serial-devices-in-docker
