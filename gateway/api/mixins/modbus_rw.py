@@ -27,7 +27,7 @@ class ModbusRWMixin:
             Read value.
         """
         try:
-            value = await device.read(obj=obj)  # FIXME async
+            value = await device.read(obj=obj)
             return value
 
         except Exception as e:
@@ -55,7 +55,7 @@ class ModbusRWMixin:
                                        allowed_methods=('Read not implemented yet',),
                                        reason='Read only object.')
         try:
-            await device.write(value=value, obj=obj)  # FIXME async
+            await device.write(value=value, obj=obj)
         except Exception as e:
             _LOG.exception('Unhandled error',
                            extra={'device_id': device.id, 'object_id': obj.id, 'exc': e, })
