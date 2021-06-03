@@ -390,12 +390,14 @@ class AsyncModbusDevice:
             obj.exception = e
             self._LOG.warning('Read error',
                               extra={'device_id': self.id, 'object_id': obj.id,
+                                     'object_type': obj.type,
                                      'register': obj.register_addr,
                                      'quantity': obj.quantity, 'exc': e, })
         except (ValueError, Exception) as e:
             obj.exception = e
             self._LOG.exception(f'Unexpected read error: {e}',
                                 extra={'device_id': self.id, 'object_id': obj.id,
+                                       'object_type': obj.type,
                                        'register': obj.register_addr,
                                        'quantity': obj.quantity,
                                        'exc': e, })
@@ -418,16 +420,19 @@ class AsyncModbusDevice:
 
             self._LOG.debug(f'Successfully write',
                             extra={'device_id': self.id, 'object_id': obj.id,
+                                   'object_type': obj.type,
                                    'address': obj.register_addr, 'value': value, })
             # obj.set_pv(value=value)
         except ModbusException as e:
             self._LOG.warning('Failed write',
                               extra={'device_id': self.id, 'object_id': obj.id,
+                                     'object_type': obj.type,
                                      'register': obj.register_addr,
                                      'quantity': obj.quantity, 'exc': e, })
         except Exception as e:
             self._LOG.exception('Unhandled error',
                                 extra={'device_id': self.id, 'object_id': obj.id,
+                                       'object_type': obj.type,
                                        'register': obj.register_addr,
                                        'quantity': obj.quantity, 'exc': e, })
 
@@ -506,6 +511,7 @@ class AsyncModbusDevice:
             scaled = decoded * obj.scale + obj.offset  # Scaling
             self._LOG.debug('Decoded',
                             extra={'device_id': obj.device_id, 'object_id': obj.id,
+                                   'object_type': obj.type,
                                    'register_address': obj.register_addr,
                                    'quantity': obj.quantity, 'data_length': obj.data_length,
                                    'data_type': obj.data_type, 'value_raw': data,
@@ -536,13 +542,13 @@ class AsyncModbusDevice:
         Returns:
             Built payload.
         """
-        value = int(value / obj.scale - obj.offset)  # Scaling
+        scaled = int(value / obj.scale - obj.offset)  # Scaling
 
         # In `pymodbus` example INT and UINT values presented by hex values.
         # value = hex(value) if obj.data_type in {DataType.INT, DataType.UINT} else value
 
         if obj.data_type is DataType.BOOL and obj.data_length == 1:
-            value = [value] + [0] * 7
+            scaled = [scaled] + [0] * 7
 
         builder = BinaryPayloadBuilder(byteorder=obj.byte_order, wordorder=obj.word_order)
         build_funcs = {
@@ -561,8 +567,15 @@ class AsyncModbusDevice:
         }
         assert build_funcs[obj.data_length][obj.data_type] is not None
 
-        build_funcs[obj.data_length][obj.data_type](value)
+        build_funcs[obj.data_length][obj.data_type](scaled)
 
         # FIXME: string not support now
         payload = builder.to_coils() if obj.is_coil else builder.to_registers()
+        self._LOG.debug('Encoded',
+                        extra={'device_id': obj.device_id, 'object_id': obj.id,
+                               'object_type': obj.type,
+                               'register_address': obj.register_addr,
+                               'quantity': obj.quantity, 'data_length': obj.data_length,
+                               'data_type': obj.data_type, 'value_raw': value,
+                               'value_scaled': scaled, 'value_encoded': payload, })
         return payload
