@@ -31,7 +31,7 @@ class BaseView(View):
             Device instance is exists.
         """
         try:
-            return self.gtw.get_device(dev_id=dev_id, gtw=self.gtw)
+            return self.gtw.get_device(dev_id=dev_id)
         except (ValueError, AttributeError, Exception) as e:
             _LOG.warning('Exception',
                          extra={'gateway': self.gtw, 'device_id': dev_id, 'exc': e, })
@@ -49,7 +49,7 @@ class BaseView(View):
             Object instance if exist.
         """
         try:
-            return dev.get_obj(obj_id=obj_id, obj_type_id=obj_type_id, dev=dev)
+            return dev.get_obj(obj_id=obj_id, obj_type_id=obj_type_id)
         except (ValueError, AttributeError, Exception) as e:
             _LOG.warning('Exception', extra={'device_id': dev.id, 'exc': e, })
             raise HTTPNotFound(reason=f'Exception: {e}\nTraceback: {e.__traceback__}')
