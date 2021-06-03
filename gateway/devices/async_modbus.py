@@ -552,7 +552,8 @@ class AsyncModbusDevice:
         if obj.data_type is DataType.BOOL and obj.data_length == 1:
             scaled = [scaled] + [0] * 7
 
-        builder = BinaryPayloadBuilder(byteorder=obj.byte_order, wordorder=obj.word_order)
+        builder = BinaryPayloadBuilder(byteorder=obj.byte_order, wordorder=obj.word_order,
+                                       repack=True)
         build_funcs = {
             1: {DataType.BOOL: builder.add_bits},
             8: {DataType.INT: builder.add_8bit_int,
@@ -572,11 +573,13 @@ class AsyncModbusDevice:
         build_funcs[obj.data_length][obj.data_type](scaled)
 
         # FIXME: string not support now
-        # payload = builder.to_coils() if obj.is_coil else builder.to_registers()
-        payload = builder.build()
+        payload = builder.to_coils() if obj.is_coil else builder.to_registers()
+        # payload = builder.build()
         self._LOG.debug('Encoded',
                         extra={'device_id': obj.device_id, 'object_id': obj.id,
                                'object_type': obj.type,
+                               'object_is_register': obj.is_register,
+                               'objects_is_coil': obj.is_coil,
                                'register_address': obj.register_addr,
                                'quantity': obj.quantity, 'data_length': obj.data_length,
                                'data_type': obj.data_type, 'value_raw': value,
