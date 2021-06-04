@@ -193,7 +193,8 @@ class VisioBASGateway:
         # await asyncio.gather(*gtw_addr_tasks)
 
         # todo await self.mqtt_client.subscribe(self.mqtt_client.topics)
-        _LOG.info('Start tasks performed')
+        _LOG.info('Start tasks performed',
+                  extra={'gateway_settings': self.settings, })
 
     async def _perform_stop_tasks(self) -> None:
         """Performs stopping tasks.
