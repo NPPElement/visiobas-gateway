@@ -139,7 +139,7 @@ class BaseModbusDevice(ABC):
 
     @property
     def timeout(self) -> float:
-        return self._device_obj.timeout_sec
+        return 3  # self._device_obj.timeout_sec
 
     @property
     def reconnect_period(self) -> int:
