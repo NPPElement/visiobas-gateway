@@ -89,7 +89,7 @@ class SyncModbusDevice(BaseModbusDevice):
                 raise ModbusException('func-not-support')  # todo: implement 0x14 func
             resp = self.read_funcs[obj.func_read](address=obj.address,
                                                   count=obj.quantity,
-                                                  unot=self.unit)
+                                                  unit=self.unit)
             if resp.isError():
                 raise ModbusException(self._0X80_FUNC_CODE)
 
