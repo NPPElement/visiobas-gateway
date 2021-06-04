@@ -1,6 +1,8 @@
 from http import HTTPStatus
+from json import JSONDecodeError
 
-from aiohttp.web_exceptions import HTTPBadGateway, HTTPNotFound, HTTPMethodNotAllowed
+from aiohttp.web_exceptions import HTTPBadGateway, HTTPNotFound, HTTPMethodNotAllowed, \
+    HTTPBadRequest
 from aiohttp.web_response import json_response
 from aiohttp_apispec import docs, request_schema, response_schema
 
@@ -20,7 +22,10 @@ class JsonRPCView(BaseView, ReadWriteMixin):
     @request_schema(JsonRPCSchema())
     @response_schema(JsonRPCPostResponseSchema, code=HTTPStatus.OK.value)
     async def post(self):
-        body = await self.request.json()
+        try:
+            body = await self.request.json()
+        except (JSONDecodeError,) as e:
+            return HTTPBadRequest(reason=f'Incorrect json: {e}')
         dev_id = int(body.get('params').get('device_id'))
         obj_type_id = int(body.get('params').get('object_type'))
         obj_id = int(body.get('params').get('object_id'))
