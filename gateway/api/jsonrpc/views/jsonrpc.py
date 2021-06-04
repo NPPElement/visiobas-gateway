@@ -1,8 +1,8 @@
 from http import HTTPStatus
 from json import JSONDecodeError
 
-from aiohttp.web_exceptions import HTTPBadGateway, HTTPNotFound, HTTPMethodNotAllowed, \
-    HTTPBadRequest
+from aiohttp.web_exceptions import (HTTPBadGateway, HTTPNotFound, HTTPMethodNotAllowed,
+                                    HTTPBadRequest)
 from aiohttp.web_response import json_response
 from aiohttp_apispec import docs, request_schema, response_schema
 

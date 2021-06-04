@@ -1,13 +1,16 @@
 from typing import Any, Union, Optional
 
-# from .bacnet_rw import BACnetRWMixin
 from .modbus_rw import ModbusRWMixin
 # from ...connectors import BACnetDevice, ModbusDevice
 from ...models import ObjProperty, Protocol
+# from .bacnet_rw import BACnetRWMixin
+from ...utils import get_file_logger
 
 # Aliases
 DeviceAlias = Any  # Union['...devices.AsyncModbusDevice',]
 ObjAlias = Any  # Union['...models.BACnetObj', '...models.ModbusObj',]
+
+_LOG = get_file_logger(name=__name__)
 
 
 class ReadWriteMixin(ModbusRWMixin):  # todo BACnetRWMixin
@@ -84,8 +87,7 @@ class ReadWriteMixin(ModbusRWMixin):  # todo BACnetRWMixin
         """
         protocol = device.protocol
 
-        if protocol in {Protocol.MODBUS_TCP,
-                        Protocol.MODBUS_RTU,
+        if protocol in {Protocol.MODBUS_TCP, Protocol.MODBUS_RTU,
                         Protocol.MODBUS_RTUOVERTCP, }:
             protocol_write_func = self.write_modbus
             protocol_read_func = self.read_modbus
@@ -97,5 +99,11 @@ class ReadWriteMixin(ModbusRWMixin):  # todo BACnetRWMixin
         await protocol_write_func(value=value, obj=obj, device=device,
                                   priority=priority, prop=prop)
         read_value = await protocol_read_func(obj=obj, device=device)
+        is_consistent = value == read_value
 
-        return value == read_value
+        _LOG.debug('Write with check called',
+                   extra={'device_id': obj.device_id, 'object_id': obj.id,
+                          'object_type': obj.type, 'value_written': value,
+                          'value_read': read_value,
+                          'values_are_consistent': is_consistent, })
+        return is_consistent
