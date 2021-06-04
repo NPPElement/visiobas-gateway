@@ -32,6 +32,16 @@ class ModbusReadFunc(Enum):
     def code_str(self) -> str:
         return self.value[1]
 
+    @property
+    def for_register(self) -> bool:
+        return True if self in {ModbusReadFunc.READ_HOLDING_REGISTERS,
+                                ModbusReadFunc.READ_INPUT_REGISTERS, } else False
+
+    @property
+    def for_coil(self) -> bool:
+        return True if self in {ModbusReadFunc.READ_COILS,
+                                ModbusReadFunc.READ_DISCRETE_INPUTS, } else False
+
 
 @unique
 class ModbusWriteFunc(Enum):
@@ -61,3 +71,13 @@ class ModbusWriteFunc(Enum):
     @property
     def code_str(self) -> str:
         return self.value[1]
+
+    @property
+    def for_register(self) -> bool:
+        return True if self in {ModbusWriteFunc.WRITE_REGISTER,
+                                ModbusWriteFunc.WRITE_REGISTERS, } else False
+
+    @property
+    def for_coil(self) -> bool:
+        return True if self in {ModbusWriteFunc.WRITE_COIL,
+                                ModbusWriteFunc.WRITE_COILS, } else False

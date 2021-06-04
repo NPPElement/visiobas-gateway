@@ -2,11 +2,11 @@ from json import loads, JSONDecodeError
 
 import paho.mqtt.client as mqtt
 
-from ...api import ReadWriteMixin, DevObjMixin, I2CRWMixin
+from ...api import ReadWriteMixin, GetDevObjMixin, I2CRWMixin
 from ...models import ObjProperty, ObjType
 
 
-class VisioMQTTApi(DevObjMixin, ReadWriteMixin, I2CRWMixin):
+class VisioMQTTApi(GetDevObjMixin, ReadWriteMixin, I2CRWMixin):
 
     def __init__(self, visio_mqtt_client, gateway):
         self.mqtt_client = visio_mqtt_client
@@ -67,10 +67,10 @@ class VisioMQTTApi(DevObjMixin, ReadWriteMixin, I2CRWMixin):
         priority = 11 if params.get('priority') is None else params['priority']
 
         device = self.get_device(dev_id=params['device_id'],
-                                 gateway=gateway
+                                 gtw=gateway
                                  )
         obj = self.get_obj(device=device,
-                           obj_type=params['object_type'],
+                           obj_type_id=params['object_type'],
                            obj_id=params['object_identifier']
                            )
         self.write(value=params['value'],

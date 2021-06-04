@@ -1,10 +1,7 @@
-from ipaddress import IPv4Address
-
 from pydantic import (Field, BaseSettings, AnyHttpUrl)
 
 
 class GatewaySettings(BaseSettings):
-
     # todo: solve problem with 'polling by'
     # address: IPv4Address = Field(
     #     ..., description="Gateway's address. "
@@ -14,10 +11,14 @@ class GatewaySettings(BaseSettings):
     override_threshold: int = Field(
         default=8, gt=0, le=16,
         description=('If priority is equal or greater than this value - '
-                     'verifier sets the OVERRIDEN flag'))
+                     'verifier sets the OVERRIDEN flag.'))
+
     poll_device_ids: list[int] = Field(..., min_items=1)
 
     api_url: AnyHttpUrl = Field(default='http://localhost:7070')
+    api_priority: int = Field(
+        default=11, ge=0, le=16,
+        description='Priority that sets when writing through the gateway API.')
 
     # Paths
     # config_path: str = Field(default='config',

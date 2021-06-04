@@ -1,11 +1,13 @@
 import asyncio
-from ipaddress import IPv4Address
+# from ipaddress import IPv4Address
 from typing import Callable, Any, Optional, Union, Awaitable, Collection
 
 import aiohttp
 import aiojobs
+from aiomisc import entrypoint
 from pydantic import ValidationError
 
+from gateway.api import VisioGtwAPI
 from gateway.clients import VisioHTTPClient, VisioBASMQTTClient
 from gateway.devices import AsyncModbusDevice
 from gateway.models import (ObjType, BACnetDevice, ModbusObj, Protocol,
@@ -18,6 +20,7 @@ _LOG = get_file_logger(__name__)
 
 class VisioBASGateway:
     """VisioBAS IoT Gateway."""
+
     def __init__(self, settings: GatewaySettings):
         # self.loop = asyncio.new_event_loop()
         self.loop: asyncio.AbstractEventLoop = asyncio.get_running_loop()
@@ -33,7 +36,7 @@ class VisioBASGateway:
 
         self.http_client: VisioHTTPClient = None
         self.mqtt_client: VisioBASMQTTClient = None
-        self.http_api_server = None
+        self.api: VisioGtwAPI = None
         self.verifier = BACnetVerifier(override_threshold=settings.override_threshold)
 
         self._devices: dict[int, Union[AsyncModbusDevice]] = {}
@@ -41,13 +44,12 @@ class VisioBASGateway:
     @classmethod
     async def create(cls, settings: GatewaySettings) -> 'VisioBASGateway':
         gateway = cls(settings=settings)
-        gateway._scheduler = await aiojobs.create_scheduler(close_timeout=60,
-                                                            limit=100)
+        gateway._scheduler = await aiojobs.create_scheduler(close_timeout=60, limit=100)
         return gateway
 
-    @property
-    def address(self) -> IPv4Address:
-        return self.settings.address
+    # @property
+    # def address(self) -> IPv4Address:
+    #     return self.settings.address
 
     @property
     def poll_device_ids(self) -> list[int]:
@@ -60,6 +62,21 @@ class VisioBASGateway:
     @property
     def devices(self) -> dict[int, Union[AsyncModbusDevice]]:
         return self._devices
+
+    def get_device(self, dev_id: int) -> Optional[Union[AsyncModbusDevice]]:
+        """Gets device instance.
+
+        Args:
+            dev_id: Device identifier.
+
+        Returns:
+            Device instance.
+        """
+        return self._devices.get(dev_id)
+
+    @property
+    def api_priority(self) -> int:
+        return self.settings.api_priority
 
     # def run(self) -> None:
     #     # if need, set event loop policy here
@@ -86,9 +103,16 @@ class VisioBASGateway:
         # await self.http_client.setup()
         # self.mqtt_client = VisioBASMQTTClient.from_yaml(
         #     gateway=self, yaml_path=self.MQTT_CFG_PATH)
-        # todo: setup HTTP API server
+        self.api = VisioGtwAPI(gateway=self, host=self.settings.api_url.host,
+                               port=int(self.settings.api_url.port))
+        await self._scheduler.spawn(self.start_api())
         await self._scheduler.spawn(coro=self.periodic_update())
         # self._upd_task = self.loop.create_task(self.periodic_update())
+
+    async def start_api(self) -> None:
+        """Starts GatewayAPI."""
+        async with entrypoint(self.api) as ep:
+            await ep.closing()
 
     async def periodic_update(self) -> None:
         """Spawn periodic update task."""

@@ -1,53 +1,61 @@
-from logging import getLogger
-from typing import Any
+from typing import Optional, Union, Any
 
-from ...connectors import ModbusDevice
-from ...models import ModbusObj, ObjProperty
+from aiohttp.web_exceptions import HTTPMethodNotAllowed
 
-_log = getLogger(__name__)
+# from ...devices import AsyncModbusDevice
+from ...models import ObjProperty
+from ...utils import get_file_logger
+
+_LOG = get_file_logger(name=__name__)
+
+# Aliases
+AsyncModbusDeviceAlias = Any  # '...devices.AsyncModbusDevice'
+ModbusObjAlias = Any  # '...models.ModbusObj'
 
 
 class ModbusRWMixin:
-
     @staticmethod
-    def read_modbus(obj: ModbusObj, device: ModbusDevice,
-                    prop: ObjProperty = ObjProperty.presentValue) -> Any:
-        try:
-            registers = device.read(obj=obj)
+    async def read_modbus(obj: ModbusObjAlias, device: AsyncModbusDeviceAlias,
+                          prop: ObjProperty = ObjProperty.presentValue
+                          ) -> Optional[Union[int, float]]:
+        """
+        Args:
+            obj: Object instance.
+            device: Device instance.
 
-            if obj.properties.quantity == 1:
-                return registers.pop()
-            else:
-                raise NotImplementedError
+        Returns:
+            Read value.
+        """
+        try:
+            value = await device.read(obj=obj)
+            return value
 
         except Exception as e:
-            _log.error(f'Error: {e}',
-                       exc_info=True
-                       )
+            _LOG.exception('Unhandled error',
+                           extra={'device_id': device.id, 'object_id': obj.id,
+                                  'object_type': obj.type, 'exc': e, })
 
     @staticmethod
-    def write_modbus(value, prop: ObjProperty, priority: int,
-                     obj: ModbusObj, device: ModbusDevice) -> None:
+    async def write_modbus(value: Union[int, float],
+                           obj: ModbusObjAlias, device: AsyncModbusDeviceAlias,
+                           prop: ObjProperty = ObjProperty.presentValue,
+                           priority: int = 11) -> None:
+        """
+        Args:
+            value: Value to write.
+            obj: Object instance.
+            device: Device instance.
+            priority: Priority of value.
+        """
+        if obj.func_write is None:
+            _LOG.warning('Attempt to write read only object',
+                         extra={'device_id': device.id, 'object_id': obj.id,
+                                'object_type': obj.type, })
+            raise HTTPMethodNotAllowed(method='POST',
+                                       allowed_methods=('Read not implemented yet',),
+                                       reason='Read only object.')
         try:
-            device.write(values=value,
-                         obj=obj
-                         )
+            await device.write(value=value, obj=obj)
         except Exception as e:
-            _log.error(f'Error: {e}',
-                       exc_info=True
-                       )
-
-    def write_with_check_modbus(self, value, prop: ObjProperty, priority: int
-                                , obj: ModbusObj, device: ModbusDevice
-                                ) -> bool:  # tuple[bool, tuple[Any, Any]]:
-        """
-        :return: the read value is equal to the written value
-        """
-        self.write_modbus(value=value,
-                          obj=obj,
-                          device=device
-                          )
-        rvalue = self.read_modbus(obj=obj,
-                                  device=device
-                                  )
-        return value == rvalue  # , (value, rvalue))
+            _LOG.exception('Unhandled error',
+                           extra={'device_id': device.id, 'object_id': obj.id, 'exc': e, })

@@ -1,13 +1,9 @@
-from .mixins import ReadWriteMixin, DevObjMixin, I2CRWMixin
-from .models import ParamsModel
-from .service import VisioGatewayApiService
+from .mixins import ReadWriteMixin
+from .service import VisioGtwAPI
 
-__all__ = ['VisioGatewayApiService',
+__all__ = ['VisioGtwAPI',
            # 'ModbusRWMixin',
            # 'BACnetRWMixin',
            'ReadWriteMixin',
-           'DevObjMixin',
-           'I2CRWMixin',
-
-           'ParamsModel'
+           # 'I2CRWMixin',
            ]
