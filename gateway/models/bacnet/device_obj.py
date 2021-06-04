@@ -90,3 +90,7 @@ class BACnetDevice(BaseBACnetObjModel):
     @property
     def protocol(self) -> Protocol:
         return self.property_list.protocol
+
+    @property
+    def timeout_sec(self) -> float:
+        return self.timeout / 1000
