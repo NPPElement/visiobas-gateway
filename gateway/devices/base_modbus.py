@@ -80,6 +80,12 @@ class BaseModbusDevice(ABC):
 
         self._connected = False
 
+    def __repr__(self) -> str:
+        return f'{self.__class__.__name__}[{self.id}]'
+
+    def __len__(self) -> int:
+        return len(self._objects)
+
     @classmethod
     async def create(cls, device_obj: BACnetDevice, gateway: 'VisioBASGateway'
                      ) -> 'BaseModbusDevice':
@@ -88,20 +94,6 @@ class BaseModbusDevice(ABC):
         await dev._gateway.async_add_job(dev.create_client)
         # _LOG.debug('Device created', extra={'device_id': dev.id})
         return dev
-
-    @abstractmethod
-    def create_client(self) -> None:
-        raise NotImplementedError
-
-    @abstractmethod
-    def is_client_connected(self) -> bool:
-        raise NotImplementedError
-
-    def __repr__(self) -> str:
-        return f'{self.__class__.__name__}[{self.id}]'
-
-    def __len__(self) -> int:
-        return len(self._objects)
 
     # @property
     # def lock(self) -> asyncio.Lock:
@@ -164,6 +156,26 @@ class BaseModbusDevice(ABC):
     @property
     def objects(self) -> set[ModbusObj]:
         return {obj for objs_set in self._objects.values() for obj in objs_set}
+
+    @abstractmethod
+    def read_funcs(self) -> dict[ModbusReadFunc, Callable]:
+        raise NotImplementedError
+
+    @abstractmethod
+    def write_funcs(self) -> dict[ModbusWriteFunc, Callable]:
+        raise NotImplementedError
+
+    @abstractmethod
+    def create_client(self) -> None:
+        raise NotImplementedError
+
+    @abstractmethod
+    def is_client_connected(self) -> bool:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def _poll_objects(self, objs: Collection[ModbusObj]) -> None:
+        raise NotImplementedError
 
     @lru_cache(maxsize=10)
     def get_object(self, obj_id: int, obj_type_id: int) -> Optional[ModbusObj]:
@@ -268,23 +280,10 @@ class BaseModbusDevice(ABC):
         await self._gateway.send_objects(objs=objs)
         await self._gateway.async_add_job(self.clear_properties, objs)  # fixme hotfix
 
-    @abstractmethod
-    async def _poll_objects(self, objs: Collection[ModbusObj]) -> None:
-        raise NotImplementedError
-
     @staticmethod
     def clear_properties(objs: Collection[BACnetObj]) -> None:
         [obj.clear_properties() for obj in objs]  # fixme hotfix
 
-    @abstractmethod
-    def read_funcs(self) -> dict[ModbusReadFunc, Callable]:
-        raise NotImplementedError
-
-    @abstractmethod
-    def write_funcs(self) -> dict[ModbusWriteFunc, Callable]:
-        raise NotImplementedError
-
-    # @staticmethod
     def _decode_response(self, resp: Union[ReadCoilsResponse,
                                            ReadDiscreteInputsResponse,
                                            ReadHoldingRegistersResponse,
