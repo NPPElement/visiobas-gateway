@@ -15,6 +15,9 @@ class GatewaySettings(BaseSettings):
 
     poll_device_ids: list[int] = Field(..., min_items=1)
 
+    modbus_sync: bool = Field(default=...,
+                              description='Use synchronous client for Modbus protocol.')
+
     api_url: AnyHttpUrl = Field(default='http://localhost:7070')
     api_priority: int = Field(
         default=11, ge=0, le=16,

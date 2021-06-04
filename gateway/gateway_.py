@@ -9,7 +9,7 @@ from pydantic import ValidationError
 
 from gateway.api import VisioGtwAPI
 from gateway.clients import VisioHTTPClient, VisioBASMQTTClient
-from gateway.devices import AsyncModbusDevice
+from gateway.devices import AsyncModbusDevice, SyncModbusDevice
 from gateway.models import (ObjType, BACnetDevice, ModbusObj, Protocol,
                             BACnetObj, HTTPSettings, GatewaySettings)
 from gateway.utils import get_file_logger
@@ -193,7 +193,8 @@ class VisioBASGateway:
         # await asyncio.gather(*gtw_addr_tasks)
 
         # todo await self.mqtt_client.subscribe(self.mqtt_client.topics)
-        _LOG.info('Start tasks performed')
+        _LOG.info('Start tasks performed',
+                  extra={'gateway_settings': self.settings, })
 
     async def _perform_stop_tasks(self) -> None:
         """Performs stopping tasks.
@@ -232,7 +233,6 @@ class VisioBASGateway:
             # request one type - 'device', so [0] element of tuple below
             dev_obj = await self.async_add_job(self._parse_device_obj, dev_obj_data[0][0])
 
-            # device = await self.async_add_job(self.device_factory, dev_obj)
             device = await self.device_factory(dev_obj=dev_obj)
 
             # fixme use for task in asyncio.as_completed(tasks):
@@ -306,7 +306,7 @@ class VisioBASGateway:
                                            dev_id=dev_id,
                                            data=str_)
 
-    async def device_factory(self, dev_obj: BACnetDevice
+    async def device_factory(self, dev_obj: BACnetDevice,
                              ) -> Optional[Union[AsyncModbusDevice]]:
         """Creates device for provided protocol.
 
@@ -317,11 +317,12 @@ class VisioBASGateway:
             protocol = dev_obj.property_list.protocol
 
             if protocol in {Protocol.MODBUS_TCP, Protocol.MODBUS_RTUOVERTCP}:
-                device = await AsyncModbusDevice.create(device_obj=dev_obj, gateway=self)
+                cls_factory = SyncModbusDevice if self.settings.modbus_sync else AsyncModbusDevice
+                device = await cls_factory.create(device_obj=dev_obj, gateway=self)
             elif protocol is Protocol.MODBUS_RTU:
-                async with self._serial_creation_lock:
-                    device = await AsyncModbusDevice.create(device_obj=dev_obj,
-                                                            gateway=self)
+                async with self._serial_creation_lock:  # fixme
+                    cls_factory = SyncModbusDevice if self.settings.modbus_sync else AsyncModbusDevice
+                    device = await cls_factory.create(device_obj=dev_obj, gateway=self)
             elif protocol == Protocol.BACNET:
                 device = None  # todo
             else:

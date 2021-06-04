@@ -90,3 +90,27 @@ class BACnetDevice(BaseBACnetObjModel):
     @property
     def protocol(self) -> Protocol:
         return self.property_list.protocol
+
+    @property
+    def timeout_sec(self) -> float:
+        return self.timeout / 1000
+
+    @property
+    def baudrate(self) -> Optional[int]:
+        if self.protocol is Protocol.MODBUS_RTU:
+            return self.property_list.rtu.baudrate
+
+    @property
+    def bytesize(self) -> Optional[int]:
+        if self.protocol is Protocol.MODBUS_RTU:
+            return self.property_list.rtu.bytesize
+
+    @property
+    def parity(self) -> Optional[str]:
+        if self.protocol is Protocol.MODBUS_RTU:
+            return self.property_list.rtu.parity
+
+    @property
+    def stopbits(self) -> Optional[int]:
+        if self.protocol is Protocol.MODBUS_RTU:
+            return self.property_list.rtu.stopbits
