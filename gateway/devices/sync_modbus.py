@@ -80,7 +80,7 @@ class SyncModbusDevice(BaseModbusDevice):
                 }
 
     async def read(self, obj: ModbusObj) -> Optional[Union[int, float]]:
-        return self._gateway.async_add_job(self.sync_read, obj)
+        return await self._gateway.async_add_job(self.sync_read, obj)
 
     def sync_read(self, obj: ModbusObj) -> Optional[Union[int, float]]:
         """Read data from Modbus object.
@@ -114,7 +114,7 @@ class SyncModbusDevice(BaseModbusDevice):
             return obj.pv  # return not used now. Updates object
 
     async def write(self, value: Union[int, float], obj: ModbusObj) -> None:
-        self._gateway.async_add_job(self.sync_write, value, obj)
+        await self._gateway.async_add_job(self.sync_write, value, obj)
 
     def sync_write(self, value: Union[int, float], obj: ModbusObj) -> None:
         """Write value to Modbus object.
