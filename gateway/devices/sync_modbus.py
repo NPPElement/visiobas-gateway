@@ -108,10 +108,6 @@ class SyncModbusDevice(BaseModbusDevice):
                                        'object_type': obj.type, 'register': obj.address,
                                        'quantity': obj.quantity, 'exc': e, })
         else:
-            self._LOG.debug(f'Successfully read',
-                            extra={'device_id': self.id, 'object_id': obj.id,
-                                   'object_type': obj.type, 'address': obj.address,
-                                   'value': value, })
             return obj.pv  # return not used now. Updates object
 
     def write(self, value: Union[int, float], obj: ModbusObj) -> None:
