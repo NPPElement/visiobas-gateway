@@ -9,7 +9,7 @@ from pydantic import ValidationError
 
 from gateway.api import VisioGtwAPI
 from gateway.clients import VisioHTTPClient, VisioBASMQTTClient
-from gateway.devices import AsyncModbusDevice
+from gateway.devices import AsyncModbusDevice, SyncModbusDevice
 from gateway.models import (ObjType, BACnetDevice, ModbusObj, Protocol,
                             BACnetObj, HTTPSettings, GatewaySettings)
 from gateway.utils import get_file_logger
@@ -317,11 +317,13 @@ class VisioBASGateway:
             protocol = dev_obj.property_list.protocol
 
             if protocol in {Protocol.MODBUS_TCP, Protocol.MODBUS_RTUOVERTCP}:
-                device = await AsyncModbusDevice.create(device_obj=dev_obj, gateway=self)
+                # device = await AsyncModbusDevice.create(device_obj=dev_obj, gateway=self)
+                device = await SyncModbusDevice.create(device_obj=dev_obj, gateway=self)
             elif protocol is Protocol.MODBUS_RTU:
                 async with self._serial_creation_lock:
-                    device = await AsyncModbusDevice.create(device_obj=dev_obj,
-                                                            gateway=self)
+                    # device = await AsyncModbusDevice.create(device_obj=dev_obj,
+                    #                                         gateway=self)
+                    device = await SyncModbusDevice.create(device_obj=dev_obj, gateway=self)
             elif protocol == Protocol.BACNET:
                 device = None  # todo
             else:
