@@ -79,7 +79,10 @@ class SyncModbusDevice(BaseModbusDevice):
                 ModbusWriteFunc.WRITE_REGISTERS: self._client.write_registers,
                 }
 
-    def read(self, obj: ModbusObj) -> Optional[Union[int, float]]:
+    async def read(self, obj: ModbusObj) -> Optional[Union[int, float]]:
+        return self._gateway.async_add_job(self.sync_read, obj)
+
+    def sync_read(self, obj: ModbusObj) -> Optional[Union[int, float]]:
         """Read data from Modbus object.
 
         Updates object and return value.
@@ -110,7 +113,10 @@ class SyncModbusDevice(BaseModbusDevice):
         else:
             return obj.pv  # return not used now. Updates object
 
-    def write(self, value: Union[int, float], obj: ModbusObj) -> None:
+    async def write(self, value: Union[int, float], obj: ModbusObj) -> None:
+        self._gateway.async_add_job(self.sync_write, value, obj)
+
+    def sync_write(self, value: Union[int, float], obj: ModbusObj) -> None:
         """Write value to Modbus object.
 
         Args:
@@ -152,6 +158,6 @@ class SyncModbusDevice(BaseModbusDevice):
     async def _poll_objects(self, objs: Collection[ModbusObj]) -> None:
         def _sync_poll_objects(objs_: Collection[ModbusObj]) -> None:
             for obj in objs_:
-                self.read(obj=obj)
+                self.sync_read(obj=obj)
         await self._gateway.async_add_job(_sync_poll_objects, objs)
 
