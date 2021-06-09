@@ -78,7 +78,7 @@ class BACnetVerifier:
 
         if isinstance(obj.pv, float) and obj.pv.is_integer():
             obj.set_pv(value=int(obj.pv))  # FIXME: update time!
-            
+
     def verify_pa(self, obj: BACnetObj) -> None:
         """Sets OVERRIDE status flag if priority array contains override priority."""
 

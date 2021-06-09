@@ -298,13 +298,15 @@ class VisioBASGateway:
     async def send_objects(self, objs: Collection[BACnetObj]) -> None:
         """Sends objects to server."""
         assert len(objs)
-
-        dev_id = list(objs)[0].device_id
-
-        str_ = ';'.join([obj.to_http_str() for obj in objs]) + ';'
-        await self.http_client.post_device(servers=self.http_client.servers_post,
-                                           dev_id=dev_id,
-                                           data=str_)
+        
+        try:
+            dev_id = list(objs)[0].device_id
+            str_ = ';'.join([obj.to_http_str() for obj in objs]) + ';'
+            await self.http_client.post_device(servers=self.http_client.servers_post,
+                                               dev_id=dev_id,
+                                               data=str_)
+        except Exception as e:
+            _LOG.exception('Unexpected error', extra={'exc': e})
 
     async def device_factory(self, dev_obj: BACnetDevice,
                              ) -> Optional[Union[AsyncModbusDevice]]:
