@@ -310,7 +310,8 @@ class VisioHTTPClient:
             _LOG.debug('Successfully sent data',
                        extra={'device_id': dev_id, 'servers': servers})
             return True
-        except asyncio.TimeoutError as e:
+        except (asyncio.TimeoutError, aiohttp.ClientError,
+                ConnectionError) as e:
             _LOG.warning('Failed to send', extra={'device_id': dev_id, 'exc': e, })
             return False
 
