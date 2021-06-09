@@ -307,9 +307,7 @@ class VisioHTTPClient:
             ]
             await asyncio.gather(*post_tasks)  # , return_exceptions=True)
             # TODO: What we should do with errors?
-            _LOG.debug('Successfully sent data',
-                       extra={'device_id': dev_id, 'servers': servers})
-            return True
+
         except (asyncio.TimeoutError, aiohttp.ClientError,
                 ConnectionError) as e:
             _LOG.warning('Failed to send', extra={'device_id': dev_id, 'exc': e, })
@@ -319,6 +317,10 @@ class VisioHTTPClient:
             _LOG.exception('Unhandled failed to send',
                            extra={'device_id': dev_id, 'exc': e, })
             return False
+        else:
+            _LOG.debug('Successfully sent data',
+                       extra={'device_id': dev_id, 'servers': servers})
+            return True
 
     async def post_property(self, value: Any,
                             property_: ObjProperty, obj: BaseBACnetObjModel,
@@ -337,10 +339,7 @@ class VisioHTTPClient:
                 for server in servers
             ]
             await asyncio.gather(*post_tasks)
-            _LOG.debug('Successfully sent property',
-                       extra={'device_id': obj.device_id, 'property': property_,
-                              'value': value, 'servers': servers, })
-            return True
+
         except (asyncio.TimeoutError, aiohttp.ClientError) as e:
             _LOG.warning('Failed to send property',
                          extra={'device_id': obj.device_id, 'property': property_,
@@ -351,6 +350,12 @@ class VisioHTTPClient:
                            extra={'device_id': obj.device_id, 'property': property_,
                                   'value': value, 'servers': servers, 'exc': e, })
             return False
+        else:
+            _LOG.debug('Successfully sent property',
+                       extra={'device_id': obj.device_id, 'property': property_,
+                              'value': value, 'servers': servers, })
+            return True
+
 
     async def _rq(self, method: str, url: str, **kwargs) -> Union[list, dict]:
         """Perform HTTP request and check response.

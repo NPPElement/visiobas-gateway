@@ -298,7 +298,7 @@ class VisioBASGateway:
     async def send_objects(self, objs: Collection[BACnetObj]) -> None:
         """Sends objects to server."""
         assert len(objs)
-        
+
         try:
             dev_id = list(objs)[0].device_id
             str_ = ';'.join([obj.to_http_str() for obj in objs]) + ';'
