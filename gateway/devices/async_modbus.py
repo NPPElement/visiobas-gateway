@@ -8,7 +8,7 @@ from pymodbus.client.asynchronous.async_io import (AsyncioModbusSerialClient,
 from pymodbus.client.asynchronous.schedulers import ASYNC_IO
 from pymodbus.client.asynchronous.serial import AsyncModbusSerialClient
 from pymodbus.client.asynchronous.tcp import AsyncModbusTCPClient
-from pymodbus.exceptions import ModbusException
+from pymodbus.exceptions import ModbusException, ModbusIOException
 from pymodbus.register_read_message import (ReadHoldingRegistersResponse,
                                             ReadInputRegistersResponse)
 from pymodbus.transaction import ModbusRtuFramer
@@ -146,7 +146,7 @@ class AsyncModbusDevice(BaseModbusDevice):
                                                             count=obj.quantity,
                                                             unit=self.unit)
             if resp.isError():
-                raise ModbusException(self._0X80_FUNC_CODE)
+                raise ModbusIOException(resp.string)
 
             value = await self.decode(resp=resp, obj=obj)
             obj.set_pv(value=value)
@@ -197,7 +197,7 @@ class AsyncModbusDevice(BaseModbusDevice):
                                                             payload,  # skip_encode=True,
                                                             unit=self.unit)
             if rq.isError():
-                raise ModbusException(self._0X80_FUNC_CODE)
+                raise ModbusIOException(rq.string)
 
             self._LOG.debug(f'Successfully write',
                             extra={'device_id': self.id, 'object_id': obj.id,

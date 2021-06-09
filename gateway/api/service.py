@@ -1,6 +1,5 @@
 from typing import Union, Any
 
-import aiomisc
 from aiohttp.web_app import Application
 from aiohttp_apispec import setup_aiohttp_apispec
 from aiomisc import entrypoint

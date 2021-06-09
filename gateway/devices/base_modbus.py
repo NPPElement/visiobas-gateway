@@ -1,24 +1,19 @@
 import asyncio
-from abc import abstractmethod, ABC
-from datetime import datetime
-from functools import lru_cache
-from ipaddress import IPv4Address
-from typing import Any, Callable, Union, Collection, Optional
+from abc import abstractmethod
+from typing import Any, Callable, Union, Optional
 
-import aiojobs
 from pymodbus.bit_read_message import (ReadCoilsResponse, ReadDiscreteInputsResponse,
                                        ReadBitsResponseBase)
-from pymodbus.client.asynchronous.async_io import (AsyncioModbusSerialClient,
-                                                   AsyncioModbusTcpClient)
+from pymodbus.client.asynchronous.async_io import (AsyncioModbusSerialClient)
 from pymodbus.client.sync import ModbusSerialClient
 from pymodbus.payload import BinaryPayloadDecoder, BinaryPayloadBuilder
 from pymodbus.register_read_message import (ReadHoldingRegistersResponse,
                                             ReadInputRegistersResponse,
                                             ReadRegistersResponseBase)
 
-from ..models import (BACnetDevice, BACnetObj, ModbusObj, ObjType, Protocol, DataType,
+from .base_device import BaseDevice
+from ..models import (BACnetDevice, ModbusObj, Protocol, DataType,
                       ModbusReadFunc, ModbusWriteFunc)
-from ..utils import get_file_logger
 
 # aliases # TODO
 # BACnetDeviceModel = Any  # ...models
@@ -30,7 +25,7 @@ VisioBASGateway = Any  # ...gateway_loop
 # _LOG = get_file_logger(name=__name__, size_mb=500)
 
 
-class BaseModbusDevice(ABC):
+class BaseModbusDevice(BaseDevice):
     # upd_period_factor = 0.9  # todo provide from config
 
     # Keys is serial port names.
@@ -39,8 +34,6 @@ class BaseModbusDevice(ABC):
     _serial_locks: dict[str: asyncio.Lock] = {}
 
     # _creation_lock = asyncio.Lock()
-
-    _0X80_FUNC_CODE = '0x80-error-code'
 
     # _serial_port_devices: Optional[
     #     dict[int, 'AsyncModbusDevice']] = {}  # key it is device id
@@ -63,49 +56,26 @@ class BaseModbusDevice(ABC):
     #     else:
     #         raise ValueError('Unhandled error!')
 
-    def __init__(self, device_obj: BACnetDevice,  # 'BACnetDeviceModel'
-                 gateway: 'VisioBASGateway'):
-        self._gateway = gateway
-        self._device_obj = device_obj
-        self._LOG = get_file_logger(name=__name__ + str(self.id))
+    def __init__(self, device_obj: BACnetDevice, gateway: 'VisioBASGateway'):
+        super().__init__(device_obj, gateway)
+        # self._gateway = gateway
+        # self._device_obj = device_obj
+        # self._LOG = get_file_logger(name=__name__ + str(self.id))
 
         # self._loop: asyncio.AbstractEventLoop = None
         self._client = None
-        self.scheduler: aiojobs.Scheduler = None
+        # self.scheduler: aiojobs.Scheduler = None
 
         # self._lock = asyncio.Lock()
 
-        self._polling = True
-        self._objects: dict[int, set[ModbusObj]] = {}  # todo hide type
-
-        self._connected = False
-
-    def __repr__(self) -> str:
-        return f'{self.__class__.__name__}[{self.id}]'
-
-    def __len__(self) -> int:
-        return len(self._objects)
-
-    @classmethod
-    async def create(cls, device_obj: BACnetDevice, gateway: 'VisioBASGateway'
-                     ) -> 'BaseModbusDevice':
-        dev = cls(device_obj=device_obj, gateway=gateway)
-        dev.scheduler = await aiojobs.create_scheduler(close_timeout=60, limit=100)
-        await dev._gateway.async_add_job(dev.create_client)
-        # _LOG.debug('Device created', extra={'device_id': dev.id})
-        return dev
+        # self._polling = True
+        # self._objects: dict[int, set[ModbusObj]] = {}  # todo hide type
+        #
+        # self._connected = False
 
     # @property
     # def lock(self) -> asyncio.Lock:
     #     return self._serial_locks.get(self.serial_port) or self._lock
-
-    @property
-    def address(self) -> Optional[IPv4Address]:
-        return self._device_obj.property_list.address
-
-    @property
-    def port(self) -> Optional[int]:
-        return self._device_obj.property_list.port
 
     @property
     def serial_port(self) -> Optional[str]:
@@ -118,44 +88,11 @@ class BaseModbusDevice(ABC):
             return self._device_obj.property_list.rtu.port
 
     @property
-    def types_to_rq(self) -> tuple[ObjType, ...]:  # todo hide type
-        return self._device_obj.types_to_rq
-
-    @property
-    def id(self) -> int:
-        """Device id."""
-        return self._device_obj.id
-
-    @property
     def unit(self) -> int:
         if self._device_obj.property_list.protocol in {Protocol.MODBUS_RTU,
                                                        Protocol.MODBUS_RTUOVERTCP}:
             return self._device_obj.property_list.rtu.unit
         return 0x01
-
-    @property
-    def protocol(self) -> Protocol:
-        return self._device_obj.property_list.protocol
-
-    @property
-    def timeout(self) -> float:
-        return 3  # self._device_obj.timeout_sec
-
-    @property
-    def reconnect_period(self) -> int:
-        return self._device_obj.property_list.reconnect_period
-
-    @property
-    def retries(self) -> int:
-        return self._device_obj.retries
-
-    @property
-    def dev_obj(self) -> BACnetDevice:
-        return self._device_obj
-
-    @property
-    def objects(self) -> set[ModbusObj]:
-        return {obj for objs_set in self._objects.values() for obj in objs_set}
 
     @abstractmethod
     def read_funcs(self) -> dict[ModbusReadFunc, Callable]:
@@ -164,125 +101,6 @@ class BaseModbusDevice(ABC):
     @abstractmethod
     def write_funcs(self) -> dict[ModbusWriteFunc, Callable]:
         raise NotImplementedError
-
-    @abstractmethod
-    def create_client(self) -> None:
-        raise NotImplementedError
-
-    @abstractmethod
-    def is_client_connected(self) -> bool:
-        raise NotImplementedError
-
-    @abstractmethod
-    async def _poll_objects(self, objs: Collection[ModbusObj]) -> None:
-        raise NotImplementedError
-
-    @lru_cache(maxsize=10)
-    def get_object(self, obj_id: int, obj_type_id: int) -> Optional[ModbusObj]:
-        """Cache last 10 object instances.
-        Args:
-            obj_id: Object identifier.
-            obj_type_id: Object type identifier.
-
-        Returns:
-            Object instance.
-        """
-        for obj in self.objects:
-            if obj.type.id == obj_type_id and obj.id == obj_id:
-                return obj
-
-    def load_objects(self, objs: Collection[ModbusObj]) -> None:
-        """Groups objects by poll period and loads them into device for polling."""
-        assert len(objs)
-
-        objs = self._sort_objects_by_period(objs=objs)
-        self._objects = objs
-        self._LOG.debug('Objects are grouped by period and loads to the device')
-
-    @staticmethod
-    def _sort_objects_by_period(objs: Collection[ModbusObj]
-                                ) -> dict[int, set[ModbusObj]]:
-        """Creates dict from objects, where key is period, value is collection
-        of objects with that period.
-
-        Returns:
-            dict, where key is period, value is set of objects with that period.
-        """
-        dct = {}
-        for obj in objs:
-            poll_period = obj.property_list.send_interval
-            try:
-                dct[poll_period].add(obj)
-            except KeyError:
-                dct[poll_period] = {obj}
-        return dct
-
-    async def stop(self) -> None:
-        """Waits for finish of all polling tasks with timeout, and stop polling.
-        Closes client.
-        """
-        await self.scheduler.close()
-        self._LOG.info('Device stopped', extra={'device_id': self.id})
-
-    async def start_periodic_polls(self) -> None:
-        """Starts periodic polls for all periods."""
-
-        if self.is_client_connected:
-            for period, objs in self._objects.items():
-                await self.scheduler.spawn(self.periodic_poll(objs=objs, period=period))
-                # self._LOG.debug('Periodic polling started',
-                #            extra={'device_id': self.id, 'period': period})
-        else:
-            self._LOG.info('`pymodbus` client is not connected. Sleeping to next try',
-                           extra={'device_id': self.id,
-                                  'seconds_to_next_try': self.reconnect_period})
-            await asyncio.sleep(delay=self.reconnect_period)
-            await self._gateway.async_add_job(self.create_client)
-            # self._gateway.async_add_job(self.start_periodic_polls)
-            await self.scheduler.spawn(self.start_periodic_polls())
-        # todo: add close event wait
-
-    async def periodic_poll(self, objs: set[ModbusObj], period: int) -> None:
-        await self.scheduler.spawn(self._poll_iter(objs=objs, period=period))
-        self._LOG.debug(f'Periodic polling task created',
-                        extra={'device_id': self.id, 'period': period,
-                               'jobs_active_count': self.scheduler.active_count,
-                               'jobs_pending_count': self.scheduler.pending_count, })
-        # await self._poll_objects(objs=objs)
-        await asyncio.sleep(delay=period)
-
-        # Period of poll may change in the polling
-        await self.scheduler.spawn(self.periodic_poll(objs=objs, period=period))
-
-    async def _poll_iter(self, objs: Collection[ModbusObj], period: int) -> None:
-        """Polls objects and set new periodic job in period.
-
-        Args:
-            objs: Objects to poll
-            period: Time to start new poll job.
-        """
-        self._LOG.debug('Polling started',
-                        extra={'device_id': self.id, 'period': period,
-                               'objects_polled': len(objs)})
-        _t0 = datetime.now()
-        await self._poll_objects(objs=objs)
-        _t_delta = datetime.now() - _t0
-        if _t_delta.seconds > period:
-            # TODO: improve tactic
-            self._LOG.warning('Polling period is too short! ',
-                              extra={'device_id': self.id, })
-
-        self._LOG.info('Objects polled',
-                       extra={'device_id': self.id, 'period': period,
-                              'seconds_took': _t_delta.seconds,
-                              'objects_polled': len(objs)})
-        await self._gateway.verify_objects(objs=objs)
-        await self._gateway.send_objects(objs=objs)
-        await self._gateway.async_add_job(self.clear_properties, objs)  # fixme hotfix
-
-    @staticmethod
-    def clear_properties(objs: Collection[BACnetObj]) -> None:
-        [obj.clear_properties() for obj in objs]  # fixme hotfix
 
     def _decode_response(self, resp: Union[ReadCoilsResponse,
                                            ReadDiscreteInputsResponse,
