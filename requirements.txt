@@ -13,10 +13,8 @@ marshmallow==3.12.1
 pymodbus==2.5.2
 pyserial-asyncio==0.5
 
+BAC0==21.2.25
+bacpypes==0.18.4
+netifaces==0.11.0
 
-# BAC0==21.2.5  # todo: use pure bacpypes?
-# bacpypes==0.18.4
-# netifaces==0.10.9
-
-# PyYAML==5.4.1
 
