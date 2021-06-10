@@ -98,8 +98,8 @@ class BaseDevice(ABC):
         raise NotImplementedError
 
     @lru_cache(maxsize=10)
-    def get_object(self, obj_id: int, obj_type_id: int) -> Optional[
-        Union[BACnetObj, ModbusObj]]:
+    def get_object(self, obj_id: int, obj_type_id: int
+                   ) -> Optional[Union[BACnetObj, ModbusObj]]:
         """Cache last 10 object instances.
         Args:
             obj_id: Object identifier.
@@ -120,13 +120,6 @@ class BaseDevice(ABC):
         self._objects = objs
         self._LOG.debug('Objects are grouped by period and loads to the device')
 
-    async def stop(self) -> None:
-        """Waits for finish of all polling tasks with timeout, and stop polling.
-        Closes client.
-        """
-        await self.scheduler.close()
-        self._LOG.info('Device stopped', extra={'device_id': self.id})
-
     async def start_periodic_polls(self) -> None:
         """Starts periodic polls for all periods."""
 
@@ -144,6 +137,13 @@ class BaseDevice(ABC):
             # self._gateway.async_add_job(self.start_periodic_polls)
             await self.scheduler.spawn(self.start_periodic_polls())
         # todo: add close event wait
+
+    async def stop(self) -> None:
+        """Waits for finish of all polling tasks with timeout, and stop polling.
+        Closes client.
+        """
+        await self.scheduler.close()
+        self._LOG.info('Device stopped', extra={'device_id': self.id})
 
     async def periodic_poll(self, objs: set[Union[BACnetObj, ModbusObj]],
                             period: int) -> None:
