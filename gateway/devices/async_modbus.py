@@ -146,7 +146,7 @@ class AsyncModbusDevice(BaseModbusDevice):
                                                             count=obj.quantity,
                                                             unit=self.unit)
             if resp.isError():
-                raise ModbusIOException(resp.string)
+                raise ModbusIOException('0x80')  # todo: resp.string
 
             value = await self.decode(resp=resp, obj=obj)
             obj.set_pv(value=value)
@@ -197,7 +197,7 @@ class AsyncModbusDevice(BaseModbusDevice):
                                                             payload,  # skip_encode=True,
                                                             unit=self.unit)
             if rq.isError():
-                raise ModbusIOException(rq.string)
+                raise ModbusIOException('0x80')  # todo: resp.string
 
             self._LOG.debug(f'Successfully write',
                             extra={'device_id': self.id, 'object_id': obj.id,

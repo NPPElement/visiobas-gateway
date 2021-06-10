@@ -94,7 +94,7 @@ class SyncModbusDevice(BaseModbusDevice):
                                                   count=obj.quantity,
                                                   unit=self.unit)
             if resp.isError():
-                raise ModbusIOException(resp.string)
+                raise ModbusIOException('0x80')  # todo: resp.string
 
             value = self._decode_response(resp=resp, obj=obj)
             obj.set_pv(value=value)
@@ -139,7 +139,7 @@ class SyncModbusDevice(BaseModbusDevice):
 
             rq = self.write_funcs[obj.func_write](obj.address, payload, unit=self.unit)
             if rq.isError():
-                raise ModbusIOException(rq.string)
+                raise ModbusIOException('0x80')  # todo: resp.string
             self._LOG.debug(f'Successfully write',
                             extra={'device_id': self.id, 'object_id': obj.id,
                                    'object_type': obj.type, 'address': obj.address,
