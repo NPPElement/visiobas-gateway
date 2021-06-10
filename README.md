@@ -1,9 +1,10 @@
 # Visiobas-Gateway
 
-It is an application for polling devices using various protocols and transmitting data to the visiobas system.
-
+It is an application for polling devices using various protocols and transmitting data to
+the visiobas system.
 
 # API
+
 Swagger docs available on http://127.0.0.1:7070/
 
 ```
@@ -24,26 +25,50 @@ curl --header "Content-Type: application/json" \
 ### - [Install Docker Compose](https://docs.docker.com/compose/install/)
 
 ### - Install Visiobas Gateway
-``` shell
+
+```shell
 cd /opt
 sudo git clone https://github.com/NPPElement/visiobas-gateway
 cd visiobas-gateway
 ```
 
 ## Setting
-Configuration can be changed in files `gateway/config/gateway.env` and `gateway/config/http.env`.
-Templates are available: `gateway/config/templates`.
 
+### Setting configuration
+
+- Configuration can be changed in file `docker-compose.yaml`.
+- Configuration can be changed in files `gateway/config/gateway.env`
+  and `gateway/config/http.env`. Templates are available: `gateway/config/templates`.
+
+### Setting Serial ports
+
+```shell
+sudo apt-get install minicom  # install minicom
+dmesg | grep tty  # show ports
+sudo minicom -s # launch minicom
+# Setup serial ports from minicom, then save as dfl.
+
+sudo nano /etc/udev/rules.d/99-serial.rules
+# then write line: KERNEL=="ttyUSB[0-9]*",MODE="0666"
+
+# Explanations: https://www.losant.com/blog/how-to-access-serial-devices-in-docker
+
+# Before launch gateway, ensure user in the `dialout` group
+sudo usermod -a -G dialout username # add to `dialout` group
+id username # check user\group info
+```
 
 ## Launch/Update
-``` shell
+
+```shell
 . run/clear_logs.sh  # Clear logs
 
 . run/git_update.sh  # Git pull + build + run
 ```
 
 To clean docker:
-``` shell
+
+```shell
 sudo docker-compose down 
 sudo docker images
 
@@ -53,7 +78,8 @@ sudo docker images -a | xargs -n 1 -I {} sudo docker rmi -f {}
 ```
 
 ## Remove
-``` shell
+
+```shell
 # Delete all containers
 sudo docker ps -a -q | xargs -n 1 -I {} sudo docker rm -f {}
 
@@ -66,9 +92,10 @@ sudo systemctl restart docker
 ```
 
 ## Logging level
-The logging level can be changed in the `docker-compose.yaml` file.
 
-The following levels can be specified: `DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL`.
+- Logging level You can change the logging level in the `docker-compose.yaml` file. You can
+  choose one of the following levels: `DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL`
 
 ## License
+
 GPL-3.0 License
