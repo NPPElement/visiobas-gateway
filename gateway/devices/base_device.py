@@ -147,43 +147,64 @@ class BaseDevice(ABC):
 
     async def periodic_poll(self, objs: set[Union[BACnetObj, ModbusObj]],
                             period: int) -> None:
-        await self.scheduler.spawn(self._poll_iter(objs=objs, period=period))
-        self._LOG.debug(f'Periodic polling task created',
-                        extra={'device_id': self.id, 'period': period,
-                               'jobs_active_count': self.scheduler.active_count,
-                               'jobs_pending_count': self.scheduler.pending_count, })
-        # await self._poll_objects(objs=objs)
-        await asyncio.sleep(delay=period)
-
-        # Period of poll may change in the polling
-        await self.scheduler.spawn(self.periodic_poll(objs=objs, period=period))
-
-    async def _poll_iter(self, objs: Collection[Union[BACnetObj, ModbusObj]],
-                         period: int) -> None:
-        """Polls objects and set new periodic job in period.
-
-        Args:
-            objs: Objects to poll
-            period: Time to start new poll job.
-        """
         self._LOG.debug('Polling started',
                         extra={'device_id': self.id, 'period': period,
                                'objects_polled': len(objs)})
         _t0 = datetime.now()
         await self._poll_objects(objs=objs)
         _t_delta = datetime.now() - _t0
-        if _t_delta.seconds > period:
-            # TODO: improve tactic
-            self._LOG.warning('Polling period is too short! ',
-                              extra={'device_id': self.id, })
-
         self._LOG.info('Objects polled',
                        extra={'device_id': self.id, 'period': period,
                               'seconds_took': _t_delta.seconds,
                               'objects_polled': len(objs)})
+
+        if _t_delta.seconds > period:
+            period *= 1.5
+            self._LOG.warning('Polling period is too short! Increasing to x1.5',
+                              extra={'device_id': self.id})
+        await self.scheduler.spawn(self._process_polled(objs=objs))
+        await asyncio.sleep(delay=period - _t_delta.seconds)
+
+        # self._LOG.debug(f'Periodic polling task created',
+        #                 extra={'device_id': self.id, 'period': period,
+        #                        'jobs_active_count': self.scheduler.active_count,
+        #                        'jobs_pending_count': self.scheduler.pending_count, })
+        # await asyncio.sleep(delay=period)
+
+        # Period of poll may change in the polling
+        await self.scheduler.spawn(self.periodic_poll(objs=objs, period=period))
+        
+    async def _process_polled(self, objs: set[Union[BACnetObj, ModbusObj]]):
         await self._gateway.verify_objects(objs=objs)
         await self._gateway.send_objects(objs=objs)
         await self._gateway.async_add_job(self._clear_properties, objs)  # fixme hotfix
+
+    # async def _poll_iter(self, objs: Collection[Union[BACnetObj, ModbusObj]],
+    #                      period: int) -> None:
+    #     """Polls objects and set new periodic job in period.
+    #
+    #     Args:
+    #         objs: Objects to poll
+    #         period: Time to start new poll job.
+    #     """
+    #     self._LOG.debug('Polling started',
+    #                     extra={'device_id': self.id, 'period': period,
+    #                            'objects_polled': len(objs)})
+    #     _t0 = datetime.now()
+    #     await self._poll_objects(objs=objs)
+    #     _t_delta = datetime.now() - _t0
+    #     if _t_delta.seconds > period:
+    #         # TODO: improve tactic
+    #         self._LOG.warning('Polling period is too short! ',
+    #                           extra={'device_id': self.id, })
+    #
+    #     self._LOG.info('Objects polled',
+    #                    extra={'device_id': self.id, 'period': period,
+    #                           'seconds_took': _t_delta.seconds,
+    #                           'objects_polled': len(objs)})
+    #     await self._gateway.verify_objects(objs=objs)
+    #     await self._gateway.send_objects(objs=objs)
+    #     await self._gateway.async_add_job(self._clear_properties, objs)  # fixme hotfix
 
     @staticmethod
     def _clear_properties(objs: Collection[Union[BACnetObj, ModbusObj]]) -> None:
