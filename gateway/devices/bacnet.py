@@ -140,7 +140,7 @@ class BACnetDevice(BaseDevice):
                                    'success': is_successful, })
             return is_successful
         except (ValueError, Exception) as e:
-            self._LOG.warning('Unhandled WriteProperty error',
+            self._LOG.exception('Unhandled WriteProperty error',
                               extra={'device_id': self.id, 'object_id': obj.id,
                                      'object_type': obj.type, 'exc': e, 'value': value})
 
