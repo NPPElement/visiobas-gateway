@@ -25,6 +25,7 @@ class VisioBASGateway:
         # self.loop = asyncio.new_event_loop()
         self.loop: asyncio.AbstractEventLoop = asyncio.get_running_loop()
         self._serial_creation_lock = asyncio.Lock()
+        self._bacnet_creation_lock = asyncio.Lock()
 
         # self._pending_tasks: list = []
         self.settings = settings
@@ -327,7 +328,8 @@ class VisioBASGateway:
                     cls_factory = SyncModbusDevice if self.settings.modbus_sync else AsyncModbusDevice
                     device = await cls_factory.create(device_obj=dev_obj, gateway=self)
             elif protocol == Protocol.BACNET:
-                device = await BACnetDevice.create(device_obj=dev_obj, gateway=self)
+                async with self.bacnet_creation_lock:
+                    device = await BACnetDevice.create(device_obj=dev_obj, gateway=self)
             else:
                 raise NotImplementedError('Device factory not implemented')
 
