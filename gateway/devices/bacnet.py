@@ -107,8 +107,9 @@ class BACnetDevice(BaseDevice):
     #     self.__put_device_end_to_verifier()
 
     async def async_write_property(self, value: Union[int, float], obj: BACnetObj,
-                                   prop: ObjProperty) -> bool:
-        return await self._gateway.async_add_job(self.write_property, value, obj, prop)
+                                   prop: ObjProperty, priority: Optional[int]) -> bool:
+        return await self._gateway.async_add_job(
+            self.write_property, value, obj, prop, priority)
 
     def write_property(self, value: Union[int, float], obj: BACnetObj,
                        prop: ObjProperty, priority: Optional[int] = None) -> bool:
