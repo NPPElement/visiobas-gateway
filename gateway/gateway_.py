@@ -1,8 +1,7 @@
 import asyncio
-# from ipaddress import IPv4Address
+from threading import Lock
 from typing import Callable, Any, Optional, Union, Awaitable, Collection
 
-import BAC0
 import aiohttp
 import aiojobs
 from aiomisc import entrypoint
@@ -15,7 +14,6 @@ from gateway.models import (ObjType, BACnetDeviceObj, ModbusObj, Protocol,
                             BACnetObj, HTTPSettings, GatewaySettings)
 from gateway.utils import get_file_logger
 from gateway.verifier import BACnetVerifier
-from threading import Lock
 
 _LOG = get_file_logger(__name__)
 
@@ -331,7 +329,7 @@ class VisioBASGateway:
                     cls_factory = SyncModbusDevice if self.settings.modbus_sync else AsyncModbusDevice
                     device = await cls_factory.create(device_obj=dev_obj, gateway=self)
             elif protocol == Protocol.BACNET:
-                async with self._bacnet_creation_lock:
+                with self._bacnet_creation_lock:
                     device = await BACnetDevice.create(device_obj=dev_obj, gateway=self)
             else:
                 raise NotImplementedError('Device factory not implemented')
