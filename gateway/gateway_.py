@@ -1,7 +1,8 @@
 import asyncio
-from threading import Lock
+# from ipaddress import IPv4Address
 from typing import Callable, Any, Optional, Union, Awaitable, Collection
 
+import BAC0
 import aiohttp
 import aiojobs
 from aiomisc import entrypoint
@@ -25,7 +26,7 @@ class VisioBASGateway:
         # self.loop = asyncio.new_event_loop()
         self.loop: asyncio.AbstractEventLoop = asyncio.get_running_loop()
         self._serial_creation_lock = asyncio.Lock()
-        self._bacnet_creation_lock = Lock()
+        self._bacnet_creation_lock = asyncio.Lock()
 
         # self._pending_tasks: list = []
         self.settings = settings
@@ -42,7 +43,7 @@ class VisioBASGateway:
 
         self._devices: dict[int, Union[AsyncModbusDevice]] = {}
 
-        # self.bacnet = BAC0.lite()  # FIXME: hotfix!
+        self.bacnet = BAC0.lite()  # FIXME: hotfix!
 
     @classmethod
     async def create(cls, settings: GatewaySettings) -> 'VisioBASGateway':
@@ -329,7 +330,7 @@ class VisioBASGateway:
                     cls_factory = SyncModbusDevice if self.settings.modbus_sync else AsyncModbusDevice
                     device = await cls_factory.create(device_obj=dev_obj, gateway=self)
             elif protocol == Protocol.BACNET:
-                with self._bacnet_creation_lock:
+                async with self._bacnet_creation_lock:
                     device = await BACnetDevice.create(device_obj=dev_obj, gateway=self)
             else:
                 raise NotImplementedError('Device factory not implemented')
