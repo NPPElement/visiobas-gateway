@@ -126,13 +126,13 @@ class BACnetDevice(BaseDevice):
         """
         priority = priority or self._gateway.api_priority
         try:
-            args = '{0} {1} {2} {3} - {4}'.format(self.addr_with_port,
-                                                  obj.type.name,
-                                                  obj.id,
-                                                  prop.name,
-                                                  value,
-                                                  priority
-                                                  )
+            args = '{0} {1} {2} {3} {4} - {5}'.format(self.addr_with_port,
+                                                      obj.type.name,
+                                                      obj.id,
+                                                      prop.name,
+                                                      value,
+                                                      priority
+                                                      )
             is_successful = self._client.write(args=args)
             self._LOG.debug('Write',
                             extra={'device_id': self.id, 'object_id': obj.id,
@@ -141,8 +141,8 @@ class BACnetDevice(BaseDevice):
             return is_successful
         except (ValueError, Exception) as e:
             self._LOG.exception('Unhandled WriteProperty error',
-                              extra={'device_id': self.id, 'object_id': obj.id,
-                                     'object_type': obj.type, 'exc': e, 'value': value})
+                                extra={'device_id': self.id, 'object_id': obj.id,
+                                       'object_type': obj.type, 'exc': e, 'value': value})
 
     async def async_read_property(self, obj: BACnetObj,
                                   prop: ObjProperty) -> Any:
