@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Optional, Union
 
-from pydantic import Field, BaseModel, PrivateAttr, validator
+from pydantic import Field, BaseModel, PrivateAttr, validator, Json
 
 from .base_obj import BaseBACnetObjModel
 from .obj_property import ObjProperty
@@ -90,7 +90,7 @@ class BACnetObj(BaseBACnetObjModel):
 
     segmentation_supported: bool = Field(default=False,
                                          alias=ObjProperty.segmentationSupported.id_str)
-    property_list: BACnetObjPropertyListJsonModel = Field(
+    property_list: Json[BACnetObjPropertyListJsonModel] = Field(
         ..., alias=ObjProperty.propertyList.id_str, description='''
         This read-only property is a JSON of property identifiers, one property identifier 
         for each property that exists within the object. The standard properties are not 
