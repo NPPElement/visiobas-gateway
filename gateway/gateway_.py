@@ -15,6 +15,7 @@ from gateway.models import (ObjType, BACnetDeviceObj, ModbusObj, Protocol,
                             BACnetObj, HTTPSettings, GatewaySettings)
 from gateway.utils import get_file_logger
 from gateway.verifier import BACnetVerifier
+from threading import Lock
 
 _LOG = get_file_logger(__name__)
 
@@ -26,7 +27,7 @@ class VisioBASGateway:
         # self.loop = asyncio.new_event_loop()
         self.loop: asyncio.AbstractEventLoop = asyncio.get_running_loop()
         self._serial_creation_lock = asyncio.Lock()
-        self._bacnet_creation_lock = asyncio.Lock()
+        self._bacnet_creation_lock = Lock()
 
         # self._pending_tasks: list = []
         self.settings = settings
@@ -43,7 +44,7 @@ class VisioBASGateway:
 
         self._devices: dict[int, Union[AsyncModbusDevice]] = {}
 
-        self.bacnet = BAC0.lite()  # FIXME: hotfix!
+        # self.bacnet = BAC0.lite()  # FIXME: hotfix!
 
     @classmethod
     async def create(cls, settings: GatewaySettings) -> 'VisioBASGateway':

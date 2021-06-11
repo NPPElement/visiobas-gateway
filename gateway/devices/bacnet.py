@@ -18,7 +18,7 @@ VisioBASGateway = Any  # ...gateway_loop
 
 
 class BACnetDevice(BaseDevice):
-    # _client: Lite = None # todo
+    _client: Lite = None # todo
 
     def __init__(self, device_obj: BACnetDeviceObj, gateway: VisioBASGateway):
         super().__init__(device_obj, gateway)
@@ -26,7 +26,7 @@ class BACnetDevice(BaseDevice):
 
         self.support_rpm: set[BACnetObj] = set()
         self.not_support_rpm: set[BACnetObj] = set()
-        self._client: BAC0.scripts.Lite = gateway.bacnet
+        # self._client: BAC0.scripts.Lite = gateway.bacnet
 
         # self.__objects_per_rpm = 25
         # todo: Should we use one RPM for several objects?
