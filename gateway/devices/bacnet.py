@@ -166,6 +166,10 @@ class BACnetDevice(BaseDevice):
                 obj.sf = StatusFlags(flags=response)
             elif prop is ObjProperty.priorityArray:
                 obj.pa = self._pa_to_tuple(pa=response)
+                self._LOG.debug('priority array extracted', extra={'priority_array': obj.pa,
+                                                                   'object_id': obj.id,
+                                                                   'object_type': obj.type,
+                                                                   'device_id': self.id, })
             # todo
 
         except (UnknownPropertyError, UnknownObjectError,
@@ -221,4 +225,5 @@ class BACnetDevice(BaseDevice):
                                    for i in range(1, pa.value[0] + 1)
                                    ]
                       ]
+
         return tuple(priorities)
