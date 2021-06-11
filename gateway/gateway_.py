@@ -244,9 +244,7 @@ class VisioBASGateway:
                              for obj_data in objs_data
                              if not isinstance(obj_data, aiohttp.ClientError)]
             objs_lists = await asyncio.gather(*extract_tasks)
-            _LOG.debug('Extracted objs', extra={'objs_lists': objs_lists})
             objs = [obj for lst in objs_lists for obj in lst if obj]  # flat list of lists
-            _LOG.debug('Extracted objs', extra={'objs': objs})
             if not len(objs):  # if there are objects
                 _LOG.warning("There aren't polling objects", extra={'device_id': dev_id})
                 return None

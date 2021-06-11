@@ -129,7 +129,7 @@ class BaseDevice(ABC):
                 # self._LOG.debug('Periodic polling started',
                 #            extra={'device_id': self.id, 'period': period})
         else:
-            self._LOG.info('`pymodbus` client is not connected. Sleeping to next try',
+            self._LOG.info('Client is not connected. Sleeping to next try',
                            extra={'device_id': self.id,
                                   'seconds_to_next_try': self.reconnect_period})
             await asyncio.sleep(delay=self.reconnect_period)
