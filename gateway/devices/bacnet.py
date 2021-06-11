@@ -5,9 +5,9 @@ from BAC0.core.io.IOExceptions import (ReadPropertyException,
                                        NoResponseFromController,
                                        UnknownObjectError,
                                        UnknownPropertyError,
-                                       ReadPropertyMultipleException,
                                        NetworkInterfaceException, InitializationError)
 from BAC0.scripts.Lite import Lite
+from bacpypes.basetypes import PriorityArray
 
 from .base_device import BaseDevice
 from ..models import (ObjProperty, BACnetDeviceObj, BACnetObj, StatusFlags)
@@ -48,51 +48,55 @@ class BACnetDevice(BaseDevice):
             self._LOG.debug('Client created', extra={'device_id': self.id})
 
     async def _poll_objects(self, objs: Collection[BACnetObj]) -> None:
-        raise NotImplementedError
+        def _sync_poll_objects(objs_: Collection[BACnetObj]) -> None:
+            for obj in objs_:
+                self.simulate_rpm(obj=obj)
 
-    def poll(self) -> None:
-        """ Poll all object from device.
-            Send each object into verifier after answer.
-            When all objects polled, send device_id into verifier as finish signal
-        """
-        for obj in self.support_rpm:
-            assert isinstance(obj, BACnetObject)
+        await self._gateway.async_add_job(_sync_poll_objects, objs)
 
-            self.__logger.debug(f'Polling supporting PRM {obj} ...')
-            try:
-                values = self.rpm(obj=obj)
-                self.__logger.debug(f'{obj} values: {values}')
-            except ReadPropertyMultipleException as e:
-                self.__logger.warning(f'{obj} rpm error: {e}\n'
-                                      f'{obj} Marking as not supporting RPM ...')
-                self.not_support_rpm.add(obj)
-                # self.support_rpm.discard(obj)
-
-            except Exception as e:
-                self.__logger.error(f'{obj} polling error: {e}', exc_info=True)
-            else:
-                self.__logger.debug(f'From {obj} read: {values}. Sending to verifier ...')
-                self.__put_data_into_verifier(properties=values)
-
-        self.support_rpm.difference_update(self.not_support_rpm)
-
-        for obj in self.not_support_rpm:
-            assert isinstance(obj, BACnetObject)
-
-            self.__logger.debug(f'Polling not supporting PRM {obj} ...')
-            try:
-                values = self.simulate_rpm(obj=obj)
-            except UnknownObjectError as e:
-                self.__logger.error(f'{obj} is unknown: {e}')
-            except Exception as e:
-                self.__logger.error(f'{obj} polling error: {e}', exc_info=True)
-            else:
-                self.__logger.debug(f'From {obj} read: {values}. Sending to verifier ...')
-                self.__put_data_into_verifier(properties=values)
-
-        # notify verifier, that device polled and should send collected objects via HTTP
-        self.__logger.debug('All objects were polled. Send device_id to verifier')
-        self.__put_device_end_to_verifier()
+    # def poll(self) -> None:
+    #     """ Poll all object from device.
+    #         Send each object into verifier after answer.
+    #         When all objects polled, send device_id into verifier as finish signal
+    #     """
+    #     for obj in self.support_rpm:
+    #         assert isinstance(obj, BACnetObject)
+    #
+    #         self.__logger.debug(f'Polling supporting PRM {obj} ...')
+    #         try:
+    #             values = self.rpm(obj=obj)
+    #             self.__logger.debug(f'{obj} values: {values}')
+    #         except ReadPropertyMultipleException as e:
+    #             self.__logger.warning(f'{obj} rpm error: {e}\n'
+    #                                   f'{obj} Marking as not supporting RPM ...')
+    #             self.not_support_rpm.add(obj)
+    #             # self.support_rpm.discard(obj)
+    #
+    #         except Exception as e:
+    #             self.__logger.error(f'{obj} polling error: {e}', exc_info=True)
+    #         else:
+    #             self.__logger.debug(f'From {obj} read: {values}. Sending to verifier ...')
+    #             self.__put_data_into_verifier(properties=values)
+    #
+    #     self.support_rpm.difference_update(self.not_support_rpm)
+    #
+    #     for obj in self.not_support_rpm:
+    #         assert isinstance(obj, BACnetObject)
+    #
+    #         self.__logger.debug(f'Polling not supporting PRM {obj} ...')
+    #         try:
+    #             values = self.simulate_rpm(obj=obj)
+    #         except UnknownObjectError as e:
+    #             self.__logger.error(f'{obj} is unknown: {e}')
+    #         except Exception as e:
+    #             self.__logger.error(f'{obj} polling error: {e}', exc_info=True)
+    #         else:
+    #             self.__logger.debug(f'From {obj} read: {values}. Sending to verifier ...')
+    #             self.__put_data_into_verifier(properties=values)
+    #
+    #     # notify verifier, that device polled and should send collected objects via HTTP
+    #     self.__logger.debug('All objects were polled. Send device_id to verifier')
+    #     self.__put_device_end_to_verifier()
 
     def read_property(self, obj: BACnetObj, prop: ObjProperty) -> Any:
         try:
@@ -107,10 +111,12 @@ class BACnetDevice(BaseDevice):
                 obj.set_pv(value=response)
             elif prop is ObjProperty.statusFlags:
                 obj.sf = StatusFlags(flags=response)
+            elif prop is ObjProperty.priorityArray:
+                obj.pa = self._pa_to_tuple(pa=response)
             # todo
 
-        except (UnknownPropertyError, UnknownObjectError, NoResponseFromController,
-                ReadPropertyException) as e:
+        except (UnknownPropertyError, UnknownObjectError,
+                NoResponseFromController, ReadPropertyException) as e:
             obj.exception = e
             self._LOG.warning('ReadProperty error',
                               extra={'device_id': self.id, 'object_id': obj.id,
@@ -123,118 +129,43 @@ class BACnetDevice(BaseDevice):
         else:
             return response
 
-    def read_property_multiple(self, obj: BACnetObj,
-                               properties: tuple[ObjProperty]) -> dict:
-        try:
-            request = ' '.join([
-                self.address,
-                obj.type.name,
-                str(obj.id),
-                *[prop.name for prop in properties]
-            ])
-            response = self._client.readMultiple(request)
+    # def read_property_multiple(self, obj: BACnetObj,
+    #                            properties: tuple[ObjProperty]) -> dict:
+    #     try:
+    #         request = ' '.join([
+    #             self.address,
+    #             obj.type.name,
+    #             str(obj.id),
+    #             *[prop.name for prop in properties]
+    #         ])
+    #         response = self._client.readMultiple(request)
+    #
+    #         # check values for None and empty strings
+    #         values = {properties[i]: value for i, value in enumerate(response)
+    #                   if value is not None and str(value).strip()}
+    #         for prop, val in values.items():
+    #
+    #
+    #     except Exception as e:
+    #         self._LOG.exception('Unhandled ReadPropertyMultiple error',
+    #                             extra={'device_id': self.id, 'object_id': obj.id,
+    #                                    'object_type': obj.type, 'exc': e, })
+    #     # else:
+    #     #     if values is not None:
+    #     #         return values
+    #     #     else:
+    #     #         raise ReadPropertyMultipleException('Response is None')
 
-            # check values for None and empty strings
-            values = {properties[i]: value for i, value in enumerate(response)
-                      if value is not None and str(value).strip()}
-            for prop, val in values.items():
-                
+    def simulate_rpm(self, obj: BACnetObj) -> None:
+        for prop in obj.type.properties:
+            self.read_property(obj=obj, prop=prop)
 
-        except Exception as e:
-            self._LOG.exception('Unhandled ReadPropertyMultiple error',
-                                extra={'device_id': self.id, 'object_id': obj.id,
-                                       'object_type': obj.type, 'exc': e, })
-        # else:
-        #     if values is not None:
-        #         return values
-        #     else:
-        #         raise ReadPropertyMultipleException('Response is None')
-
-    def __simulate_rpm(self, obj: BACnetObj, properties: list[ObjProperty]) -> dict:
-        values = {}
-        for prop in properties:
-            try:
-                response = self.read_property(obj=obj, prop=prop)
-
-            except (UnknownObjectError, NoResponseFromController) as e:
-                self.__logger.warning(f'sRPM Error: {e}')
-                raise e
-
-            except (UnknownPropertyError, ReadPropertyException) as e:
-                if prop is ObjProperty.priorityArray:
-                    continue
-                self.__logger.warning(f'sRPM Error: {e}')
-                raise e
-            except TypeError as e:
-                self.__logger.error(f'Type error: {e}')
-                raise e
-            except Exception as e:
-                self.__logger.error(f'sRPM error: {e}', exc_info=True)
-
-            else:
-                values.update({prop: response})
-                # self.not_support_rpm.update(obj)
-
-        return values
-
-    def rpm(self, obj: BACnetObject) -> dict:
-        properties = {
-            ObjProperty.deviceId: self.id,
-            ObjProperty.objectName: obj.name,
-            ObjProperty.objectType: obj.type,
-            ObjProperty.objectIdentifier: obj.id,
-        }
-        try:
-            values = self.read_property_multiple(obj=obj,
-                                                 properties=obj.type.properties
-                                                 )
-
-        except ReadPropertyMultipleException as e:
-            self.__logger.error(f'Read Error: {e}')
-            raise e
-        else:
-            properties.update(values)
-            return properties
-
-    def simulate_rpm(self, obj: BACnetObject) -> dict:
-        properties = {
-            ObjProperty.deviceId: self.id,
-            ObjProperty.objectName: obj.name,
-            ObjProperty.objectType: obj.type,
-            ObjProperty.objectIdentifier: obj.id,
-        }
-
-        try:
-            values = self.__simulate_rpm(obj=obj,
-                                         properties=obj.type.properties
-                                         )
-
-        except NoResponseFromController as e:
-            self.__logger.error(f'No response error: {e}')
-            values = get_fault_obj_properties(reliability='no-response')
-        except UnknownPropertyError as e:
-            self.__logger.error(f'Unknown property error: {e}')
-            values = get_fault_obj_properties(reliability='unknown-property')
-        except UnknownObjectError as e:
-            self.__logger.error(f'Unknown object error: {e}')
-            values = get_fault_obj_properties(reliability='unknown-object')
-        except (ReadPropertyException, TypeError) as e:
-            self.__logger.error(f'RP error: {e}')
-            values = get_fault_obj_properties(reliability='rp-error')
-        except Exception as e:
-            self.__logger.error(f'Read Error: {e}', exc_info=True)
-            values = get_fault_obj_properties(reliability='error')
-        finally:
-            properties.update(values)
-            return properties
-
-    def __put_device_end_to_verifier(self) -> None:
-        """ device_id in queue means that device polled.
-            Should send collected objects to HTTP
-        """
-        self.__verifier_queue.put(self.id)
-
-    def __put_data_into_verifier(self, properties: dict) -> None:
-        """ Send collected data about obj into BACnetVerifier
-        """
-        self.__verifier_queue.put(properties)
+    @staticmethod
+    def _pa_to_tuple(pa: PriorityArray) -> tuple:
+        """Represent `bacpypes` object `PriorityArray` as tuple."""
+        priorities = [v[0] if k[0] != 'null' else None
+                      for k, v in [zip(*pa.value[i].dict_contents().items())
+                                   for i in range(1, pa.value[0] + 1)
+                                   ]
+                      ]
+        return tuple(priorities)
