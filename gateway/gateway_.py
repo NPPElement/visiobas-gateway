@@ -9,7 +9,7 @@ from pydantic import ValidationError
 
 from gateway.api import VisioGtwAPI
 from gateway.clients import VisioHTTPClient, VisioBASMQTTClient
-from gateway.devices import AsyncModbusDevice, SyncModbusDevice
+from gateway.devices import AsyncModbusDevice, SyncModbusDevice, BACnetDevice
 from gateway.models import (ObjType, BACnetDeviceObj, ModbusObj, Protocol,
                             BACnetObj, HTTPSettings, GatewaySettings)
 from gateway.utils import get_file_logger
@@ -309,7 +309,9 @@ class VisioBASGateway:
             _LOG.exception('Unexpected error', extra={'exc': e})
 
     async def device_factory(self, dev_obj: BACnetDeviceObj,
-                             ) -> Optional[Union[AsyncModbusDevice]]:
+                             ) -> Optional[Union[AsyncModbusDevice,
+                                                 SyncModbusDevice,
+                                                 BACnetDevice]]:
         """Creates device for provided protocol.
 
         Returns:
@@ -326,7 +328,7 @@ class VisioBASGateway:
                     cls_factory = SyncModbusDevice if self.settings.modbus_sync else AsyncModbusDevice
                     device = await cls_factory.create(device_obj=dev_obj, gateway=self)
             elif protocol == Protocol.BACNET:
-                device = None  # todo
+                device = await BACnetDevice.create(device_obj=dev_obj, gateway=self)
             else:
                 raise NotImplementedError('Device factory not implemented')
 
