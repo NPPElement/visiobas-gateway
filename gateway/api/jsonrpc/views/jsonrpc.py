@@ -30,6 +30,7 @@ class JsonRPCView(BaseView, ReadWriteMixin):
         obj_type_id = int(body.get('params').get('object_type'))
         obj_id = int(body.get('params').get('object_id'))
         value_str = body.get('params').get('value')
+        priority = int(body.get('params').get('priority'))
         value = float(value_str) if '.' in value_str else int(value_str)
 
         dev = self.get_device(dev_id=dev_id)
@@ -51,7 +52,7 @@ class JsonRPCView(BaseView, ReadWriteMixin):
         try:
             _values_equal = await self.write_with_check(value=value,
                                                         prop=ObjProperty.presentValue,
-                                                        priority=self.gtw.api_priority,
+                                                        priority=priority,
                                                         obj=obj, device=dev)
             if _values_equal:
                 _LOG.debug('Successfully write. Values are consistent',

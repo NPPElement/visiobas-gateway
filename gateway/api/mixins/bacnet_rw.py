@@ -37,11 +37,8 @@ class BACnetRWMixin:
             Is write successful.
         """
         try:
-            return await device.async_write_property(value=value,
-                                                     prop=prop,
-                                                     priority=priority,
-                                                     obj=obj
-                                                     )
+            return await device.async_write_property(value=value, prop=prop,
+                                                     priority=priority, obj=obj)
         except Exception as e:
             _LOG.exception('Unhandled error',
                            extra={'device_id': device.id, 'object_id': obj.id, 'exc': e, })
