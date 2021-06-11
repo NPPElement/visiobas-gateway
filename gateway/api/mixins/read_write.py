@@ -98,7 +98,7 @@ class ReadWriteMixin(ModbusRWMixin, BACnetRWMixin):
                                       f'Received: {device} {type(device)}')
         await protocol_write_coro(value=value, obj=obj, device=device,
                                   priority=priority, prop=prop)
-        read_value = await protocol_read_coro(obj=obj, device=device)
+        read_value = await protocol_read_coro(obj=obj, device=device, prop=prop)
         is_consistent = value == read_value
 
         _LOG.debug('Write with check called',
