@@ -30,6 +30,10 @@ class BACnetDevice(BaseDevice):
         # todo: Should we use one RPM for several objects?
 
     @property
+    def addr_with_port(self) -> str:
+        return ':'.join((str(self.address), str(self.port)))
+
+    @property
     def is_client_connected(self) -> bool:
         return self._client is not None
 
@@ -39,7 +43,7 @@ class BACnetDevice(BaseDevice):
         try:
             if self._client is None:
                 self._LOG.debug('Creating BAC0 client', extra={'device_id': self.id})
-                self._client = lite()
+                self._client = lite()  # todo port
             else:
                 self._LOG.debug('BAC0 client already created. Setting it',
                                 extra={'device_id': self.id})
@@ -119,7 +123,7 @@ class BACnetDevice(BaseDevice):
         """
         priority = priority or self._gateway.api_priority
         try:
-            args = '{0} {1} {2} {3} - {4}'.format(str(self.address),
+            args = '{0} {1} {2} {3} - {4}'.format(self.addr_with_port,
                                                   obj.type.name,
                                                   obj.id,
                                                   prop.name,
@@ -144,7 +148,7 @@ class BACnetDevice(BaseDevice):
     def read_property(self, obj: BACnetObj, prop: ObjProperty) -> Any:
         try:
             request = ' '.join([
-                str(self.address),
+                self.addr_with_port,
                 obj.type.name,
                 str(obj.id),
                 prop.name
