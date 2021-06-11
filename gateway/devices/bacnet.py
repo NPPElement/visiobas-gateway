@@ -31,7 +31,7 @@ class BACnetDevice(BaseDevice):
 
     @property
     def is_client_connected(self) -> bool:
-        return True  # self._client is not None # FIXME: hotfix
+        return self._client is not None
 
     def create_client(self) -> None:
         """Initializes BAC0 client."""
