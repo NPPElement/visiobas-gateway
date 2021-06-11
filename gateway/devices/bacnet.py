@@ -31,21 +31,25 @@ class BACnetDevice(BaseDevice):
 
     @property
     def is_client_connected(self) -> bool:
-        return self._client is not None
+        return True  # self._client is not None # FIXME: hotfix
 
     def create_client(self) -> None:
         """Initializes BAC0 client."""
-        self._LOG.debug('Creating BAC0 client', extra={'device_id': self.id})
+
         try:
-            if not self._client:
+            if self._client is None:
+                self._LOG.debug('Creating BAC0 client', extra={'device_id': self.id})
                 self._client = lite()
+            else:
+                self._LOG.debug('BAC0 client already created. Setting it',
+                                extra={'device_id': self.id})
 
         except (InitializationError, NetworkInterfaceException,
                 Exception) as e:
             self._LOG.debug('Cannot create client',
                             extra={'device_id': self.id, 'exc': e, })
         else:
-            self._LOG.debug('Client created', extra={'device_id': self.id})
+            self._LOG.debug('Client set', extra={'device_id': self.id})
 
     async def _poll_objects(self, objs: Collection[BACnetObj]) -> None:
         def _sync_poll_objects(objs_: Collection[BACnetObj]) -> None:
