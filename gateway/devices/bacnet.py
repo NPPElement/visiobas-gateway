@@ -1,4 +1,4 @@
-from typing import Any, Collection
+from typing import Any, Collection, Union, Optional
 
 from BAC0 import lite
 from BAC0.core.io.IOExceptions import (ReadPropertyException,
@@ -98,6 +98,47 @@ class BACnetDevice(BaseDevice):
     #     self.__logger.debug('All objects were polled. Send device_id to verifier')
     #     self.__put_device_end_to_verifier()
 
+    async def async_write_property(self, value: Union[int, float], obj: BACnetObj,
+                                   prop: ObjProperty) -> bool:
+        return await self._gateway.async_add_job(self.write_property, value, obj, prop)
+
+    def write_property(self, value: Union[int, float], obj: BACnetObj,
+                       prop: ObjProperty, priority: Optional[int] = None) -> bool:
+        """Writes value to property value in object.
+
+        Args:
+            value: Value to write.
+            obj: Object instance.
+            prop: Property which write.
+            priority: Value priority.
+
+        Returns:
+            Write is successful.
+        """
+        priority = priority or self._gateway.api_priority
+        try:
+            args = '{0} {1} {2} {3} - {4}'.format(self.address,
+                                                  obj.type.name,
+                                                  obj.id,
+                                                  prop.name,
+                                                  value,
+                                                  priority
+                                                  )
+            is_successful = self._client.write(args=args)
+            self._LOG.debug('Write',
+                            extra={'device_id': self.id, 'object_id': obj.id,
+                                   'object_type': obj.type, 'value': value,
+                                   'success': is_successful, })
+            return is_successful
+        except Exception as e:
+            self._LOG.warning('WriteProperty error: {e}',
+                              extra={'device_id': self.id, 'object_id': obj.id,
+                                     'object_type': obj.type, 'exc': e, 'value': value})
+
+    async def async_read_property(self, obj: BACnetObj,
+                                  prop: ObjProperty) -> Any:
+        return await self._gateway.async_add_job(self.read_property, obj, prop)
+
     def read_property(self, obj: BACnetObj, prop: ObjProperty) -> Any:
         try:
             request = ' '.join([
@@ -107,6 +148,9 @@ class BACnetDevice(BaseDevice):
                 prop.name
             ])
             response = self._client.read(request)
+            self._LOG.debug('Read',
+                            extra={'device_id': self.id, 'object_id': obj.id,
+                                   'object_type': obj.type, 'response': response, })
             if prop is ObjProperty.presentValue:
                 obj.set_pv(value=response)
             elif prop is ObjProperty.statusFlags:
