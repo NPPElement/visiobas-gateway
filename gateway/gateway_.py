@@ -2,6 +2,7 @@ import asyncio
 # from ipaddress import IPv4Address
 from typing import Callable, Any, Optional, Union, Awaitable, Collection
 
+import BAC0
 import aiohttp
 import aiojobs
 from aiomisc import entrypoint
@@ -41,6 +42,8 @@ class VisioBASGateway:
         self.verifier = BACnetVerifier(override_threshold=settings.override_threshold)
 
         self._devices: dict[int, Union[AsyncModbusDevice]] = {}
+
+        self.bacnet = BAC0.lite()  # FIXME: hotfix!
 
     @classmethod
     async def create(cls, settings: GatewaySettings) -> 'VisioBASGateway':
@@ -303,8 +306,7 @@ class VisioBASGateway:
             dev_id = list(objs)[0].device_id
             str_ = ';'.join([obj.to_http_str() for obj in objs]) + ';'
             await self.http_client.post_device(servers=self.http_client.servers_post,
-                                               dev_id=dev_id,
-                                               data=str_)
+                                               dev_id=dev_id, data=str_)
         except Exception as e:
             _LOG.exception('Unexpected error', extra={'exc': e})
 

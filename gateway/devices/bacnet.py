@@ -1,6 +1,5 @@
 from typing import Any, Collection, Union, Optional
 
-from BAC0 import lite
 from BAC0.core.io.IOExceptions import (ReadPropertyException,
                                        NoResponseFromController,
                                        UnknownObjectError,
@@ -35,16 +34,21 @@ class BACnetDevice(BaseDevice):
 
     @property
     def is_client_connected(self) -> bool:
-        return self._client is not None
+        # return self._client is not None
+        return self._gateway.bacnet is not None
 
     def create_client(self) -> None:
         """Initializes BAC0 client."""
 
         try:
-            if self._client is None:
-                self._LOG.debug('Creating BAC0 client', extra={'device_id': self.id})
-                self._client = lite()  # todo port
-            else:
+            # FIXME: hotfix
+            # if self._client is None:
+            #     self._LOG.debug('Creating BAC0 client', extra={'device_id': self.id})
+            #     self._client = lite()  # todo port
+            # else:
+            #     self._LOG.debug('BAC0 client already created. Setting it',
+            #                     extra={'device_id': self.id})
+            if self._gateway.bacnet is None:
                 self._LOG.debug('BAC0 client already created. Setting it',
                                 extra={'device_id': self.id})
 
