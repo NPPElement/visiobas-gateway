@@ -10,7 +10,6 @@ from .status_flags import StatusFlags
 
 # class BACnetObjPropertyListModel(BaseModel):
 #
-#
 #     def __repr__(self) -> str:
 #         return str(self.__dict__)
 
