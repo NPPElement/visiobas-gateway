@@ -117,7 +117,7 @@ class BACnetDevice(BaseDevice):
         """
         priority = priority or self._gateway.api_priority
         try:
-            args = '{0} {1} {2} {3} - {4}'.format(self.address,
+            args = '{0} {1} {2} {3} - {4}'.format(str(self.address),
                                                   obj.type.name,
                                                   obj.id,
                                                   prop.name,
@@ -142,7 +142,7 @@ class BACnetDevice(BaseDevice):
     def read_property(self, obj: BACnetObj, prop: ObjProperty) -> Any:
         try:
             request = ' '.join([
-                self.address,
+                str(self.address),
                 obj.type.name,
                 str(obj.id),
                 prop.name
