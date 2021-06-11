@@ -328,7 +328,7 @@ class VisioBASGateway:
                     cls_factory = SyncModbusDevice if self.settings.modbus_sync else AsyncModbusDevice
                     device = await cls_factory.create(device_obj=dev_obj, gateway=self)
             elif protocol == Protocol.BACNET:
-                async with self.bacnet_creation_lock:
+                async with self._bacnet_creation_lock:
                     device = await BACnetDevice.create(device_obj=dev_obj, gateway=self)
             else:
                 raise NotImplementedError('Device factory not implemented')
