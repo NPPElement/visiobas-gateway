@@ -8,16 +8,17 @@ from .obj_property import ObjProperty
 from .status_flags import StatusFlags
 
 
-class BACnetObjPropertyListModel(BaseModel):
-    send_interval: float = Field(default=60, alias='sendPeriod',
-                                 description='Period to internal object poll')
-
-    def __repr__(self) -> str:
-        return str(self.__dict__)
+# class BACnetObjPropertyListModel(BaseModel):
+#
+#
+#     def __repr__(self) -> str:
+#         return str(self.__dict__)
 
 
 class BACnetObjPropertyListJsonModel(BaseModel):
-    property_list: BACnetObjPropertyListModel = Field(default=None)
+    # property_list: BACnetObjPropertyListModel = Field(default=None)
+    send_interval: float = Field(default=60, alias='sendPeriod',
+                                 description='Period to internal object poll')
 
     def __str__(self) -> str:
         return str(self.__dict__)
@@ -142,7 +143,6 @@ class BACnetObj(BaseBACnetObjModel):
     def clear_properties(self) -> None:
         self.sf = StatusFlags(flags=0b0000)
         self.reliability = None
-
 
     def set_pv(self, value: Optional[Union[int, float, str]]) -> None:
         """Sets presentValue with round by resolution.
