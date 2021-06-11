@@ -49,7 +49,7 @@ class DevicePropertyListJsonModel(BaseModel):
         return v
 
 
-class BACnetDevice(BaseBACnetObjModel):
+class BACnetDeviceObj(BaseBACnetObjModel):
     timeout: int = Field(
         default=6000, alias=ObjProperty.apduTimeout.id_str, gt=0,
         description='''

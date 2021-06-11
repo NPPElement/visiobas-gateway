@@ -10,7 +10,7 @@ from pydantic import ValidationError
 from gateway.api import VisioGtwAPI
 from gateway.clients import VisioHTTPClient, VisioBASMQTTClient
 from gateway.devices import AsyncModbusDevice, SyncModbusDevice
-from gateway.models import (ObjType, BACnetDevice, ModbusObj, Protocol,
+from gateway.models import (ObjType, BACnetDeviceObj, ModbusObj, Protocol,
                             BACnetObj, HTTPSettings, GatewaySettings)
 from gateway.utils import get_file_logger
 from gateway.verifier import BACnetVerifier
@@ -269,17 +269,17 @@ class VisioBASGateway:
         _LOG.info('Device polling started', extra={'device_id': dev_id})
 
     @staticmethod
-    def _parse_device_obj(dev_data: dict) -> Optional[BACnetDevice]:
+    def _parse_device_obj(dev_data: dict) -> Optional[BACnetDeviceObj]:
         """Parses and validate device object data from JSON.
 
         Returns:
             Parsed and validated device object, if no errors throw.
         """
-        dev_obj = BACnetDevice(**dev_data)
+        dev_obj = BACnetDeviceObj(**dev_data)
         _LOG.debug('Device object parsed', extra={'device_object': dev_obj})
         return dev_obj
 
-    def _extract_objects(self, objs_data: tuple, dev_obj: BACnetDevice
+    def _extract_objects(self, objs_data: tuple, dev_obj: BACnetDeviceObj
                          ) -> list[ModbusObj]:
         """Parses and validate objects data from JSON.
 
@@ -308,7 +308,7 @@ class VisioBASGateway:
         except Exception as e:
             _LOG.exception('Unexpected error', extra={'exc': e})
 
-    async def device_factory(self, dev_obj: BACnetDevice,
+    async def device_factory(self, dev_obj: BACnetDeviceObj,
                              ) -> Optional[Union[AsyncModbusDevice]]:
         """Creates device for provided protocol.
 
@@ -340,7 +340,7 @@ class VisioBASGateway:
                            extra={'device_id': dev_obj.id, 'exc': e, })
 
     @staticmethod
-    def object_factory(dev_obj: BACnetDevice, obj_data: dict[str, Any]
+    def object_factory(dev_obj: BACnetDeviceObj, obj_data: dict[str, Any]
                        ) -> Optional[Union[ModbusObj, BACnetObj]]:
         """Creates object for provided protocol data.
 

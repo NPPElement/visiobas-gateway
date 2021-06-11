@@ -1,6 +1,6 @@
 import unittest
 
-from gateway.models.bacnet import BACnetDevice
+from gateway.models.bacnet import BACnetDeviceObj
 
 
 class TestToStr(unittest.TestCase):
@@ -8,9 +8,9 @@ class TestToStr(unittest.TestCase):
         self._set_device_object_data()
 
     def test_parse(self):
-        modbus_rtu_device_data = BACnetDevice(**self.modbus_rtu_device_data)
-        modbus_device_data = BACnetDevice(**self.modbus_device_data)
-        bacnet_device_data = BACnetDevice(**self.bacnet_device_data)
+        modbus_rtu_device_data = BACnetDeviceObj(**self.modbus_rtu_device_data)
+        modbus_device_data = BACnetDeviceObj(**self.modbus_device_data)
+        bacnet_device_data = BACnetDeviceObj(**self.bacnet_device_data)
 
         print(modbus_rtu_device_data, modbus_device_data, bacnet_device_data, sep='\n')
 

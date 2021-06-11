@@ -14,7 +14,7 @@ from pymodbus.register_read_message import (ReadHoldingRegistersResponse,
 from pymodbus.transaction import ModbusRtuFramer
 
 from .base_modbus import BaseModbusDevice
-from ..models import (BACnetDevice, ModbusObj, Protocol, ModbusReadFunc, ModbusWriteFunc)
+from ..models import (BACnetDeviceObj, ModbusObj, Protocol, ModbusReadFunc, ModbusWriteFunc)
 
 # aliases # TODO
 # BACnetDeviceModel = Any  # ...models
@@ -28,7 +28,7 @@ class AsyncModbusDevice(BaseModbusDevice):
     # _serial_clients: dict[str: AsyncioModbusSerialClient] = {}
     # _serial_locks: dict[str: asyncio.Lock] = {}
 
-    def __init__(self, device_obj: BACnetDevice, gateway: 'VisioBASGateway'):
+    def __init__(self, device_obj: BACnetDeviceObj, gateway: 'VisioBASGateway'):
         super().__init__(device_obj, gateway)
         # self._LOG = get_file_logger(name=__name__ + str(self.id))
 

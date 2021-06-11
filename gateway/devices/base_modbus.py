@@ -12,7 +12,7 @@ from pymodbus.register_read_message import (ReadHoldingRegistersResponse,
                                             ReadRegistersResponseBase)
 
 from .base_device import BaseDevice
-from ..models import (BACnetDevice, ModbusObj, Protocol, DataType,
+from ..models import (BACnetDeviceObj, ModbusObj, Protocol, DataType,
                       ModbusReadFunc, ModbusWriteFunc)
 
 # aliases # TODO
@@ -56,7 +56,7 @@ class BaseModbusDevice(BaseDevice):
     #     else:
     #         raise ValueError('Unhandled error!')
 
-    def __init__(self, device_obj: BACnetDevice, gateway: 'VisioBASGateway'):
+    def __init__(self, device_obj: BACnetDeviceObj, gateway: 'VisioBASGateway'):
         super().__init__(device_obj, gateway)
         # self._gateway = gateway
         # self._device_obj = device_obj

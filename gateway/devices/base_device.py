@@ -7,7 +7,7 @@ from typing import Any, Optional, Collection, Union
 
 import aiojobs
 
-from ..models import (BACnetDevice, BACnetObj, ModbusObj, ObjType, Protocol)
+from ..models import (BACnetDeviceObj, BACnetObj, ModbusObj, ObjType, Protocol)
 from ..utils import get_file_logger
 
 # Aliases
@@ -17,7 +17,7 @@ VisioBASGateway = Any  # ...gateway_loop
 class BaseDevice(ABC):
     # tODO: implement Singleton by device_id
 
-    def __init__(self, device_obj: BACnetDevice, gateway: 'VisioBASGateway'):
+    def __init__(self, device_obj: BACnetDeviceObj, gateway: 'VisioBASGateway'):
         self._gateway = gateway
         self._device_obj = device_obj
         self._LOG = get_file_logger(name=__name__ + str(self.id))
@@ -30,7 +30,7 @@ class BaseDevice(ABC):
         self._connected = False
 
     @classmethod
-    async def create(cls, device_obj: BACnetDevice, gateway: 'VisioBASGateway'
+    async def create(cls, device_obj: BACnetDeviceObj, gateway: 'VisioBASGateway'
                      ) -> 'BaseDevice':
         dev = cls(device_obj=device_obj, gateway=gateway)
         dev.scheduler = await aiojobs.create_scheduler(close_timeout=60, limit=100)
@@ -78,7 +78,7 @@ class BaseDevice(ABC):
         return self._device_obj.retries
 
     @property
-    def dev_obj(self) -> BACnetDevice:
+    def dev_obj(self) -> BACnetDeviceObj:
         return self._device_obj
 
     @property
@@ -173,7 +173,7 @@ class BaseDevice(ABC):
 
         # Period of poll may change in the polling
         await self.scheduler.spawn(self.periodic_poll(objs=objs, period=period))
-        
+
     async def _process_polled(self, objs: set[Union[BACnetObj, ModbusObj]]):
         await self._gateway.verify_objects(objs=objs)
         await self._gateway.send_objects(objs=objs)
