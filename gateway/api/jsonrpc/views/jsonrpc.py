@@ -34,11 +34,19 @@ class JsonRPCView(BaseView, ReadWriteMixin):
 
         dev = self.get_device(dev_id=dev_id)
         if dev is None:
-            return HTTPNotFound(reason='Device not found.')
+            return json_response({  # todo: use error status code
+                'success': False,
+                'msg': 'Device not found.'
+            },
+                status=HTTPStatus.OK.value)
 
         obj = self.get_obj(dev=dev, obj_type_id=obj_type_id, obj_id=obj_id)
         if obj is None:
-            return HTTPNotFound(reason='Object not found.')
+            return json_response({  # todo: use error status code
+                'success': False,
+                'msg': 'Object not found.'
+            },
+                status=HTTPStatus.OK.value)
 
         try:
             _values_equal = await self.write_with_check(value=value,
@@ -58,7 +66,7 @@ class JsonRPCView(BaseView, ReadWriteMixin):
                     'success': False,
                     'msg': 'Inconsistent written and read values.'
                 },
-                    status=HTTPStatus.BAD_GATEWAY.value
+                    status=HTTPStatus.OK.value
                 )
         except HTTPMethodNotAllowed as e:
             _LOG.warning('Exception',
@@ -69,5 +77,10 @@ class JsonRPCView(BaseView, ReadWriteMixin):
             _LOG.exception('Unhandled exception',
                            extra={'device_id': dev_id, 'object_id': obj_id,
                                   'obj_type_id': obj_type_id, 'exc': e, })
-            return HTTPBadGateway(reason=f'Exception: {e}')
+            return json_response({  # todo: use error status code
+                    'success': False,
+                    'msg': 'Gateway exception.'
+                },
+                    status=HTTPStatus.OK.value
+                )
         # TODO: traceback

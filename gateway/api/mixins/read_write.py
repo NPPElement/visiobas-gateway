@@ -39,7 +39,7 @@ class ReadWriteMixin(ModbusRWMixin, BACnetRWMixin):
         value = await protocol_read_coro(obj=obj, device=device, prop=prop)
         return value
 
-    async def write(self, value: Optional[Union[int, float, str]],
+    async def write(self, value: Optional[Union[int, float]],
                     obj: ObjAlias, device: DeviceAlias,
                     priority: int = 11, prop: ObjProperty = ObjProperty.presentValue
                     ) -> None:
