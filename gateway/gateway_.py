@@ -357,7 +357,7 @@ class VisioBASGateway:
                             Protocol.MODBUS_RTUOVERTCP}:
                 obj = ModbusObj(**obj_data)  # todo switch to parse_raw
             elif protocol == Protocol.BACNET:
-                obj = None  # todo
+                obj = BACnetObj(**obj_data)
             else:
                 # unknown protocols logging by `pydantic` on enter
                 raise NotImplementedError('Not implemented protocol factory.')
