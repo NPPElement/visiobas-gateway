@@ -43,7 +43,7 @@ class BACnetVerifier:
             obj.reliability = 'decode-error'
         else:
             RELIABILITY_LEN_LIMIT = 50
-            str_exc = str(obj.exception)[-RELIABILITY_LEN_LIMIT:].strip().replace(' ', '-')
+            str_exc = str(obj.exception)[-RELIABILITY_LEN_LIMIT:].strip().replace(' ', '-').replace(',', '-').replace(':', '-').replace('.', '-')
             obj.reliability = str_exc
 
         obj.exception = None
