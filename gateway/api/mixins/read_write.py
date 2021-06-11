@@ -1,9 +1,8 @@
 from typing import Any, Union, Optional
 
+from .bacnet_rw import BACnetRWMixin
 from .modbus_rw import ModbusRWMixin
-# from ...connectors import BACnetDevice, ModbusDevice
 from ...models import ObjProperty, Protocol
-# from .bacnet_rw import BACnetRWMixin
 from ...utils import get_file_logger
 
 # Aliases
@@ -13,7 +12,7 @@ ObjAlias = Any  # Union['...models.BACnetObj', '...models.ModbusObj',]
 _LOG = get_file_logger(name=__name__)
 
 
-class ReadWriteMixin(ModbusRWMixin):  # todo BACnetRWMixin
+class ReadWriteMixin(ModbusRWMixin, BACnetRWMixin):
     async def read(self, obj: ObjAlias, device: DeviceAlias,
                    prop: ObjProperty = ObjProperty.presentValue) -> Any:
         """
@@ -32,8 +31,8 @@ class ReadWriteMixin(ModbusRWMixin):  # todo BACnetRWMixin
                         Protocol.MODBUS_RTUOVERTCP, }:
             protocol_read_coro = self.read_modbus
 
-        # elif protocol is Protocol.BACNET:
-        # protocol_read_func = self.read_bacnet
+        elif protocol is Protocol.BACNET:
+            protocol_read_coro = self.read_bacnet
         else:
             raise NotImplementedError('Only BACnet, Modbus implemented. '
                                       f'Received: {device} {type(device)}')
@@ -60,8 +59,8 @@ class ReadWriteMixin(ModbusRWMixin):  # todo BACnetRWMixin
                         Protocol.MODBUS_RTU,
                         Protocol.MODBUS_RTUOVERTCP, }:
             protocol_write_coro = self.write_modbus
-        # if protocol is Protocol.BACNET:
-        #     protocol_write_func = self.write_bacnet
+        elif protocol is Protocol.BACNET:
+            protocol_write_coro = self.write_bacnet
         else:
             raise NotImplementedError('Only BACnet, Modbus implemented. '
                                       f'Received: {device} {type(device)}')
@@ -89,16 +88,17 @@ class ReadWriteMixin(ModbusRWMixin):  # todo BACnetRWMixin
 
         if protocol in {Protocol.MODBUS_TCP, Protocol.MODBUS_RTU,
                         Protocol.MODBUS_RTUOVERTCP, }:
-            protocol_write_func = self.write_modbus
-            protocol_read_func = self.read_modbus
-        # if protocol is Protocol.BACNET:
-        #     protocol_write_func = self.write_bacnet
+            protocol_write_coro = self.write_modbus
+            protocol_read_coro = self.read_modbus
+        elif protocol is Protocol.BACNET:
+            protocol_write_coro = self.write_bacnet
+            protocol_read_coro = self.read_bacnet
         else:
             raise NotImplementedError('Only BACnet, Modbus implemented. '
                                       f'Received: {device} {type(device)}')
-        await protocol_write_func(value=value, obj=obj, device=device,
+        await protocol_write_coro(value=value, obj=obj, device=device,
                                   priority=priority, prop=prop)
-        read_value = await protocol_read_func(obj=obj, device=device)
+        read_value = await protocol_read_coro(obj=obj, device=device)
         is_consistent = value == read_value
 
         _LOG.debug('Write with check called',
