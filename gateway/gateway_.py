@@ -42,7 +42,7 @@ class VisioBASGateway:
 
         self._devices: dict[int, Union[AsyncModbusDevice]] = {}
 
-        self.bacnet = None  # : BAC0.scripts.Lite = None  # BAC0.lite()  # FIXME: hotfix!
+        # self.bacnet = None  # : BAC0.scripts.Lite = None  # BAC0.lite()  # FIXME: hotfix!
 
     @classmethod
     async def create(cls, settings: GatewaySettings) -> 'VisioBASGateway':
@@ -325,10 +325,10 @@ class VisioBASGateway:
                     cls_factory = SyncModbusDevice if self.settings.modbus_sync else AsyncModbusDevice
                     device = await cls_factory.create(device_obj=dev_obj, gateway=self)
             elif protocol == Protocol.BACNET:
-                import BAC0
+                # import BAC0
                 async with self._bacnet_creation_lock:
-                    if not self.bacnet:
-                        self.bacnet = BAC0.lite()
+                    # if not self.bacnet:
+                    #     self.bacnet = BAC0.lite()
                     device = await BACnetDevice.create(device_obj=dev_obj, gateway=self)
             else:
                 raise NotImplementedError('Device factory not implemented')

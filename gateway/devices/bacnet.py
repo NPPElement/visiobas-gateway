@@ -18,15 +18,15 @@ VisioBASGateway = Any  # ...gateway_loop
 
 
 class BACnetDevice(BaseDevice):
-    # _client: Lite = None # todo
+    _client: Lite = None  # todo
 
     def __init__(self, device_obj: BACnetDeviceObj, gateway: VisioBASGateway):
         super().__init__(device_obj, gateway)
-        # self._client: Lite = None
+        self._client: Lite = None
 
         self.support_rpm: set[BACnetObj] = set()
         self.not_support_rpm: set[BACnetObj] = set()
-        self._client: BAC0.scripts.Lite = gateway.bacnet
+        # self._client: BAC0.scripts.Lite = gateway.bacnet
 
         # self.__objects_per_rpm = 25
         # todo: Should we use one RPM for several objects?
@@ -43,9 +43,9 @@ class BACnetDevice(BaseDevice):
         """Initializes BAC0 client."""
 
         try:
-            if self._client is None:
+            if self.__class__._client is None:
                 self._LOG.debug('Creating BAC0 client', extra={'device_id': self.id})
-                self._client = lite()  # todo port
+                self.__class__._client = lite()  # todo port
             else:
                 self._LOG.debug('BAC0 client already created. Setting it',
                                 extra={'device_id': self.id})
@@ -133,7 +133,7 @@ class BACnetDevice(BaseDevice):
                                                       value,
                                                       priority
                                                       )
-            is_successful = self._client.write(args=args)
+            is_successful = self.__class__._client.write(args=args)
             self._LOG.debug('Write',
                             extra={'device_id': self.id, 'object_id': obj.id,
                                    'object_type': obj.type, 'value': value,
@@ -156,7 +156,7 @@ class BACnetDevice(BaseDevice):
                 str(obj.id),
                 prop.name
             ])
-            response = self._client.read(request)
+            response = self.__class__._client.read(request)
             self._LOG.debug('Read',
                             extra={'device_id': self.id, 'object_id': obj.id,
                                    'object_type': obj.type, 'response': response, })
