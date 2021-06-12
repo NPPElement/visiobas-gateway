@@ -8,7 +8,7 @@ from ...models import ObjProperty
 class JsonRPCView(handler.JSONRPCView, ReadWriteMixin, BaseView):
     URL_PATH = r'/json-rpc'
 
-    def rpc_write_set_point(self, *args, **kwargs):
+    async def rpc_write_set_point(self, *args, **kwargs):
         dev_id = int(kwargs.get('params').get('device_id'))
         obj_type_id = int(kwargs.get('params').get('object_type'))
         obj_id = int(kwargs.get('params').get('object_id'))
