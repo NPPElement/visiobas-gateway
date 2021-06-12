@@ -22,7 +22,6 @@ class BACnetDevice(BaseDevice):
 
     def __init__(self, device_obj: BACnetDeviceObj, gateway: VisioBASGateway):
         super().__init__(device_obj, gateway)
-        self._client: Lite = None
 
         self.support_rpm: set[BACnetObj] = set()
         self.not_support_rpm: set[BACnetObj] = set()
@@ -37,17 +36,17 @@ class BACnetDevice(BaseDevice):
 
     @property
     def is_client_connected(self) -> bool:
-        return self._client is not None
+        return self.__class__._client is not None
 
     def create_client(self) -> None:
         """Initializes BAC0 client."""
 
         try:
-            if self.__class__._client is None:
+            if not self.is_client_connected:
                 self._LOG.debug('Creating BAC0 client', extra={'device_id': self.id})
                 self.__class__._client = lite()  # todo port
             else:
-                self._LOG.debug('BAC0 client already created. Setting it',
+                self._LOG.debug('BAC0 client already created',
                                 extra={'device_id': self.id})
 
         except (InitializationError, NetworkInterfaceException,
