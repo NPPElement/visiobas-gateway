@@ -1,7 +1,7 @@
 import asyncio
-# from ipaddress import IPv4Address
 from typing import Callable, Any, Optional, Union, Awaitable, Collection
 
+# Also depends on BAC0 in BACnet case in device factory
 import aiohttp
 import aiojobs
 from aiomisc import entrypoint
@@ -9,8 +9,8 @@ from pydantic import ValidationError
 
 from gateway.api import VisioGtwAPI
 from gateway.clients import VisioHTTPClient, VisioBASMQTTClient
-from gateway.devices import AsyncModbusDevice, SyncModbusDevice
-from gateway.models import (ObjType, BACnetDevice, ModbusObj, Protocol,
+from gateway.devices import AsyncModbusDevice, SyncModbusDevice, BACnetDevice
+from gateway.models import (ObjType, BACnetDeviceObj, ModbusObj, Protocol,
                             BACnetObj, HTTPSettings, GatewaySettings)
 from gateway.utils import get_file_logger
 from gateway.verifier import BACnetVerifier
@@ -25,6 +25,7 @@ class VisioBASGateway:
         # self.loop = asyncio.new_event_loop()
         self.loop: asyncio.AbstractEventLoop = asyncio.get_running_loop()
         self._serial_creation_lock = asyncio.Lock()
+        self._bacnet_creation_lock = asyncio.Lock()
 
         # self._pending_tasks: list = []
         self.settings = settings
@@ -41,15 +42,13 @@ class VisioBASGateway:
 
         self._devices: dict[int, Union[AsyncModbusDevice]] = {}
 
+        self.bacnet = None  # : BAC0.scripts.Lite = None  # BAC0.lite()  # FIXME: hotfix!
+
     @classmethod
     async def create(cls, settings: GatewaySettings) -> 'VisioBASGateway':
         gateway = cls(settings=settings)
         gateway._scheduler = await aiojobs.create_scheduler(close_timeout=60, limit=100)
         return gateway
-
-    # @property
-    # def address(self) -> IPv4Address:
-    #     return self.settings.address
 
     @property
     def poll_device_ids(self) -> list[int]:
@@ -244,8 +243,7 @@ class VisioBASGateway:
                              for obj_data in objs_data
                              if not isinstance(obj_data, aiohttp.ClientError)]
             objs_lists = await asyncio.gather(*extract_tasks)
-            objs = [obj for lst in objs_lists for obj in lst]  # flat list of lists
-
+            objs = [obj for lst in objs_lists for obj in lst if obj]  # flat list of lists
             if not len(objs):  # if there are objects
                 _LOG.warning("There aren't polling objects", extra={'device_id': dev_id})
                 return None
@@ -256,10 +254,10 @@ class VisioBASGateway:
 
             self._devices.update({device.id: device})
             _LOG.info('Device loaded', extra={'device_id': dev_id})
-        except (ValidationError, AttributeError,) as e:
+        except (ValidationError,) as e:  #
             _LOG.warning('Cannot load device',
                          extra={'device_id': dev_id, 'exc': e, })
-        except (TypeError, Exception) as e:
+        except (TypeError, AttributeError, Exception) as e:
             _LOG.exception('Unhandled load device exception',
                            extra={'device_id': dev_id, 'exc': e, })
 
@@ -269,17 +267,17 @@ class VisioBASGateway:
         _LOG.info('Device polling started', extra={'device_id': dev_id})
 
     @staticmethod
-    def _parse_device_obj(dev_data: dict) -> Optional[BACnetDevice]:
+    def _parse_device_obj(dev_data: dict) -> Optional[BACnetDeviceObj]:
         """Parses and validate device object data from JSON.
 
         Returns:
             Parsed and validated device object, if no errors throw.
         """
-        dev_obj = BACnetDevice(**dev_data)
+        dev_obj = BACnetDeviceObj(**dev_data)
         _LOG.debug('Device object parsed', extra={'device_object': dev_obj})
         return dev_obj
 
-    def _extract_objects(self, objs_data: tuple, dev_obj: BACnetDevice
+    def _extract_objects(self, objs_data: tuple, dev_obj: BACnetDeviceObj
                          ) -> list[ModbusObj]:
         """Parses and validate objects data from JSON.
 
@@ -303,13 +301,14 @@ class VisioBASGateway:
             dev_id = list(objs)[0].device_id
             str_ = ';'.join([obj.to_http_str() for obj in objs]) + ';'
             await self.http_client.post_device(servers=self.http_client.servers_post,
-                                               dev_id=dev_id,
-                                               data=str_)
+                                               dev_id=dev_id, data=str_)
         except Exception as e:
             _LOG.exception('Unexpected error', extra={'exc': e})
 
-    async def device_factory(self, dev_obj: BACnetDevice,
-                             ) -> Optional[Union[AsyncModbusDevice]]:
+    async def device_factory(self, dev_obj: BACnetDeviceObj,
+                             ) -> Optional[Union[AsyncModbusDevice,
+                                                 SyncModbusDevice,
+                                                 BACnetDevice]]:
         """Creates device for provided protocol.
 
         Returns:
@@ -326,7 +325,11 @@ class VisioBASGateway:
                     cls_factory = SyncModbusDevice if self.settings.modbus_sync else AsyncModbusDevice
                     device = await cls_factory.create(device_obj=dev_obj, gateway=self)
             elif protocol == Protocol.BACNET:
-                device = None  # todo
+                import BAC0
+                async with self._bacnet_creation_lock:
+                    if not self.bacnet:
+                        self.bacnet = BAC0.lite()
+                    device = await BACnetDevice.create(device_obj=dev_obj, gateway=self)
             else:
                 raise NotImplementedError('Device factory not implemented')
 
@@ -340,7 +343,7 @@ class VisioBASGateway:
                            extra={'device_id': dev_obj.id, 'exc': e, })
 
     @staticmethod
-    def object_factory(dev_obj: BACnetDevice, obj_data: dict[str, Any]
+    def object_factory(dev_obj: BACnetDeviceObj, obj_data: dict[str, Any]
                        ) -> Optional[Union[ModbusObj, BACnetObj]]:
         """Creates object for provided protocol data.
 
@@ -354,7 +357,7 @@ class VisioBASGateway:
                             Protocol.MODBUS_RTUOVERTCP}:
                 obj = ModbusObj(**obj_data)  # todo switch to parse_raw
             elif protocol == Protocol.BACNET:
-                obj = None  # todo
+                obj = BACnetObj(**obj_data)
             else:
                 # unknown protocols logging by `pydantic` on enter
                 raise NotImplementedError('Not implemented protocol factory.')

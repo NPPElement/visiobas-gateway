@@ -6,7 +6,7 @@ from pymodbus.exceptions import ModbusException, ModbusIOException
 from pymodbus.framer.rtu_framer import ModbusRtuFramer
 
 from .base_modbus import BaseModbusDevice
-from ..models import (BACnetDevice, Protocol, ModbusReadFunc, ModbusWriteFunc, ModbusObj)
+from ..models import (BACnetDeviceObj, Protocol, ModbusReadFunc, ModbusWriteFunc, ModbusObj)
 
 # aliases # TODO
 # BACnetDeviceModel = Any  # ...models
@@ -14,7 +14,7 @@ VisioBASGateway = Any  # ...gateway_loop
 
 
 class SyncModbusDevice(BaseModbusDevice):
-    def __init__(self, device_obj: BACnetDevice, gateway: VisioBASGateway):
+    def __init__(self, device_obj: BACnetDeviceObj, gateway: VisioBASGateway):
         super().__init__(device_obj, gateway)
         self._client: Union[ModbusSerialClient, ModbusTcpClient] = None
 

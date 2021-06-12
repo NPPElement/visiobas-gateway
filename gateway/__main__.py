@@ -15,7 +15,7 @@ LOG_FORMAT = os.environ.get('LOG_FORMAT',
                             '.%(funcName)s(%(lineno)d): %(message)s')
 # [%(threadName)s]
 
-loggers_to_disable = ['pymodbus', 'asyncio', ]  # 'BAC0_Root', 'bacpypes',]
+loggers_to_disable = ['pymodbus', 'asyncio', 'BAC0_Root', 'bacpypes', ]
 for name in loggers_to_disable:
     _logger = logging.getLogger(name=name)
     _logger.propagate = False

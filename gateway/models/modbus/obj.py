@@ -5,7 +5,7 @@ from pymodbus.constants import Endian
 
 from .data_type import DataType
 from .func_code import ModbusReadFunc, ModbusWriteFunc
-from ..bacnet.obj import BACnetObj, BACnetObjPropertyListModel
+from ..bacnet.obj import BACnetObj, BACnetObjPropertyListJsonModel
 from ..bacnet.obj_property import ObjProperty
 
 
@@ -75,7 +75,7 @@ class ModbusObjPropertyListModel(BaseModel):
         return v
 
 
-class ModbusPropertyListJsonModel(BACnetObjPropertyListModel):
+class ModbusPropertyListJsonModel(BACnetObjPropertyListJsonModel):
     modbus: ModbusObjPropertyListModel = Field(...)
 
     def __str__(self) -> str:
