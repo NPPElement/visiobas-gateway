@@ -82,7 +82,7 @@ class ReadWriteMixin(ModbusRWMixin, BACnetRWMixin):
             prop: Property of object to write.
 
         Returns:
-            Is write value and read value are equal.
+            Is write value and read value are consistent.
         """
         protocol = device.protocol
 
