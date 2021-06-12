@@ -4,7 +4,7 @@ from pathlib import Path
 
 """VisioBAS IoT gateway."""
 
-__version__ = '3.1.0'
+__version__ = '3.2.0'
 __author__ = 'VisioBAS, Ovtsin Matvey'
 __maintainer__ = __author__
 __email__ = 'mtovtsin@gmail.com'
