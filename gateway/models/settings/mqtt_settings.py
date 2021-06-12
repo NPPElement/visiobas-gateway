@@ -6,6 +6,7 @@ class MQTTSettings(BaseSettings):
 
     qos: int = Field(default=0, ge=0, le=2)
     retain: bool = Field(default=True)
+    keepalive: int = Field(default=60, ge=1)
 
     topics_sub: list[str] = Field(default=None)
 
