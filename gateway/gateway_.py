@@ -43,7 +43,7 @@ class VisioBASGateway:
 
         self._devices: dict[int, Union[AsyncModbusDevice]] = {}
 
-        self.bacnet = BAC0.lite()  # FIXME: hotfix!
+        # self.bacnet = BAC0.lite()  # FIXME: hotfix!
 
     @classmethod
     async def create(cls, settings: GatewaySettings) -> 'VisioBASGateway':

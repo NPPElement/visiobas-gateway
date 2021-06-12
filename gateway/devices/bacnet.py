@@ -1,6 +1,5 @@
 from typing import Any, Collection, Union, Optional
 
-import BAC0
 from BAC0 import lite
 from BAC0.core.io.IOExceptions import (ReadPropertyException,
                                        NoResponseFromController,
@@ -18,7 +17,7 @@ VisioBASGateway = Any  # ...gateway_loop
 
 
 class BACnetDevice(BaseDevice):
-    # _client: Lite = None # todo
+    _client: Lite = None  # todo
 
     def __init__(self, device_obj: BACnetDeviceObj, gateway: VisioBASGateway):
         super().__init__(device_obj, gateway)
@@ -26,7 +25,7 @@ class BACnetDevice(BaseDevice):
 
         self.support_rpm: set[BACnetObj] = set()
         self.not_support_rpm: set[BACnetObj] = set()
-        self._client: BAC0.scripts.Lite = gateway.bacnet
+        # self._client: BAC0.scripts.Lite = gateway.bacnet
 
         # self.__objects_per_rpm = 25
         # todo: Should we use one RPM for several objects?
@@ -39,16 +38,17 @@ class BACnetDevice(BaseDevice):
     def is_client_connected(self) -> bool:
         return self._client is not None
 
-    def create_client(self) -> None:
+    async def create_client(self) -> None:
         """Initializes BAC0 client."""
 
         try:
             if self._client is None:
-                self._LOG.debug('Creating BAC0 client', extra={'device_id': self.id})
+                self._LOG.debug('Creating BAC0 client',
+                                extra={'device_id': self.id, 'client': self._client, })
                 self._client = lite()  # todo port
             else:
-                self._LOG.debug('BAC0 client already created. Setting it',
-                                extra={'device_id': self.id})
+                self._LOG.debug('BAC0 client already created',
+                                extra={'device_id': self.id, 'client': self._client, })
 
         except (InitializationError, NetworkInterfaceException,
                 Exception) as e:

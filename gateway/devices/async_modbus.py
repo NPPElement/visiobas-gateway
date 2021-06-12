@@ -37,7 +37,7 @@ class AsyncModbusDevice(BaseModbusDevice):
 
         self._lock = asyncio.Lock()
 
-    def create_client(self) -> None:
+    async def create_client(self) -> None:
         """Initializes asynchronous modbus client.
 
         Raises:
