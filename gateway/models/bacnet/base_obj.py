@@ -22,13 +22,6 @@ class BaseBACnetObjModel(BaseModel):
 
     property_list: Json = Field(alias=ObjProperty.propertyList.id_str)
 
-    @validator('type')
-    def temp_fix_to_correct_types(cls, v: ObjType) -> ObjType:
-        # FIXME: delete (hotfix to correct invalid type on server)
-        if v is ObjType.ANALOG_VALUE:
-            v = ObjType.ANALOG_OUTPUT
-        return v
-
     @property
     def replaced_name(self) -> str:
         return self.name.replace(':', '/').replace('.', '/')
