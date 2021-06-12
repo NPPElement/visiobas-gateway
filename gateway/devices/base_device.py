@@ -34,8 +34,7 @@ class BaseDevice(ABC):
                      ) -> 'BaseDevice':
         dev = cls(device_obj=device_obj, gateway=gateway)
         dev.scheduler = await aiojobs.create_scheduler(close_timeout=60, limit=100)
-        # await dev._gateway.async_add_job(dev.create_client)
-        await dev.create_client()
+        await dev._gateway.async_add_job(dev.create_client)
         # _LOG.debug('Device created', extra={'device_id': dev.id})
         return dev
 
@@ -91,7 +90,7 @@ class BaseDevice(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    async def create_client(self) -> None:
+    def create_client(self) -> None:
         raise NotImplementedError
 
     @abstractmethod

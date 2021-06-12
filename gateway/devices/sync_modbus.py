@@ -18,7 +18,7 @@ class SyncModbusDevice(BaseModbusDevice):
         super().__init__(device_obj, gateway)
         self._client: Union[ModbusSerialClient, ModbusTcpClient] = None
 
-    async def create_client(self) -> None:
+    def create_client(self) -> None:
         """Initializes synchronous modbus client."""
 
         self._LOG.debug('Creating pymodbus client', extra={'device_id': self.id})
