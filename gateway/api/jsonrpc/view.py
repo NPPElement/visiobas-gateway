@@ -19,7 +19,7 @@ class JsonRPCView(handler.JSONRPCView, ReadWriteMixin, BaseView):
         value = float(kwargs.get('value'))
         # value = float(value_str) if '.' in value_str else int(value_str)
 
-        _LOG.debug('Call params', extra={'args': args, 'kwargs': kwargs, })
+        _LOG.debug('Call params', extra={'args_': args, 'kwargs_': kwargs, })
         dev = self.get_device(dev_id=dev_id)
         if dev is None:
             raise Exception('Device not found')
