@@ -1,4 +1,3 @@
-# from .views import JsonRPCView
 from .view import JsonRPCView
 
 JSON_RPC_HANDLERS = (JsonRPCView,
