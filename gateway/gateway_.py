@@ -1,8 +1,7 @@
 import asyncio
-# from ipaddress import IPv4Address
 from typing import Callable, Any, Optional, Union, Awaitable, Collection
 
-# for BACnet import BAC0 in device factory
+# Also depends on BAC0 in BACnet case in device factory
 import aiohttp
 import aiojobs
 from aiomisc import entrypoint
@@ -43,17 +42,13 @@ class VisioBASGateway:
 
         self._devices: dict[int, Union[AsyncModbusDevice]] = {}
 
-        self.bacnet = None # : BAC0.scripts.Lite = None  # BAC0.lite()  # FIXME: hotfix!
+        self.bacnet = None  # : BAC0.scripts.Lite = None  # BAC0.lite()  # FIXME: hotfix!
 
     @classmethod
     async def create(cls, settings: GatewaySettings) -> 'VisioBASGateway':
         gateway = cls(settings=settings)
         gateway._scheduler = await aiojobs.create_scheduler(close_timeout=60, limit=100)
         return gateway
-
-    # @property
-    # def address(self) -> IPv4Address:
-    #     return self.settings.address
 
     @property
     def poll_device_ids(self) -> list[int]:
