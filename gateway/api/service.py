@@ -1,5 +1,6 @@
 from typing import Union, Any
 
+import aiohttp_cors
 from aiohttp.web_app import Application
 from aiohttp_apispec import setup_aiohttp_apispec
 from aiomisc import entrypoint
@@ -37,11 +38,26 @@ class VisioGtwAPI(AIOHTTPService):
         app = Application()
         app['gateway'] = self._gateway
 
+        cors = aiohttp_cors.setup(app)
+        # resource = cors.add(app.router.add_resource("/hello"))
+
         # Register handlers
         for handler in self.handlers:
             _LOG.debug('Registering handler %r as %r',
                        handler.__name__, handler.URL_PATH)
-            app.router.add_route('*', handler.URL_PATH, handler)
+
+            resource = cors.add(app.router.add_resource(handler.URL_PATH))
+            route = cors.add(
+                resource.add_route('POST', handler), {
+                    '*': aiohttp_cors.ResourceOptions(
+                        allow_credentials=True,
+                        expose_headers=("X-Custom-Server-Header",),
+                        allow_headers=("X-Requested-With", "Content-Type"),
+                        max_age=3600,
+                    )
+                })
+
+            # app.router.add_route('*', handler.URL_PATH, handler)
 
         # Swagger docs
         setup_aiohttp_apispec(app=app, title='VisioBASGateway API',
