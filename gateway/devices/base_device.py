@@ -19,7 +19,7 @@ VisioBASGateway = Any  # ...gateway_loop
 class BaseDevice(ABC):
     # TODO: implement Singleton by device_id
 
-    _client_creation_lock: asyncio.Lock = None # asyncio.Lock(loop=)
+    _client_creation_lock: asyncio.Lock = None
 
     # Keys is serial port names.
     _serial_clients: dict[str: Union[ModbusSerialClient,
@@ -74,7 +74,7 @@ class BaseDevice(ABC):
         return self._device_obj.property_list.port
 
     @property
-    def types_to_rq(self) -> tuple[ObjType, ...]:  # todo hide type
+    def types_to_rq(self) -> tuple[ObjType, ...]:
         return self._device_obj.types_to_rq
 
     @property

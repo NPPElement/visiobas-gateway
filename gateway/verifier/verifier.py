@@ -38,15 +38,15 @@ class BACnetVerifier:
         if isinstance(obj.exception, (asyncio.TimeoutError, asyncio.CancelledError)):
             obj.reliability = 'timeout'
         elif isinstance(obj.exception, ModbusException):
-            obj.reliability = str(obj.exception).replace(' ', '-')
+            obj.reliability = str(obj.exception)
         elif isinstance(obj.exception, (TypeError, ValueError)):
             obj.reliability = 'decode-error'
         else:
-            RELIABILITY_LEN_LIMIT = 50
+            RELIABILITY_LEN_LIMIT = 50  # TODO: wait 500 explanation by server
             str_hotfix = 'read-error'
-            # str_exc = str(obj.exception)[-RELIABILITY_LEN_LIMIT:].strip().replace(' ', '-').replace(',', '-').replace(':', '-').replace('.', '-')
+            # str_exc = str(obj.exception)[-RELIABILITY_LEN_LIMIT:].strip()
             obj.reliability = str_hotfix
-
+        obj.reliability.strip().replace(' ', '-').replace(',', '-').replace(':', '-').replace('.', '-').replace('/','-').replace('[','').replace(']','')
         obj.exception = None
 
     @staticmethod
