@@ -19,7 +19,7 @@ class JsonRPCView(handler.JSONRPCView, ReadWriteMixin, BaseView, CorsViewMixin):
             allow_headers="*",
             allow_methods='*'
         ),
-        'visiobas': ResourceOptions(
+        'http://127.0.0.1:9090': ResourceOptions(
             allow_credentials=True,
             expose_headers="*",
             allow_headers="*",
