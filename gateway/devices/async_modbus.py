@@ -37,7 +37,7 @@ class AsyncModbusDevice(BaseModbusDevice):
 
         self._lock = asyncio.Lock()
 
-    def create_client(self) -> None:
+    async def create_client(self) -> None:
         """Initializes asynchronous modbus client.
 
         Raises:
@@ -60,37 +60,34 @@ class AsyncModbusDevice(BaseModbusDevice):
                     loop=loop, timeout=self.timeout
                 )
             elif self.protocol is Protocol.MODBUS_RTU:
-                if (
-                        not self._serial_clients.get(self.serial_port)
-                        or not self._serial_port_locks.get(self.serial_port)
-                ):
-                    self._LOG.debug('Serial port not using. Creating async client',
-                                    extra={'device_id': self.id,
-                                           'serial_port': self.serial_port, })
+                async with self.__class__._serial_creation_lock:
+                    if (
+                            not self._serial_clients.get(self.serial_port)
+                            or not self._serial_port_locks.get(self.serial_port)
+                    ):
+                        self._LOG.debug('Serial port not using. Creating async client',
+                                        extra={'device_id': self.id,
+                                               'serial_port': self.serial_port, })
 
-                    # async with self._serial_locks[self.serial_port]:
-                    self._loop, self._client = AsyncModbusSerialClient(
-                        scheduler=ASYNC_IO,
-                        method='rtu', port=self.serial_port,
-                        baudrate=self._device_obj.baudrate,
-                        bytesize=self._device_obj.bytesize,
-                        parity=self._device_obj.parity,
-                        stopbits=self._device_obj.stopbits,
-                        loop=loop, timeout=self.timeout
-                    )
-                    self._serial_port_locks.update({self.serial_port: asyncio.Lock()})
-                    self._serial_clients.update({self.serial_port: self._client})
-                elif (
-                        self._serial_clients.get(self.serial_port)
-                        and self._serial_port_locks.get(self.serial_port)
-                ):
-                    self._LOG.debug('Serial port already using. Getting client',
-                                    extra={'device_id': self.id,
-                                           'serial_port': self.serial_port, })
-                    self._client = self._serial_clients[self.serial_port]
-
-                self._LOG.debug('Current state of serial',
-                                extra={'serial_clients_dict': self._serial_clients, })
+                        self._loop, self._client = AsyncModbusSerialClient(
+                            scheduler=ASYNC_IO,
+                            method='rtu', port=self.serial_port,
+                            baudrate=self._device_obj.baudrate,
+                            bytesize=self._device_obj.bytesize,
+                            parity=self._device_obj.parity,
+                            stopbits=self._device_obj.stopbits,
+                            loop=loop, timeout=self.timeout
+                        )
+                        self._serial_port_locks.update({self.serial_port: asyncio.Lock()})
+                        self._serial_clients.update({self.serial_port: self._client})
+                    elif (
+                            self._serial_clients.get(self.serial_port)
+                            and self._serial_port_locks.get(self.serial_port)
+                    ):
+                        self._LOG.debug('Serial port already using. Getting client',
+                                        extra={'device_id': self.id,
+                                               'serial_port': self.serial_port, })
+                        self._client = self._serial_clients[self.serial_port]
             else:
                 raise NotImplementedError('Other methods not support yet')
         except ModbusException as e:
