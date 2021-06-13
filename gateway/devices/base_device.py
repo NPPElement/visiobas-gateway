@@ -19,7 +19,7 @@ VisioBASGateway = Any  # ...gateway_loop
 class BaseDevice(ABC):
     # TODO: implement Singleton by device_id
 
-    _serial_creation_lock = asyncio.Lock()
+    _client_creation_lock = asyncio.Lock()
 
     # Keys is serial port names.
     _serial_clients: dict[str: Union[ModbusSerialClient,
@@ -43,7 +43,8 @@ class BaseDevice(ABC):
                      ) -> 'BaseDevice':
         dev = cls(device_obj=device_obj, gateway=gateway)
         dev.scheduler = await aiojobs.create_scheduler(close_timeout=60, limit=100)
-        await dev._gateway.async_add_job(dev.create_client)
+        async with cls._client_creation_lock:
+            await dev._gateway.async_add_job(dev.create_client)
         dev._LOG.debug('Device created',
                        extra={'device_id': dev.id, 'protocol': dev.protocol,
                               'serial_clients_dict': cls._serial_clients, })

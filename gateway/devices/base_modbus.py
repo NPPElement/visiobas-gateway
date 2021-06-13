@@ -54,7 +54,6 @@ class BaseModbusDevice(BaseDevice):
     @property
     def serial_port(self) -> Optional[str]:
         """
-
         Returns:
             Serial port name if exists. Else None.
         """

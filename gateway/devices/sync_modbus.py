@@ -30,24 +30,23 @@ class SyncModbusDevice(BaseModbusDevice):
                                                retry_on_empty=True, retry_on_invalid=True,
                                                timeout=self.timeout)
             elif self.protocol is Protocol.MODBUS_RTU:
-                async with self.__class__._serial_creation_lock:
-                    if not self._serial_clients.get(self.serial_port):
-                        self._LOG.debug('Serial port not using. Creating sync client',
-                                        extra={'device_id': self.id,
-                                               'serial_port': self.serial_port, })
-                        self._client = ModbusSerialClient(method='rtu',
-                                                          port=self.serial_port,
-                                                          baudrate=self._device_obj.baudrate,
-                                                          bytesize=self._device_obj.bytesize,
-                                                          parity=self._device_obj.parity,
-                                                          stopbits=self._device_obj.stopbits,
-                                                          timeout=self.timeout)
-                        self._serial_clients.update({self.serial_port: self._client})
-                    else:
-                        self._LOG.debug('Serial port already using. Getting client',
-                                        extra={'device_id': self.id,
-                                               'serial_port': self.serial_port, })
-                        self._client = self._serial_clients[self.serial_port]
+                if not self._serial_clients.get(self.serial_port):
+                    self._LOG.debug('Serial port not using. Creating sync client',
+                                    extra={'device_id': self.id,
+                                           'serial_port': self.serial_port, })
+                    self._client = ModbusSerialClient(method='rtu',
+                                                      port=self.serial_port,
+                                                      baudrate=self._device_obj.baudrate,
+                                                      bytesize=self._device_obj.bytesize,
+                                                      parity=self._device_obj.parity,
+                                                      stopbits=self._device_obj.stopbits,
+                                                      timeout=self.timeout)
+                    self._serial_clients.update({self.serial_port: self._client})
+                else:
+                    self._LOG.debug('Serial port already using. Getting client',
+                                    extra={'device_id': self.id,
+                                           'serial_port': self.serial_port, })
+                    self._client = self._serial_clients[self.serial_port]
             else:
                 raise NotImplementedError('Other methods not support yet')
 

@@ -1,7 +1,5 @@
 from typing import Any, Collection, Union, Optional
 
-import BAC0
-from BAC0 import lite
 from BAC0.core.io.IOExceptions import (ReadPropertyException,
                                        NoResponseFromController,
                                        UnknownObjectError,
@@ -31,7 +29,7 @@ class BACnetDevice(BaseDevice):
         # todo: Should we use one RPM for several objects?
 
     @property
-    def addr_with_port(self) -> str:
+    def address_port(self) -> str:
         return ':'.join((str(self.address), str(self.port)))
 
     @property
@@ -40,11 +38,10 @@ class BACnetDevice(BaseDevice):
 
     def create_client(self) -> None:
         """Initializes BAC0 client."""
-
         try:
             if not self.is_client_connected:
                 self._LOG.debug('Creating BAC0 client', extra={'device_id': self.id})
-                self.__class__._client = lite()  # todo port
+                self.__class__._client = Lite()  # todo params
             else:
                 self._LOG.debug('BAC0 client already created',
                                 extra={'device_id': self.id})
@@ -128,7 +125,7 @@ class BACnetDevice(BaseDevice):
         """
         priority = priority or self._gateway.api_priority
         try:
-            args = '{0} {1} {2} {3} {4} - {5}'.format(self.addr_with_port,
+            args = '{0} {1} {2} {3} {4} - {5}'.format(self.address_port,
                                                       obj.type.name,
                                                       obj.id,
                                                       prop.name,
@@ -153,7 +150,7 @@ class BACnetDevice(BaseDevice):
     def read_property(self, obj: BACnetObj, prop: ObjProperty) -> Any:
         try:
             request = ' '.join([
-                self.addr_with_port,
+                self.address_port,
                 obj.type.name,
                 str(obj.id),
                 prop.name
