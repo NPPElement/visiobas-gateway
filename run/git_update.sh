@@ -1,3 +1,5 @@
+# Pull latest from github + build + launch
+
 sudo docker-compose down
 # todo cancel changes
 sudo git pull
