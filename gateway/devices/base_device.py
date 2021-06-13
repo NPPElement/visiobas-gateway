@@ -105,6 +105,10 @@ class BaseDevice(ABC):
         raise NotImplementedError
 
     @abstractmethod
+    def close_client(self) -> None:
+        raise NotImplementedError
+
+    @abstractmethod
     async def _poll_objects(self, objs: Collection[Union[BACnetObj, ModbusObj]]) -> None:
         raise NotImplementedError
 

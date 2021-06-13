@@ -3,6 +3,9 @@ from typing import Any, Callable, Union, Optional
 
 from pymodbus.bit_read_message import (ReadCoilsResponse, ReadDiscreteInputsResponse,
                                        ReadBitsResponseBase)
+from pymodbus.client.asynchronous.async_io import AsyncioModbusTcpClient, \
+    AsyncioModbusSerialClient
+from pymodbus.client.sync import ModbusSerialClient, ModbusTcpClient
 from pymodbus.payload import BinaryPayloadDecoder, BinaryPayloadBuilder
 from pymodbus.register_read_message import (ReadHoldingRegistersResponse,
                                             ReadInputRegistersResponse,
@@ -31,7 +34,10 @@ class BaseModbusDevice(BaseDevice):
         # self._LOG = get_file_logger(name=__name__ + str(self.id))
 
         # self._loop: asyncio.AbstractEventLoop = None
-        self._client = None
+        self._client: Union[
+            ModbusSerialClient, ModbusTcpClient,
+            AsyncioModbusTcpClient, AsyncioModbusSerialClient
+        ] = None
         # self.scheduler: aiojobs.Scheduler = None
 
         # self._lock = asyncio.Lock()

@@ -54,6 +54,9 @@ class BACnetDevice(BaseDevice):
             self._LOG.debug('Cannot create client',
                             extra={'device_id': self.id, 'exc': e, })
 
+    def close_client(self) -> None:
+        self._client.disconnect()
+
     async def _poll_objects(self, objs: Collection[BACnetObj]) -> None:
         def _sync_poll_objects(objs_: Collection[BACnetObj]) -> None:
             for obj in objs_:

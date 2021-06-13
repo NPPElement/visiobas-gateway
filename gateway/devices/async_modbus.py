@@ -96,6 +96,12 @@ class AsyncModbusDevice(BaseModbusDevice):
         else:
             self._LOG.debug('Client created', extra={'device_id': self.id})
 
+    def close_client(self) -> None:
+        self._client.stop()
+        if self.protocol is Protocol.MODBUS_RTU:
+            self.__class__._serial_clients.pop(self.serial_port)
+            self.__class__._serial_port_locks.pop(self.serial_port)
+
     @property
     def is_client_connected(self) -> bool:
         if hasattr(self._client, 'protocol') and self._client.protocol is not None:

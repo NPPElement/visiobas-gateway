@@ -58,6 +58,12 @@ class SyncModbusDevice(BaseModbusDevice):
             self._connected = self._client.connect()
             self._LOG.debug('Client created', extra={'device_id': self.id})
 
+    def close_client(self) -> None:
+        self._client.close()
+        if self.protocol is Protocol.MODBUS_RTU:
+            self.__class__._serial_clients.pop(self.serial_port)
+            self.__class__._serial_port_locks.pop(self.serial_port)
+
     @property
     def is_client_connected(self) -> bool:
         return self._connected
