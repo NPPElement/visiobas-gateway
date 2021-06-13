@@ -13,8 +13,14 @@ class JsonRPCView(handler.JSONRPCView, ReadWriteMixin, BaseView, CorsViewMixin):
     URL_PATH = r'/json-rpc'
 
     cors_config = {
-        "*": ResourceOptions(
-            allow_credentials=False,  # True
+        '*': ResourceOptions(
+            allow_credentials=False,
+            expose_headers="*",
+            allow_headers="*",
+            allow_methods='*'
+        ),
+        'visiobas': ResourceOptions(
+            allow_credentials=True,
             expose_headers="*",
             allow_headers="*",
             allow_methods='*'
