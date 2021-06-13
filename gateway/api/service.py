@@ -38,12 +38,6 @@ class VisioGtwAPI(AIOHTTPService):
         app = Application()
         app['gateway'] = self._gateway
 
-        # Register handlers
-        for handler in self.handlers:
-            _LOG.debug('Registering handler %r as %r',
-                       handler.__name__, handler.URL_PATH)
-            app.router.add_route('*', handler.URL_PATH, handler)
-
         # Configure default CORS settings.
         cors = aiohttp_cors.setup(app, defaults={
             "*": aiohttp_cors.ResourceOptions(
@@ -53,9 +47,17 @@ class VisioGtwAPI(AIOHTTPService):
                 allow_methods='*'
             )
         })
-        # Configure CORS on all routes.
-        for route in list(app.router.routes()):
-            cors.add(route)
+
+        # Register handlers
+        for handler in self.handlers:
+            _LOG.debug('Registering handler %r as %r',
+                       handler.__name__, handler.URL_PATH)
+            cors.add(
+                app.router.add_route('*', handler.URL_PATH, handler)
+            )
+        # # Configure CORS on all routes.
+        # for route in list(app.router.routes()):
+        #     cors.add(route)
 
         # Swagger docs
         setup_aiohttp_apispec(app=app, title='VisioBASGateway API',

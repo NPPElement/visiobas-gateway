@@ -1,3 +1,4 @@
+from aiohttp_cors import CorsViewMixin, ResourceOptions
 from aiohttp_jsonrpc import handler
 
 from ..base_view import BaseView
@@ -8,8 +9,17 @@ from ...utils import get_file_logger
 _LOG = get_file_logger(__name__)
 
 
-class JsonRPCView(handler.JSONRPCView, ReadWriteMixin, BaseView):
+class JsonRPCView(handler.JSONRPCView, ReadWriteMixin, BaseView, CorsViewMixin):
     URL_PATH = r'/json-rpc'
+
+    cors_config = {
+        "*": ResourceOptions(
+            allow_credentials=True,
+            expose_headers="*",
+            allow_headers="*",
+            allow_methods='*'
+        )
+    }
 
     async def rpc_writeSetPoint(self, *args, **kwargs):
         dev_id = int(kwargs.get('device_id'))
