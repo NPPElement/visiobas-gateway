@@ -50,6 +50,7 @@ class VisioGtwAPI(AIOHTTPService):
                 allow_credentials=True,
                 expose_headers="*",
                 allow_headers="*",
+                allow_methods='*'
             )
         })
 
