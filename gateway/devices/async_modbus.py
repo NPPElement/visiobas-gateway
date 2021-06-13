@@ -62,7 +62,7 @@ class AsyncModbusDevice(BaseModbusDevice):
             elif self.protocol is Protocol.MODBUS_RTU:
                 if (
                         not self._serial_clients.get(self.serial_port)
-                        or not self._serial_locks.get(self.serial_port)
+                        or not self._serial_port_locks.get(self.serial_port)
                 ):
                     self._LOG.debug('Serial port not using. Creating async client',
                                     extra={'device_id': self.id,
@@ -78,11 +78,11 @@ class AsyncModbusDevice(BaseModbusDevice):
                         stopbits=self._device_obj.stopbits,
                         loop=loop, timeout=self.timeout
                     )
-                    self._serial_locks.update({self.serial_port: asyncio.Lock()})
+                    self._serial_port_locks.update({self.serial_port: asyncio.Lock()})
                     self._serial_clients.update({self.serial_port: self._client})
                 elif (
                         self._serial_clients.get(self.serial_port)
-                        and self._serial_locks.get(self.serial_port)
+                        and self._serial_port_locks.get(self.serial_port)
                 ):
                     self._LOG.debug('Serial port already using. Getting client',
                                     extra={'device_id': self.id,
@@ -107,7 +107,7 @@ class AsyncModbusDevice(BaseModbusDevice):
 
     @property
     def lock(self) -> asyncio.Lock:
-        return self._serial_locks.get(self.serial_port) or self._lock
+        return self._serial_port_locks.get(self.serial_port) or self._lock
 
     async def _poll_objects(self, objs: Collection[ModbusObj]) -> None:
         read_tasks = [self.read(obj=obj) for obj in objs]

@@ -31,7 +31,7 @@ class BaseModbusDevice(BaseDevice):
     # Keys is serial port names.
     _serial_clients: dict[str: Union[ModbusSerialClient,
                                      AsyncioModbusSerialClient]] = {}
-    _serial_locks: dict[str: asyncio.Lock] = {}
+    _serial_port_locks: dict[str: asyncio.Lock] = {}
 
     # _creation_lock = asyncio.Lock()
 

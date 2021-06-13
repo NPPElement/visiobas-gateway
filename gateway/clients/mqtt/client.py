@@ -17,6 +17,7 @@ class VisioBASMQTTClient:
     """Control interactions via MQTT."""
 
     def __init__(self, gateway, config: dict):
+        # TODO
         self._gateway = gateway
         self._config = config
 
