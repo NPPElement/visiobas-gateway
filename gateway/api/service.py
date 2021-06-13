@@ -1,5 +1,6 @@
 from typing import Union, Any
 
+import aiohttp_cors
 from aiohttp.web_app import Application
 from aiohttp_apispec import setup_aiohttp_apispec
 from aiomisc import entrypoint
@@ -42,6 +43,19 @@ class VisioGtwAPI(AIOHTTPService):
             _LOG.debug('Registering handler %r as %r',
                        handler.__name__, handler.URL_PATH)
             app.router.add_route('*', handler.URL_PATH, handler)
+
+        # Configure default CORS settings.
+        cors = aiohttp_cors.setup(app, defaults={
+            "*": aiohttp_cors.ResourceOptions(
+                allow_credentials=True,
+                expose_headers="*",
+                allow_headers="*",
+                allow_methods='*'
+            )
+        })
+        # Configure CORS on all routes.
+        for route in list(app.router.routes()):
+            cors.add(route)
 
         # Swagger docs
         setup_aiohttp_apispec(app=app, title='VisioBASGateway API',

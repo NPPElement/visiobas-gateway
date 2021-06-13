@@ -1,6 +1,9 @@
 aiojobs~=0.3.0
 
 aiohttp==3.7.4.post0
+aiohttp-cors==0.7.0
+aiohttp-jsonrpc==0.3.0
+
 aiohttp-apispec==2.2.1
 aiomisc==14.1.0
 

@@ -58,15 +58,6 @@ class VisioBASMQTTClient:
     # self._client.tls_set()
     #     # todo add certificate
 
-    @classmethod
-    def from_yaml(cls, gateway, yaml_path: Path):
-        # todo add a pydantic model of config and use it
-        import yaml
-
-        with yaml_path.open() as cfg_file:
-            config = yaml.load(cfg_file, Loader=yaml.FullLoader)
-            _log.info(f'Creating {cls.__name__} from {yaml_path} ...')
-        return cls(gateway=gateway, config=config)
 
     def init_client(self) -> None:
         """Initialize MQTT client."""
