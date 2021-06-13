@@ -14,7 +14,7 @@ class JsonRPCView(handler.JSONRPCView, ReadWriteMixin, BaseView, CorsViewMixin):
 
     cors_config = {
         "*": ResourceOptions(
-            allow_credentials=True,
+            # allow_credentials=True,
             expose_headers='*',
             allow_headers="*",
             allow_methods='*'
