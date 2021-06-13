@@ -26,7 +26,7 @@ class VisioGtwAPI(AIOHTTPService):
         return self.__class__.__name__
 
     @property
-    def handlers(self) -> tuple[Union[JsonRPCViewAlias,], ...]:
+    def handlers(self) -> tuple[Union[JsonRPCViewAlias, ], ...]:
         return JSON_RPC_HANDLERS  # todo add rest handlers
 
     async def create_application(self) -> Application:
