@@ -171,7 +171,7 @@ class BaseDevice(ABC):
         self._LOG.info('Device stopped', extra={'device_id': self.id})
 
     async def _periodic_reset_unreachable(self) -> None:
-        await asyncio.sleep(self._gateway.unreachable_check_period)
+        await asyncio.sleep(self._gateway.unreachable_reset_period)
 
         self._LOG.debug('Reset unreachable objects')
         self.load_objects(objs=self._unreachable_objects)

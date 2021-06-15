@@ -52,7 +52,7 @@ class VisioBASGateway:
 
     @property
     def unreachable_check_period(self) -> int:
-        return self.settings.unreachable_check_period
+        return self.settings.unreachable_reset_period
 
     @property
     def poll_device_ids(self) -> list[int]:
