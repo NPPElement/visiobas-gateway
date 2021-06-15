@@ -14,7 +14,8 @@ from pymodbus.register_read_message import (ReadHoldingRegistersResponse,
 from pymodbus.transaction import ModbusRtuFramer
 
 from .base_modbus import BaseModbusDevice
-from ..models import (BACnetDeviceObj, ModbusObj, Protocol, ModbusReadFunc, ModbusWriteFunc)
+from ..models import (BACnetDeviceObj, ModbusObj, Protocol, ModbusReadFunc, ModbusWriteFunc,
+                      StatusFlags)
 
 # aliases # TODO
 # BACnetDeviceModel = Any  # ...models
@@ -145,22 +146,24 @@ class AsyncModbusDevice(BaseModbusDevice):
 
             value = await self.decode(resp=resp, obj=obj)
             obj.set_pv(value=value)
+            obj.sf = StatusFlags()
+            obj.reliability = None
 
         except (TypeError, AttributeError, ValueError,
                 asyncio.TimeoutError, asyncio.CancelledError,
-                ModbusException,
+                ModbusException, Exception
                 ) as e:
-            obj.exception = e
+            obj.set_exc(exc=e)
             self._LOG.warning('Read error',
                               extra={'device_id': self.id, 'object_id': obj.id,
                                      'object_type': obj.type, 'register': obj.address,
                                      'quantity': obj.quantity, 'exc': e, })
-        except Exception as e:
-            obj.exception = e
-            self._LOG.exception(f'Unexpected read error: {e}',
-                                extra={'device_id': self.id, 'object_id': obj.id,
-                                       'object_type': obj.type, 'register': obj.address,
-                                       'quantity': obj.quantity, 'exc': e, })
+        # except Exception as e:
+        #     obj.exception = e
+        #     self._LOG.exception(f'Unexpected read error: {e}',
+        #                         extra={'device_id': self.id, 'object_id': obj.id,
+        #                                'object_type': obj.type, 'register': obj.address,
+        #                                'quantity': obj.quantity, 'exc': e, })
         else:
             return obj.pv  # return not used now. Updates object
 

@@ -163,25 +163,29 @@ class BACnetDevice(BaseDevice):
                 obj.set_pv(value=response)
             elif prop is ObjProperty.statusFlags:
                 obj.sf = StatusFlags(flags=response)
+            elif prop is ObjProperty.reliability:
+                obj.reliability = response
             elif prop is ObjProperty.priorityArray:
                 obj.pa = self._pa_to_tuple(pa=response)
                 self._LOG.debug('priority array extracted', extra={'priority_array': obj.pa,
                                                                    'object_id': obj.id,
                                                                    'object_type': obj.type,
                                                                    'device_id': self.id, })
-            # todo
+            else:
+                NotImplementedError('Other properties not support now.')
 
         except (UnknownPropertyError, UnknownObjectError,
-                NoResponseFromController, ReadPropertyException) as e:
-            obj.exception = e
+                NoResponseFromController, ReadPropertyException,
+                Exception) as e:
+            obj.set_exc(exc=e)
             self._LOG.warning('ReadProperty error',
                               extra={'device_id': self.id, 'object_id': obj.id,
                                      'object_type': obj.type, 'exc': e, })
-        except Exception as e:
-            obj.exception = e
-            self._LOG.exception(f'Unexpected read error: {e}',
-                                extra={'device_id': self.id, 'object_id': obj.id,
-                                       'object_type': obj.type, 'exc': e, })
+        # except Exception as e:
+        #     obj.exception = e
+        #     self._LOG.exception(f'Unexpected read error: {e}',
+        #                         extra={'device_id': self.id, 'object_id': obj.id,
+        #                                'object_type': obj.type, 'exc': e, })
         else:
             return response
 

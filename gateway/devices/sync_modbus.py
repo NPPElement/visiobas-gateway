@@ -6,7 +6,8 @@ from pymodbus.exceptions import ModbusException, ModbusIOException
 from pymodbus.framer.rtu_framer import ModbusRtuFramer
 
 from .base_modbus import BaseModbusDevice
-from ..models import (BACnetDeviceObj, Protocol, ModbusReadFunc, ModbusWriteFunc, ModbusObj)
+from ..models import (BACnetDeviceObj, Protocol, ModbusReadFunc, ModbusWriteFunc, ModbusObj,
+                      StatusFlags)
 
 # aliases # TODO
 # BACnetDeviceModel = Any  # ...models
@@ -101,19 +102,23 @@ class SyncModbusDevice(BaseModbusDevice):
                 raise ModbusIOException('0x80')  # todo: resp.string
 
             value = self._decode_response(resp=resp, obj=obj)
+
             obj.set_pv(value=value)
-        except (TypeError, ValueError, AttributeError, ModbusException) as e:
-            obj.exception = e
+            obj.sf = StatusFlags()
+            obj.reliability = None
+        except (TypeError, ValueError, AttributeError,
+                ModbusException, Exception) as e:
+            obj.set_exc(exc=e)
             self._LOG.warning('Read error',
                               extra={'device_id': self.id, 'object_id': obj.id,
                                      'object_type': obj.type, 'register': obj.address,
                                      'quantity': obj.quantity, 'exc': e, })
-        except Exception as e:
-            obj.exception = e
-            self._LOG.exception(f'Unexpected read error: {e}',
-                                extra={'device_id': self.id, 'object_id': obj.id,
-                                       'object_type': obj.type, 'register': obj.address,
-                                       'quantity': obj.quantity, 'exc': e, })
+        # except Exception as e:
+        #     obj.exception = e
+        #     self._LOG.exception(f'Unexpected read error: {e}',
+        #                         extra={'device_id': self.id, 'object_id': obj.id,
+        #                                'object_type': obj.type, 'register': obj.address,
+        #                                'quantity': obj.quantity, 'exc': e, })
         else:
             return obj.pv  # return not used now. Updates object
 
