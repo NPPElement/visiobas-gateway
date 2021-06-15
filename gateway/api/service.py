@@ -39,7 +39,13 @@ class VisioGtwAPI(AIOHTTPService):
         app['gateway'] = self._gateway
 
         # Configure default CORS settings.
-        cors = aiohttp_cors.setup(app)
+        cors = aiohttp_cors.setup(app, defaults={
+            '*': aiohttp_cors.ResourceOptions(
+                expose_headers='*',
+                allow_headers='*',
+                allow_methods=['GET', 'POST', ]
+            )
+        })
         # , defaults={
         #     "*": aiohttp_cors.ResourceOptions(
         #         allow_credentials=False,
@@ -52,7 +58,7 @@ class VisioGtwAPI(AIOHTTPService):
         # Register handlers
         for handler in self.handlers:
             _LOG.debug('Registering handler',
-                       extra={'handler': handler.__name__, 'url': handler.URL_PATH,})
+                       extra={'handler': handler.__name__, 'url': handler.URL_PATH, })
             cors.add(
                 app.router.add_route('*', handler.URL_PATH, handler)
             )
