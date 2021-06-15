@@ -1,3 +1,4 @@
+import asyncio
 from datetime import datetime
 from typing import Optional, Union
 
@@ -24,34 +25,6 @@ class BACnetObjPropertyListJsonModel(BaseModel):
 
     def __repr__(self) -> str:
         return str(self)
-
-
-# class LastValueDescriptor:
-#     def __init__(self, resolution: float, value=None):
-#         self.resolution = resolution
-#
-#         whole_part, fractional_part = str(resolution).split('.', maxsplit=1)
-#         self.ndigits = len(fractional_part)
-#
-#         self.value = value
-#         self.updated: datetime = None  # when it was updated
-#
-#     def __get__(self, instance, owner):
-#         return self.value
-#
-#     def __set__(self, instance, value: Optional[Union[float, int, str]]) -> None:
-#         self.updated = datetime.now()
-#         if isinstance(value, (float, int)):
-#             self.value = self._round(value=value)
-#         elif isinstance(value, str) or value is None:
-#             self.value = value
-#         else:
-#             raise NotImplemented
-#
-#     def _round(self, value: Union[float, int]) -> float:
-#         return round(
-#             round(value / self.resolution) * self.resolution,
-#             ndigits=self.ndigits)
 
 
 class BACnetObj(BaseBACnetObjModel):
@@ -96,9 +69,11 @@ class BACnetObj(BaseBACnetObjModel):
         for each property that exists within the object. The standard properties are not 
         included in the JSON.''')
 
-    exception: Optional[Exception] = None
     _last_value: Optional[Union[int, float, str]] = PrivateAttr()
     _updated_at: Optional[datetime] = PrivateAttr()
+
+    # exception: Optional[Exception] = None
+    _unreachable_in_row: int = 0
 
     class Config:
         arbitrary_types_allowed = True
@@ -111,6 +86,10 @@ class BACnetObj(BaseBACnetObjModel):
         return v
 
     @property
+    def unreachable_in_row(self) -> int:
+        return self._unreachable_in_row
+
+    @property
     def pv(self) -> Optional[Union[int, float, str]]:
         """Indicates the current value, in engineering units, of the `TYPE`.
         `Present_Value` shall be optionally commandable. If `Present_Value` is commandable
@@ -121,44 +100,43 @@ class BACnetObj(BaseBACnetObjModel):
         """
         return self._last_value
 
-    # @pv.setter
-    # def pv(self, value: Optional[Union[int, float, str]]):
-    #     # TODO: Make it by descriptor?
-    #
-    #     def _round(value_: Union[float, int], resolution: float) -> float:
-    #         whole_part, fractional_part = str(resolution).split('.', maxsplit=1)
-    #         digits = len(fractional_part)
-    #         return round(round(value_ / resolution) * resolution, ndigits=digits)
-    #
-    #     self._updated = datetime.now()
-    #
-    #     if isinstance(value, (float, int)):
-    #         self._pv = _round(value_=value, resolution=self.resolution)
-    #     elif isinstance(value, str) or value is None:
-    #         self._pv = value
-    #     else:
-    #         raise ValueError('Expected only int, float, str, None')
+    def set_exc(self, exc: Exception) -> None:
+        """Sets properties related with exception."""
+        self._unreachable_in_row += 1
+        self._last_value = 'null'
 
-    def clear_properties(self) -> None:
-        self.sf = StatusFlags(flags=0b0000)
-        self.reliability = None
+        if isinstance(exc, (asyncio.TimeoutError, asyncio.CancelledError)):
+            self.reliability = 'timeout'
+        # elif isinstance(exc, ModbusException):
+        #     self.reliability = str(exc)
+        elif isinstance(exc, (TypeError, ValueError)):
+            self.reliability = 'decode-error'
+        else:
+            RELIABILITY_LEN_LIMIT = 50  # TODO: wait 500 explanation by server
+            str_hotfix = 'error'
+            # str_exc = str(exc)[-RELIABILITY_LEN_LIMIT:]
+            self.reliability = str_hotfix
+        self.reliability.strip().replace(
+            ' ', '-').replace(',', '-').replace(':', '-').replace(
+            '.', '-').replace('/', '-').replace('[', '').replace(']', '')
 
     def set_pv(self, value: Optional[Union[int, float, str]]) -> None:
         """Sets presentValue with round by resolution.
-        Use it to set new presentValue.
+        Use it to set new presentValue by read from controller.
 
-        `pydantic` BaseModel not support parametrized descriptor, setter.
-        See:
-            - https://github.com/samuelcolvin/pydantic/pull/679  # custom descriptor
-            - https://github.com/samuelcolvin/pydantic/issues/935
-            - https://github.com/samuelcolvin/pydantic/issues/1577
-            - https://github.com/samuelcolvin/pydantic/pull/2625  # computed fields
+        In verifier case please use _last_value
 
-        TODO: Make it by setter or descriptor with params?
+        # `pydantic` BaseModel not support parametrized descriptor, setter.
+        # See:
+        #     - https://github.com/samuelcolvin/pydantic/pull/679  # custom descriptor
+        #     - https://github.com/samuelcolvin/pydantic/issues/935
+        #     - https://github.com/samuelcolvin/pydantic/issues/1577
+        #     - https://github.com/samuelcolvin/pydantic/pull/2625  # computed fields
 
         Args:
             value: presentValue of object
         """
+        assert isinstance(value, (int, float, str))
 
         def _round(value_: Union[float, int],
                    resolution: Union[int, float]) -> float:
@@ -173,7 +151,9 @@ class BACnetObj(BaseBACnetObjModel):
                 digits = len(fractional_part)
                 return round(rounded, ndigits=digits)
 
+        self._unreachable_in_row = 0
         self._updated_at = datetime.now()
+        self.reliability = None
 
         if isinstance(value, (float, int)) and self.type.is_analog:
             self._last_value = _round(value_=value, resolution=self.resolution)
@@ -189,16 +169,11 @@ class BACnetObj(BaseBACnetObjModel):
         return str(self)
 
     def to_mqtt_str(self) -> str:
-        return '{0} {1} {2} {3} {4}'.format(self.device_id,
-                                            self.id,
-                                            self.type.id,
-                                            self.pv,
-                                            self.sf, )
+        return '{0} {1} {2} {3} {4}'.format(self.device_id, self.id, self.type.id,
+                                            self.pv, self.sf, )
 
     def to_http_str(self) -> str:
-        str_ = '{0} {1} {2}'.format(self.id,
-                                    self.type.id,
-                                    self.pv, )
+        str_ = '{0} {1} {2}'.format(self.id, self.type.id, self.pv, )
         if self.pa:
             pa_str = self._convert_pa_to_str(pa=self.pa)
             str_ += ' ' + pa_str
