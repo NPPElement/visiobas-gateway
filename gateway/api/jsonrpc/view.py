@@ -1,4 +1,5 @@
-from aiohttp_cors import CorsViewMixin, ResourceOptions
+from aiohttp import web
+from aiohttp_cors import CorsViewMixin, ResourceOptions, custom_cors
 from aiohttp_jsonrpc import handler
 
 from ..base_view import BaseView
@@ -14,18 +15,27 @@ class JsonRPCView(handler.JSONRPCView, ReadWriteMixin, BaseView, CorsViewMixin):
 
     cors_config = {
         '*': ResourceOptions(
-            allow_credentials=False,
+            # allow_credentials=False,
             expose_headers="*",
             allow_headers="*",
-            allow_methods='*'
+            # allow_methods='*'
         ),
-        'http://127.0.0.1:9090': ResourceOptions(
-            allow_credentials=True,
-            expose_headers="*",
-            allow_headers="*",
-            allow_methods='*'
-        )
+        # 'http://127.0.0.1:9090': ResourceOptions(
+        #     allow_credentials=True,
+        #     expose_headers="*",
+        #     allow_headers="*",
+        #     allow_methods='*'
+        # )
     }
+
+    @custom_cors({
+        "*": ResourceOptions(
+            allow_credentials=False,
+            allow_headers="*",
+        )
+    })
+    async def post(self):
+        return web.Response(text="Hello")
 
     async def rpc_writeSetPoint(self, *args, **kwargs):
         dev_id = int(kwargs.get('device_id'))
