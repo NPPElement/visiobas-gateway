@@ -134,9 +134,14 @@ class BaseDevice(ABC):
         """Groups objects by poll period and loads them into device for polling."""
         assert len(objs)
 
-        objs = self._sort_objects_by_period(objs=objs)
-        self._objects = objs
-        self._LOG.debug('Objects are grouped by period and loads to the device')
+        for obj in objs:
+            poll_period = obj.property_list.send_interval
+            try:
+                self._objects[poll_period].add(obj)
+            except KeyError:
+                self._objects[poll_period] = {obj}
+        self._LOG.debug('Objects are grouped by period and loads to the device',
+                        extra={'device_id': self.id, 'objects_number': len(objs)})
 
     async def start_periodic_polls(self) -> None:
         """Starts periodic polls for all periods."""
@@ -168,9 +173,8 @@ class BaseDevice(ABC):
     async def _periodic_reset_unreachable(self) -> None:
         await asyncio.sleep(self._gateway.unreachable_check_period)
 
-        for obj in self._unreachable_objects:
-            obj._unreachable_in_row = 0
-            self._objects[obj.property_list.send_interval].add(obj)
+        self._LOG.debug('Reset unreachable objects')
+        self.load_objects(objs=self._unreachable_objects)
         self._unreachable_objects = set()
 
         await self.scheduler.spawn(self._periodic_reset_unreachable())
@@ -245,20 +249,15 @@ class BaseDevice(ABC):
     # def _clear_properties(objs: Collection[Union[BACnetObj, ModbusObj]]) -> None:
     #     [obj.clear_properties() for obj in objs]  # fixme hotfix
 
-    @staticmethod
-    def _sort_objects_by_period(objs: Collection[Union[BACnetObj, ModbusObj]]
-                                ) -> dict[int, set[Union[BACnetObj, ModbusObj]]]:
-        """Creates dict from objects, where key is period, value is collection
-        of objects with that period.
-
-        Returns:
-            dict, where key is period, value is set of objects with that period.
-        """
-        dct = {}
-        for obj in objs:
-            poll_period = obj.property_list.send_interval
-            try:
-                dct[poll_period].add(obj)
-            except KeyError:
-                dct[poll_period] = {obj}
-        return dct
+    # @staticmethod
+    # def _sort_objects_by_period(objs: Collection[Union[BACnetObj, ModbusObj]]
+    #                             ) -> dict[int, set[Union[BACnetObj, ModbusObj]]]:
+    #     """Creates dict from objects, where key is period, value is collection
+    #     of objects with that period.
+    #
+    #     Returns:
+    #         dict, where key is period, value is set of objects with that period.
+    #     """
+    #     dct = {}
+    #
+    #     return dct
