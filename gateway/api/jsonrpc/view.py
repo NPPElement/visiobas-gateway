@@ -21,15 +21,6 @@ class JsonRPCView(handler.JSONRPCView, ReadWriteMixin, BaseView, CorsViewMixin):
         )
     }
 
-    # @custom_cors({
-    #     "*": ResourceOptions(
-    #         allow_credentials=False,
-    #         allow_headers="*",
-    #     )
-    # })
-    # async def post(self):
-    #     return web.Response(text="Hello")
-
     async def rpc_writeSetPoint(self, *args, **kwargs):
         dev_id = int(kwargs.get('device_id'))
         obj_type_id = int(kwargs.get('object_type'))
