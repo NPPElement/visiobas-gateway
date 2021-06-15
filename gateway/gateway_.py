@@ -47,6 +47,14 @@ class VisioBASGateway:
         return gateway
 
     @property
+    def unreachable_threshold(self) -> int:
+        return self.settings.unreachable_threshold
+
+    @property
+    def unreachable_check_period(self) -> int:
+        return self.settings.unreachable_check_period
+
+    @property
     def poll_device_ids(self) -> list[int]:
         return self.settings.poll_device_ids
 
