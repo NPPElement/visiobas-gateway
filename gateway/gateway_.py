@@ -23,8 +23,7 @@ class VisioBASGateway:
     def __init__(self, settings: GatewaySettings):
         # self.loop = asyncio.new_event_loop()
         self.loop: asyncio.AbstractEventLoop = asyncio.get_running_loop()
-        self._serial_creation_lock = asyncio.Lock()
-        self._bacnet_creation_lock = asyncio.Lock()
+        # self._serial_creation_lock = asyncio.Lock()  # fixme
 
         # self._pending_tasks: list = []
         self.settings = settings
@@ -314,15 +313,17 @@ class VisioBASGateway:
         try:
             protocol = dev_obj.property_list.protocol
 
-            if protocol in {Protocol.MODBUS_TCP, Protocol.MODBUS_RTUOVERTCP}:
-                cls_factory = SyncModbusDevice if self.settings.modbus_sync else AsyncModbusDevice
-                device = await cls_factory.create(device_obj=dev_obj, gateway=self)
-            elif protocol is Protocol.MODBUS_RTU:
-                async with self._serial_creation_lock:  # fixme
-                    cls_factory = SyncModbusDevice if self.settings.modbus_sync else AsyncModbusDevice
-                    device = await cls_factory.create(device_obj=dev_obj, gateway=self)
+            if protocol in {
+                Protocol.MODBUS_TCP, Protocol.MODBUS_RTUOVERTCP, Protocol.MODBUS_RTU
+            }:
+                cls = SyncModbusDevice if self.settings.modbus_sync else AsyncModbusDevice
+
+                # if protocol is Protocol.MODBUS_RTU:
+                #     async with self._serial_creation_lock:  # fixme
+                #         device = await cls.create(device_obj=dev_obj, gateway=self)
+                # else:
+                device = await cls.create(device_obj=dev_obj, gateway=self)
             elif protocol == Protocol.BACNET:
-                # async with self._bacnet_creation_lock:
                 device = await BACnetDevice.create(device_obj=dev_obj, gateway=self)
 
             else:

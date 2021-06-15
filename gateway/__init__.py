@@ -1,11 +1,9 @@
 from pathlib import Path
 
-# from gateway.gateway_ import VisioBASGateway
-
 """VisioBAS IoT gateway."""
 
-__version__ = '3.2.1'
-__author__ = 'VisioBAS, Ovtsin Matvey'
+__version__ = '3.2.2'
+__author__ = 'VisioBAS, Matvey Ovtsin'
 __maintainer__ = __author__
 __email__ = 'mtovtsin@gmail.com'
 __url__ = '<info.visiobas.com>'
@@ -13,8 +11,7 @@ __license__ = 'GNU General Public License v3.0'
 
 BASE_DIR = Path(__file__).resolve().parent
 
-__all__ = [  # 'VisioBASGateway',
-
+__all__ = [
     '__author__',
     '__email__',
     '__license__',

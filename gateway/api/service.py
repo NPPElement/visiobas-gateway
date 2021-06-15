@@ -26,7 +26,7 @@ class VisioGtwAPI(AIOHTTPService):
         return self.__class__.__name__
 
     @property
-    def handlers(self) -> tuple[Union[JsonRPCViewAlias,], ...]:
+    def handlers(self) -> tuple[Union[JsonRPCViewAlias, ], ...]:
         return JSON_RPC_HANDLERS  # todo add rest handlers
 
     async def create_application(self) -> Application:
@@ -38,24 +38,26 @@ class VisioGtwAPI(AIOHTTPService):
         app = Application()
         app['gateway'] = self._gateway
 
-        # Register handlers
-        for handler in self.handlers:
-            _LOG.debug('Registering handler %r as %r',
-                       handler.__name__, handler.URL_PATH)
-            app.router.add_route('*', handler.URL_PATH, handler)
-
         # Configure default CORS settings.
         cors = aiohttp_cors.setup(app, defaults={
             "*": aiohttp_cors.ResourceOptions(
-                allow_credentials=True,
+                allow_credentials=False,
                 expose_headers="*",
                 allow_headers="*",
                 allow_methods='*'
             )
         })
-        # Configure CORS on all routes.
-        for route in list(app.router.routes()):
-            cors.add(route)
+
+        # Register handlers
+        for handler in self.handlers:
+            _LOG.debug('Registering handler %r as %r',
+                       handler.__name__, handler.URL_PATH)
+            cors.add(
+                app.router.add_route('*', handler.URL_PATH, handler)
+            )
+        # # Configure CORS on all routes.
+        # for route in list(app.router.routes()):
+        #     cors.add(route)
 
         # Swagger docs
         setup_aiohttp_apispec(app=app, title='VisioBASGateway API',

@@ -61,9 +61,9 @@ id username # check user\group info
 ## Launch/Update
 
 ```shell
-. run/clear_logs.sh  # Clear logs
+. run/logs_clear.sh  # Clear logs
 
-. run/git_update.sh  # Git pull + build + run
+. run/git_update.sh  # Git pull + build + launch
 ```
 
 To clean docker:

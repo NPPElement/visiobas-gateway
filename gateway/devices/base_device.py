@@ -6,6 +6,8 @@ from ipaddress import IPv4Address
 from typing import Any, Optional, Collection, Union
 
 import aiojobs
+from pymodbus.client.asynchronous.async_io import AsyncioModbusSerialClient
+from pymodbus.client.sync import ModbusSerialClient
 
 from ..models import (BACnetDeviceObj, BACnetObj, ModbusObj, ObjType, Protocol)
 from ..utils import get_file_logger
@@ -15,7 +17,14 @@ VisioBASGateway = Any  # ...gateway_loop
 
 
 class BaseDevice(ABC):
-    # tODO: implement Singleton by device_id
+    # TODO: implement Singleton by device_id
+
+    _client_creation_lock: asyncio.Lock = None
+
+    # Keys is serial port names.
+    _serial_clients: dict[str: Union[ModbusSerialClient,
+                                     AsyncioModbusSerialClient]] = {}
+    _serial_port_locks: dict[str: asyncio.Lock] = {}
 
     def __init__(self, device_obj: BACnetDeviceObj, gateway: 'VisioBASGateway'):
         self._gateway = gateway
@@ -32,10 +41,17 @@ class BaseDevice(ABC):
     @classmethod
     async def create(cls, device_obj: BACnetDeviceObj, gateway: 'VisioBASGateway'
                      ) -> 'BaseDevice':
+        loop = gateway.loop
+        if cls._client_creation_lock is None:
+            cls._client_creation_lock = asyncio.Lock(loop=loop)
+
         dev = cls(device_obj=device_obj, gateway=gateway)
         dev.scheduler = await aiojobs.create_scheduler(close_timeout=60, limit=100)
-        await dev._gateway.async_add_job(dev.create_client)
-        # _LOG.debug('Device created', extra={'device_id': dev.id})
+        async with cls._client_creation_lock:
+            await dev._gateway.async_add_job(dev.create_client)
+        dev._LOG.debug('Device created',
+                       extra={'device_id': dev.id, 'protocol': dev.protocol,
+                              'serial_clients_dict': cls._serial_clients, })
         return dev
 
     def __repr__(self) -> str:
@@ -58,7 +74,7 @@ class BaseDevice(ABC):
         return self._device_obj.property_list.port
 
     @property
-    def types_to_rq(self) -> tuple[ObjType, ...]:  # todo hide type
+    def types_to_rq(self) -> tuple[ObjType, ...]:
         return self._device_obj.types_to_rq
 
     @property
@@ -91,6 +107,10 @@ class BaseDevice(ABC):
 
     @abstractmethod
     def create_client(self) -> None:
+        raise NotImplementedError
+
+    @abstractmethod
+    def close_client(self) -> None:
         raise NotImplementedError
 
     @abstractmethod

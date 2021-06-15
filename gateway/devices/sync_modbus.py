@@ -18,7 +18,7 @@ class SyncModbusDevice(BaseModbusDevice):
         super().__init__(device_obj, gateway)
         self._client: Union[ModbusSerialClient, ModbusTcpClient] = None
 
-    def create_client(self) -> None:
+    async def create_client(self) -> None:
         """Initializes synchronous modbus client."""
 
         self._LOG.debug('Creating pymodbus client', extra={'device_id': self.id})
@@ -34,7 +34,8 @@ class SyncModbusDevice(BaseModbusDevice):
                     self._LOG.debug('Serial port not using. Creating sync client',
                                     extra={'device_id': self.id,
                                            'serial_port': self.serial_port, })
-                    self._client = ModbusSerialClient(method='rtu', port=self.serial_port,
+                    self._client = ModbusSerialClient(method='rtu',
+                                                      port=self.serial_port,
                                                       baudrate=self._device_obj.baudrate,
                                                       bytesize=self._device_obj.bytesize,
                                                       parity=self._device_obj.parity,
@@ -46,9 +47,6 @@ class SyncModbusDevice(BaseModbusDevice):
                                     extra={'device_id': self.id,
                                            'serial_port': self.serial_port, })
                     self._client = self._serial_clients[self.serial_port]
-
-                self._LOG.debug('Current state of serial',
-                                extra={'serial_clients_dict': self._serial_clients, })
             else:
                 raise NotImplementedError('Other methods not support yet')
 
@@ -58,6 +56,12 @@ class SyncModbusDevice(BaseModbusDevice):
         else:
             self._connected = self._client.connect()
             self._LOG.debug('Client created', extra={'device_id': self.id})
+
+    def close_client(self) -> None:
+        self._client.close()
+        if self.protocol is Protocol.MODBUS_RTU:
+            self.__class__._serial_clients.pop(self.serial_port)
+            self.__class__._serial_port_locks.pop(self.serial_port)
 
     @property
     def is_client_connected(self) -> bool:
@@ -159,5 +163,5 @@ class SyncModbusDevice(BaseModbusDevice):
         def _sync_poll_objects(objs_: Collection[ModbusObj]) -> None:
             for obj in objs_:
                 self.sync_read(obj=obj)
-        await self._gateway.async_add_job(_sync_poll_objects, objs)
 
+        await self._gateway.async_add_job(_sync_poll_objects, objs)

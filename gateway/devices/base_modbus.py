@@ -1,11 +1,11 @@
-import asyncio
 from abc import abstractmethod
 from typing import Any, Callable, Union, Optional
 
 from pymodbus.bit_read_message import (ReadCoilsResponse, ReadDiscreteInputsResponse,
                                        ReadBitsResponseBase)
-from pymodbus.client.asynchronous.async_io import (AsyncioModbusSerialClient)
-from pymodbus.client.sync import ModbusSerialClient
+from pymodbus.client.asynchronous.async_io import AsyncioModbusTcpClient, \
+    AsyncioModbusSerialClient
+from pymodbus.client.sync import ModbusSerialClient, ModbusTcpClient
 from pymodbus.payload import BinaryPayloadDecoder, BinaryPayloadBuilder
 from pymodbus.register_read_message import (ReadHoldingRegistersResponse,
                                             ReadInputRegistersResponse,
@@ -26,35 +26,6 @@ VisioBASGateway = Any  # ...gateway_loop
 
 
 class BaseModbusDevice(BaseDevice):
-    # upd_period_factor = 0.9  # todo provide from config
-
-    # Keys is serial port names.
-    _serial_clients: dict[str: Union[ModbusSerialClient,
-                                     AsyncioModbusSerialClient]] = {}
-    _serial_port_locks: dict[str: asyncio.Lock] = {}
-
-    # _creation_lock = asyncio.Lock()
-
-    # _serial_port_devices: Optional[
-    #     dict[int, 'AsyncModbusDevice']] = {}  # key it is device id
-    # _tcp_devices: Optional[dict[int, 'AsyncModbusDevice']] = {}  # key it is serial port
-    #
-    # def __new__(cls, *args, **kwargs):
-    #     dev_obj: BACnetDeviceModel = kwargs.get('device_obj', None)
-    #     _LOG.debug('Call __new__()', extra={'device_object': dev_obj})
-    #
-    #     if dev_obj and dev_obj.property_list.protocol is Protocol.MODBUS_RTU:
-    #         serial_port = dev_obj.property_list.rtu.port
-    #         if cls._serial_port_devices.get(serial_port) is None:
-    #             cls._serial_port_devices[serial_port] = super().__new__(cls)
-    #         return cls._serial_port_devices[serial_port]
-    #     elif dev_obj and dev_obj.property_list.protocol in {Protocol.MODBUS_TCP,
-    #                                                         Protocol.MODBUS_RTUOVERTCP}:
-    #         if cls._tcp_devices.get(dev_obj.id, None) is None:
-    #             cls._tcp_devices[dev_obj.id] = super().__new__(cls)
-    #         return cls._tcp_devices[dev_obj.id]
-    #     else:
-    #         raise ValueError('Unhandled error!')
 
     def __init__(self, device_obj: BACnetDeviceObj, gateway: 'VisioBASGateway'):
         super().__init__(device_obj, gateway)
@@ -63,7 +34,10 @@ class BaseModbusDevice(BaseDevice):
         # self._LOG = get_file_logger(name=__name__ + str(self.id))
 
         # self._loop: asyncio.AbstractEventLoop = None
-        self._client = None
+        self._client: Union[
+            ModbusSerialClient, ModbusTcpClient,
+            AsyncioModbusTcpClient, AsyncioModbusSerialClient
+        ] = None
         # self.scheduler: aiojobs.Scheduler = None
 
         # self._lock = asyncio.Lock()
@@ -80,7 +54,6 @@ class BaseModbusDevice(BaseDevice):
     @property
     def serial_port(self) -> Optional[str]:
         """
-
         Returns:
             Serial port name if exists. Else None.
         """
