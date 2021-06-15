@@ -13,7 +13,7 @@ from ..models import (BACnetDeviceObj, BACnetObj, ModbusObj, ObjType, Protocol)
 from ..utils import get_file_logger
 
 # Aliases
-VisioBASGateway = Any  # ...gateway_loop
+VisioBASGateway = Any  # ...gateway_
 
 
 class BaseDevice(ABC):
@@ -33,8 +33,10 @@ class BaseDevice(ABC):
 
         self.scheduler: aiojobs.Scheduler = None
 
-        self._polling = True
-        self._objects: dict[int, set[Union[BACnetObj, ModbusObj]]] = {}  # todo hide type
+        # Key: period
+        self._objects: dict[int, set[Union[BACnetObj, ModbusObj]]] = {}
+        self._unreachable_objects: set[Union[BACnetObj, ModbusObj]] = set()
+        # todo: add check by period
 
         self._connected = False
 
@@ -92,10 +94,6 @@ class BaseDevice(ABC):
     @property
     def retries(self) -> int:
         return self._device_obj.retries
-
-    @property
-    def dev_obj(self) -> BACnetDeviceObj:
-        return self._device_obj
 
     @property
     def all_objects(self) -> set[Union[BACnetObj, ModbusObj]]:
@@ -156,6 +154,8 @@ class BaseDevice(ABC):
             await self._gateway.async_add_job(self.create_client)
             # self._gateway.async_add_job(self.start_periodic_polls)
             await self.scheduler.spawn(self.start_periodic_polls())
+            await self.scheduler.spawn(self._periodic_reset_unreachable())
+
         # todo: add close event wait
 
     async def stop(self) -> None:
@@ -164,6 +164,16 @@ class BaseDevice(ABC):
         """
         await self.scheduler.close()
         self._LOG.info('Device stopped', extra={'device_id': self.id})
+
+    async def _periodic_reset_unreachable(self) -> None:
+        await asyncio.sleep(self._gateway.unreachable_check_period)
+
+        for obj in self._unreachable_objects:
+            obj._unreachable_in_row = 0
+            self._objects[obj.property_list.send_interval].add(obj)
+        self._unreachable_objects = set()
+
+        await self.scheduler.spawn(self._periodic_reset_unreachable())
 
     async def periodic_poll(self, objs: set[Union[BACnetObj, ModbusObj]],
                             period: int) -> None:
@@ -174,13 +184,12 @@ class BaseDevice(ABC):
         await self._poll_objects(objs=objs)
         _t_delta = datetime.now() - _t0
         self._LOG.info('Objects polled',
-                       extra={'device_id': self.id, 'period': period,
-                              'seconds_took': _t_delta.seconds,
-                              'objects_polled': len(objs)})
+                       extra={'device_id': self.id, 'seconds_took': _t_delta.seconds,
+                              'objects_polled': len(objs), 'period': period, })
 
         if _t_delta.seconds > period:
             period *= 1.5
-            self._LOG.warning('Polling period is too short! Increasing to x1.5',
+            self._LOG.warning('Polling period is too short! Increased in x1.5',
                               extra={'device_id': self.id})
         await self.scheduler.spawn(self._process_polled(objs=objs))
         await asyncio.sleep(delay=period - _t_delta.seconds)
@@ -197,7 +206,13 @@ class BaseDevice(ABC):
     async def _process_polled(self, objs: set[Union[BACnetObj, ModbusObj]]):
         await self._gateway.verify_objects(objs=objs)
         await self._gateway.send_objects(objs=objs)
-        await self._gateway.async_add_job(self._clear_properties, objs)  # fixme hotfix
+        # await self._gateway.async_add_job(self._clear_properties, objs)  # fixme hotfix
+
+        for period, objs in self._objects.items():
+            for obj in objs:
+                if obj.unreachable_in_row >= self._gateway.unreachable_threshold:
+                    self._objects[period].remove(obj)
+                    self._unreachable_objects.add(obj)
 
     # async def _poll_iter(self, objs: Collection[Union[BACnetObj, ModbusObj]],
     #                      period: int) -> None:
@@ -226,9 +241,9 @@ class BaseDevice(ABC):
     #     await self._gateway.send_objects(objs=objs)
     #     await self._gateway.async_add_job(self._clear_properties, objs)  # fixme hotfix
 
-    @staticmethod
-    def _clear_properties(objs: Collection[Union[BACnetObj, ModbusObj]]) -> None:
-        [obj.clear_properties() for obj in objs]  # fixme hotfix
+    # @staticmethod
+    # def _clear_properties(objs: Collection[Union[BACnetObj, ModbusObj]]) -> None:
+    #     [obj.clear_properties() for obj in objs]  # fixme hotfix
 
     @staticmethod
     def _sort_objects_by_period(objs: Collection[Union[BACnetObj, ModbusObj]]
