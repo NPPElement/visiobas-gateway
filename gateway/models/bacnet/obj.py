@@ -73,7 +73,7 @@ class BACnetObj(BaseBACnetObjModel):
     _updated_at: Optional[datetime] = PrivateAttr()
 
     # exception: Optional[Exception] = None
-    _unreachable_in_row: int = 0
+    _unreachable_in_row: int = PrivateAttr(default=0)
 
     class Config:
         arbitrary_types_allowed = True
