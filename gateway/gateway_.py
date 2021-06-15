@@ -106,7 +106,8 @@ class VisioBASGateway:
 
     async def start_api(self) -> None:
         """Starts GatewayAPI."""
-        async with entrypoint(self.api) as ep:
+        # todo: drop `aiomics` dependence
+        async with entrypoint(self.api, log_config=False) as ep:
             await ep.closing()
 
     async def periodic_update(self) -> None:

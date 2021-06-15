@@ -17,13 +17,7 @@ class JsonRPCView(handler.JSONRPCView, ReadWriteMixin, BaseView, CorsViewMixin):
             allow_credentials=False,
             expose_headers="*",
             allow_headers="*",
-            allow_methods='*'
-        ),
-        'http://127.0.0.1:9090': ResourceOptions(
-            allow_credentials=True,
-            expose_headers="*",
-            allow_headers="*",
-            allow_methods='*'
+            allow_methods=['POST']
         )
     }
 
