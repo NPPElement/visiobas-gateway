@@ -4,10 +4,7 @@ version: "3.7"
 #  backend:
 #    driver: bridge
 
-networks:
-  default:
-    external: true
-    name: services_backend
+
 
 services:
   vb_gateway:
@@ -56,6 +53,12 @@ services:
     devices: # To detect Modbus RTU devices
       - "/dev/ttyS0:/dev/ttyS0"
       - "/dev/ttyUSB0:/dev/ttyUSB0"
+
+
+networks:
+  default:
+    external: true
+    name: services_backend
 
 
 # [1]: https://www.losant.com/blog/how-to-access-serial-devices-in-docker
