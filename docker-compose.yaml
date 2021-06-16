@@ -50,7 +50,7 @@ services:
     ports:
       - 502:502
       - 7070:7070
-      - 8080:8080
+      #- 8080:8080
       - 47808:47808
 
     devices: # To detect Modbus RTU devices
