@@ -112,7 +112,8 @@ class SyncModbusDevice(BaseModbusDevice):
             self._LOG.warning('Read error',
                               extra={'device_id': self.id, 'object_id': obj.id,
                                      'object_type': obj.type, 'register': obj.address,
-                                     'quantity': obj.quantity, 'exc': e, })
+                                     'quantity': obj.quantity, 'exc': e,
+                                     'unreachable_in_row': obj.unreachable_in_row, })
         # except Exception as e:
         #     obj.exception = e
         #     self._LOG.exception(f'Unexpected read error: {e}',

@@ -180,7 +180,8 @@ class BACnetDevice(BaseDevice):
             obj.set_exc(exc=e)
             self._LOG.warning('ReadProperty error',
                               extra={'device_id': self.id, 'object_id': obj.id,
-                                     'object_type': obj.type, 'exc': e, })
+                                     'object_type': obj.type, 'exc': e,
+                                     'unreachable_in_row': obj.unreachable_in_row, })
         # except Exception as e:
         #     obj.exception = e
         #     self._LOG.exception(f'Unexpected read error: {e}',
