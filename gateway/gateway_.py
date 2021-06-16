@@ -51,7 +51,7 @@ class VisioBASGateway:
         return self.settings.unreachable_threshold
 
     @property
-    def unreachable_check_period(self) -> int:
+    def unreachable_reset_period(self) -> int:
         return self.settings.unreachable_reset_period
 
     @property
@@ -300,7 +300,8 @@ class VisioBASGateway:
 
     async def send_objects(self, objs: Collection[BACnetObj]) -> None:
         """Sends objects to server."""
-        assert len(objs)
+        if not len(objs):
+            return None
 
         try:
             dev_id = list(objs)[0].device_id
