@@ -213,54 +213,10 @@ class BaseDevice(ABC):
         # await self._gateway.async_add_job(self._clear_properties, objs)  # fixme hotfix
 
         for period, objs in self._objects.items():
-            for obj in objs:
+            for obj in objs.copy():
                 if obj.unreachable_in_row >= self._gateway.unreachable_threshold:
                     self._LOG.debug('Marked as unreachable',
                                     extra={'device_id': obj.device_id,
                                            'object_id': obj.id, 'object_type': obj.type, })
                     self._objects[period].remove(obj)
                     self._unreachable_objects.add(obj)
-
-    # async def _poll_iter(self, objs: Collection[Union[BACnetObj, ModbusObj]],
-    #                      period: int) -> None:
-    #     """Polls objects and set new periodic job in period.
-    #
-    #     Args:
-    #         objs: Objects to poll
-    #         period: Time to start new poll job.
-    #     """
-    #     self._LOG.debug('Polling started',
-    #                     extra={'device_id': self.id, 'period': period,
-    #                            'objects_polled': len(objs)})
-    #     _t0 = datetime.now()
-    #     await self._poll_objects(objs=objs)
-    #     _t_delta = datetime.now() - _t0
-    #     if _t_delta.seconds > period:
-    #         # TODO: improve tactic
-    #         self._LOG.warning('Polling period is too short! ',
-    #                           extra={'device_id': self.id, })
-    #
-    #     self._LOG.info('Objects polled',
-    #                    extra={'device_id': self.id, 'period': period,
-    #                           'seconds_took': _t_delta.seconds,
-    #                           'objects_polled': len(objs)})
-    #     await self._gateway.verify_objects(objs=objs)
-    #     await self._gateway.send_objects(objs=objs)
-    #     await self._gateway.async_add_job(self._clear_properties, objs)  # fixme hotfix
-
-    # @staticmethod
-    # def _clear_properties(objs: Collection[Union[BACnetObj, ModbusObj]]) -> None:
-    #     [obj.clear_properties() for obj in objs]  # fixme hotfix
-
-    # @staticmethod
-    # def _sort_objects_by_period(objs: Collection[Union[BACnetObj, ModbusObj]]
-    #                             ) -> dict[int, set[Union[BACnetObj, ModbusObj]]]:
-    #     """Creates dict from objects, where key is period, value is collection
-    #     of objects with that period.
-    #
-    #     Returns:
-    #         dict, where key is period, value is set of objects with that period.
-    #     """
-    #     dct = {}
-    #
-    #     return dct
