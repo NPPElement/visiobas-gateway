@@ -42,4 +42,4 @@ class JsonRPCView(handler.JSONRPCView, ReadWriteMixin, BaseView, CorsViewMixin):
             value=value, prop=ObjProperty.presentValue, priority=priority,
             obj=obj, device=dev)
 
-        return is_consistent
+        return {'success': is_consistent}
