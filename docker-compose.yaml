@@ -5,7 +5,7 @@ version: "3.3"
 #    driver: bridge
 
 networks:
-  gateway:
+  default:
     external: true
     name: services_backend
 
