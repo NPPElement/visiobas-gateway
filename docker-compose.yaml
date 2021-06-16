@@ -4,6 +4,11 @@ version: "3.3"
 #  backend:
 #    driver: bridge
 
+networks:
+  gateway:
+    external: true
+    name: services_backend
+
 services:
   vb_gateway:
     container_name: gateway
@@ -39,8 +44,8 @@ services:
       - /dev:/dev # [1]
       # - /home/user/visiobas-gateway/gateway:/usr/share/python3/gtw/lib/python3.9/site-packages/gateway
     # command: python -OO __main__.py
-#    networks:
-#      - backend
+    networks:
+      - gateway
     network_mode: host
     ports:
       - 502:502
