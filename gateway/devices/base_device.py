@@ -132,7 +132,8 @@ class BaseDevice(ABC):
 
     def load_objects(self, objs: Collection[Union[BACnetObj, ModbusObj]]) -> None:
         """Groups objects by poll period and loads them into device for polling."""
-        assert len(objs)
+        if not len(objs):
+            return None
 
         for obj in objs:
             poll_period = obj.property_list.send_interval
