@@ -215,6 +215,9 @@ class BaseDevice(ABC):
         for period, objs in self._objects.items():
             for obj in objs:
                 if obj.unreachable_in_row >= self._gateway.unreachable_threshold:
+                    self._LOG.debug('Marked as unreachable',
+                                    extra={'device_id': obj.device_id,
+                                           'object_id': obj.id, 'object_type': obj.type, })
                     self._objects[period].remove(obj)
                     self._unreachable_objects.add(obj)
 
