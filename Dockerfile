@@ -38,4 +38,4 @@ RUN ln -snf /usr/share/python3/gtw/bin/gateway  /usr/local/bin/
 # Set the default command to run when the container starts
 CMD ["gateway"]
 
-EXPOSE 502 7070 8080 47808
+EXPOSE 7070
