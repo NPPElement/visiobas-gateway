@@ -134,6 +134,8 @@ class VisioBASGateway:
             target: target to call.
             args: parameters for target to call.
         """
+        # todo: get loop
+
         if target is None:
             raise ValueError('None not allowed')
         self.loop.call_soon_threadsafe(self.async_add_job, target, *args)
@@ -209,7 +211,7 @@ class VisioBASGateway:
             - Log out to HTTP
         """
         # todo await self.mqtt_client.unsubscribe(self.mqtt_client.topics)
-        stop_device_tasks = [dev.stop for dev in self.devices.values()]
+        stop_device_tasks = [dev._stop for dev in self.devices.values()]
         await asyncio.gather(*stop_device_tasks)
         self._devices = {}
 
@@ -301,6 +303,7 @@ class VisioBASGateway:
     async def send_objects(self, objs: Collection[BACnetObj]) -> None:
         """Sends objects to server."""
         if not len(objs):
+            _LOG.debug('Nothing to send')
             return None
 
         try:
@@ -327,11 +330,6 @@ class VisioBASGateway:
                 Protocol.MODBUS_TCP, Protocol.MODBUS_RTUOVERTCP, Protocol.MODBUS_RTU
             }:
                 cls = SyncModbusDevice if self.settings.modbus_sync else AsyncModbusDevice
-
-                # if protocol is Protocol.MODBUS_RTU:
-                #     async with self._serial_creation_lock:  # fixme
-                #         device = await cls.create(device_obj=dev_obj, gateway=self)
-                # else:
                 device = await cls.create(device_obj=dev_obj, gateway=self)
             elif protocol == Protocol.BACNET:
                 device = await BACnetDevice.create(device_obj=dev_obj, gateway=self)

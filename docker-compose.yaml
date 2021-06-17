@@ -1,8 +1,4 @@
-version: "3.3"
-
-#networks:
-#  backend:
-#    driver: bridge
+version: "3.7"
 
 services:
   vb_gateway:
@@ -37,20 +33,19 @@ services:
       #- /opt/visiobas-gateway/logs:/usr/share/python3/gtw/gateway/logs
       - /opt/visiobas-gateway/gateway:/usr/share/python3/gtw/lib/python3.9/site-packages/gateway
       - /dev:/dev # [1]
-      # - /home/user/visiobas-gateway/gateway:/usr/share/python3/gtw/lib/python3.9/site-packages/gateway
     # command: python -OO __main__.py
-#    networks:
-#      - backend
     network_mode: host
     ports:
-      - 502:502
       - 7070:7070
-      - 8080:8080
-      - 47808:47808
 
     devices: # To detect Modbus RTU devices
       - "/dev/ttyS0:/dev/ttyS0"
       - "/dev/ttyUSB0:/dev/ttyUSB0"
+
+networks:
+  default:
+    external: true
+    name: services_backend
 
 
 # [1]: https://www.losant.com/blog/how-to-access-serial-devices-in-docker
