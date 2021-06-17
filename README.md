@@ -6,9 +6,9 @@ the [VisioBAS system](https://github.com/NPPElement/visiobas-broker).
 ### Contents
 0. [API](#API)
 1. [Installation](#Installation)
-    - [Install Docker](#--Install-Docker)
-    - [Install Docker Compose](#--Install-Docker-Compose)
-    - [Install VisioBAS gateway](#--Install-VisioBAS-Gateway)
+    - [Install Docker](#a-Install-Docker)
+    - [Install Docker Compose](#b-Install-Docker-Compose)
+    - [Install VisioBAS gateway](#c-Install-VisioBAS-Gateway)
 2. [Setting](#Setting)
     - [Setting COM ports](#Setting-Serial-ports)
     - [Setting configuration](#Setting-configuration)
@@ -18,11 +18,9 @@ the [VisioBAS system](https://github.com/NPPElement/visiobas-broker).
 
 ## API
 
-### `JSON-RPC 2.0` API Available on `http://127.0.0.1:7070/json-rpc`.
+### `JSON-RPC 2.0` API Available on `http://host:port/json-rpc`.
 
-### `REST API` Not support now.
-
-~~Swagger docs available on http://127.0.0.1:7070/~~
+~~Swagger docs available on http://host:port/~~ TODO: update
 
 ```shell
 # curl -X GET http://127.0.0.1:7070/api/v1/property/35/2/1/85
@@ -35,11 +33,11 @@ curl --header "Content-Type: application/json" \
 
 ## Installation
 
-### 1. [Install Docker](https://docs.docker.com/engine/install/)
+### a. [Install Docker](https://docs.docker.com/engine/install/)
 
-### 2. [Install Docker Compose](https://docs.docker.com/compose/install/)
+### b. [Install Docker Compose](https://docs.docker.com/compose/install/)
 
-### 3. Install VisioBAS Gateway
+### c. Install VisioBAS Gateway
 
 ```shell
 cd /opt
