@@ -6,7 +6,7 @@ from multiprocessing import SimpleQueue
 from pathlib import Path
 from time import sleep
 
-from gateway.clients import VisioBASMQTTClient
+from gateway.clients import VisioMQTTClient
 
 _base_path = Path(__file__).resolve().parent
 
@@ -15,12 +15,12 @@ _log = getLogger(__name__)
 
 class VisioPanel:
     def __init__(self):
-        self.mqtt_client = VisioBASMQTTClient.from_yaml(
+        self.mqtt_client = VisioMQTTClient.from_yaml(
             gateway=self,  # Using panel as gateway!
             getting_queue=SimpleQueue(),
             yaml_path=_base_path / 'mqtt.yaml'
         )
-        self.mqtt_client.start()
+        self.mqtt_client.run_app()
 
         self._stopped = False
 

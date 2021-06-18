@@ -6,13 +6,14 @@ import aiojobs
 from aiomisc import entrypoint
 from pydantic import ValidationError
 
-from gateway.api import VisioGtwAPI
-from gateway.clients import VisioHTTPClient, VisioBASMQTTClient
+from gateway.api import VisioGtwApi
+from gateway.clients import VisioHTTPClient, VisioMQTTClient
 from gateway.devices import AsyncModbusDevice, SyncModbusDevice, BACnetDevice
 from gateway.models import (ObjType, BACnetDeviceObj, ModbusObj, Protocol,
-                            BACnetObj, HTTPSettings, GatewaySettings)
+                            BACnetObj, HTTPSettings, GatewaySettings, ApiSettings)
 from gateway.utils import get_file_logger
 from gateway.verifier import BACnetVerifier
+
 
 _LOG = get_file_logger(__name__)
 
@@ -21,9 +22,7 @@ class VisioBASGateway:
     """VisioBAS IoT Gateway."""
 
     def __init__(self, settings: GatewaySettings):
-        # self.loop = asyncio.new_event_loop()
         self.loop: asyncio.AbstractEventLoop = asyncio.get_running_loop()
-        # self._serial_creation_lock = asyncio.Lock()  # fixme
 
         # self._pending_tasks: list = []
         self.settings = settings
@@ -34,11 +33,13 @@ class VisioBASGateway:
         self._scheduler: aiojobs.Scheduler = None
 
         self.http_client: VisioHTTPClient = None
-        self.mqtt_client: VisioBASMQTTClient = None
-        self.api: VisioGtwAPI = None
+        self.mqtt_client: VisioMQTTClient = None
+        self.api: VisioGtwApi = None
         self.verifier = BACnetVerifier(override_threshold=settings.override_threshold)
 
         self._devices: dict[int, Union[AsyncModbusDevice]] = {}
+
+        # TODO: updating event to return msg in case controlling at update time.
 
     @classmethod
     async def create(cls, settings: GatewaySettings) -> 'VisioBASGateway':
@@ -59,8 +60,7 @@ class VisioBASGateway:
         return self._devices
 
     def get_device(self, dev_id: int) -> Optional[Union[AsyncModbusDevice]]:
-        """Gets device instance.
-
+        """
         Args:
             dev_id: Device identifier.
 
@@ -68,10 +68,6 @@ class VisioBASGateway:
             Device instance.
         """
         return self._devices.get(dev_id)
-
-    @property
-    def api_priority(self) -> int:
-        return self.settings.api_priority
 
     # def run(self) -> None:
     #     # if need, set event loop policy here
@@ -95,20 +91,19 @@ class VisioBASGateway:
     async def async_setup(self) -> None:
         """Set up Gateway and spawn update task."""
         self.http_client = VisioHTTPClient(gateway=self, settings=HTTPSettings())
-        # await self.http_client.setup()
         # self.mqtt_client = VisioBASMQTTClient.from_yaml(
         #     gateway=self, yaml_path=self.MQTT_CFG_PATH)
-        self.api = VisioGtwAPI(gateway=self, host=self.settings.api_url.host,
-                               port=int(self.settings.api_url.port))
-        await self._scheduler.spawn(self.start_api())
+        self.api = VisioGtwApi.create(gateway=self, settings=ApiSettings())
+
+        # TODO: run MQTT here
         await self._scheduler.spawn(coro=self.periodic_update())
         # self._upd_task = self.loop.create_task(self.periodic_update())
 
-    async def start_api(self) -> None:
-        """Starts GatewayAPI."""
-        # todo: drop `aiomics` dependence
-        async with entrypoint(self.api, log_config=False) as ep:
-            await ep.closing()
+    # async def start_api(self) -> None:
+    #     """Starts GatewayAPI."""
+    #     # todo: drop `aiomics` dependence
+    #     async with entrypoint(self.api, log_config=False) as ep:
+    #         await ep.closing()
 
     async def periodic_update(self) -> None:
         """Spawn periodic update task."""
@@ -161,44 +156,46 @@ class VisioBASGateway:
     async def _perform_start_tasks(self) -> None:
         """Performs starting tasks.
 
-        Setup gateway steps:
-            - Log in to HTTP
-            - Load devices
-            - Start devices poll
-            - Connect to MQTT
+        # Setup gateway steps: # todo update
+        #     - Log in to HTTP
+        #     - Load devices
+        #     - Start devices poll
+        #     - Connect to MQTT
         """
+        await self._scheduler.spawn(self.api.start())
+        # TODO: run API in separate thread
+
         await self.http_client.wait_login()
 
-        # Load devices
+        # Load devices.
         load_device_tasks = [self.load_device(dev_id=dev_id)
                              for dev_id in self.poll_device_ids]
         await asyncio.gather(*load_device_tasks)
 
-        # Run polling tasks
-        # start_poll_tasks = [self.start_device_poll(dev_id=dev_id)
-        #                     for dev_id in self._devices.keys()]
-        # await asyncio.gather(*start_poll_tasks)
+        # Run polling tasks.
+        start_poll_tasks = [self.start_device_poll(dev_id=dev_id)
+                            for dev_id in self._devices.keys()]
+        await asyncio.gather(*start_poll_tasks)
 
-        # Create devices by one to prevent creations of several serial clients
-        for dev_id in self._devices.keys():
-            await self.start_device_poll(dev_id=dev_id)
+        # # Create devices by one to prevent creations of several serial clients
+        # for dev_id in self._devices.keys():
+        #     await self.start_device_poll(dev_id=dev_id)
 
         # # Set gateway address of polling devices
         # gtw_addr_tasks = [self.http_client.post_gateway_address(dev_obj=dev.dev_obj)
         #                   for dev in self._devices.values()]
         # await asyncio.gather(*gtw_addr_tasks)
 
-        # todo await self.mqtt_client.subscribe(self.mqtt_client.topics)
         _LOG.info('Start tasks performed',
                   extra={'gateway_settings': self.settings, })
 
     async def _perform_stop_tasks(self) -> None:
         """Performs stopping tasks.
 
-        Stop gateway steps:
-            - Unsubscribe to MQTT
-            - Stop devices poll
-            - Log out to HTTP
+        # Stop gateway steps: # todo: update
+        #     - Unsubscribe to MQTT
+        #     - Stop devices poll
+        #     - Log out to HTTP
         """
         # todo await self.mqtt_client.unsubscribe(self.mqtt_client.topics)
         stop_device_tasks = [dev.stop for dev in self.devices.values()]
@@ -309,7 +306,7 @@ class VisioBASGateway:
         """Creates device for provided protocol.
 
         Returns:
-            Created device.
+            Created device instance.
         """
         try:
             protocol = dev_obj.property_list.protocol
@@ -318,15 +315,10 @@ class VisioBASGateway:
                 Protocol.MODBUS_TCP, Protocol.MODBUS_RTUOVERTCP, Protocol.MODBUS_RTU
             }:
                 cls = SyncModbusDevice if self.settings.modbus_sync else AsyncModbusDevice
-
-                # if protocol is Protocol.MODBUS_RTU:
-                #     async with self._serial_creation_lock:  # fixme
-                #         device = await cls.create(device_obj=dev_obj, gateway=self)
-                # else:
                 device = await cls.create(device_obj=dev_obj, gateway=self)
             elif protocol == Protocol.BACNET:
                 device = await BACnetDevice.create(device_obj=dev_obj, gateway=self)
-
+            # todo: camera
             else:
                 raise NotImplementedError('Device factory not implemented')
 
@@ -345,7 +337,7 @@ class VisioBASGateway:
         """Creates object for provided protocol data.
 
         Returns:
-            If object created - returns created object.
+            If object created - returns created object instance.
             If object incorrect - returns None.
         """
         try:
@@ -356,11 +348,10 @@ class VisioBASGateway:
             elif protocol == Protocol.BACNET:
                 obj = BACnetObj(**obj_data)
             else:
-                # unknown protocols logging by `pydantic` on enter
                 raise NotImplementedError('Not implemented protocol factory.')
             return obj
         except ValidationError as e:
-            _LOG.warning('Failed polling object creation',
+            _LOG.warning('Failed polling object creation. Please check objects settings',
                          extra={'device_id': dev_obj.id,
                                 'object_data': obj_data, 'exc': e, })
         except Exception as e:

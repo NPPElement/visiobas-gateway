@@ -1,6 +1,6 @@
 from .http_ import VisioHTTPClient
-from .mqtt import VisioBASMQTTClient
+from .mqtt import VisioMQTTClient
 
 __all__ = ('VisioHTTPClient',
-           'VisioBASMQTTClient'
+           'VisioMQTTClient'
            )
