@@ -20,7 +20,7 @@ class VisioPanel:
             getting_queue=SimpleQueue(),
             yaml_path=_base_path / 'mqtt.yaml'
         )
-        self.mqtt_client.start()
+        self.mqtt_client.run_app()
 
         self._stopped = False
 

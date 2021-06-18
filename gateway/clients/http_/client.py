@@ -27,7 +27,7 @@ class VisioHTTPClient:
         self.gateway = gateway
         self._settings = settings
         self._timeout = aiohttp.ClientTimeout(total=settings.timeout)
-        self._session = aiohttp.ClientSession(timeout=settings.timeout)
+        self._session = aiohttp.ClientSession(timeout=self._timeout)
 
         # self._upd_task = None
         self._authorized = False
@@ -37,11 +37,7 @@ class VisioHTTPClient:
         return self.__class__.__name__
 
     @property
-    def timeout(self) -> aiohttp.ClientTimeout:
-        return self._timeout
-
-    @property
-    def authorized(self) -> bool:
+    def is_authorized(self) -> bool:
         return self._authorized
 
     @property
@@ -59,16 +55,6 @@ class VisioHTTPClient:
     async def setup(self) -> None:
         """Wait for authorization then spawn a periodic update task."""
         await self.wait_login(retry=self.retry_delay)
-
-        # self._upd_task = self.gateway.loop.create_task(self.periodic_update())
-
-    # async def periodic_update(self) -> None:
-    #     """Perform periodically reauthorize."""
-    #     # await asyncio.sleep(delay=self.upd_delay)
-    #     # todo kill/wait pending tasks
-    #     await self.logout(nodes=self.all_nodes)
-    #     await self.authorize(retry=self.retry_delay)
-    #     # self._upd_task = self.gateway.loop.create_task(self.periodic_update())
 
     # async def run_http_post_loop(self, queue: asyncio.Queue,
     #                              post_nodes: Iterable[VisioHTTPNode],
@@ -99,34 +85,6 @@ class VisioHTTPClient:
     #                        )
     #     else:  # received stop signal
     #         _log.info(f'{self} stopped.')
-
-    # async def run_ws_send_loop(self, queue: SimpleQueue,
-    #                            post_nodes: Iterable[VisioHTTPNode],
-    #                            session) -> None:
-    #     """Listen queue from verifier.
-    #     When receive data from verifier - send it to nodes via websocket.
-    #
-    #     Designed as an endless loop. Can be stopped from gateway thread.
-    #     """
-    #     _log.info('Sending via websocket loop started')
-    #     # Loop that receive data from verifier then send it to nodes via websocket.
-    #     while not self._stopped:
-    #         try:
-    #             raise NotImplementedError  # todo
-    #
-    #         except Exception as e:
-    #             _log.error(f'Receive or send device error: {e}',
-    #                        exc_info=True
-    #                        )
-    #     else:  # received stop signal
-    #         _log.info(f'{self} stopped.')
-
-    # def stop(self) -> None:
-    #     self._stopped = True
-    #     _log.info(f'Stopping {self} ...')
-    #     asyncio.run(
-    #         self.logout(nodes=[self.get_node, *self.post_nodes])
-    #     )
 
     # async def post_gateway_address(self, dev_obj: BACnetDevice) -> None:
     #     """Post gateway address to polling device.
@@ -324,7 +282,6 @@ class VisioHTTPClient:
 
     async def post_property(self, value: Any,
                             property_: ObjProperty, obj: BaseBACnetObjModel,
-                            # fixme import switch to ''
                             servers: Collection[HTTPServerConfig],
                             ) -> bool:
         try:
@@ -356,7 +313,6 @@ class VisioHTTPClient:
                               'value': value, 'servers': servers, })
             return True
 
-
     async def _rq(self, method: str, url: str, **kwargs) -> Union[list, dict]:
         """Perform HTTP request and check response.
         :return: extracted data
@@ -364,14 +320,14 @@ class VisioHTTPClient:
         # todo: need re-raise?
         _LOG.debug('Perform request',
                    extra={'method': method, 'url': url, 'data': kwargs.get('data')})
-        async with self._session.request(method=method, url=url, timeout=self.timeout,
+        async with self._session.request(method=method, url=url, timeout=self._timeout,
                                          **kwargs) as resp:
             data = await self._extract_response_data(response=resp)
             return data
 
     @staticmethod
     async def _extract_response_data(response: aiohttp.ClientResponse) -> list or dict:
-        """ Checks the correctness of the response.
+        """Checks the correctness of the response.
         :param response: server's response
         :return: response['data'] field after checks
         """
@@ -421,45 +377,3 @@ class VisioHTTPClient:
     #         # todo: What should we doing with rejected objects?
     #         return rejected_objects_id
 
-    # async def run_modbus_simulation_loop(self):
-    #     """Loop for modbus simulation."""
-    #     # fixme Isn't loop.
-    #     _log.critical(f'Starting {self} in modbus simulation mode.')
-    #     try:
-    #         from gateway.connector.modbus import ModbusConnector
-    #         # Does not start normally. Therefore parameters can be skipped.
-    #
-    #         # The queue is not for the verifier!
-    #         # Used to transfer data from http to modbus server.
-    #         # No queue for verifier.
-    #         modbus_connector = ModbusConnector(gateway='',
-    #                                            getting_queue=self._getting_queue,
-    #                                            verifier_queue=None,
-    #                                            config={}
-    #                                            )
-    #         async with aiohttp.ClientSession(timeout=self._timeout) as session:
-    #             while not self._is_authorized:
-    #                 self._is_authorized = await self.login(get_node=self.get_node,
-    #                                                        post_nodes=self.post_nodes,
-    #                                                        session=session
-    #                                                        )
-    #
-    #             # The queue from the connector is read by the modbus simulation server.
-    #             is_updated = await self.upd_connector(node=self.get_node,
-    #                                                   connector=modbus_connector,
-    #                                                   session=session
-    #                                                   )
-    #             _log.critical(f'Modbus device sent to modbus server: {is_updated}')
-    #
-    #             # fixme: expected only one device in address_cache
-    #             device_address = list(modbus_connector.address_cache.values()).pop()
-    #             self._getting_queue.put(device_address)
-    #
-    #             self._stopped = True
-    #             _log.info(f'Stopping {self} ...')
-    #             await self.logout(nodes=[self.get_node, *self.post_nodes])
-    #
-    #     except Exception as e:
-    #         _log.warning(f'Test modbus loop error: {e}',
-    #                      exc_info=True
-    #                      )
