@@ -7,7 +7,7 @@ from aiomisc import entrypoint
 from pydantic import ValidationError
 
 from gateway.api import VisioGtwApi
-from gateway.clients import VisioHTTPClient, VisioBASMQTTClient
+from gateway.clients import VisioHTTPClient, VisioMQTTClient
 from gateway.devices import AsyncModbusDevice, SyncModbusDevice, BACnetDevice
 from gateway.models import (ObjType, BACnetDeviceObj, ModbusObj, Protocol,
                             BACnetObj, HTTPSettings, GatewaySettings, ApiSettings)
@@ -33,7 +33,7 @@ class VisioBASGateway:
         self._scheduler: aiojobs.Scheduler = None
 
         self.http_client: VisioHTTPClient = None
-        self.mqtt_client: VisioBASMQTTClient = None
+        self.mqtt_client: VisioMQTTClient = None
         self.api: VisioGtwApi = None
         self.verifier = BACnetVerifier(override_threshold=settings.override_threshold)
 
