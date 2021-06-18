@@ -51,8 +51,8 @@ cd visiobas-gateway
 
 Configuration can be changed in files:
   - `docker-compose.yaml`
-  - `gateway/config/gateway.env` [template](/gateway/config/templates/gateway.env)
-  - `gateway/config/http.env` [template](/gateway/config/templates/http.env)
+  - `gateway/config/gateway.env` [template](/config/templates/gateway.env)
+  - `gateway/config/http.env` [template](/config/templates/http.env)
   - TODO: mqtt
 
 ### Logging level
