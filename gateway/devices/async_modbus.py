@@ -38,7 +38,7 @@ class AsyncModbusDevice(BaseModbusDevice):
             # ConnectionError: if client is not initialized.
 
         Async pymodbus not support `timeout` param. Default: 2 sec
-        See: https://github.com/riptideio/pymodbus/issues/349
+        See: <https://github.com/riptideio/pymodbus/issues/349>
         """
         self._LOG.debug('Creating pymodbus client', extra={'device_id': self.id})
         try:
@@ -107,7 +107,6 @@ class AsyncModbusDevice(BaseModbusDevice):
 
     async def _poll_objects(self, objs: Collection[ModbusObj]) -> None:
         read_tasks = [self.read(obj=obj) for obj in objs]
-        # await self.scheduler.spawn(asyncio.gather(*read_tasks))
         await asyncio.gather(*read_tasks)
 
     @property
@@ -131,6 +130,7 @@ class AsyncModbusDevice(BaseModbusDevice):
 
         Updates object and return value.
         """
+        self._polling.wait()
         try:
             if obj.func_read is ModbusReadFunc.READ_FILE:
                 raise ModbusException('func-not-support')  # todo: implement 0x14 func
@@ -175,6 +175,7 @@ class AsyncModbusDevice(BaseModbusDevice):
             value: Value to write
             obj: Object instance.
         """
+        self._polling.clear()
         try:
             if obj.func_write is None:
                 raise ModbusException('Object cannot be overwritten')
@@ -191,6 +192,7 @@ class AsyncModbusDevice(BaseModbusDevice):
 
             # Using lock because pymodbus doesn't handle async requests internally.
             # Maybe this will change in pymodbus v3.0.0
+
             async with self.lock:
                 rq = await self.write_funcs[obj.func_write](obj.address,
                                                             payload,  # skip_encode=True,
@@ -198,7 +200,7 @@ class AsyncModbusDevice(BaseModbusDevice):
             if rq.isError():
                 raise ModbusIOException('0x80')  # todo: resp.string
 
-            self._LOG.debug(f'Successfully write',
+            self._LOG.debug('Successfully write',
                             extra={'device_id': self.id, 'object_id': obj.id,
                                    'object_type': obj.type, 'address': obj.address,
                                    'value': value, })
@@ -215,6 +217,8 @@ class AsyncModbusDevice(BaseModbusDevice):
                                 extra={'device_id': self.id, 'object_id': obj.id,
                                        'object_type': obj.type, 'register': obj.address,
                                        'quantity': obj.quantity, 'exc': e, })
+        finally:
+            self._polling.set()
 
     async def decode(self, resp: Union[ReadCoilsResponse,
                                        ReadDiscreteInputsResponse,

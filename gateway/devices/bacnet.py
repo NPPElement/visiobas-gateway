@@ -111,7 +111,7 @@ class BACnetDevice(BaseDevice):
             self.write_property, value, obj, prop, priority)
 
     def write_property(self, value: Union[int, float], obj: BACnetObj,
-                       prop: ObjProperty, priority: Optional[int] = None) -> bool:
+                       prop: ObjProperty, priority: int) -> bool:
         """Writes value to property value in object.
 
         Args:
@@ -123,37 +123,34 @@ class BACnetDevice(BaseDevice):
         Returns:
             Write is successful.
         """
-        priority = priority or self._gateway.api_priority
+        # priority = priority or self._gateway.api.priority
+        self._polling.clear()
         try:
             args = '{0} {1} {2} {3} {4} - {5}'.format(self.address_port,
-                                                      obj.type.name,
-                                                      obj.id,
-                                                      prop.name,
-                                                      value,
-                                                      priority
-                                                      )
+                                                      obj.type.name, obj.id,
+                                                      prop.name, value, priority)
             is_successful = self.__class__._client.write(args=args)
-            self._LOG.debug('Write',
-                            extra={'device_id': self.id, 'object_id': obj.id,
-                                   'object_type': obj.type, 'value': value,
-                                   'success': is_successful, })
+            self._LOG.debug('Write', extra={'device_id': self.id, 'object_id': obj.id,
+                                            'object_type': obj.type, 'value': value,
+                                            'success': is_successful, })
             return is_successful
         except (ValueError, Exception) as e:
             self._LOG.exception('Unhandled WriteProperty error',
                                 extra={'device_id': self.id, 'object_id': obj.id,
                                        'object_type': obj.type, 'exc': e, 'value': value})
+        finally:
+            self._polling.set()
 
     async def async_read_property(self, obj: BACnetObj,
                                   prop: ObjProperty) -> Any:
         return await self._gateway.async_add_job(self.read_property, obj, prop)
 
     def read_property(self, obj: BACnetObj, prop: ObjProperty) -> Any:
+
+        self._polling.wait()
         try:
             request = ' '.join([
-                self.address_port,
-                obj.type.name,
-                str(obj.id),
-                prop.name
+                self.address_port, obj.type.name, str(obj.id), prop.name
             ])
             response = self.__class__._client.read(request)
             self._LOG.debug('Read',
@@ -167,10 +164,9 @@ class BACnetDevice(BaseDevice):
                 obj.reliability = response
             elif prop is ObjProperty.priorityArray:
                 obj.pa = self._pa_to_tuple(pa=response)
-                self._LOG.debug('priority array extracted', extra={'priority_array': obj.pa,
-                                                                   'object_id': obj.id,
-                                                                   'object_type': obj.type,
-                                                                   'device_id': self.id, })
+                self._LOG.debug('priority array extracted',
+                                extra={'priority_array': obj.pa, 'object_id': obj.id,
+                                       'object_type': obj.type, 'device_id': self.id, })
             else:
                 NotImplementedError('Other properties not support now.')
 

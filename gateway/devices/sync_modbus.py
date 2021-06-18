@@ -92,6 +92,7 @@ class SyncModbusDevice(BaseModbusDevice):
 
         Updates object and return value.
         """
+        self._polling.wait()
         try:
             if obj.func_read is ModbusReadFunc.READ_FILE:
                 raise ModbusException('func-not-support')  # todo: implement 0x14 func
@@ -133,6 +134,7 @@ class SyncModbusDevice(BaseModbusDevice):
             value: Value to write
             obj: Object instance.
         """
+        self._polling.clear()
         try:
             if obj.func_write is None:
                 raise ModbusException('Object cannot be overwritten')
@@ -164,6 +166,8 @@ class SyncModbusDevice(BaseModbusDevice):
                                 extra={'device_id': self.id, 'object_id': obj.id,
                                        'object_type': obj.type, 'register': obj.address,
                                        'quantity': obj.quantity, 'exc': e, })
+        finally:
+            self._polling.set()
 
     async def _poll_objects(self, objs: Collection[ModbusObj]) -> None:
         def _sync_poll_objects(objs_: Collection[ModbusObj]) -> None:

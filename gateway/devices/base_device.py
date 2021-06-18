@@ -31,7 +31,7 @@ class BaseDevice(ABC):
         self._device_obj = device_obj
         self._LOG = get_file_logger(name=__name__ + str(self.id))
 
-        self.scheduler: aiojobs.Scheduler = None
+        self._scheduler: aiojobs.Scheduler = None
 
         # Key: period
         self._objects: dict[int, set[Union[BACnetObj, ModbusObj]]] = {}
@@ -39,9 +39,9 @@ class BaseDevice(ABC):
 
         self._connected = False
 
-        # IMPORTANT: set that event to change the objects (write and load).
-        # Wait that event in polling to provide priority access by write.
-        self._objects_changes = asyncio.Event()
+        # IMPORTANT: clear that event to change the objects (write and load).
+        # Wait that event in polling to provide priority access to write.
+        self._polling = asyncio.Event()
 
     @classmethod
     async def create(cls, device_obj: BACnetDeviceObj, gateway: 'VisioBASGateway'
@@ -51,7 +51,7 @@ class BaseDevice(ABC):
             cls._client_creation_lock = asyncio.Lock(loop=loop)
 
         dev = cls(device_obj=device_obj, gateway=gateway)
-        dev.scheduler = await aiojobs.create_scheduler(close_timeout=60, limit=100)
+        dev._scheduler = await aiojobs.create_scheduler(close_timeout=60, limit=100)
         async with cls._client_creation_lock:
             await dev._gateway.async_add_job(dev.create_client)
         dev._LOG.debug('Device created',
@@ -61,9 +61,6 @@ class BaseDevice(ABC):
 
     def __repr__(self) -> str:
         return f'{self.__class__.__name__}[{self.id}]'
-
-    def __len__(self) -> int:
-        return len(self._objects)
 
     @property
     def id(self) -> int:
@@ -139,12 +136,14 @@ class BaseDevice(ABC):
             self._LOG.debug('No objects to load', extra={'device_id': self.id, })
             return None
 
+        self._polling.clear()
         for obj in objs:
             poll_period = obj.property_list.send_interval
             try:
                 self._objects[poll_period].add(obj)
             except KeyError:
                 self._objects[poll_period] = {obj}
+        self._polling.set()
         self._LOG.debug('Objects are grouped by period and loads to the device',
                         extra={'device_id': self.id, 'objects_number': len(objs)})
 
@@ -152,16 +151,17 @@ class BaseDevice(ABC):
         """Starts periodic polls for all periods."""
 
         if self.is_client_connected:
+            self._polling.set()
             for period, objs in self._objects.items():
-                await self.scheduler.spawn(self.periodic_poll(objs=objs, period=period))
-            await self.scheduler.spawn(self._periodic_reset_unreachable())
+                await self._scheduler.spawn(self.periodic_poll(objs=objs, period=period))
+            await self._scheduler.spawn(self._periodic_reset_unreachable())
         else:
             self._LOG.info('Client is not connected. Sleeping to next try',
                            extra={'device_id': self.id,
                                   'seconds_to_next_try': self.reconnect_period})
             await asyncio.sleep(delay=self.reconnect_period)
             await self._gateway.async_add_job(self.create_client)
-            await self.scheduler.spawn(self.start_periodic_polls())
+            await self._scheduler.spawn(self.start_periodic_polls())
             # await self.scheduler.spawn(self._periodic_reset_unreachable())
 
         # todo: add close event wait
@@ -170,7 +170,7 @@ class BaseDevice(ABC):
         """Waits for finish of all polling tasks with timeout, and stop polling.
         Closes client.
         """
-        await self.scheduler.close()
+        await self._scheduler.close()
         self.close_client()  # todo: left client open if used by another device
         self._LOG.info('Device stopped', extra={'device_id': self.id})
 
@@ -179,11 +179,12 @@ class BaseDevice(ABC):
 
         self._LOG.debug('Reset unreachable objects',
                         extra={'device_id': self.id,
-                               'unreachable_objects_number': len(self._unreachable_objects)})
+                               'unreachable_objects_number': len(
+                                   self._unreachable_objects)})
         self.load_objects(objs=self._unreachable_objects)
         self._unreachable_objects = set()
 
-        await self.scheduler.spawn(self._periodic_reset_unreachable())
+        await self._scheduler.spawn(self._periodic_reset_unreachable())
 
     async def periodic_poll(self, objs: set[Union[BACnetObj, ModbusObj]],
                             period: int) -> None:
@@ -201,7 +202,7 @@ class BaseDevice(ABC):
             period *= 1.5
             self._LOG.warning('Polling period is too short! Increased in x1.5',
                               extra={'device_id': self.id})
-        await self.scheduler.spawn(self._process_polled(objs=objs))
+        await self._scheduler.spawn(self._process_polled(objs=objs))
         await asyncio.sleep(delay=period - _t_delta.seconds)
 
         # self._LOG.debug(f'Periodic polling task created',
@@ -210,7 +211,7 @@ class BaseDevice(ABC):
         #                        'jobs_pending_count': self.scheduler.pending_count, })
         # await asyncio.sleep(delay=period)
 
-        await self.scheduler.spawn(self.periodic_poll(objs=objs, period=period))
+        await self._scheduler.spawn(self.periodic_poll(objs=objs, period=period))
 
     async def _process_polled(self, objs: set[Union[BACnetObj, ModbusObj]]):
         await self._gateway.verify_objects(objs=objs)
