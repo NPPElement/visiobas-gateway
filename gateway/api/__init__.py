@@ -1,7 +1,7 @@
 from .mixins import ReadWriteMixin
-from .service import VisioGtwAPI
+from .service import VisioGtwApi
 
-__all__ = ['VisioGtwAPI',
+__all__ = ['VisioGtwApi',
            # 'ModbusRWMixin',
            # 'BACnetRWMixin',
            'ReadWriteMixin',
