@@ -35,7 +35,7 @@ class BaseView(View):
         except (ValueError, AttributeError, Exception) as e:
             _LOG.warning('Exception',
                          extra={'gateway': self.gtw, 'device_id': dev_id, 'exc': e, })
-            raise HTTPNotFound(reason=f'Exception: {e}\nTraceback: {e.__traceback__}')
+            # raise HTTPNotFound(reason=f'Exception: {e}\nTraceback: {e.__traceback__}')
 
     @staticmethod
     def get_obj(obj_id: int, obj_type_id: int, dev: DeviceAlias) -> Optional[ObjAlias]:
