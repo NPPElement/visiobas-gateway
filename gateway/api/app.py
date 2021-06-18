@@ -101,14 +101,14 @@ class VisioGtwApi:
             host: TCP/IP hostname to serve on.
             port: TCP/IP port to serve on.
         """
-        _LOG.info('Starting app', extra={'app': app, 'host': host, 'port': port, })
+        _LOG.info('Starting app', extra={'host': host, 'port': port, })
         runner = AppRunner(app=app)
         await runner.setup()
         site = TCPSite(runner=runner, host=host, port=port)
         await site.start()
 
         await self._stopped.wait()
-        _LOG.debug('Stopping app', extra={'app': app, 'host': host, 'port': port, })
+        _LOG.debug('Stopping app', extra={'host': host, 'port': port, })
         await runner.cleanup()
 
 

@@ -34,7 +34,11 @@ cd visiobas-gateway
 
 ## Setting
 
-### Setting configuration
+### Configuration
+
+Application configures via environment variables. 
+Environment variables provides via `.env` files.
+Paths to `.env` files specified at `docker-compose.yaml`.
 
 - Configuration can be changed in file `docker-compose.yaml`.
 - Configuration can be changed in files `gateway/config/gateway.env`

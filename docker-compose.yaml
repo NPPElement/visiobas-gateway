@@ -16,9 +16,9 @@ services:
     restart: always
     privileged: true # [1]
     env_file:
-      - gateway/config/gateway.env
-      - gateway/config/http.env
-      - gateway/config/api.env
+      - config/gateway.env
+      - config/http.env
+      - config/api.env
     environment:
       - TZ=Europe/Moscow
       - PYTHONPATH=/
