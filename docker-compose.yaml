@@ -1,18 +1,12 @@
 version: "3.7"
 
-#networks:
-#  backend:
-#    driver: bridge
-
-
-
 services:
   vb_gateway:
     container_name: gateway
     build:
       context: .
       dockerfile: Dockerfile
-    image: visiobas-gateway:3.2.2
+    image: visiobas-gateway:3.2.3
     logging:
       #driver: none
       driver: "json-file"
@@ -24,6 +18,7 @@ services:
     env_file:
       - gateway/config/gateway.env
       - gateway/config/http.env
+      - gateway/config/api.env
     environment:
       - TZ=Europe/Moscow
       - PYTHONPATH=/
@@ -39,10 +34,9 @@ services:
       #- /opt/visiobas-gateway/logs:/usr/share/python3/gtw/gateway/logs
       - /opt/visiobas-gateway/gateway:/usr/share/python3/gtw/lib/python3.9/site-packages/gateway
       - /dev:/dev # [1]
-      # - /home/user/visiobas-gateway/gateway:/usr/share/python3/gtw/lib/python3.9/site-packages/gateway
     # command: python -OO __main__.py
-    networks:
-      - default
+#    networks:
+#      - default
 #    network_mode: host
     ports:
       - 7070:7070
@@ -51,11 +45,9 @@ services:
       - "/dev/ttyS0:/dev/ttyS0"
       - "/dev/ttyUSB0:/dev/ttyUSB0"
 
-
-networks:
-  default:
-    external: true
-    name: services_backend
-
+#networks:
+#  default:
+#    external: true
+#    name: services_backend
 
 # [1]: https://www.losant.com/blog/how-to-access-serial-devices-in-docker
