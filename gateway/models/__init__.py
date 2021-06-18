@@ -3,7 +3,8 @@ from .bacnet import (ObjType, ObjProperty, StatusFlag, StatusFlags, BACnetObj,
 from .modbus import (ModbusObj, ModbusReadFunc, ModbusWriteFunc, DataType)
 from .mqtt import ResultCode, Qos
 from .protocol import Protocol
-from .settings import (HTTPServerConfig, HTTPSettings, GatewaySettings, MQTTSettings, )
+from .settings import (HTTPServerConfig, HTTPSettings, GatewaySettings, MQTTSettings,
+                       ApiSettings)
 
 __all__ = [
     'ObjType', 'ObjProperty', 'StatusFlag', 'StatusFlags',
@@ -16,5 +17,5 @@ __all__ = [
 
     'Protocol',
 
-    'HTTPServerConfig', 'HTTPSettings', 'GatewaySettings', 'MQTTSettings',
+    'HTTPServerConfig', 'HTTPSettings', 'GatewaySettings', 'MQTTSettings', 'ApiSettings',
 ]
