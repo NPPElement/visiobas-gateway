@@ -1,6 +1,5 @@
-from typing import Union, Optional, Any
+from typing import Optional, Any
 
-from aiohttp.web_exceptions import HTTPNotFound
 from aiohttp.web_urldispatcher import View
 
 from ..utils import get_file_logger
@@ -30,12 +29,7 @@ class BaseView(View):
         Returns:
             Device instance is exists.
         """
-        try:
-            return self.gtw.get_device(dev_id=dev_id)
-        except (ValueError, AttributeError, Exception) as e:
-            _LOG.warning('Exception',
-                         extra={'gateway': self.gtw, 'device_id': dev_id, 'exc': e, })
-            # raise HTTPNotFound(reason=f'Exception: {e}\nTraceback: {e.__traceback__}')
+        return self.gtw.get_device(dev_id=dev_id)
 
     @staticmethod
     def get_obj(obj_id: int, obj_type_id: int, dev: DeviceAlias) -> Optional[ObjAlias]:
@@ -48,8 +42,4 @@ class BaseView(View):
         Returns:
             Object instance if exist.
         """
-        try:
-            return dev.get_object(obj_id=obj_id, obj_type_id=obj_type_id)
-        except (ValueError, AttributeError, Exception) as e:
-            _LOG.warning('Exception', extra={'device_id': dev.id, 'exc': e, })
-            raise HTTPNotFound(reason=f'Exception: {e}\nTraceback: {e.__traceback__}')
+        return dev.get_object(obj_id=obj_id, obj_type_id=obj_type_id)

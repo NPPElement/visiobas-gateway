@@ -41,7 +41,7 @@ class ReadWriteMixin(ModbusRWMixin, BACnetRWMixin):
 
     async def write(self, value: Optional[Union[int, float]],
                     obj: ObjAlias, device: DeviceAlias,
-                    priority: int = 11, prop: ObjProperty = ObjProperty.presentValue
+                    priority: int, prop: ObjProperty = ObjProperty.presentValue
                     ) -> None:
         """
         # TODO priority
@@ -69,7 +69,7 @@ class ReadWriteMixin(ModbusRWMixin, BACnetRWMixin):
 
     async def write_with_check(self, value: Optional[Union[int, float, str]],
                                obj: ObjAlias, device: DeviceAlias,
-                               priority: int = 11,
+                               priority: int,
                                prop: ObjProperty = ObjProperty.presentValue
                                ) -> bool:
         """
