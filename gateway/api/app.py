@@ -44,9 +44,9 @@ class VisioGtwApi:
         return JSON_RPC_HANDLERS  # todo add rest handlers
 
     @classmethod
-    async def create(cls, gateway, settings: ApiSettings) -> 'VisioGtwApi':
+    def create(cls, gateway, settings: ApiSettings) -> 'VisioGtwApi':
         api = cls(gateway=gateway, settings=settings)
-        api._app = await api.create_app()
+        api._app = api.create_app()
         return api
 
     async def stop(self) -> None:
@@ -56,10 +56,10 @@ class VisioGtwApi:
     async def start(self) -> None:
         """Starts Gateway API until stopped."""
         if self._app is None:
-            self._app = await self.create_app()
+            self._app = self.create_app()
         await self.run_app(app=self._app, host=self.host, port=self.port)
 
-    async def create_app(self) -> Application:
+    def create_app(self) -> Application:
         """Creates an instance of the application.
 
         Returns:
@@ -114,7 +114,7 @@ class VisioGtwApi:
 
 if __name__ == '__main__':
     async def main():
-        api = await VisioGtwApi.create(gateway=None, settings=ApiSettings())
+        api = VisioGtwApi.create(gateway=None, settings=ApiSettings())
         await api.start()
 
 
