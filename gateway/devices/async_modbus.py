@@ -125,7 +125,7 @@ class AsyncModbusDevice(BaseModbusDevice):
                 ModbusWriteFunc.WRITE_REGISTERS: self._client.protocol.write_registers,
                 }
 
-    async def read(self, obj: ModbusObj) -> Optional[Union[int, float]]:
+    async def read(self, obj: ModbusObj, **kwargs) -> Optional[Union[int, float]]:
         """Read data from Modbus object.
 
         Updates object and return value.
@@ -168,7 +168,7 @@ class AsyncModbusDevice(BaseModbusDevice):
         else:
             return obj.pv  # return not used now. Updates object
 
-    async def write(self, value: Union[int, float], obj: ModbusObj) -> None:
+    async def write(self, value: Union[int, float], obj: ModbusObj, **kwargs) -> None:
         """Write value to Modbus object.
 
         Args:

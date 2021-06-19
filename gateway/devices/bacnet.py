@@ -1,9 +1,7 @@
 from typing import Any, Collection, Union, Optional
 
-from BAC0.core.io.IOExceptions import (ReadPropertyException,
-                                       NoResponseFromController,
-                                       UnknownObjectError,
-                                       UnknownPropertyError,
+from BAC0.core.io.IOExceptions import (ReadPropertyException, NoResponseFromController,
+                                       UnknownObjectError, UnknownPropertyError,
                                        NetworkInterfaceException, InitializationError)
 from BAC0.scripts.Lite import Lite
 from bacpypes.basetypes import PriorityArray
@@ -105,8 +103,11 @@ class BACnetDevice(BaseDevice):
     #     self.__logger.debug('All objects were polled. Send device_id to verifier')
     #     self.__put_device_end_to_verifier()
 
-    async def async_write_property(self, value: Union[int, float], obj: BACnetObj,
-                                   prop: ObjProperty, priority: Optional[int]) -> bool:
+    async def write(self, value: Union[int, float], obj: BACnetObj,
+                    # prop: ObjProperty, priority: Optional[int]
+                    **kwargs) -> bool:
+        prop = kwargs.get('prop')
+        priority = kwargs.get('priority')
         return await self._gateway.async_add_job(
             self.write_property, value, obj, prop, priority)
 
@@ -141,8 +142,10 @@ class BACnetDevice(BaseDevice):
         finally:
             self._polling.set()
 
-    async def async_read_property(self, obj: BACnetObj,
-                                  prop: ObjProperty) -> Any:
+    async def read(self, obj: BACnetObj,
+                   # prop: ObjProperty
+                   **kwargs) -> Any:
+        prop = kwargs.get('prop')
         return await self._gateway.async_add_job(self.read_property, obj, prop)
 
     def read_property(self, obj: BACnetObj, prop: ObjProperty) -> Any:

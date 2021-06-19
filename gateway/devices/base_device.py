@@ -115,6 +115,33 @@ class BaseDevice(ABC):
     async def _poll_objects(self, objs: Collection[Union[BACnetObj, ModbusObj]]) -> None:
         raise NotImplementedError
 
+    @abstractmethod
+    async def read(self, obj: BACnetObj, **kwargs) -> Optional[Union[int, float, str]]:
+        raise NotImplementedError(
+            'You should implement async read method for your device'
+        )
+
+    @abstractmethod
+    async def write(self, value: Union[int, float], obj: BACnetObj, **kwargs) -> None:
+        raise NotImplementedError(
+            'You should implement async write method for your device'
+        )
+
+    async def write_with_check(self, value: Union[int, float], obj: BACnetObj,
+                               **kwargs) -> bool:
+        self._polling.clear()
+        await self.write(value=value, obj=obj, **kwargs)
+        read_value = await self.read(obj=obj, **kwargs)
+        self._polling.set()
+
+        is_consistent = value == read_value
+        self._LOG.debug('Write with check called',
+                        extra={'device_id': obj.device_id, 'object_id': obj.id,
+                               'object_type': obj.type, 'value_written': value,
+                               'value_read': read_value,
+                               'values_are_consistent': is_consistent, })
+        return is_consistent
+
     @lru_cache(maxsize=10)
     def get_object(self, obj_id: int, obj_type_id: int
                    ) -> Optional[Union[BACnetObj, ModbusObj]]:
@@ -162,17 +189,14 @@ class BaseDevice(ABC):
             await asyncio.sleep(delay=self.reconnect_period)
             await self._gateway.async_add_job(self.create_client)
             await self._scheduler.spawn(self.start_periodic_polls())
-            # await self.scheduler.spawn(self._periodic_reset_unreachable())
 
-        # todo: add close event wait
-
-    async def _stop(self) -> None:
+    async def stop(self) -> None:
         """Waits for finish of all polling tasks with timeout, and stop polling.
         Closes client.
         """
         await self._scheduler.close()
         self.close_client()  # todo: left client open if used by another device
-        self._LOG.info('Device stopped', extra={'device_id': self.id})
+        self._LOG.info('Device stopped', extra={'device_id': self.id, })
 
     async def _periodic_reset_unreachable(self) -> None:
         await asyncio.sleep(self._gateway.unreachable_reset_period)
