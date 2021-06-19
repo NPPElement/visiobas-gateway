@@ -175,7 +175,6 @@ class AsyncModbusDevice(BaseModbusDevice):
             value: Value to write
             obj: Object instance.
         """
-        self._polling.clear()
         try:
             if obj.func_write is None:
                 raise ModbusException('Object cannot be overwritten')
@@ -204,21 +203,19 @@ class AsyncModbusDevice(BaseModbusDevice):
                             extra={'device_id': self.id, 'object_id': obj.id,
                                    'object_type': obj.type, 'address': obj.address,
                                    'value': value, })
-            # obj.set_pv(value=value)
+
         except (ModbusException, struct.error,
-                asyncio.TimeoutError
+                asyncio.TimeoutError, Exception
                 ) as e:
             self._LOG.warning('Failed write',
                               extra={'device_id': self.id, 'object_id': obj.id,
                                      'object_type': obj.type, 'register': obj.address,
                                      'quantity': obj.quantity, 'exc': e, })
-        except Exception as e:
-            self._LOG.exception('Unhandled error',
-                                extra={'device_id': self.id, 'object_id': obj.id,
-                                       'object_type': obj.type, 'register': obj.address,
-                                       'quantity': obj.quantity, 'exc': e, })
-        finally:
-            self._polling.set()
+        # except Exception as e:
+        #     self._LOG.exception('Unhandled error',
+        #                         extra={'device_id': self.id, 'object_id': obj.id,
+        #                                'object_type': obj.type, 'register': obj.address,
+        #                                'quantity': obj.quantity, 'exc': e, })
 
     async def decode(self, resp: Union[ReadCoilsResponse,
                                        ReadDiscreteInputsResponse,

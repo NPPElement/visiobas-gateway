@@ -134,7 +134,6 @@ class SyncModbusDevice(BaseModbusDevice):
             value: Value to write
             obj: Object instance.
         """
-        self._polling.clear()
         try:
             if obj.func_write is None:
                 raise ModbusException('Object cannot be overwritten')
@@ -156,18 +155,16 @@ class SyncModbusDevice(BaseModbusDevice):
                             extra={'device_id': self.id, 'object_id': obj.id,
                                    'object_type': obj.type, 'address': obj.address,
                                    'value': value, })
-        except (ModbusException, struct.error) as e:
+        except (ModbusException, struct.error, Exception) as e:
             self._LOG.warning('Failed write',
                               extra={'device_id': self.id, 'object_id': obj.id,
                                      'object_type': obj.type, 'register': obj.address,
                                      'quantity': obj.quantity, 'exc': e, })
-        except Exception as e:
-            self._LOG.exception('Unhandled error',
-                                extra={'device_id': self.id, 'object_id': obj.id,
-                                       'object_type': obj.type, 'register': obj.address,
-                                       'quantity': obj.quantity, 'exc': e, })
-        finally:
-            self._polling.set()
+        # except Exception as e:
+        #     self._LOG.exception('Unhandled error',
+        #                         extra={'device_id': self.id, 'object_id': obj.id,
+        #                                'object_type': obj.type, 'register': obj.address,
+        #                                'quantity': obj.quantity, 'exc': e, })
 
     async def _poll_objects(self, objs: Collection[ModbusObj]) -> None:
         def _sync_poll_objects(objs_: Collection[ModbusObj]) -> None:

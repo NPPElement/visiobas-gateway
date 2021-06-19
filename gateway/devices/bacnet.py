@@ -125,7 +125,6 @@ class BACnetDevice(BaseDevice):
             Write is successful.
         """
         # priority = priority or self._gateway.api.priority
-        self._polling.clear()
         try:
             args = '{0} {1} {2} {3} {4} - {5}'.format(self.address_port,
                                                       obj.type.name, obj.id,
@@ -139,8 +138,6 @@ class BACnetDevice(BaseDevice):
             self._LOG.exception('Unhandled WriteProperty error',
                                 extra={'device_id': self.id, 'object_id': obj.id,
                                        'object_type': obj.type, 'exc': e, 'value': value})
-        finally:
-            self._polling.set()
 
     async def read(self, obj: BACnetObj,
                    # prop: ObjProperty

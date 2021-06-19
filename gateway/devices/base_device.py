@@ -39,8 +39,8 @@ class BaseDevice(ABC):
 
         self._connected = False
 
-        # IMPORTANT: clear that event to change the objects (write and load).
-        # Wait that event in polling to provide priority access to write.
+        # IMPORTANT: clear that event to change the objects (load or priority write).
+        # Wait that event in polling to provide priority access to write_with_check.
         self._polling = asyncio.Event()
 
     @classmethod
