@@ -2,14 +2,13 @@ from aiohttp_cors import CorsViewMixin, ResourceOptions
 from aiohttp_jsonrpc import handler
 
 from ..base_view import BaseView
-from ..mixins import ReadWriteMixin
 from ...models import ObjProperty
 from ...utils import get_file_logger
 
 _LOG = get_file_logger(__name__)
 
 
-class JsonRPCView(handler.JSONRPCView, ReadWriteMixin, BaseView, CorsViewMixin):
+class JsonRPCView(handler.JSONRPCView, BaseView, CorsViewMixin):
     URL_PATH = r'/json-rpc'
 
     cors_config = {
@@ -38,7 +37,7 @@ class JsonRPCView(handler.JSONRPCView, ReadWriteMixin, BaseView, CorsViewMixin):
         if obj is None:
             raise Exception('Object not found')
 
-        is_consistent = await self.write_with_check(
+        is_consistent = await dev.write_with_check(
             value=value, prop=ObjProperty.presentValue, priority=priority,
             obj=obj, device=dev)
 

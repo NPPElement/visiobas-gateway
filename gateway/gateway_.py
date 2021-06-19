@@ -211,7 +211,7 @@ class VisioBASGateway:
             - Log out to HTTP
         """
         # todo await self.mqtt_client.unsubscribe(self.mqtt_client.topics)
-        stop_device_tasks = [dev._stop for dev in self.devices.values()]
+        stop_device_tasks = [dev.stop for dev in self.devices.values()]
         await asyncio.gather(*stop_device_tasks)
         self._devices = {}
 
