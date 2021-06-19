@@ -27,7 +27,7 @@ class BaseView(View):
             dev_id: Device identifier.
 
         Returns:
-            Device instance is exists.
+            Device instance if exists.
         """
         return self.gtw.get_device(dev_id=dev_id)
 
