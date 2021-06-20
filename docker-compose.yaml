@@ -35,9 +35,9 @@ services:
       - /opt/visiobas-gateway/gateway:/usr/share/python3/gtw/lib/python3.9/site-packages/gateway
       - /dev:/dev # [1]
     # command: python -OO __main__.py
-#    networks:
-#      - default
-#    network_mode: host
+    # network_mode: host
+    # networks:
+    #  - backend
     ports:
       - 7070:7070
 

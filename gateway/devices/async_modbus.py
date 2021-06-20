@@ -14,7 +14,8 @@ from pymodbus.register_read_message import (ReadHoldingRegistersResponse,
 from pymodbus.transaction import ModbusRtuFramer
 
 from .base_modbus import BaseModbusDevice
-from ..models import (BACnetDeviceObj, ModbusObj, Protocol, ModbusReadFunc, ModbusWriteFunc)
+from ..models import (BACnetDeviceObj, ModbusObj, Protocol, ModbusReadFunc, ModbusWriteFunc,
+                      StatusFlags)
 
 # aliases # TODO
 # BACnetDeviceModel = Any  # ...models
@@ -37,7 +38,7 @@ class AsyncModbusDevice(BaseModbusDevice):
             # ConnectionError: if client is not initialized.
 
         Async pymodbus not support `timeout` param. Default: 2 sec
-        See: https://github.com/riptideio/pymodbus/issues/349
+        See: <https://github.com/riptideio/pymodbus/issues/349>
         """
         self._LOG.debug('Creating pymodbus client', extra={'device_id': self.id})
         try:
@@ -106,7 +107,6 @@ class AsyncModbusDevice(BaseModbusDevice):
 
     async def _poll_objects(self, objs: Collection[ModbusObj]) -> None:
         read_tasks = [self.read(obj=obj) for obj in objs]
-        # await self.scheduler.spawn(asyncio.gather(*read_tasks))
         await asyncio.gather(*read_tasks)
 
     @property
@@ -125,11 +125,12 @@ class AsyncModbusDevice(BaseModbusDevice):
                 ModbusWriteFunc.WRITE_REGISTERS: self._client.protocol.write_registers,
                 }
 
-    async def read(self, obj: ModbusObj) -> Optional[Union[int, float]]:
+    async def read(self, obj: ModbusObj, **kwargs) -> Optional[Union[int, float]]:
         """Read data from Modbus object.
 
         Updates object and return value.
         """
+        self._polling.wait()
         try:
             if obj.func_read is ModbusReadFunc.READ_FILE:
                 raise ModbusException('func-not-support')  # todo: implement 0x14 func
@@ -145,26 +146,29 @@ class AsyncModbusDevice(BaseModbusDevice):
 
             value = await self.decode(resp=resp, obj=obj)
             obj.set_pv(value=value)
+            obj.sf = StatusFlags()
+            obj.reliability = None
 
         except (TypeError, AttributeError, ValueError,
                 asyncio.TimeoutError, asyncio.CancelledError,
-                ModbusException,
+                ModbusException, Exception
                 ) as e:
-            obj.exception = e
+            obj.set_exc(exc=e)
             self._LOG.warning('Read error',
                               extra={'device_id': self.id, 'object_id': obj.id,
                                      'object_type': obj.type, 'register': obj.address,
-                                     'quantity': obj.quantity, 'exc': e, })
-        except Exception as e:
-            obj.exception = e
-            self._LOG.exception(f'Unexpected read error: {e}',
-                                extra={'device_id': self.id, 'object_id': obj.id,
-                                       'object_type': obj.type, 'register': obj.address,
-                                       'quantity': obj.quantity, 'exc': e, })
+                                     'quantity': obj.quantity, 'exc': e,
+                                     'unreachable_in_row': obj.unreachable_in_row, })
+        # except Exception as e:
+        #     obj.exception = e
+        #     self._LOG.exception(f'Unexpected read error: {e}',
+        #                         extra={'device_id': self.id, 'object_id': obj.id,
+        #                                'object_type': obj.type, 'register': obj.address,
+        #                                'quantity': obj.quantity, 'exc': e, })
         else:
             return obj.pv  # return not used now. Updates object
 
-    async def write(self, value: Union[int, float], obj: ModbusObj) -> None:
+    async def write(self, value: Union[int, float], obj: ModbusObj, **kwargs) -> None:
         """Write value to Modbus object.
 
         Args:
@@ -187,6 +191,7 @@ class AsyncModbusDevice(BaseModbusDevice):
 
             # Using lock because pymodbus doesn't handle async requests internally.
             # Maybe this will change in pymodbus v3.0.0
+
             async with self.lock:
                 rq = await self.write_funcs[obj.func_write](obj.address,
                                                             payload,  # skip_encode=True,
@@ -194,23 +199,23 @@ class AsyncModbusDevice(BaseModbusDevice):
             if rq.isError():
                 raise ModbusIOException('0x80')  # todo: resp.string
 
-            self._LOG.debug(f'Successfully write',
+            self._LOG.debug('Successfully write',
                             extra={'device_id': self.id, 'object_id': obj.id,
                                    'object_type': obj.type, 'address': obj.address,
                                    'value': value, })
-            # obj.set_pv(value=value)
+
         except (ModbusException, struct.error,
-                asyncio.TimeoutError
+                asyncio.TimeoutError, Exception
                 ) as e:
             self._LOG.warning('Failed write',
                               extra={'device_id': self.id, 'object_id': obj.id,
                                      'object_type': obj.type, 'register': obj.address,
                                      'quantity': obj.quantity, 'exc': e, })
-        except Exception as e:
-            self._LOG.exception('Unhandled error',
-                                extra={'device_id': self.id, 'object_id': obj.id,
-                                       'object_type': obj.type, 'register': obj.address,
-                                       'quantity': obj.quantity, 'exc': e, })
+        # except Exception as e:
+        #     self._LOG.exception('Unhandled error',
+        #                         extra={'device_id': self.id, 'object_id': obj.id,
+        #                                'object_type': obj.type, 'register': obj.address,
+        #                                'quantity': obj.quantity, 'exc': e, })
 
     async def decode(self, resp: Union[ReadCoilsResponse,
                                        ReadDiscreteInputsResponse,

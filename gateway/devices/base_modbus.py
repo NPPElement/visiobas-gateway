@@ -29,27 +29,11 @@ class BaseModbusDevice(BaseDevice):
 
     def __init__(self, device_obj: BACnetDeviceObj, gateway: 'VisioBASGateway'):
         super().__init__(device_obj, gateway)
-        # self._gateway = gateway
-        # self._device_obj = device_obj
-        # self._LOG = get_file_logger(name=__name__ + str(self.id))
 
-        # self._loop: asyncio.AbstractEventLoop = None
         self._client: Union[
             ModbusSerialClient, ModbusTcpClient,
             AsyncioModbusTcpClient, AsyncioModbusSerialClient
         ] = None
-        # self.scheduler: aiojobs.Scheduler = None
-
-        # self._lock = asyncio.Lock()
-
-        # self._polling = True
-        # self._objects: dict[int, set[ModbusObj]] = {}  # todo hide type
-        #
-        # self._connected = False
-
-    # @property
-    # def lock(self) -> asyncio.Lock:
-    #     return self._serial_locks.get(self.serial_port) or self._lock
 
     @property
     def serial_port(self) -> Optional[str]:

@@ -1,13 +1,26 @@
-# Visiobas-Gateway
+# VisioBAS-Gateway
 
-It is an application for polling devices using various protocols and transmitting data to
-the visiobas system.
+Application for polling devices using various protocols and transmitting data to
+the [VisioBAS system](https://github.com/NPPElement/visiobas-broker).
 
-# API
-## `JSON-RPC 2.0` API Available on `http://127.0.0.1:7070/json-rpc`.
-## `REST API` Not support now.
+### Contents
+0. [API](#API)
+1. [Installation](#Installation)
+    - [Install Docker](#a-Install-Docker)
+    - [Install Docker Compose](#b-Install-Docker-Compose)
+    - [Install VisioBAS gateway](#c-Install-VisioBAS-Gateway)
+2. [Setting](#Setting)
+    - [Setting COM ports](#Setting-Serial-ports)
+    - [Setting configuration](#Setting-configuration)
+3. [Launch/Update](#LaunchUpdate)
+4. [Remove](#Remove)
+5. [License Information](#License-Information)
 
-~~Swagger docs available on http://127.0.0.1:7070/~~
+## API
+
+### `JSON-RPC 2.0` API Available on `http://host:port/json-rpc`.
+
+~~Swagger docs available on http://host:port/~~ TODO: update
 
 ```shell
 # curl -X GET http://127.0.0.1:7070/api/v1/property/35/2/1/85
@@ -20,11 +33,11 @@ curl --header "Content-Type: application/json" \
 
 ## Installation
 
-### - [Install Docker](https://docs.docker.com/engine/install/)
+### a. [Install Docker](https://docs.docker.com/engine/install/)
 
-### - [Install Docker Compose](https://docs.docker.com/compose/install/)
+### b. [Install Docker Compose](https://docs.docker.com/compose/install/)
 
-### - Install Visiobas Gateway
+### c. Install VisioBAS Gateway
 
 ```shell
 cd /opt
@@ -40,9 +53,18 @@ Application configures via environment variables.
 Environment variables provides via `.env` files.
 Paths to `.env` files specified at `docker-compose.yaml`.
 
-- Configuration can be changed in file `docker-compose.yaml`.
-- Configuration can be changed in files `gateway/config/gateway.env`
-  and `gateway/config/http.env`. Templates are available: `gateway/config/templates`.
+Configuration can be changed in files:
+  - `docker-compose.yaml`
+  - `gateway/config/gateway.env` [template](/config/templates/gateway.env)
+  - `gateway/config/http.env` [template](/config/templates/http.env)
+  - TODO: mqtt
+
+### Logging level
+
+- Logging level You can change the logging level in the `docker-compose.yaml` file. You can
+  choose one of the following levels: `DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL`
+
+### [Objects configuration](/docs/properties_ru.md)
 
 ### Setting Serial ports
 
@@ -95,11 +117,6 @@ sudo systemctl daemon-reload
 sudo systemctl restart docker
 ```
 
-## Logging level
+### [License Information](/LICENSE)
 
-- Logging level You can change the logging level in the `docker-compose.yaml` file. You can
-  choose one of the following levels: `DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL`
-
-## License
-
-GPL-3.0 License
+`GPL-3.0 License`

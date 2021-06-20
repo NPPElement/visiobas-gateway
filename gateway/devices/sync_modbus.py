@@ -6,7 +6,8 @@ from pymodbus.exceptions import ModbusException, ModbusIOException
 from pymodbus.framer.rtu_framer import ModbusRtuFramer
 
 from .base_modbus import BaseModbusDevice
-from ..models import (BACnetDeviceObj, Protocol, ModbusReadFunc, ModbusWriteFunc, ModbusObj)
+from ..models import (BACnetDeviceObj, Protocol, ModbusReadFunc, ModbusWriteFunc, ModbusObj,
+                      StatusFlags)
 
 # aliases # TODO
 # BACnetDeviceModel = Any  # ...models
@@ -83,7 +84,7 @@ class SyncModbusDevice(BaseModbusDevice):
                 ModbusWriteFunc.WRITE_REGISTERS: self._client.write_registers,
                 }
 
-    async def read(self, obj: ModbusObj) -> Optional[Union[int, float]]:
+    async def read(self, obj: ModbusObj, **kwargs) -> Optional[Union[int, float]]:
         return await self._gateway.async_add_job(self.sync_read, obj)
 
     def sync_read(self, obj: ModbusObj) -> Optional[Union[int, float]]:
@@ -91,6 +92,7 @@ class SyncModbusDevice(BaseModbusDevice):
 
         Updates object and return value.
         """
+        self._polling.wait()
         try:
             if obj.func_read is ModbusReadFunc.READ_FILE:
                 raise ModbusException('func-not-support')  # todo: implement 0x14 func
@@ -101,23 +103,28 @@ class SyncModbusDevice(BaseModbusDevice):
                 raise ModbusIOException('0x80')  # todo: resp.string
 
             value = self._decode_response(resp=resp, obj=obj)
+
             obj.set_pv(value=value)
-        except (TypeError, ValueError, AttributeError, ModbusException) as e:
-            obj.exception = e
+            obj.sf = StatusFlags()
+            obj.reliability = None
+        except (TypeError, ValueError, AttributeError,
+                ModbusException, Exception) as e:
+            obj.set_exc(exc=e)
             self._LOG.warning('Read error',
                               extra={'device_id': self.id, 'object_id': obj.id,
                                      'object_type': obj.type, 'register': obj.address,
-                                     'quantity': obj.quantity, 'exc': e, })
-        except Exception as e:
-            obj.exception = e
-            self._LOG.exception(f'Unexpected read error: {e}',
-                                extra={'device_id': self.id, 'object_id': obj.id,
-                                       'object_type': obj.type, 'register': obj.address,
-                                       'quantity': obj.quantity, 'exc': e, })
+                                     'quantity': obj.quantity, 'exc': e,
+                                     'unreachable_in_row': obj.unreachable_in_row, })
+        # except Exception as e:
+        #     obj.exception = e
+        #     self._LOG.exception(f'Unexpected read error: {e}',
+        #                         extra={'device_id': self.id, 'object_id': obj.id,
+        #                                'object_type': obj.type, 'register': obj.address,
+        #                                'quantity': obj.quantity, 'exc': e, })
         else:
             return obj.pv  # return not used now. Updates object
 
-    async def write(self, value: Union[int, float], obj: ModbusObj) -> None:
+    async def write(self, value: Union[int, float], obj: ModbusObj, **kwargs) -> None:
         await self._gateway.async_add_job(self.sync_write, value, obj)
 
     def sync_write(self, value: Union[int, float], obj: ModbusObj) -> None:
@@ -148,16 +155,16 @@ class SyncModbusDevice(BaseModbusDevice):
                             extra={'device_id': self.id, 'object_id': obj.id,
                                    'object_type': obj.type, 'address': obj.address,
                                    'value': value, })
-        except (ModbusException, struct.error) as e:
+        except (ModbusException, struct.error, Exception) as e:
             self._LOG.warning('Failed write',
                               extra={'device_id': self.id, 'object_id': obj.id,
                                      'object_type': obj.type, 'register': obj.address,
                                      'quantity': obj.quantity, 'exc': e, })
-        except Exception as e:
-            self._LOG.exception('Unhandled error',
-                                extra={'device_id': self.id, 'object_id': obj.id,
-                                       'object_type': obj.type, 'register': obj.address,
-                                       'quantity': obj.quantity, 'exc': e, })
+        # except Exception as e:
+        #     self._LOG.exception('Unhandled error',
+        #                         extra={'device_id': self.id, 'object_id': obj.id,
+        #                                'object_type': obj.type, 'register': obj.address,
+        #                                'quantity': obj.quantity, 'exc': e, })
 
     async def _poll_objects(self, objs: Collection[ModbusObj]) -> None:
         def _sync_poll_objects(objs_: Collection[ModbusObj]) -> None:

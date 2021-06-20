@@ -1,8 +1,4 @@
-import asyncio
 from typing import Collection
-
-# todo: process optional imports
-from pymodbus.exceptions import ModbusException
 
 from ..models import StatusFlags, StatusFlag, BACnetObj
 from ..utils import get_file_logger
@@ -21,33 +17,41 @@ class BACnetVerifier:
         [self.verify(obj=obj) for obj in objs]
 
     def verify(self, obj: BACnetObj) -> None:
-        if obj.exception:
-            self.process_exception(obj=obj)
-        else:
-            self.verify_sf(obj=obj)
-            self.verify_pv(obj=obj)
+        # if obj.exception:
+        #     self.process_exception(obj=obj)
+        # else:
+        self.verify_sf(obj=obj)
+        self.verify_pv(obj=obj)
 
-            if obj.pa is not None:
-                self.verify_pa(obj=obj)
+        if obj.pa is not None:
+            self.verify_pa(obj=obj)
 
-    @staticmethod
-    def process_exception(obj: BACnetObj) -> None:
-        obj.set_pv(value='null')
-        obj.sf.enable(flag=StatusFlag.FAULT)
-
-        if isinstance(obj.exception, (asyncio.TimeoutError, asyncio.CancelledError)):
-            obj.reliability = 'timeout'
-        elif isinstance(obj.exception, ModbusException):
-            obj.reliability = str(obj.exception)
-        elif isinstance(obj.exception, (TypeError, ValueError)):
-            obj.reliability = 'decode-error'
-        else:
-            RELIABILITY_LEN_LIMIT = 50  # TODO: wait 500 explanation by server
-            str_hotfix = 'read-error'
-            # str_exc = str(obj.exception)[-RELIABILITY_LEN_LIMIT:].strip()
-            obj.reliability = str_hotfix
-        obj.reliability.strip().replace(' ', '-').replace(',', '-').replace(':', '-').replace('.', '-').replace('/','-').replace('[','').replace(']','')
-        obj.exception = None
+    # @staticmethod
+    # def process_exception(obj: BACnetObj) -> None:
+    #     """Processes properties related with any object error.
+    #
+    #     Args:
+    #         obj: Object instance with error.
+    #
+    #     """
+    #     obj._last_value = 'null'
+    #     # obj.sf.enable(flag=StatusFlag.FAULT)
+    #
+    #     if isinstance(obj.exception, (asyncio.TimeoutError, asyncio.CancelledError)):
+    #         obj.reliability = 'timeout'
+    #     elif isinstance(obj.exception, ModbusException):
+    #         obj.reliability = str(obj.exception)
+    #     elif isinstance(obj.exception, (TypeError, ValueError)):
+    #         obj.reliability = 'decode-error'
+    #     else:
+    #         RELIABILITY_LEN_LIMIT = 50  # TODO: wait 500 explanation by server
+    #         str_hotfix = 'read-error'
+    #         # str_exc = str(obj.exception)[-RELIABILITY_LEN_LIMIT:].strip()
+    #         obj.reliability = str_hotfix
+    #     obj.reliability.strip().replace(' ', '-').replace(',', '-').replace(':',
+    #                                                                         '-').replace(
+    #         '.', '-').replace('/', '-').replace('[', '').replace(']', '')
+    #     obj.exception = None
 
     @staticmethod
     def verify_sf(obj: BACnetObj) -> None:
@@ -56,29 +60,29 @@ class BACnetVerifier:
     @staticmethod
     def verify_pv(obj: BACnetObj) -> None:
         if obj.pv in {True, 'active'}:
-            obj.set_pv(value=1)
+            obj._last_value = 1
         elif obj.pv in {False, 'inactive'}:
-            obj.set_pv(value=0)
+            obj._last_value = 0
 
-        elif obj.pv in {'null', None}:
-            obj.set_pv(value='null')
+        elif obj.pv in {'null', None} or isinstance(obj.pv, str) and not obj.pv.strip():
+            obj._last_value = 'null'
             obj.sf.enable(flag=StatusFlag.FAULT)
             # obj.reliability todo is reliability set?
         elif obj.pv == float('inf'):
-            obj.set_pv(value='null')
+            obj._last_value = 'null'
             obj.sf.enable(flag=StatusFlag.FAULT)
             obj.reliability = 2
         elif obj.pv == float('-inf'):
-            obj.set_pv(value='null')
+            obj._last_value = 'null'
             obj.sf.enable(flag=StatusFlag.FAULT)
             obj.reliability = 3
-        elif isinstance(obj.pv, str) and not obj.pv.strip():
-            obj.set_pv(value='null')
-            obj.sf.enable(flag=StatusFlag.FAULT)
-            obj.reliability = 'empty'
+        # elif isinstance(obj.pv, str) and not obj.pv.strip():
+        #     obj._last_value='null'
+        #     obj.sf.enable(flag=StatusFlag.FAULT)
+        #     obj.reliability = 'empty'
 
         if isinstance(obj.pv, float) and obj.pv.is_integer():
-            obj.set_pv(value=int(obj.pv))  # FIXME: update time!
+            obj._last_value = int(obj.pv)
 
     def verify_pa(self, obj: BACnetObj) -> None:
         """Sets OVERRIDE status flag if priority array contains override priority."""

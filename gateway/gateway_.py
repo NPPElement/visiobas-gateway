@@ -48,6 +48,14 @@ class VisioBASGateway:
         return gateway
 
     @property
+    def unreachable_threshold(self) -> int:
+        return self.settings.unreachable_threshold
+
+    @property
+    def unreachable_reset_period(self) -> int:
+        return self.settings.unreachable_reset_period
+
+    @property
     def poll_device_ids(self) -> list[int]:
         return self.settings.poll_device_ids
 
@@ -121,6 +129,8 @@ class VisioBASGateway:
             target: target to call.
             args: parameters for target to call.
         """
+        # todo: get loop
+
         if target is None:
             raise ValueError('None not allowed')
         self.loop.call_soon_threadsafe(self.async_add_job, target, *args)
@@ -289,7 +299,9 @@ class VisioBASGateway:
 
     async def send_objects(self, objs: Collection[BACnetObj]) -> None:
         """Sends objects to server."""
-        assert len(objs)
+        if not len(objs):
+            _LOG.debug('Nothing to send')
+            return None
 
         try:
             dev_id = list(objs)[0].device_id

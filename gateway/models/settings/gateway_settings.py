@@ -8,6 +8,10 @@ class GatewaySettings(BaseSettings):
     #                      "Uses to set 'polled by' in polling device object.")
 
     update_period: int = Field(default=3600, ge=1800)
+    unreachable_reset_period: int = Field(default=1800, ge=900)
+    unreachable_threshold: int = Field(
+        default=3, ge=1, description='Number of unsuccessful attempts to read object to '
+                                     'mark it as unreachable.')
     override_threshold: int = Field(
         default=8, gt=0, le=16,
         description=('If priority is equal or greater than this value - '

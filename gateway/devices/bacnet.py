@@ -1,9 +1,7 @@
 from typing import Any, Collection, Union, Optional
 
-from BAC0.core.io.IOExceptions import (ReadPropertyException,
-                                       NoResponseFromController,
-                                       UnknownObjectError,
-                                       UnknownPropertyError,
+from BAC0.core.io.IOExceptions import (ReadPropertyException, NoResponseFromController,
+                                       UnknownObjectError, UnknownPropertyError,
                                        NetworkInterfaceException, InitializationError)
 from BAC0.scripts.Lite import Lite
 from bacpypes.basetypes import PriorityArray
@@ -105,13 +103,16 @@ class BACnetDevice(BaseDevice):
     #     self.__logger.debug('All objects were polled. Send device_id to verifier')
     #     self.__put_device_end_to_verifier()
 
-    async def async_write_property(self, value: Union[int, float], obj: BACnetObj,
-                                   prop: ObjProperty, priority: Optional[int]) -> bool:
+    async def write(self, value: Union[int, float], obj: BACnetObj,
+                    # prop: ObjProperty, priority: Optional[int]
+                    **kwargs) -> bool:
+        prop = kwargs.get('prop')
+        priority = kwargs.get('priority')
         return await self._gateway.async_add_job(
             self.write_property, value, obj, prop, priority)
 
     def write_property(self, value: Union[int, float], obj: BACnetObj,
-                       prop: ObjProperty, priority: Optional[int] = None) -> bool:
+                       prop: ObjProperty, priority: int) -> bool:
         """Writes value to property value in object.
 
         Args:
@@ -123,37 +124,33 @@ class BACnetDevice(BaseDevice):
         Returns:
             Write is successful.
         """
-        priority = priority or self._gateway.api_priority
+        # priority = priority or self._gateway.api.priority
         try:
             args = '{0} {1} {2} {3} {4} - {5}'.format(self.address_port,
-                                                      obj.type.name,
-                                                      obj.id,
-                                                      prop.name,
-                                                      value,
-                                                      priority
-                                                      )
+                                                      obj.type.name, obj.id,
+                                                      prop.name, value, priority)
             is_successful = self.__class__._client.write(args=args)
-            self._LOG.debug('Write',
-                            extra={'device_id': self.id, 'object_id': obj.id,
-                                   'object_type': obj.type, 'value': value,
-                                   'success': is_successful, })
+            self._LOG.debug('Write', extra={'device_id': self.id, 'object_id': obj.id,
+                                            'object_type': obj.type, 'value': value,
+                                            'success': is_successful, })
             return is_successful
         except (ValueError, Exception) as e:
             self._LOG.exception('Unhandled WriteProperty error',
                                 extra={'device_id': self.id, 'object_id': obj.id,
                                        'object_type': obj.type, 'exc': e, 'value': value})
 
-    async def async_read_property(self, obj: BACnetObj,
-                                  prop: ObjProperty) -> Any:
+    async def read(self, obj: BACnetObj,
+                   # prop: ObjProperty
+                   **kwargs) -> Any:
+        prop = kwargs.get('prop')
         return await self._gateway.async_add_job(self.read_property, obj, prop)
 
     def read_property(self, obj: BACnetObj, prop: ObjProperty) -> Any:
+
+        self._polling.wait()
         try:
             request = ' '.join([
-                self.address_port,
-                obj.type.name,
-                str(obj.id),
-                prop.name
+                self.address_port, obj.type.name, str(obj.id), prop.name
             ])
             response = self.__class__._client.read(request)
             self._LOG.debug('Read',
@@ -163,25 +160,29 @@ class BACnetDevice(BaseDevice):
                 obj.set_pv(value=response)
             elif prop is ObjProperty.statusFlags:
                 obj.sf = StatusFlags(flags=response)
+            elif prop is ObjProperty.reliability:
+                obj.reliability = response
             elif prop is ObjProperty.priorityArray:
                 obj.pa = self._pa_to_tuple(pa=response)
-                self._LOG.debug('priority array extracted', extra={'priority_array': obj.pa,
-                                                                   'object_id': obj.id,
-                                                                   'object_type': obj.type,
-                                                                   'device_id': self.id, })
-            # todo
+                self._LOG.debug('priority array extracted',
+                                extra={'priority_array': obj.pa, 'object_id': obj.id,
+                                       'object_type': obj.type, 'device_id': self.id, })
+            else:
+                NotImplementedError('Other properties not support now.')
 
         except (UnknownPropertyError, UnknownObjectError,
-                NoResponseFromController, ReadPropertyException) as e:
-            obj.exception = e
+                NoResponseFromController, ReadPropertyException,
+                Exception) as e:
+            obj.set_exc(exc=e)
             self._LOG.warning('ReadProperty error',
                               extra={'device_id': self.id, 'object_id': obj.id,
-                                     'object_type': obj.type, 'exc': e, })
-        except Exception as e:
-            obj.exception = e
-            self._LOG.exception(f'Unexpected read error: {e}',
-                                extra={'device_id': self.id, 'object_id': obj.id,
-                                       'object_type': obj.type, 'exc': e, })
+                                     'object_type': obj.type, 'exc': e,
+                                     'unreachable_in_row': obj.unreachable_in_row, })
+        # except Exception as e:
+        #     obj.exception = e
+        #     self._LOG.exception(f'Unexpected read error: {e}',
+        #                         extra={'device_id': self.id, 'object_id': obj.id,
+        #                                'object_type': obj.type, 'exc': e, })
         else:
             return response
 
