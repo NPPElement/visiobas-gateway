@@ -81,9 +81,9 @@ class VisioGtwApi:
         # Register handlers
         for handler in self.handlers:
             _LOG.debug('Registering handler',
-                       extra={'handler': handler.__name__, 'url': handler.url_path, })
+                       extra={'handler': handler.__name__, 'url': handler.URL_PATH, })
             cors.add(
-                app.router.add_route('*', handler.url_path, handler)
+                app.router.add_route('*', handler.URL_PATH, handler)
             )
 
         # Swagger docs

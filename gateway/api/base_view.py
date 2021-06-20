@@ -16,11 +16,6 @@ ObjAlias = Any  # Union['..models.BACnetObj',]
 class BaseView(View):
 
     @property
-    @abstractmethod
-    def url_path(self) -> str:
-        raise NotImplementedError
-
-    @property
     def gtw(self) -> VisioBASGatewayAlias:
         """
         Returns:
