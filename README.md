@@ -54,9 +54,9 @@ Environment variables provides via `.env` files.
 Paths to `.env` files specified at `docker-compose.yaml`.
 
 Configuration can be changed in files:
-  - `docker-compose.yaml`
-  - `gateway/config/gateway.env` [template](/config/templates/gateway.env)
-  - `gateway/config/http.env` [template](/config/templates/http.env)
+  - `config/gateway.env` [template](/config/templates/gateway.env)
+  - `config/http.env` [template](/config/templates/http.env)
+  - `config/api.env` [template](/config/templates/api.env)
   - TODO: mqtt
 
 ### Logging level
@@ -64,7 +64,8 @@ Configuration can be changed in files:
 - Logging level You can change the logging level in the `docker-compose.yaml` file. You can
   choose one of the following levels: `DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL`
 
-### [Objects configuration](/docs/properties_ru.md)
+### Objects configuration
+To configure objects properties read [this note](/docs/properties_ru.md).
 
 ### Setting Serial ports
 
