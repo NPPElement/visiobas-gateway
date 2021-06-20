@@ -235,8 +235,8 @@ class BaseDevice(ABC):
                               'objects_number': len(objs), 'period': period, })
 
         if _t_delta.seconds > period:
-            period *= 1.5
-            self._LOG.warning('Polling period is too short! Increased in x1.5',
+            # period *= 1.5
+            self._LOG.warning('Polling period is too short!',
                               extra={'device_id': self.id})
         await self._scheduler.spawn(self._process_polled(objs=objs))
         await asyncio.sleep(delay=period - _t_delta.seconds)
