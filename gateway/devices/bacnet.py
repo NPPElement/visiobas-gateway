@@ -1,4 +1,4 @@
-from typing import Any, Collection, Union, Optional
+from typing import Any, Collection, Union
 
 from BAC0.core.io.IOExceptions import (ReadPropertyException, NoResponseFromController,
                                        UnknownObjectError, UnknownPropertyError,
@@ -53,11 +53,13 @@ class BACnetDevice(BaseDevice):
         self._client.disconnect()
 
     async def _poll_objects(self, objs: Collection[BACnetObj]) -> None:
-        def _sync_poll_objects(objs_: Collection[BACnetObj]) -> None:
-            for obj in objs_:
-                await self.simulate_rpm(obj=obj)
-
-        await self._gateway.async_add_job(_sync_poll_objects, objs)
+        # def _sync_poll_objects(objs_: Collection[BACnetObj]) -> None:
+        #     for obj in objs_:
+        #         await self.simulate_rpm(obj=obj)
+        #
+        # await self._gateway.async_add_job(_sync_poll_objects, objs)
+        for obj in objs:
+            await self.simulate_rpm(obj=obj)
 
     # def poll(self) -> None:
     #     """ Poll all object from device.
