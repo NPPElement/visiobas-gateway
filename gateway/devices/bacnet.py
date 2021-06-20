@@ -55,7 +55,7 @@ class BACnetDevice(BaseDevice):
     async def _poll_objects(self, objs: Collection[BACnetObj]) -> None:
         def _sync_poll_objects(objs_: Collection[BACnetObj]) -> None:
             for obj in objs_:
-                self.simulate_rpm(obj=obj)
+                await self.simulate_rpm(obj=obj)
 
         await self._gateway.async_add_job(_sync_poll_objects, objs)
 
@@ -143,11 +143,10 @@ class BACnetDevice(BaseDevice):
                    # prop: ObjProperty
                    **kwargs) -> Any:
         prop = kwargs.get('prop')
+        await self._polling.wait()
         return await self._gateway.async_add_job(self.read_property, obj, prop)
 
     def read_property(self, obj: BACnetObj, prop: ObjProperty) -> Any:
-
-        self._polling.wait()
         try:
             request = ' '.join([
                 self.address_port, obj.type.name, str(obj.id), prop.name
@@ -213,9 +212,9 @@ class BACnetDevice(BaseDevice):
     #     #     else:
     #     #         raise ReadPropertyMultipleException('Response is None')
 
-    def simulate_rpm(self, obj: BACnetObj) -> None:
+    async def simulate_rpm(self, obj: BACnetObj) -> None:
         for prop in obj.type.properties:
-            self.read_property(obj=obj, prop=prop)
+            await self.read(obj=obj, prop=prop)
 
     @staticmethod
     def _pa_to_tuple(pa: PriorityArray) -> tuple:

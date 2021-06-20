@@ -85,6 +85,7 @@ class SyncModbusDevice(BaseModbusDevice):
                 }
 
     async def read(self, obj: ModbusObj, **kwargs) -> Optional[Union[int, float]]:
+        await self._polling.wait()
         return await self._gateway.async_add_job(self.sync_read, obj)
 
     def sync_read(self, obj: ModbusObj) -> Optional[Union[int, float]]:
@@ -92,7 +93,6 @@ class SyncModbusDevice(BaseModbusDevice):
 
         Updates object and return value.
         """
-        self._polling.wait()
         try:
             if obj.func_read is ModbusReadFunc.READ_FILE:
                 raise ModbusException('func-not-support')  # todo: implement 0x14 func
@@ -167,8 +167,10 @@ class SyncModbusDevice(BaseModbusDevice):
         #                                'quantity': obj.quantity, 'exc': e, })
 
     async def _poll_objects(self, objs: Collection[ModbusObj]) -> None:
-        def _sync_poll_objects(objs_: Collection[ModbusObj]) -> None:
-            for obj in objs_:
-                self.sync_read(obj=obj)
-
-        await self._gateway.async_add_job(_sync_poll_objects, objs)
+        # def _sync_poll_objects(objs_: Collection[ModbusObj]) -> None:
+        #     for obj in objs_:
+        #         self.sync_read(obj=obj)
+        #
+        # await self._gateway.async_add_job(_sync_poll_objects, objs)
+        for obj in objs:
+            await self.read(obj=obj)

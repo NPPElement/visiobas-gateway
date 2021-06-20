@@ -130,7 +130,7 @@ class AsyncModbusDevice(BaseModbusDevice):
 
         Updates object and return value.
         """
-        self._polling.wait()
+        await self._polling.wait()
         try:
             if obj.func_read is ModbusReadFunc.READ_FILE:
                 raise ModbusException('func-not-support')  # todo: implement 0x14 func
