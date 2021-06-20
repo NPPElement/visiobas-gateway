@@ -3,7 +3,6 @@ from typing import Callable, Any, Optional, Union, Awaitable, Collection
 
 import aiohttp
 import aiojobs
-from aiomisc import entrypoint
 from pydantic import ValidationError
 
 from gateway.api import VisioGtwApi
@@ -13,7 +12,6 @@ from gateway.models import (ObjType, BACnetDeviceObj, ModbusObj, Protocol,
                             BACnetObj, HTTPSettings, GatewaySettings, ApiSettings)
 from gateway.utils import get_file_logger
 from gateway.verifier import BACnetVerifier
-
 
 _LOG = get_file_logger(__name__)
 
