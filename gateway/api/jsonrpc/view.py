@@ -9,7 +9,6 @@ _LOG = get_file_logger(__name__)
 
 
 class JsonRPCView(handler.JSONRPCView, BaseView, CorsViewMixin):
-    URL_PATH = r'/json-rpc'
 
     cors_config = {
         '*': ResourceOptions(
@@ -19,6 +18,10 @@ class JsonRPCView(handler.JSONRPCView, BaseView, CorsViewMixin):
             allow_methods=['POST']
         )
     }
+
+    @property
+    def url_path(self) -> str:
+        return r'/json-rpc'
 
     async def rpc_writeSetPoint(self, *args, **kwargs):
         dev_id = int(kwargs.get('device_id'))

@@ -1,3 +1,4 @@
+from abc import abstractmethod
 from typing import Optional, Any
 
 from aiohttp.web_urldispatcher import View
@@ -13,6 +14,11 @@ ObjAlias = Any  # Union['..models.BACnetObj',]
 
 
 class BaseView(View):
+
+    @abstractmethod
+    def url_path(self) -> str:
+        raise NotImplementedError
+
     @property
     def gtw(self) -> VisioBASGatewayAlias:
         """
