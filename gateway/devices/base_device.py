@@ -196,7 +196,7 @@ class BaseDevice(ABC):
         else:
             self._LOG.info('Client is not connected. Sleeping to next try',
                            extra={'device_id': self.id,
-                                  'seconds_to_next_try': self.reconnect_period})
+                                  'seconds_to_next_try': self.reconnect_period, })
             await asyncio.sleep(delay=self.reconnect_period)
             await self._gateway.async_add_job(self.create_client)
             await self._scheduler.spawn(self.start_periodic_polls())
@@ -225,13 +225,14 @@ class BaseDevice(ABC):
                             period: int) -> None:
         self._LOG.debug('Polling started',
                         extra={'device_id': self.id, 'period': period,
-                               'objects_polled': len(objs)})
+                               'objects_number': len(objs)})
         _t0 = datetime.now()
         await self._poll_objects(objs=objs)
+        self._check_unreachable(objs=objs, period=period)  # hotfix
         _t_delta = datetime.now() - _t0
         self._LOG.info('Objects polled',
                        extra={'device_id': self.id, 'seconds_took': _t_delta.seconds,
-                              'objects_polled': len(objs), 'period': period, })
+                              'objects_number': len(objs), 'period': period, })
 
         if _t_delta.seconds > period:
             period *= 1.5
@@ -244,19 +245,19 @@ class BaseDevice(ABC):
         #                 extra={'device_id': self.id, 'period': period,
         #                        'jobs_active_count': self.scheduler.active_count,
         #                        'jobs_pending_count': self.scheduler.pending_count, })
-        # await asyncio.sleep(delay=period)
 
         await self._scheduler.spawn(self.periodic_poll(objs=objs, period=period))
 
-    async def _process_polled(self, objs: set[Union[BACnetObj, ModbusObj]]):
+    async def _process_polled(self, objs: set[Union[BACnetObj, ModbusObj]]) -> None:
         await self._gateway.verify_objects(objs=objs)
         await self._gateway.send_objects(objs=objs)
 
-        for period, objs in self._objects.items():
-            for obj in objs.copy():
-                if obj.unreachable_in_row >= self._gateway.unreachable_threshold:
-                    self._LOG.debug('Marked as unreachable',
-                                    extra={'device_id': obj.device_id,
-                                           'object_id': obj.id, 'object_type': obj.type, })
-                    self._objects[period].remove(obj)
-                    self._unreachable_objects.add(obj)
+    def _check_unreachable(self, objs: set[Union[BACnetObj, ModbusObj]], period: int
+                           ) -> None:
+        for obj in objs.copy():
+            if obj.unreachable_in_row >= self._gateway.unreachable_threshold:
+                self._LOG.debug('Marked as unreachable',
+                                extra={'device_id': obj.device_id,
+                                       'object_id': obj.id, 'object_type': obj.type, })
+                self._objects[period].remove(obj)
+                self._unreachable_objects.add(obj)
