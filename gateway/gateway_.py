@@ -107,12 +107,6 @@ class VisioBASGateway:
         await self._scheduler.spawn(coro=self.periodic_update())
         # self._upd_task = self.loop.create_task(self.periodic_update())
 
-    # async def start_api(self) -> None:
-    #     """Starts GatewayAPI."""
-    #     # todo: drop `aiomics` dependence
-    #     async with entrypoint(self.api, log_config=False) as ep:
-    #         await ep.closing()
-
     async def periodic_update(self) -> None:
         """Spawn periodic update task."""
         await self._perform_start_tasks()

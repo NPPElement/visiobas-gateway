@@ -129,6 +129,17 @@ class BaseDevice(ABC):
 
     async def write_with_check(self, value: Union[int, float], obj: BACnetObj,
                                **kwargs) -> bool:
+        """Writes value to object at controller and check it by read.
+
+        Args:
+            value: Value to write.
+            obj: Objects instance.
+            **kwargs:
+
+        Returns:
+            True - if write value and read value is consistent.
+            False - if they aren't consistent.
+        """
         self._polling.clear()
         await self.write(value=value, obj=obj, **kwargs)
         read_value = await self.read(obj=obj, **kwargs)
