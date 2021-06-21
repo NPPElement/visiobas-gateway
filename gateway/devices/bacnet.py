@@ -145,7 +145,9 @@ class BACnetDevice(BaseDevice):
                    # prop: ObjProperty
                    **kwargs) -> Any:
         prop = kwargs.get('prop')
-        await self._polling.wait()
+
+        if kwargs.get('wait', True):
+            await self._polling.wait()
         return await self._gateway.async_add_job(self.read_property, obj, prop)
 
     def read_property(self, obj: BACnetObj, prop: ObjProperty) -> Any:

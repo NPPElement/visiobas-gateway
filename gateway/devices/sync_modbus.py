@@ -1,3 +1,4 @@
+import asyncio
 import struct
 from typing import Union, Any, Callable, Optional, Collection
 
@@ -43,6 +44,8 @@ class SyncModbusDevice(BaseModbusDevice):
                                                       stopbits=self._device_obj.stopbits,
                                                       timeout=self.timeout)
                     self._serial_clients.update({self.serial_port: self._client})
+                    self.__class__._serial_polling.update(
+                        {self.serial_port: asyncio.Event()})
                 else:
                     self._LOG.debug('Serial port already using. Getting client',
                                     extra={'device_id': self.id,
@@ -85,7 +88,8 @@ class SyncModbusDevice(BaseModbusDevice):
                 }
 
     async def read(self, obj: ModbusObj, **kwargs) -> Optional[Union[int, float]]:
-        await self._polling.wait()
+        if kwargs.get('wait', True):
+            await self._polling_event.wait()
         return await self._gateway.async_add_job(self.sync_read, obj)
 
     def sync_read(self, obj: ModbusObj) -> Optional[Union[int, float]]:

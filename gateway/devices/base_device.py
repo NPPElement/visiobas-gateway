@@ -21,10 +21,11 @@ class BaseDevice(ABC):
 
     _client_creation_lock: asyncio.Lock = None
 
-    # Keys is serial port names.
+    # Key is serial port name.
     _serial_clients: dict[str: Union[ModbusSerialClient,
                                      AsyncioModbusSerialClient]] = {}
     _serial_port_locks: dict[str: asyncio.Lock] = {}
+    _serial_polling: dict[str: asyncio.Event] = {}
 
     def __init__(self, device_obj: BACnetDeviceObj, gateway: 'VisioBASGateway'):
         self._gateway = gateway
@@ -66,6 +67,10 @@ class BaseDevice(ABC):
     def id(self) -> int:
         """Device id."""
         return self._device_obj.id
+
+    @property
+    def _polling_event(self) -> asyncio.Event:
+        return self.__class__._serial_polling[self.serial_port] if self.protocol is Protocol.MODBUS_RTU else self._polling
 
     @property
     def address(self) -> Optional[IPv4Address]:
@@ -142,7 +147,7 @@ class BaseDevice(ABC):
         """
         self._polling.clear()
         await self.write(value=value, obj=obj, **kwargs)
-        read_value = await self.read(obj=obj, **kwargs)
+        read_value = await self.read(obj=obj, wait=False, **kwargs)
         self._polling.set()
 
         is_consistent = value == read_value

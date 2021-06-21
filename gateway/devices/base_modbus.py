@@ -3,8 +3,8 @@ from typing import Any, Callable, Union, Optional
 
 from pymodbus.bit_read_message import (ReadCoilsResponse, ReadDiscreteInputsResponse,
                                        ReadBitsResponseBase)
-from pymodbus.client.asynchronous.async_io import AsyncioModbusTcpClient, \
-    AsyncioModbusSerialClient
+from pymodbus.client.asynchronous.async_io import (AsyncioModbusTcpClient,
+                                                   AsyncioModbusSerialClient)
 from pymodbus.client.sync import ModbusSerialClient, ModbusTcpClient
 from pymodbus.payload import BinaryPayloadDecoder, BinaryPayloadBuilder
 from pymodbus.register_read_message import (ReadHoldingRegistersResponse,
@@ -181,8 +181,7 @@ class BaseModbusDevice(BaseDevice):
                                'object_is_register': obj.is_register,
                                'objects_is_coil': obj.is_coil,
                                'address': obj.address,
-                               'word_order': obj.word_order,
-                               'byre_order': obj.byte_order,
+                               'word_order': obj.word_order, 'byre_order': obj.byte_order,
                                'quantity': obj.quantity, 'data_length': obj.data_length,
                                'data_type': obj.data_type, 'value_raw': value,
                                'value_scaled': scaled, 'value_encoded': payload, })

@@ -73,6 +73,8 @@ class AsyncModbusDevice(BaseModbusDevice):
                     )
                     self._serial_port_locks.update({self.serial_port: asyncio.Lock()})
                     self._serial_clients.update({self.serial_port: self._client})
+                    self.__class__._serial_polling.update(
+                        {self.serial_port: asyncio.Event()})
                 elif (
                         self._serial_clients.get(self.serial_port)
                         and self._serial_port_locks.get(self.serial_port)
@@ -130,7 +132,8 @@ class AsyncModbusDevice(BaseModbusDevice):
 
         Updates object and return value.
         """
-        await self._polling.wait()
+        if kwargs.get('wait', True):
+            await self._polling_event.wait()
         try:
             if obj.func_read is ModbusReadFunc.READ_FILE:
                 raise ModbusException('func-not-support')  # todo: implement 0x14 func
