@@ -33,7 +33,6 @@ class ObjType(Enum):
     PULSE_CONVERTER = "pulse-converter", 24, 'pulseConverter'
     ACCESS_POINT = "access-point", 33, 'accessPoint'
 
-
     # todo add types from page 65
 
     # TODO: add JSON-input = 250
@@ -78,20 +77,12 @@ class ObjType(Enum):
 
     @property
     def properties(self) -> tuple[ObjProperty, ...]:
-        if self in {ObjType.BINARY_INPUT,
-                    ObjType.ANALOG_INPUT,
-                    ObjType.MULTI_STATE_INPUT
-                    }:
-            return (ObjProperty.presentValue,
-                    ObjProperty.statusFlags
-                    )
-        elif self in {ObjType.BINARY_OUTPUT, ObjType.BINARY_VALUE,
-                      ObjType.ANALOG_OUTPUT, ObjType.ANALOG_VALUE,
-                      ObjType.MULTI_STATE_VALUE, ObjType.MULTI_STATE_OUTPUT
-                      }:
-            return (ObjProperty.presentValue,
-                    ObjProperty.statusFlags,
-                    ObjProperty.priorityArray
-                    )
+        if self in {ObjType.BINARY_INPUT, ObjType.ANALOG_INPUT, ObjType.MULTI_STATE_INPUT}:
+            return ObjProperty.presentValue, ObjProperty.statusFlags
+        elif self in {ObjType.BINARY_OUTPUT, ObjType.BINARY_VALUE, ObjType.ANALOG_OUTPUT,
+                      ObjType.ANALOG_VALUE, ObjType.MULTI_STATE_VALUE,
+                      ObjType.MULTI_STATE_OUTPUT}:
+            return (ObjProperty.presentValue, ObjProperty.statusFlags,
+                    ObjProperty.priorityArray)
         else:
             raise NotImplementedError(f'Properties for {self} not defined yet')

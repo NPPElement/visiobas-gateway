@@ -34,9 +34,6 @@ class AsyncModbusDevice(BaseModbusDevice):
     async def create_client(self) -> None:
         """Initializes asynchronous modbus client.
 
-        Raises:
-            # ConnectionError: if client is not initialized.
-
         Async pymodbus not support `timeout` param. Default: 2 sec
         See: <https://github.com/riptideio/pymodbus/issues/349>
         """
@@ -73,8 +70,7 @@ class AsyncModbusDevice(BaseModbusDevice):
                     )
                     self._serial_port_locks.update({self.serial_port: asyncio.Lock()})
                     self._serial_clients.update({self.serial_port: self._client})
-                    self.__class__._serial_polling.update(
-                        {self.serial_port: asyncio.Event()})
+                    self._serial_polling.update({self.serial_port: asyncio.Event()})
                 elif (
                         self._serial_clients.get(self.serial_port)
                         and self._serial_port_locks.get(self.serial_port)

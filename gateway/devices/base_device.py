@@ -69,8 +69,17 @@ class BaseDevice(ABC):
         return self._device_obj.id
 
     @property
+    def serial_port(self) -> Optional[str]:
+        """
+        Returns:
+            Serial port name if exists. Else None.
+        """
+        if self.protocol is Protocol.MODBUS_RTU:
+            return self._device_obj.property_list.rtu.port
+
+    @property
     def _polling_event(self) -> asyncio.Event:
-        return self.__class__._serial_polling[self.serial_port] if self.protocol is Protocol.MODBUS_RTU else self._polling
+        return self._serial_polling[self.serial_port] if self.protocol is Protocol.MODBUS_RTU else self._polling
 
     @property
     def address(self) -> Optional[IPv4Address]:
@@ -145,10 +154,10 @@ class BaseDevice(ABC):
             True - if write value and read value is consistent.
             False - if they aren't consistent.
         """
-        self._polling.clear()
+        self._polling_event.clear()
         await self.write(value=value, obj=obj, **kwargs)
         read_value = await self.read(obj=obj, wait=False, **kwargs)
-        self._polling.set()
+        self._polling_event.set()
 
         is_consistent = value == read_value
         self._LOG.debug('Write with check called',
@@ -179,14 +188,14 @@ class BaseDevice(ABC):
             self._LOG.debug('No objects to load', extra={'device_id': self.id, })
             return None
 
-        self._polling.clear()
+        self._polling_event.clear()
         for obj in objs:
             poll_period = obj.property_list.send_interval
             try:
                 self._objects[poll_period].add(obj)
             except KeyError:
                 self._objects[poll_period] = {obj}
-        self._polling.set()
+        self._polling_event.set()
         self._LOG.debug('Objects are grouped by period and loads to the device',
                         extra={'device_id': self.id, 'objects_number': len(objs)})
 
@@ -194,7 +203,7 @@ class BaseDevice(ABC):
         """Starts periodic polls for all periods."""
 
         if self.is_client_connected:
-            self._polling.set()
+            self._polling_event.set()
             for period, objs in self._objects.items():
                 await self._scheduler.spawn(self.periodic_poll(objs=objs, period=period))
             await self._scheduler.spawn(self._periodic_reset_unreachable())

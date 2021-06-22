@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from typing import Any, Callable, Union, Optional
+from typing import Any, Callable, Union
 
 from pymodbus.bit_read_message import (ReadCoilsResponse, ReadDiscreteInputsResponse,
                                        ReadBitsResponseBase)
@@ -34,15 +34,6 @@ class BaseModbusDevice(BaseDevice):
             ModbusSerialClient, ModbusTcpClient,
             AsyncioModbusTcpClient, AsyncioModbusSerialClient
         ] = None
-
-    @property
-    def serial_port(self) -> Optional[str]:
-        """
-        Returns:
-            Serial port name if exists. Else None.
-        """
-        if self.protocol is Protocol.MODBUS_RTU:
-            return self._device_obj.property_list.rtu.port
 
     @property
     def unit(self) -> int:

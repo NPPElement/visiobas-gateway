@@ -41,11 +41,8 @@ def get_file_logger(name: str,
     logger.setLevel(level=log_level)
     # logger.handlers = []  # Remove all handlers
 
-    file_handler = RotatingFileHandler(filename=log_filename,
-                                       mode='a',
-                                       maxBytes=size_mb,
-                                       backupCount=1,
-                                       encoding='utf-8', )
+    file_handler = RotatingFileHandler(filename=log_filename, mode='a', maxBytes=size_mb,
+                                       backupCount=1, encoding='utf-8', )
     formatter = ExtraFormatter(fmt=fmt)
     file_handler.setFormatter(fmt=formatter)
     logger.addHandler(file_handler)
