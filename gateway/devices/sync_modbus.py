@@ -31,6 +31,7 @@ class SyncModbusDevice(BaseModbusDevice):
                                                framer=framer, retries=self.retries,
                                                retry_on_empty=True, retry_on_invalid=True,
                                                timeout=self.timeout)
+                self._connected = self._client.connect()
             elif self.protocol is Protocol.MODBUS_RTU:
                 if not self._serial_clients.get(self.serial_port):
                     self._LOG.debug('Serial port not using. Creating sync client',
@@ -45,6 +46,7 @@ class SyncModbusDevice(BaseModbusDevice):
                                                       timeout=self.timeout)
                     self._serial_clients.update({self.serial_port: self._client})
                     self._serial_polling.update({self.serial_port: asyncio.Event()})
+                    self._serial_connected.update({self.serial_port: self._client.connect()})
                 else:
                     self._LOG.debug('Serial port already using. Getting client',
                                     extra={'device_id': self.id,
@@ -57,7 +59,6 @@ class SyncModbusDevice(BaseModbusDevice):
             self._LOG.warning('Cannot create client',
                               extra={'device_id': self.id, 'exc': e, })
         else:
-            self._connected = self._client.connect()
             self._LOG.debug('Client created', extra={'device_id': self.id})
 
     def close_client(self) -> None:
@@ -66,9 +67,9 @@ class SyncModbusDevice(BaseModbusDevice):
             self.__class__._serial_clients.pop(self.serial_port)
             self.__class__._serial_port_locks.pop(self.serial_port)
 
-    @property
-    def is_client_connected(self) -> bool:
-        return self._connected
+    # @property
+    # def is_client_connected(self) -> bool:
+    #     return self._connected
 
     @property
     def read_funcs(self) -> dict[ModbusReadFunc, Callable]:

@@ -71,6 +71,7 @@ class AsyncModbusDevice(BaseModbusDevice):
                     self._serial_port_locks.update({self.serial_port: asyncio.Lock()})
                     self._serial_clients.update({self.serial_port: self._client})
                     self._serial_polling.update({self.serial_port: asyncio.Event()})
+                    self._serial_connected.update({self.serial_port: self._client.connect()})
                 elif (
                         self._serial_clients.get(self.serial_port)
                         and self._serial_port_locks.get(self.serial_port)
@@ -109,19 +110,21 @@ class AsyncModbusDevice(BaseModbusDevice):
 
     @property
     def read_funcs(self) -> dict[ModbusReadFunc, Callable]:
-        return {ModbusReadFunc.READ_COILS: self._client.protocol.read_coils,
-                ModbusReadFunc.READ_DISCRETE_INPUTS: self._client.protocol.read_discrete_inputs,
-                ModbusReadFunc.READ_HOLDING_REGISTERS: self._client.protocol.read_holding_registers,
-                ModbusReadFunc.READ_INPUT_REGISTERS: self._client.protocol.read_input_registers,
-                }
+        return {
+            ModbusReadFunc.READ_COILS: self._client.protocol.read_coils,
+            ModbusReadFunc.READ_DISCRETE_INPUTS: self._client.protocol.read_discrete_inputs,
+            ModbusReadFunc.READ_HOLDING_REGISTERS: self._client.protocol.read_holding_registers,
+            ModbusReadFunc.READ_INPUT_REGISTERS: self._client.protocol.read_input_registers,
+        }
 
     @property
     def write_funcs(self) -> dict[ModbusWriteFunc, Callable]:
-        return {ModbusWriteFunc.WRITE_COIL: self._client.protocol.write_coil,
-                ModbusWriteFunc.WRITE_REGISTER: self._client.protocol.write_register,
-                ModbusWriteFunc.WRITE_COILS: self._client.protocol.write_coils,
-                ModbusWriteFunc.WRITE_REGISTERS: self._client.protocol.write_registers,
-                }
+        return {
+            ModbusWriteFunc.WRITE_COIL: self._client.protocol.write_coil,
+            ModbusWriteFunc.WRITE_REGISTER: self._client.protocol.write_register,
+            ModbusWriteFunc.WRITE_COILS: self._client.protocol.write_coils,
+            ModbusWriteFunc.WRITE_REGISTERS: self._client.protocol.write_registers,
+        }
 
     async def read(self, obj: ModbusObj, **kwargs) -> Optional[Union[int, float]]:
         """Read data from Modbus object.

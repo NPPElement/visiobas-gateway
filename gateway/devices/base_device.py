@@ -26,6 +26,7 @@ class BaseDevice(ABC):
                                      AsyncioModbusSerialClient]] = {}
     _serial_port_locks: dict[str: asyncio.Lock] = {}
     _serial_polling: dict[str: asyncio.Event] = {}
+    _serial_connected: dict[str, bool] = {}
 
     def __init__(self, device_obj: BACnetDeviceObj, gateway: 'VisioBASGateway'):
         self._gateway = gateway
@@ -43,6 +44,10 @@ class BaseDevice(ABC):
         # IMPORTANT: clear that event to change the objects (load or priority write).
         # Wait that event in polling to provide priority access to write_with_check.
         self._polling = asyncio.Event()
+
+    @property
+    def is_client_connected(self) -> bool:
+        return bool(self._serial_connected.get(self.serial_port)) if self.protocol is Protocol.MODBUS_RTU else self._connected
 
     @classmethod
     async def create(cls, device_obj: BACnetDeviceObj, gateway: 'VisioBASGateway'
@@ -113,9 +118,9 @@ class BaseDevice(ABC):
     def all_objects(self) -> set[Union[BACnetObj, ModbusObj]]:
         return {obj for objs_set in self._objects.values() for obj in objs_set}
 
-    @abstractmethod
-    def is_client_connected(self) -> bool:
-        raise NotImplementedError
+    # @abstractmethod
+    # def is_client_connected(self) -> bool:
+    #     raise NotImplementedError
 
     @abstractmethod
     def create_client(self) -> None:
