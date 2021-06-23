@@ -167,7 +167,7 @@ class BACnetDevice(BaseDevice):
                 obj.reliability = response
             elif prop is ObjProperty.priorityArray:
                 obj.pa = self._pa_to_tuple(pa=response)
-                self._LOG.debug('priority array extracted',
+                self._LOG.debug('Priority array extracted',
                                 extra={'priority_array': obj.pa, 'object_id': obj.id,
                                        'object_type': obj.type, 'device_id': self.id, })
             else:
@@ -176,10 +176,12 @@ class BACnetDevice(BaseDevice):
         except (UnknownPropertyError, UnknownObjectError,
                 NoResponseFromController, ReadPropertyException,
                 Exception) as e:
-            obj.set_exc(exc=e)
+            if prop is ObjProperty.presentValue:
+                obj.set_exc(exc=e)
             self._LOG.warning('ReadProperty error',
                               extra={'device_id': self.id, 'object_id': obj.id,
                                      'object_type': obj.type, 'exc': e,
+                                     'property': prop,
                                      'unreachable_in_row': obj.unreachable_in_row, })
         # except Exception as e:
         #     obj.exception = e
