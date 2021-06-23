@@ -20,28 +20,29 @@ requirements = [str(r) for r in parse_requirements(_req_path.read_text())]
 # ).load_module()
 
 
-setup(name='visiobas-gateway',
-      version=__version__,
-      author=__author__,
-      author_email=__email__,
-      maintainer=__maintainer__,
-      maintainer_email=__email__,
-      license=__license__,
-      description='VisiBAS Gateway.',
-      long_description=open('README.md').read(),
-      url='https://github.com/NPPElement/visiobas-gateway',
-      # platforms='all',
-      classifiers=['Programming Language :: Python',
-                   'Programming Language :: Python :: 3',
-                   'Programming Language :: Python :: 3.9',
-                   'Programming Language :: Python :: Implementation :: CPython',
-                   ],
-      python_requires='>=3.9',
-      packages=find_packages(exclude=('tests', 'connectors', 'panel')),
-      install_requires=requirements,
-      # extras_require={'dev': load_requirements('requirements.dev.txt')},
-      entry_points={'console_scripts': ['gateway = gateway.__main__:main',
-                                        ]
-                    },
-      include_package_data=True
-      )
+setup(
+    name='visiobas-gateway',
+    version=__version__,
+    author=__author__,
+    author_email=__email__,
+    maintainer=__maintainer__,
+    maintainer_email=__email__,
+    license=__license__,
+    description='VisiBAS Gateway.',
+    long_description=open('README.md').read(),
+    url='https://github.com/NPPElement/visiobas-gateway',
+    # platforms='all',
+    classifiers=['Programming Language :: Python',
+                 'Programming Language :: Python :: 3',
+                 'Programming Language :: Python :: 3.9',
+                 'Programming Language :: Python :: Implementation :: CPython',
+                 ],
+    python_requires='>=3.9',
+    packages=find_packages(exclude=('tests', 'connectors', 'panel')),
+    install_requires=requirements,
+    # extras_require={'dev': load_requirements('requirements.dev.txt')},
+    entry_points={'console_scripts': ['gateway = gateway.__main__:main',
+                                      ]
+                  },
+    include_package_data=True
+)
