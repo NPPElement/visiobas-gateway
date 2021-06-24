@@ -2,11 +2,13 @@ from .base_device import BaseDevice
 from ..models import BACnetDeviceObj
 
 
-class XNP_6550_RH(BaseDevice):
+class SUNAPIDevice(BaseDevice):
+    """Now used for XNP-6550-RH."""
+
     def __init__(self, device_obj: BACnetDeviceObj, gateway):
         super().__init__(device_obj, gateway)
 
-    def ptz(self, cgi: str, msubmenu: str, action: str, **kwargs) -> None:
+    def ptz(self, cgi: str, submenu: str, action: str, **kwargs) -> None:
         """The absolute submenu of `ptzcontrol.cgi` controls absolute a PTZ operation that moves the camera to
         the specified position.
         """
@@ -20,12 +22,13 @@ class XNP_6550_RH(BaseDevice):
             'swing', 'group', 'tour', 'trace', 'autorun', 'home', 'preset', 'presetimageconfig',
             'presetvideoanalysis', 'Presetvideoanalysis2', 'ptzsettings',
         }
+        actions = {}  # todo
 
         if cgi is 'control':
-            if msubmenu not in control_submenus:
+            if submenu not in control_submenus:
                 raise ValueError(f'Control submenu must be one of {control_submenus}')
         elif cgi is 'config':
-            if msubmenu not in config_submenus:
+            if submenu not in config_submenus:
                 raise ValueError(f'Config submenu must be one of {config_submenus}')
         else:
             raise ValueError('Provide `control` or `config` cgi')
@@ -35,5 +38,5 @@ class XNP_6550_RH(BaseDevice):
 
         # ex = 'http://<Device IP>/stw‐cgi/ptzcontrol.cgi?msubmenu=absolute&action=control&Pan=90&Zoom=30&Tilt=25'
 
-        self._gateway.http_client.request(method='POST', url=url_path,
-                                          params={'msubmenu': msubmenu, 'action': action, **kwargs})
+        self._gtw.http_client.request(method='POST', url=url_path,
+                                      params={'msubmenu': submenu, 'action': action, **kwargs})
