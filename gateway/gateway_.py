@@ -63,9 +63,9 @@ class VisioBASGateway:
     def upd_period(self) -> int:
         return self.settings.update_period
 
-    @property
-    def devices(self) -> dict[int, Union[AsyncModbusDevice]]:
-        return self._devices
+    # @property
+    # def devices(self) -> dict[int, Union[AsyncModbusDevice]]:
+    #     return self._devices
 
     def get_device(self, dev_id: int) -> Optional[Union[AsyncModbusDevice]]:
         """
@@ -193,8 +193,11 @@ class VisioBASGateway:
         #     - Log out to HTTP
         """
         # todo await self.mqtt_client.unsubscribe(self.mqtt_client.topics)
-        stop_device_tasks = [dev.stop for dev in self.devices.values()]
-        await asyncio.gather(*stop_device_tasks)
+
+        # Stop polling devices.
+        stop_device_polling_tasks = [dev.stop for dev in self._devices.values()
+                                     if dev.is_polling_device]
+        await asyncio.gather(*stop_device_polling_tasks)
         self._devices = {}
 
         await self.http_client.logout()
@@ -253,8 +256,12 @@ class VisioBASGateway:
 
     async def start_device_poll(self, dev_id: int) -> None:
         """Starts poll of device."""
-        await self.async_add_job(self.devices[dev_id].start_periodic_polls)
-        _LOG.info('Device polling started', extra={'device_id': dev_id})
+        dev = self._devices[dev_id]
+        if dev.is_polling_device:
+            await self.async_add_job(dev.start_periodic_polls)
+            _LOG.info('Device polling started', extra={'device_id': dev_id})
+        else:
+            _LOG.warning('Is not a polling device', extra={'device_id': dev_id})
 
     @staticmethod
     def _parse_device_obj(dev_data: dict) -> Optional[BACnetDeviceObj]:
