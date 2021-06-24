@@ -114,12 +114,12 @@ class VisioHTTPClient:
             If provided one type - returns objects of this type or exception.
             If provided several types - returns tuple of objects, exceptions.
         """
-        rq_tasks = [self._rq(method='GET',
-                             url=self._URL_GET.format(
+        rq_tasks = [self.request(method='GET',
+                                 url=self._URL_GET.format(
                                  base_url=self.server_get.current_url,
                                  device_id=str(dev_id),
                                  object_type_dashed=obj_type.name_dashed),
-                             headers=self.server_get.auth_headers)
+                                 headers=self.server_get.auth_headers)
                     for obj_type in obj_types]
         data = await asyncio.gather(*rq_tasks, return_exceptions=True)
 
@@ -141,10 +141,10 @@ class VisioHTTPClient:
 
         _LOG.debug('Logging out', extra={'servers': servers})
         try:
-            logout_tasks = [self._rq(method='GET',
-                                     url=self._URL_LOGOUT.format(
+            logout_tasks = [self.request(method='GET',
+                                         url=self._URL_LOGOUT.format(
                                          base_url=server.current_url),
-                                     headers=server.auth_headers)
+                                         headers=server.auth_headers)
                             for server in servers]
             res = await asyncio.gather(*logout_tasks)
 
@@ -219,10 +219,10 @@ class VisioHTTPClient:
         try:
 
             while not server.is_authorized:  # and server.switch_server():
-                auth_data = await self._rq(method='POST',
-                                           url=self._URL_LOGIN.format(
+                auth_data = await self.request(method='POST',
+                                               url=self._URL_LOGIN.format(
                                                base_url=server.current_url),
-                                           json=server.auth_payload)
+                                               json=server.auth_payload)
                 server.set_auth_data(**auth_data)
 
                 if not server.switch_current():
@@ -255,12 +255,12 @@ class VisioHTTPClient:
         """
         try:
             post_tasks = [
-                self._rq(method='POST',
-                         url=self._URL_POST_LIGHT.format(
+                self.request(method='POST',
+                             url=self._URL_POST_LIGHT.format(
                              base_url=server.current_url,
                              device_id=str(dev_id)),
-                         headers=server.auth_headers,
-                         data=data)
+                             headers=server.auth_headers,
+                             data=data)
                 for server in servers
             ]
             await asyncio.gather(*post_tasks)  # , return_exceptions=True)
@@ -286,13 +286,13 @@ class VisioHTTPClient:
                             ) -> bool:
         try:
             post_tasks = [
-                self._rq(method='POST',
-                         url=self._URL_POST_PROPERTY.format(
+                self.request(method='POST',
+                             url=self._URL_POST_PROPERTY.format(
                              base_url=server.current_url,
                              property_id=property_.id_str,
                              replaced_object_name=obj.replaced_name),
-                         headers=server.auth_headers,
-                         data=value)
+                             headers=server.auth_headers,
+                             data=value)
                 for server in servers
             ]
             await asyncio.gather(*post_tasks)
@@ -313,7 +313,7 @@ class VisioHTTPClient:
                               'value': value, 'servers': servers, })
             return True
 
-    async def _rq(self, method: str, url: str, **kwargs) -> Union[list, dict]:
+    async def request(self, method: str, url: str, **kwargs) -> Union[list, dict]:
         """Perform HTTP request and check response.
         :return: extracted data
         """
