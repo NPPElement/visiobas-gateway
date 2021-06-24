@@ -74,7 +74,7 @@ class VisioGtwApi:
             '*': aiohttp_cors.ResourceOptions(
                 expose_headers='*',
                 allow_headers='*',
-                allow_methods=['GET', 'POST', ]
+                allow_methods=['POST', ]
             )
         })
 
