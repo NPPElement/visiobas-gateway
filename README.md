@@ -97,7 +97,7 @@ in `docker-compose.yaml` the following network settings (commented now):
 networks:
   default:
     external: true
-    name: services_backend
+    name: services_backend  # or your network name
 ```
 
 Scripts for common actions available:
