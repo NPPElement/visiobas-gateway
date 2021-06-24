@@ -42,3 +42,5 @@ class JsonRPCView(handler.JSONRPCView, BaseView, CorsViewMixin):
             obj=obj, device=dev)
 
         return {'success': is_consistent}
+
+

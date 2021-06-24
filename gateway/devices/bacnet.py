@@ -110,7 +110,7 @@ class BACnetDevice(BasePollingDevice):
                     **kwargs) -> bool:
         prop = kwargs.get('prop')
         priority = kwargs.get('priority')
-        return await self._gateway.async_add_job(
+        return await self._gtw.async_add_job(
             self.write_property, value, obj, prop, priority)
 
     def write_property(self, value: Union[int, float], obj: BACnetObj,
@@ -148,7 +148,7 @@ class BACnetDevice(BasePollingDevice):
 
         if kwargs.get('wait', True):
             await self._polling.wait()
-        return await self._gateway.async_add_job(self.read_property, obj, prop)
+        return await self._gtw.async_add_job(self.read_property, obj, prop)
 
     def read_property(self, obj: BACnetObj, prop: ObjProperty) -> Any:
         try:

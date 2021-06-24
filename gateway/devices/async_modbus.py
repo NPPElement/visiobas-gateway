@@ -39,8 +39,8 @@ class AsyncModbusDevice(BaseModbusDevice):
         """
         self._LOG.debug('Creating pymodbus client', extra={'device_id': self.id})
         try:
-            loop = self._gateway.loop
-            asyncio.set_event_loop(loop=self._gateway.loop)
+            loop = self._gtw.loop
+            asyncio.set_event_loop(loop=self._gtw.loop)
 
             if self.protocol in {Protocol.MODBUS_TCP, Protocol.MODBUS_RTUOVERTCP}:
                 framer = ModbusRtuFramer if self.protocol is Protocol.MODBUS_RTUOVERTCP else None
@@ -62,10 +62,10 @@ class AsyncModbusDevice(BaseModbusDevice):
                     self._loop, self._client = AsyncModbusSerialClient(
                         scheduler=ASYNC_IO,
                         method='rtu', port=self.serial_port,
-                        baudrate=self._device_obj.baudrate,
-                        bytesize=self._device_obj.bytesize,
-                        parity=self._device_obj.parity,
-                        stopbits=self._device_obj.stopbits,
+                        baudrate=self._dev_obj.baudrate,
+                        bytesize=self._dev_obj.bytesize,
+                        parity=self._dev_obj.parity,
+                        stopbits=self._dev_obj.stopbits,
                         loop=loop, timeout=self.timeout
                     )
                     self._serial_port_locks.update({self.serial_port: asyncio.Lock()})
@@ -233,7 +233,7 @@ class AsyncModbusDevice(BaseModbusDevice):
         Returns:
             Decoded from register\bits and scaled value.
         """
-        return await self._gateway.async_add_job(self._decode_response, resp, obj)
+        return await self._gtw.async_add_job(self._decode_response, resp, obj)
 
     async def build(self, value: Union[int, float], obj: ModbusObj
                     ) -> Union[int, list[Union[int, bytes, bool]]]:
@@ -246,4 +246,4 @@ class AsyncModbusDevice(BaseModbusDevice):
         Returns:
             Built payload.
         """
-        return await self._gateway.async_add_job(self._build_payload, value, obj)
+        return await self._gtw.async_add_job(self._build_payload, value, obj)

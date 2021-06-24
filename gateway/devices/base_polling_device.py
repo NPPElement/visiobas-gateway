@@ -48,8 +48,7 @@ class BasePollingDevice(BaseDevice, ABC):
             self._serial_connected.get(self.serial_port)) if self.protocol is Protocol.MODBUS_RTU else self._connected
 
     @classmethod
-    async def create(cls, device_obj: BACnetDeviceObj, gateway: 'VisioBASGateway'
-                     ) -> 'BasePollingDevice':
+    async def create(cls, device_obj: BACnetDeviceObj, gateway) -> 'BasePollingDevice':
         loop = gateway.loop
         if cls._client_creation_lock is None:
             cls._client_creation_lock = asyncio.Lock(loop=loop)
@@ -57,7 +56,7 @@ class BasePollingDevice(BaseDevice, ABC):
         dev = cls(device_obj=device_obj, gateway=gateway)
         dev._scheduler = await aiojobs.create_scheduler(close_timeout=60, limit=100)
         async with cls._client_creation_lock:
-            await dev._gateway.async_add_job(dev.create_client)
+            await dev._gtw.async_add_job(dev.create_client)
         dev._LOG.debug('Device created',
                        extra={'device_id': dev.id, 'protocol': dev.protocol,
                               'serial_clients_dict': cls._serial_clients, })
@@ -70,7 +69,7 @@ class BasePollingDevice(BaseDevice, ABC):
             Serial port name if exists. Else None.
         """
         if self.protocol is Protocol.MODBUS_RTU:
-            return self._device_obj.property_list.rtu.port
+            return self._dev_obj.property_list.rtu.port
 
     @property
     def _polling_event(self) -> asyncio.Event:
@@ -78,15 +77,15 @@ class BasePollingDevice(BaseDevice, ABC):
 
     @property
     def types_to_rq(self) -> tuple[ObjType, ...]:
-        return self._device_obj.types_to_rq
+        return self._dev_obj.types_to_rq
 
     @property
     def reconnect_period(self) -> int:
-        return self._device_obj.property_list.reconnect_period
+        return self._dev_obj.property_list.reconnect_period
 
     @property
     def retries(self) -> int:
-        return self._device_obj.retries
+        return self._dev_obj.retries
 
     @property
     def all_objects(self) -> set[Union[BACnetObj, ModbusObj]]:
@@ -191,7 +190,7 @@ class BasePollingDevice(BaseDevice, ABC):
                            extra={'device_id': self.id,
                                   'seconds_to_next_try': self.reconnect_period, })
             await asyncio.sleep(delay=self.reconnect_period)
-            await self._gateway.async_add_job(self.create_client)
+            await self._gtw.async_add_job(self.create_client)
             await self._scheduler.spawn(self.start_periodic_polls())
 
     async def stop(self) -> None:
@@ -203,7 +202,7 @@ class BasePollingDevice(BaseDevice, ABC):
         self._LOG.info('Device stopped', extra={'device_id': self.id, })
 
     async def _periodic_reset_unreachable(self) -> None:
-        await asyncio.sleep(self._gateway.unreachable_reset_period)
+        await asyncio.sleep(self._gtw.unreachable_reset_period)
 
         self._LOG.debug('Reset unreachable objects',
                         extra={'device_id': self.id,
@@ -242,13 +241,13 @@ class BasePollingDevice(BaseDevice, ABC):
         await self._scheduler.spawn(self.periodic_poll(objs=objs, period=period))
 
     async def _process_polled(self, objs: set[Union[BACnetObj, ModbusObj]]) -> None:
-        await self._gateway.verify_objects(objs=objs)
-        await self._gateway.send_objects(objs=objs)
+        await self._gtw.verify_objects(objs=objs)
+        await self._gtw.send_objects(objs=objs)
 
     def _check_unreachable(self, objs: set[Union[BACnetObj, ModbusObj]], period: int
                            ) -> None:
         for obj in objs.copy():
-            if obj.unreachable_in_row >= self._gateway.unreachable_threshold:
+            if obj.unreachable_in_row >= self._gtw.unreachable_threshold:
                 self._LOG.debug('Marked as unreachable',
                                 extra={'device_id': obj.device_id,
                                        'object_id': obj.id, 'object_type': obj.type, })

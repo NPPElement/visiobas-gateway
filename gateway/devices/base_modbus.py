@@ -38,7 +38,7 @@ class BaseModbusDevice(BasePollingDevice):
     @property
     def unit(self) -> int:
         if self.protocol in {Protocol.MODBUS_RTU, Protocol.MODBUS_RTUOVERTCP}:
-            return self._device_obj.property_list.rtu.unit
+            return self._dev_obj.property_list.rtu.unit
         return 0x01
 
     @abstractmethod
