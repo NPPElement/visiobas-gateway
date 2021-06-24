@@ -6,14 +6,14 @@ from BAC0.core.io.IOExceptions import (ReadPropertyException, NoResponseFromCont
 from BAC0.scripts.Lite import Lite
 from bacpypes.basetypes import PriorityArray
 
-from .base_device import BaseDevice
+from .base_polling_device import BasePollingDevice
 from ..models import (ObjProperty, BACnetDeviceObj, BACnetObj, StatusFlags)
 
 # Aliases
 VisioBASGateway = Any  # ...gateway_loop
 
 
-class BACnetDevice(BaseDevice):
+class BACnetDevice(BasePollingDevice):
     _client: Lite = None  # todo
 
     def __init__(self, device_obj: BACnetDeviceObj, gateway: VisioBASGateway):
