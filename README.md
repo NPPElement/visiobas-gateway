@@ -4,6 +4,7 @@ Application for polling devices using various protocols and transmitting data to
 the [VisioBAS system](https://github.com/NPPElement/visiobas-broker).
 
 ### Contents
+
 0. [API](#API)
 1. [Installation](#Installation)
     - [Install Docker](#a-Install-Docker)
@@ -23,8 +24,6 @@ the [VisioBAS system](https://github.com/NPPElement/visiobas-broker).
 ~~Swagger docs available on http://host:port/~~ TODO: update
 
 ```shell
-# curl -X GET http://127.0.0.1:7070/api/v1/property/35/2/1/85
-
 curl --header "Content-Type: application/json" \
   --request POST \
   --data '{"jsonrpc":"2.0","method":"writeSetPoint","params":{"device_id":"35","object_type":"2","object_id":"1","property":"85","priority":"10","index":"-1","tag":"9","value":"40"},"id":""}' \
@@ -42,29 +41,33 @@ curl --header "Content-Type: application/json" \
 ```shell
 cd /opt
 sudo git clone https://github.com/NPPElement/visiobas-gateway
-cd visiobas-gateway
+cd /opt/visiobas-gateway
+
+# Configure gateway now. Then:
+. run/install.sh
 ```
 
 ## Setting
 
 ### Configuration
 
-Application configures via environment variables. 
-Environment variables provides via `.env` files.
-Paths to `.env` files specified at `docker-compose.yaml`.
+Application configures via environment variables. Environment variables are provided via `.env` files. Paths to `.env` files
+are specified in `docker-compose.yaml`.
 
 Configuration can be changed in files:
-  - `config/gateway.env` [template](/config/templates/gateway.env)
-  - `config/http.env` [template](/config/templates/http.env)
-  - `config/api.env` [template](/config/templates/api.env)
-  - TODO: mqtt
+
+- `config/gateway.env` [template](/config/templates/gateway.env)
+- `config/http.env` [template](/config/templates/http.env)
+- `config/api.env` [template](/config/templates/api.env)
+- TODO: mqtt
 
 ### Logging level
 
-- Logging level You can change the logging level in the `docker-compose.yaml` file. You can
-  choose one of the following levels: `DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL`
+- Logging level You can change the logging level in the `docker-compose.yaml` file. You can choose one of the following
+  levels: `DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL`
 
 ### Objects configuration
+
 To configure objects properties read [this note](/docs/properties_ru.md).
 
 ### Setting Serial ports
@@ -87,11 +90,25 @@ id username # check user\group info
 
 ## Launch/Update
 
+To launch on the same machine with [VisioBAS system](https://github.com/NPPElement/visiobas-broker) - add
+in `docker-compose.yaml` the following network settings (commented now):
+
+```yaml
+networks:
+  default:
+    external: true
+    name: services_backend
+```
+
+Scripts for common actions available:
+
 ```shell
 . run/logs_clear.sh  # Clear logs
 
 . run/update.sh  # Git pull + build + launch
 ```
+
+## Remove
 
 To clean docker:
 
@@ -103,8 +120,6 @@ sudo docker rmi -f [image_id]
 # OR
 sudo docker images -a | xargs -n 1 -I {} sudo docker rmi -f {}
 ```
-
-## Remove
 
 ```shell
 # Delete all containers
