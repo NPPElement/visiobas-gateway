@@ -16,11 +16,13 @@ class JsonRPCView(handler.JSONRPCView, BaseView, CorsViewMixin):
             allow_credentials=False,
             expose_headers="*",
             allow_headers="*",
-            allow_methods=['POST']
+            allow_methods=['POST', ]
         )
     }
 
     async def rpc_writeSetPoint(self, *args, **kwargs):
+        _LOG.debug('Call params', extra={'args_': args, 'kwargs_': kwargs, })
+
         dev_id = int(kwargs.get('device_id'))
         obj_type_id = int(kwargs.get('object_type'))
         obj_id = int(kwargs.get('object_id'))
@@ -28,9 +30,8 @@ class JsonRPCView(handler.JSONRPCView, BaseView, CorsViewMixin):
         value = float(kwargs.get('value'))
         # value = float(value_str) if '.' in value_str else int(value_str)
 
-        _LOG.debug('Call params', extra={'args_': args, 'kwargs_': kwargs, })
         dev = self.get_device(dev_id=dev_id)
-        if dev is None:
+        if dev is None or not dev.is_polling_device:
             raise Exception('Device not found')
 
         obj = self.get_obj(dev=dev, obj_type_id=obj_type_id, obj_id=obj_id)
@@ -42,5 +43,18 @@ class JsonRPCView(handler.JSONRPCView, BaseView, CorsViewMixin):
             obj=obj, device=dev)
 
         return {'success': is_consistent}
+
+    async def rpc_ptz(self, *args, **kwargs):
+        _LOG.debug('Call params', extra={'args_': args, 'kwargs_': kwargs, })
+
+        dev_id = int(kwargs.get('device_id'))
+        dev = self.get_device(dev_id=dev_id)
+
+        if dev is None or not dev.is_camera:
+            raise Exception('Device not found')
+
+        dev.ptz(**kwargs)  # add check
+
+        return {'success': 'not checking now'}
 
 

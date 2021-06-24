@@ -181,15 +181,6 @@ class VisioBASGateway:
                             if dev.is_polling_device]
         await asyncio.gather(*start_poll_tasks)
 
-        # # Create devices by one to prevent creations of several serial clients
-        # for dev_id in self._devices.keys():
-        #     await self.start_device_poll(dev_id=dev_id)
-
-        # # Set gateway address of polling devices
-        # gtw_addr_tasks = [self.http_client.post_gateway_address(dev_obj=dev.dev_obj)
-        #                   for dev in self._devices.values()]
-        # await asyncio.gather(*gtw_addr_tasks)
-
         _LOG.info('Start tasks performed',
                   extra={'gateway_settings': self.settings, })
 

@@ -11,6 +11,8 @@ class SUNAPIDevice(BaseDevice):
     def ptz(self, cgi: str, submenu: str, action: str, **kwargs) -> None:
         """The absolute submenu of `ptzcontrol.cgi` controls absolute a PTZ operation that moves the camera to
         the specified position.
+
+        # todo: add check
         """
 
         control_submenus = {
