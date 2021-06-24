@@ -30,14 +30,9 @@ services:
       - GTW_LOG_FILE_SIZE=50 # in MB
       - GTW_LOG_FILE_LEVEL=DEBUG
     volumes:
-      #- /opt/visiobas-gateway/gateway/config:/usr/share/python3/gtw/lib/python3.9/site-packages/gateway/config
       #- /opt/visiobas-gateway/logs:/usr/share/python3/gtw/gateway/logs
       - /opt/visiobas-gateway/gateway:/usr/share/python3/gtw/lib/python3.9/site-packages/gateway
       - /dev:/dev # [1]
-    # command: python -OO __main__.py
-    # network_mode: host
-    # networks:
-    #  - backend
     ports:
       - 7070:7070
 
