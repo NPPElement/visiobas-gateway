@@ -38,7 +38,7 @@ setup(
                  'Programming Language :: Python :: Implementation :: CPython',
                  ],
     python_requires='>=3.9',
-    packages=find_packages(exclude=('tests', 'connectors', 'panel')),
+    packages=find_packages(exclude=('tests', 'connectors',)),
     install_requires=requirements,
     # extras_require={'dev': load_requirements('requirements.dev.txt')},
     entry_points={'console_scripts': ['gateway = gateway.__main__:main',
