@@ -198,6 +198,7 @@ class BasePollingDevice(BaseDevice, ABC):
         Closes client.
         """
         await self._scheduler.close()
+        self._LOG.debug('scheduler closed')
         self.close_client()  # todo: left client open if used by another device
         self._LOG.info('Device stopped', extra={'device_id': self.id, })
 

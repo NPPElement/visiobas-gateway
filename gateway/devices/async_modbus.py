@@ -90,9 +90,9 @@ class AsyncModbusDevice(BaseModbusDevice):
 
     def close_client(self) -> None:
         self._client.stop()
-        if self.protocol is Protocol.MODBUS_RTU:
-            self.__class__._serial_clients.pop(self.serial_port)
-            self.__class__._serial_port_locks.pop(self.serial_port)
+        # if self.protocol is Protocol.MODBUS_RTU:
+        #     self.__class__._serial_clients.pop(self.serial_port)
+        #     self.__class__._serial_port_locks.pop(self.serial_port)
 
     @property
     def is_client_connected(self) -> bool:
