@@ -35,6 +35,7 @@ class BasePollingDevice(BaseDevice, ABC):
         # Key: period
         self._objects: dict[int, set[Union[BACnetObj, ModbusObj]]] = {}
         self._unreachable_objects: set[Union[BACnetObj, ModbusObj]] = set()
+        # self._nonexistent_objects: set[Union[BACnetObj, ModbusObj]] = set()
 
         self._connected = False
 
@@ -183,7 +184,7 @@ class BasePollingDevice(BaseDevice, ABC):
         if self.is_client_connected:
             self._polling_event.set()
             for period, objs in self._objects.items():
-                await self._scheduler.spawn(self.periodic_poll(objs=objs, period=period))
+                await self._scheduler.spawn(self.periodic_poll(objs=objs, period=period, first_iter=True))
             await self._scheduler.spawn(self._periodic_reset_unreachable())
         else:
             self._LOG.info('Client is not connected. Sleeping to next try',
@@ -216,13 +217,19 @@ class BasePollingDevice(BaseDevice, ABC):
         await self._scheduler.spawn(self._periodic_reset_unreachable())
 
     async def periodic_poll(self, objs: set[Union[BACnetObj, ModbusObj]],
-                            period: int) -> None:
+                            period: int, *, first_iter: bool = False) -> None:
         self._LOG.debug('Polling started',
                         extra={'device_id': self.id, 'period': period,
                                'objects_number': len(objs)})
         _t0 = datetime.now()
         await self._poll_objects(objs=objs)
         self._check_unreachable(objs=objs, period=period)  # hotfix
+        if first_iter:
+            nonexistent_objs = {obj for obj in objs if not obj.existing}
+            objs -= nonexistent_objs
+            self._LOG.info('Removed non-existent objects', extra={'nonexistent_objects': nonexistent_objs,
+                                                                  'nonexistent_objects_number': len(nonexistent_objs)})
+
         _t_delta = datetime.now() - _t0
         self._LOG.info('Objects polled',
                        extra={'device_id': self.id, 'seconds_took': _t_delta.seconds,
