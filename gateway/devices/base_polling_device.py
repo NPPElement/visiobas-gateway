@@ -227,8 +227,9 @@ class BasePollingDevice(BaseDevice, ABC):
         if first_iter:
             nonexistent_objs = {obj for obj in objs if not obj.existing}
             objs -= nonexistent_objs
-            self._LOG.info('Removed non-existent objects', extra={'nonexistent_objects': nonexistent_objs,
-                                                                  'nonexistent_objects_number': len(nonexistent_objs)})
+            self._LOG.info('Removed non-existent objects',
+                           extra={'device_id': self.id, 'nonexistent_objects': nonexistent_objs,
+                                  'nonexistent_objects_number': len(nonexistent_objs)})
 
         _t_delta = datetime.now() - _t0
         self._LOG.info('Objects polled',
