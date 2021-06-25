@@ -217,7 +217,7 @@ class VisioBASGateway:
                                                            obj_types=(ObjType.DEVICE,))
             _LOG.debug('Device object downloaded', extra={'device_id': dev_id})
 
-            if not dev_obj_data or isinstance(dev_obj_data, Exception):
+            if not dev_obj_data or isinstance(dev_obj_data[0], Exception):
                 _LOG.warning('Empty device object or exception',
                              extra={'device_id': dev_id, 'data': dev_obj_data, })
                 return None

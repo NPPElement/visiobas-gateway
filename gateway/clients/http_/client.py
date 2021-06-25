@@ -142,14 +142,14 @@ class VisioHTTPClient:
         _LOG.debug('Logging out', extra={'servers': servers})
         try:
             logout_tasks = [self.request(method='GET',
-                                         url=self._URL_LOGOUT.format(
-                                             base_url=server.current_url),
+                                         url=self._URL_LOGOUT.format(base_url=server.current_url),
                                          headers=server.auth_headers)
                             for server in servers]
             res = await asyncio.gather(*logout_tasks)
 
             # clear auth data
             [server.clear_auth_data() for server in servers]
+            self._authorized = False
 
             _LOG.info('Logged out',
                       extra={'servers': servers, 'result': res})
@@ -171,8 +171,7 @@ class VisioHTTPClient:
         """
         while not self._authorized:
             self._authorized = await self.login(get_server=self.server_get,
-                                                post_servers=self.servers_post,
-                                                )
+                                                post_servers=self.servers_post)
             if not self._authorized:
                 await asyncio.sleep(delay=retry)
 
