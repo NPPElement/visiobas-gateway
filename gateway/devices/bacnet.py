@@ -50,7 +50,10 @@ class BACnetDevice(BasePollingDevice):
                             extra={'device_id': self.id, 'exc': e, })
 
     def close_client(self) -> None:
-        self._client.disconnect()
+        try:
+            self._client.disconnect()
+        except KeyError:  # todo: init\close with address per network
+            pass
 
     async def _poll_objects(self, objs: Collection[BACnetObj]) -> None:
         # def _sync_poll_objects(objs_: Collection[BACnetObj]) -> None:
