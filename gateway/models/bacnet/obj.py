@@ -2,7 +2,7 @@ import asyncio
 from datetime import datetime
 from typing import Optional, Union
 
-from BAC0.core.io.IOExceptions import UnknownPropertyError
+from BAC0.core.io.IOExceptions import UnknownObjectError
 from pydantic import Field, BaseModel, PrivateAttr, validator, Json
 
 from .base_obj import BaseBACnetObjModel
@@ -115,7 +115,7 @@ class BACnetObj(BaseBACnetObjModel):
             self.reliability = 'timeout'
         # elif isinstance(exc, ModbusException):
         #     self.reliability = str(exc)
-        elif isinstance(exc, (UnknownPropertyError, )):  # todo: add modbus non-existent exceptions
+        elif isinstance(exc, (UnknownObjectError, )):  # todo: add modbus non-existent exceptions
             self._existing = False
             self.reliability = 'non-existent-object'
         elif isinstance(exc, (TypeError, ValueError)):
