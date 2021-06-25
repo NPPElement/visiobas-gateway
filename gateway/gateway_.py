@@ -196,7 +196,7 @@ class VisioBASGateway:
 
         # Stop polling devices.
         _LOG.debug('Call stop tasks')
-        stop_device_polling_tasks = [dev.stop for dev in self._devices.values()
+        stop_device_polling_tasks = [dev.stop() for dev in self._devices.values()
                                      if dev.is_polling_device]
         await asyncio.gather(*stop_device_polling_tasks)
         self._devices = {}
