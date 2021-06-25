@@ -224,13 +224,12 @@ class VisioBASGateway:
             # objs in the list, so get [0] element in `dev_obj_data[0]` below
             # request one type - 'device', so [0] element of tuple below
             dev_obj = await self.async_add_job(self._parse_device_obj, dev_obj_data[0][0])
+            dev = await self.device_factory(dev_obj=dev_obj)
 
-            device = await self.device_factory(dev_obj=dev_obj)
-
-            if device.is_polling_device:
-                # fixme use for task in asyncio.as_completed(tasks):
+            if dev.is_polling_device:
+                # todo: use for task in asyncio.as_completed(tasks):
                 objs_data = await self.http_client.get_objs(dev_id=dev_id,
-                                                            obj_types=device.types_to_rq)
+                                                            obj_types=dev.types_to_rq)
                 _LOG.debug('Polling objects downloaded', extra={'device_id': dev_id})
 
                 extract_tasks = [self.async_add_job(self._extract_objects, obj_data, dev_obj)
@@ -238,15 +237,16 @@ class VisioBASGateway:
                                  if not isinstance(obj_data, aiohttp.ClientError)]
                 objs_lists = await asyncio.gather(*extract_tasks)
                 objs = [obj for lst in objs_lists for obj in lst if obj]  # flat list of lists
-                if not len(objs):  # if there are objects
+
+                if not len(objs):
                     _LOG.warning("There aren't polling objects", extra={'device_id': dev_id})
                     return None
 
                 _LOG.debug('Polling objects extracted',
                            extra={'device_id': dev_id, 'objects_count': len(objs)})
-                await self.async_add_job(device.load_objects, objs)
+                await self.async_add_job(dev.load_objects, objs)
 
-            self._devices.update({device.id: device})
+            self._devices.update({dev.id: dev})
             _LOG.info('Device loaded', extra={'device_id': dev_id})
         except (ValidationError,) as e:  #
             _LOG.warning('Cannot load device',
@@ -259,7 +259,7 @@ class VisioBASGateway:
         """Starts poll of device."""
         dev = self._devices[dev_id]
         if dev.is_polling_device:
-            await self.async_add_job(dev.start_periodic_polls)
+            await self.async_add_job(dev.start_periodic_pollings)
             _LOG.info('Device polling started', extra={'device_id': dev_id})
         else:
             _LOG.warning('Is not a polling device', extra={'device_id': dev_id})

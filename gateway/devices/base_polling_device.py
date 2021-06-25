@@ -177,8 +177,8 @@ class BasePollingDevice(BaseDevice, ABC):
         self._LOG.debug('Objects are grouped by period and loads to the device',
                         extra={'device_id': self.id, 'objects_number': len(objs)})
 
-    async def start_periodic_polls(self) -> None:
-        """Starts periodic polls for all periods."""
+    async def start_periodic_pollings(self) -> None:
+        """Starts periodic pollings for all periods."""
 
         if self.is_client_connected:
             self._polling_event.set()
@@ -191,12 +191,14 @@ class BasePollingDevice(BaseDevice, ABC):
                                   'seconds_to_next_try': self.reconnect_period, })
             await asyncio.sleep(delay=self.reconnect_period)
             await self._gtw.async_add_job(self.create_client)
-            await self._scheduler.spawn(self.start_periodic_polls())
+            await self._scheduler.spawn(self.start_periodic_pollings())
 
     async def stop(self) -> None:
         """Waits for finish of all polling tasks with timeout, and stop polling.
         Closes client.
         """
+        self._LOG.debug('stop call')
+        self._polling_event.clear()
         await self._scheduler.close()
         self._LOG.debug('scheduler closed')
         self.close_client()  # todo: left client open if used by another device
@@ -207,8 +209,7 @@ class BasePollingDevice(BaseDevice, ABC):
 
         self._LOG.debug('Reset unreachable objects',
                         extra={'device_id': self.id,
-                               'unreachable_objects_number': len(
-                                   self._unreachable_objects)})
+                               'unreachable_objects_number': len(self._unreachable_objects)})
         self.load_objects(objs=self._unreachable_objects)
         self._unreachable_objects = set()
 
