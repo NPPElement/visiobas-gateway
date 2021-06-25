@@ -11,7 +11,7 @@ from pymodbus.register_read_message import (ReadHoldingRegistersResponse,
                                             ReadInputRegistersResponse,
                                             ReadRegistersResponseBase)
 
-from .base_device import BaseDevice
+from .base_polling_device import BasePollingDevice
 from ..models import (BACnetDeviceObj, ModbusObj, Protocol, DataType,
                       ModbusReadFunc, ModbusWriteFunc)
 
@@ -25,7 +25,7 @@ VisioBASGateway = Any  # ...gateway_loop
 # _LOG = get_file_logger(name=__name__, size_mb=500)
 
 
-class BaseModbusDevice(BaseDevice):
+class BaseModbusDevice(BasePollingDevice):
 
     def __init__(self, device_obj: BACnetDeviceObj, gateway: 'VisioBASGateway'):
         super().__init__(device_obj, gateway)
@@ -38,7 +38,7 @@ class BaseModbusDevice(BaseDevice):
     @property
     def unit(self) -> int:
         if self.protocol in {Protocol.MODBUS_RTU, Protocol.MODBUS_RTUOVERTCP}:
-            return self._device_obj.property_list.rtu.unit
+            return self._dev_obj.property_list.rtu.unit
         return 0x01
 
     @abstractmethod

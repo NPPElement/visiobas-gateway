@@ -39,10 +39,10 @@ class SyncModbusDevice(BaseModbusDevice):
                                            'serial_port': self.serial_port, })
                     self._client = ModbusSerialClient(method='rtu',
                                                       port=self.serial_port,
-                                                      baudrate=self._device_obj.baudrate,
-                                                      bytesize=self._device_obj.bytesize,
-                                                      parity=self._device_obj.parity,
-                                                      stopbits=self._device_obj.stopbits,
+                                                      baudrate=self._dev_obj.baudrate,
+                                                      bytesize=self._dev_obj.bytesize,
+                                                      parity=self._dev_obj.parity,
+                                                      stopbits=self._dev_obj.stopbits,
                                                       timeout=self.timeout)
                     self._serial_clients.update({self.serial_port: self._client})
                     self._serial_polling.update({self.serial_port: asyncio.Event()})
@@ -63,9 +63,9 @@ class SyncModbusDevice(BaseModbusDevice):
 
     def close_client(self) -> None:
         self._client.close()
-        if self.protocol is Protocol.MODBUS_RTU:
-            self.__class__._serial_clients.pop(self.serial_port)
-            self.__class__._serial_port_locks.pop(self.serial_port)
+        # if self.protocol is Protocol.MODBUS_RTU:
+        #     self.__class__._serial_clients.pop(self.serial_port)
+        #     self.__class__._serial_port_locks.pop(self.serial_port)
 
     # @property
     # def is_client_connected(self) -> bool:
@@ -92,7 +92,7 @@ class SyncModbusDevice(BaseModbusDevice):
     async def read(self, obj: ModbusObj, **kwargs) -> Optional[Union[int, float]]:
         if kwargs.get('wait', True):
             await self._polling_event.wait()
-        return await self._gateway.async_add_job(self.sync_read, obj)
+        return await self._gtw.async_add_job(self.sync_read, obj)
 
     def sync_read(self, obj: ModbusObj) -> Optional[Union[int, float]]:
         """Read data from Modbus object.
@@ -131,7 +131,7 @@ class SyncModbusDevice(BaseModbusDevice):
             return obj.pv  # return not used now. Updates object
 
     async def write(self, value: Union[int, float], obj: ModbusObj, **kwargs) -> None:
-        await self._gateway.async_add_job(self.sync_write, value, obj)
+        await self._gtw.async_add_job(self.sync_write, value, obj)
 
     def sync_write(self, value: Union[int, float], obj: ModbusObj) -> None:
         """Write value to Modbus object.

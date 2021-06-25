@@ -6,14 +6,14 @@ from BAC0.core.io.IOExceptions import (ReadPropertyException, NoResponseFromCont
 from BAC0.scripts.Lite import Lite
 from bacpypes.basetypes import PriorityArray
 
-from .base_device import BaseDevice
+from .base_polling_device import BasePollingDevice
 from ..models import (ObjProperty, BACnetDeviceObj, BACnetObj, StatusFlags)
 
 # Aliases
 VisioBASGateway = Any  # ...gateway_loop
 
 
-class BACnetDevice(BaseDevice):
+class BACnetDevice(BasePollingDevice):
     _client: Lite = None  # todo
 
     def __init__(self, device_obj: BACnetDeviceObj, gateway: VisioBASGateway):
@@ -110,7 +110,7 @@ class BACnetDevice(BaseDevice):
                     **kwargs) -> bool:
         prop = kwargs.get('prop')
         priority = kwargs.get('priority')
-        return await self._gateway.async_add_job(
+        return await self._gtw.async_add_job(
             self.write_property, value, obj, prop, priority)
 
     def write_property(self, value: Union[int, float], obj: BACnetObj,
@@ -148,7 +148,7 @@ class BACnetDevice(BaseDevice):
 
         if kwargs.get('wait', True):
             await self._polling.wait()
-        return await self._gateway.async_add_job(self.read_property, obj, prop)
+        return await self._gtw.async_add_job(self.read_property, obj, prop)
 
     def read_property(self, obj: BACnetObj, prop: ObjProperty) -> Any:
         try:
