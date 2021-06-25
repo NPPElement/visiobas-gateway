@@ -105,17 +105,17 @@ class BaseModbusDevice(BasePollingDevice):
 
                 decoded = decode_funcs[obj.data_length][obj.data_type]()
                 scaled = decoded * obj.scale + obj.offset  # Scaling
-            self._LOG.debug('Decoded',
-                            extra={'device_id': obj.device_id, 'object_id': obj.id,
-                                   'object_type': obj.type,
-                                   'address': obj.address,
-                                   'object_is_register': obj.is_register,
-                                   'objects_is_coil': obj.is_coil,
-                                   'word_order': obj.word_order,
-                                   'byre_order': obj.byte_order,
-                                   'quantity': obj.quantity, 'data_length': obj.data_length,
-                                   'data_type': obj.data_type, 'value_raw': data,
-                                   'value_decoded': decoded, 'value_scaled': scaled})
+            # self._LOG.debug('Decoded',
+            #                 extra={'device_id': obj.device_id, 'object_id': obj.id,
+            #                        'object_type': obj.type,
+            #                        'address': obj.address,
+            #                        'object_is_register': obj.is_register,
+            #                        'objects_is_coil': obj.is_coil,
+            #                        'word_order': obj.word_order,
+            #                        'byre_order': obj.byte_order,
+            #                        'quantity': obj.quantity, 'data_length': obj.data_length,
+            #                        'data_type': obj.data_type, 'value_raw': data,
+            #                        'value_decoded': decoded, 'value_scaled': scaled})
             return scaled
 
     def _build_payload(self, value: Union[int, float], obj: ModbusObj

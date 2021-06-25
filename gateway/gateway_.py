@@ -294,7 +294,7 @@ class VisioBASGateway:
     async def send_objects(self, objs: Collection[BACnetObj]) -> None:
         """Sends objects to server."""
         if not len(objs):
-            _LOG.debug('Nothing to send')
+            # _LOG.debug('Nothing to send')
             return None
 
         try:
