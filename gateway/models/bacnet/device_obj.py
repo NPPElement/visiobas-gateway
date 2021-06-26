@@ -32,6 +32,24 @@ class DevicePropertyListJsonModel(BaseModel):
     address: Optional[IPv4Address] = Field(default=None)
     port: Optional[int] = Field(default=None)
 
+    timeout: int = Field(
+        default=6000, alias=ObjProperty.apduTimeout.id_str, gt=0,
+        description='''
+            The amount of time in milliseconds between retransmissions of an APDU requiring 
+            acknowledgment for which no acknowledgment has been received. A suggested default 
+            value for this property is 6,000 milliseconds for devices that permit modification 
+            of this parameter. Otherwise, the default value shall be 10,000 milliseconds. 
+            This value shall be non-zero if the Device object property called 
+            Number_Of_APDU_Retries is non-zero.''')
+    retries: int = Field(
+        default=3, alias=ObjProperty.numberOfApduRetries.id_str, ge=0,
+        description='''
+            Indicates the maximum number of times that an APDU shall be retransmitted. 
+            A suggested default value for this property is 3. If this device does not perform 
+            retries, then this property shall be set to zero. If the value of this property is 
+            greater than zero, a non-zero value shall be placed in the Device object 
+            APDU_Timeout property.''')
+
     # todo check
     internal_period: float = Field(default=0.3, alias='internalPeriod')
     reconnect_period: int = Field(default=5 * 60, alias='reconnectPeriod')
@@ -50,23 +68,8 @@ class DevicePropertyListJsonModel(BaseModel):
 
 
 class BACnetDeviceObj(BaseBACnetObjModel):
-    timeout: int = Field(
-        default=6000, alias=ObjProperty.apduTimeout.id_str, gt=0,
-        description='''
-        The amount of time in milliseconds between retransmissions of an APDU requiring 
-        acknowledgment for which no acknowledgment has been received. A suggested default 
-        value for this property is 6,000 milliseconds for devices that permit modification 
-        of this parameter. Otherwise, the default value shall be 10,000 milliseconds. 
-        This value shall be non-zero if the Device object property called 
-        Number_Of_APDU_Retries is non-zero.''')
-    retries: int = Field(
-        default=3, alias=ObjProperty.numberOfApduRetries.id_str, ge=0,
-        description='''
-        Indicates the maximum number of times that an APDU shall be retransmitted. 
-        A suggested default value for this property is 3. If this device does not perform 
-        retries, then this property shall be set to zero. If the value of this property is 
-        greater than zero, a non-zero value shall be placed in the Device object 
-        APDU_Timeout property.''')
+    # 11 and 73 (timeout and retries) moved to property list.
+    # Because device properties uses by server to another task.
 
     # send_sync_delay = # send period
     # internal_sync_delay =
@@ -93,7 +96,11 @@ class BACnetDeviceObj(BaseBACnetObjModel):
 
     @property
     def timeout_sec(self) -> float:
-        return self.timeout / 1000
+        return self.property_list.timeout / 1000
+
+    @property
+    def retries(self) -> int:
+        return self.property_list.retries
 
     @property
     def baudrate(self) -> Optional[int]:
