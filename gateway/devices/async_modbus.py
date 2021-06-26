@@ -9,6 +9,7 @@ from pymodbus.client.asynchronous.schedulers import ASYNC_IO
 from pymodbus.client.asynchronous.serial import AsyncModbusSerialClient
 from pymodbus.client.asynchronous.tcp import AsyncModbusTCPClient
 from pymodbus.exceptions import ModbusException, ModbusIOException
+from pymodbus.framer.socket_framer import ModbusSocketFramer
 from pymodbus.register_read_message import (ReadHoldingRegistersResponse,
                                             ReadInputRegistersResponse)
 from pymodbus.transaction import ModbusRtuFramer
@@ -43,7 +44,7 @@ class AsyncModbusDevice(BaseModbusDevice):
             asyncio.set_event_loop(loop=self._gtw.loop)
 
             if self.protocol in {Protocol.MODBUS_TCP, Protocol.MODBUS_RTUOVERTCP}:
-                framer = ModbusRtuFramer if self.protocol is Protocol.MODBUS_RTUOVERTCP else None
+                framer = ModbusRtuFramer if self.protocol is Protocol.MODBUS_RTUOVERTCP else ModbusSocketFramer
                 self._loop, self._client = AsyncModbusTCPClient(
                     scheduler=ASYNC_IO,
                     host=str(self.address), port=self.port, framer=framer,
