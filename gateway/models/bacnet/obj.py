@@ -119,8 +119,8 @@ class BACnetObj(BaseBACnetObjModel):
         elif isinstance(exc, (TypeError, ValueError)):
             self.reliability = 'decode-error'
         else:
-            RELIABILITY_LEN_LIMIT = 50
-            str_exc = str(exc)[-RELIABILITY_LEN_LIMIT:]
+            # RELIABILITY_LEN_LIMIT = 50
+            str_exc = exc.__class__.__name__  # str(exc)[-RELIABILITY_LEN_LIMIT:]
             self.reliability = str_exc
 
         self.reliability = self.reliability.strip().replace(
