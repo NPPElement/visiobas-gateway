@@ -32,7 +32,8 @@ class DevicePropertyListJsonModel(BaseModel):
     address: Optional[IPv4Address] = Field(default=None)
     port: Optional[int] = Field(default=None)
 
-    timeout: int = Field(..., alias=ObjProperty.apduTimeout.id_str, gt=0,  #  default=6000
+    timeout: int = Field(
+        default=6000, alias='apduTimeout', gt=0,  # alias=ObjProperty.apduTimeout.id_str
         description='''
             The amount of time in milliseconds between retransmissions of an APDU requiring 
             acknowledgment for which no acknowledgment has been received. A suggested default 
@@ -41,7 +42,8 @@ class DevicePropertyListJsonModel(BaseModel):
             This value shall be non-zero if the Device object property called 
             Number_Of_APDU_Retries is non-zero.''')
     retries: int = Field(
-        default=3, alias=ObjProperty.numberOfApduRetries.id_str, ge=0,
+        default=3, alias='numberOfApduRetries', ge=0,
+        # alias=ObjProperty.numberOfApduRetries.id_str
         description='''
             Indicates the maximum number of times that an APDU shall be retransmitted. 
             A suggested default value for this property is 3. If this device does not perform 
