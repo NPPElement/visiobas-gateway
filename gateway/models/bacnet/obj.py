@@ -115,7 +115,7 @@ class BACnetObj(BaseBACnetObjModel):
             self.reliability = 'timeout'
         elif isinstance(exc, (UnknownObjectError, )):  # todo: add modbus non-existent exceptions
             self._existing = False
-            self.reliability = str(exc)  # 'non-existent-object'
+            self.reliability = 'non-existent-object'
         elif isinstance(exc, (TypeError, ValueError)):
             self.reliability = 'decode-error'
         else:
