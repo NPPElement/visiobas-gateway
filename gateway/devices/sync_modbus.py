@@ -107,7 +107,7 @@ class SyncModbusDevice(BaseModbusDevice):
                                                   count=obj.quantity,
                                                   unit=self.unit)
             if resp.isError():
-                raise ModbusIOException('0x80')  # todo: resp.string
+                raise ModbusIOException(str(resp))
 
             value = self._decode_response(resp=resp, obj=obj)
 

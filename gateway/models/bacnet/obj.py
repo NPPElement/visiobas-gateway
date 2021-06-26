@@ -113,18 +113,15 @@ class BACnetObj(BaseBACnetObjModel):
 
         if isinstance(exc, (asyncio.TimeoutError, asyncio.CancelledError)):
             self.reliability = 'timeout'
-        # elif isinstance(exc, ModbusException):
-        #     self.reliability = str(exc)
         elif isinstance(exc, (UnknownObjectError, )):  # todo: add modbus non-existent exceptions
             self._existing = False
             self.reliability = 'non-existent-object'
         elif isinstance(exc, (TypeError, ValueError)):
             self.reliability = 'decode-error'
         else:
-            RELIABILITY_LEN_LIMIT = 50  # TODO: wait 500 explanation by server
-            str_hotfix = 'error'
-            # str_exc = str(exc)[-RELIABILITY_LEN_LIMIT:]
-            self.reliability = str_hotfix
+            RELIABILITY_LEN_LIMIT = 50
+            str_exc = str(exc)[-RELIABILITY_LEN_LIMIT:]
+            self.reliability = str_exc
         self.reliability.strip().replace(
             ' ', '-').replace(',', '-').replace(':', '-').replace(
             '.', '-').replace('/', '-').replace('[', '').replace(']', '')

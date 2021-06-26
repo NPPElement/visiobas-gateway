@@ -17,41 +17,11 @@ class BACnetVerifier:
         [self.verify(obj=obj) for obj in objs]
 
     def verify(self, obj: BACnetObj) -> None:
-        # if obj.exception:
-        #     self.process_exception(obj=obj)
-        # else:
         self.verify_sf(obj=obj)
         self.verify_pv(obj=obj)
 
         if obj.pa is not None:
             self.verify_pa(obj=obj)
-
-    # @staticmethod
-    # def process_exception(obj: BACnetObj) -> None:
-    #     """Processes properties related with any object error.
-    #
-    #     Args:
-    #         obj: Object instance with error.
-    #
-    #     """
-    #     obj._last_value = 'null'
-    #     # obj.sf.enable(flag=StatusFlag.FAULT)
-    #
-    #     if isinstance(obj.exception, (asyncio.TimeoutError, asyncio.CancelledError)):
-    #         obj.reliability = 'timeout'
-    #     elif isinstance(obj.exception, ModbusException):
-    #         obj.reliability = str(obj.exception)
-    #     elif isinstance(obj.exception, (TypeError, ValueError)):
-    #         obj.reliability = 'decode-error'
-    #     else:
-    #         RELIABILITY_LEN_LIMIT = 50  # TODO: wait 500 explanation by server
-    #         str_hotfix = 'read-error'
-    #         # str_exc = str(obj.exception)[-RELIABILITY_LEN_LIMIT:].strip()
-    #         obj.reliability = str_hotfix
-    #     obj.reliability.strip().replace(' ', '-').replace(',', '-').replace(':',
-    #                                                                         '-').replace(
-    #         '.', '-').replace('/', '-').replace('[', '').replace(']', '')
-    #     obj.exception = None
 
     @staticmethod
     def verify_sf(obj: BACnetObj) -> None:
