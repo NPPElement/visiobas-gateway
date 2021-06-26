@@ -2,6 +2,7 @@ import asyncio
 from datetime import datetime
 from typing import Optional, Union
 
+from BAC0.core.io.IOExceptions import UnknownObjectError
 from pydantic import Field, BaseModel, PrivateAttr, validator, Json
 
 from .base_obj import BaseBACnetObjModel
@@ -74,6 +75,7 @@ class BACnetObj(BaseBACnetObjModel):
 
     # exception: Optional[Exception] = None
     _unreachable_in_row: int = PrivateAttr(default=0)
+    _existing: bool = PrivateAttr(default=True)  # False if object not exists (incorrect object data on server).
 
     class Config:
         arbitrary_types_allowed = True
@@ -84,6 +86,10 @@ class BACnetObj(BaseBACnetObjModel):
         if values['type'].is_analog and not v:
             return 0.1  # default resolution value
         return v
+
+    @property
+    def existing(self) -> bool:
+        return self._existing
 
     @property
     def unreachable_in_row(self) -> int:
@@ -109,6 +115,9 @@ class BACnetObj(BaseBACnetObjModel):
             self.reliability = 'timeout'
         # elif isinstance(exc, ModbusException):
         #     self.reliability = str(exc)
+        elif isinstance(exc, (UnknownObjectError, )):  # todo: add modbus non-existent exceptions
+            self._existing = False
+            self.reliability = 'non-existent-object'
         elif isinstance(exc, (TypeError, ValueError)):
             self.reliability = 'decode-error'
         else:

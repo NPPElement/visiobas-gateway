@@ -5,6 +5,7 @@ from typing import Union, Any, Callable, Optional, Collection
 from pymodbus.client.sync import ModbusSerialClient, ModbusTcpClient
 from pymodbus.exceptions import ModbusException, ModbusIOException
 from pymodbus.framer.rtu_framer import ModbusRtuFramer
+from pymodbus.framer.socket_framer import ModbusSocketFramer
 
 from .base_modbus import BaseModbusDevice
 from ..models import (BACnetDeviceObj, Protocol, ModbusReadFunc, ModbusWriteFunc, ModbusObj,
@@ -26,7 +27,7 @@ class SyncModbusDevice(BaseModbusDevice):
         self._LOG.debug('Creating pymodbus client', extra={'device_id': self.id})
         try:
             if self.protocol in {Protocol.MODBUS_TCP, Protocol.MODBUS_RTUOVERTCP}:
-                framer = ModbusRtuFramer if self.protocol is Protocol.MODBUS_RTUOVERTCP else None
+                framer = ModbusRtuFramer if self.protocol is Protocol.MODBUS_RTUOVERTCP else ModbusSocketFramer
                 self._client = ModbusTcpClient(host=str(self.address), port=self.port,
                                                framer=framer, retries=self.retries,
                                                retry_on_empty=True, retry_on_invalid=True,

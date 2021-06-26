@@ -3,6 +3,7 @@ from typing import Callable, Any, Optional, Union, Awaitable, Collection
 
 import aiohttp
 import aiojobs
+from aiohttp import ClientError
 from pydantic import ValidationError
 
 from gateway.api import VisioGtwApi
@@ -102,6 +103,7 @@ class VisioBASGateway:
         # self.mqtt_client = VisioBASMQTTClient.from_yaml(
         #     gateway=self, yaml_path=self.MQTT_CFG_PATH)
         self.api = VisioGtwApi.create(gateway=self, settings=ApiSettings())
+        await self._scheduler.spawn(self.api.start())
 
         # TODO: run MQTT here
         await self._scheduler.spawn(coro=self.periodic_update())
@@ -166,8 +168,6 @@ class VisioBASGateway:
         #     - Start devices poll
         #     - Connect to MQTT
         """
-        await self._scheduler.spawn(self.api.start())
-
         await self.http_client.wait_login()
 
         # Load devices.
@@ -196,7 +196,7 @@ class VisioBASGateway:
 
         # Stop polling devices.
         _LOG.debug('Call stop tasks')
-        stop_device_polling_tasks = [dev.stop for dev in self._devices.values()
+        stop_device_polling_tasks = [dev.stop() for dev in self._devices.values()
                                      if dev.is_polling_device]
         await asyncio.gather(*stop_device_polling_tasks)
         self._devices = {}
@@ -217,8 +217,9 @@ class VisioBASGateway:
                                                            obj_types=(ObjType.DEVICE,))
             _LOG.debug('Device object downloaded', extra={'device_id': dev_id})
 
-            if not dev_obj_data:
-                _LOG.warning('Empty device object', extra={'device_id': dev_id})
+            if not dev_obj_data or isinstance(dev_obj_data[0], Exception):
+                _LOG.warning('Empty device object or exception',
+                             extra={'device_id': dev_id, 'data': dev_obj_data, })
                 return None
 
             # objs in the list, so get [0] element in `dev_obj_data[0]` below
@@ -294,7 +295,7 @@ class VisioBASGateway:
     async def send_objects(self, objs: Collection[BACnetObj]) -> None:
         """Sends objects to server."""
         if not len(objs):
-            _LOG.debug('Nothing to send')
+            # _LOG.debug('Nothing to send')
             return None
 
         try:

@@ -116,9 +116,9 @@ class VisioHTTPClient:
         """
         rq_tasks = [self.request(method='GET',
                                  url=self._URL_GET.format(
-                                 base_url=self.server_get.current_url,
-                                 device_id=str(dev_id),
-                                 object_type_dashed=obj_type.name_dashed),
+                                     base_url=self.server_get.current_url,
+                                     device_id=str(dev_id),
+                                     object_type_dashed=obj_type.name_dashed),
                                  headers=self.server_get.auth_headers)
                     for obj_type in obj_types]
         data = await asyncio.gather(*rq_tasks, return_exceptions=True)
@@ -142,14 +142,14 @@ class VisioHTTPClient:
         _LOG.debug('Logging out', extra={'servers': servers})
         try:
             logout_tasks = [self.request(method='GET',
-                                         url=self._URL_LOGOUT.format(
-                                         base_url=server.current_url),
+                                         url=self._URL_LOGOUT.format(base_url=server.current_url),
                                          headers=server.auth_headers)
                             for server in servers]
             res = await asyncio.gather(*logout_tasks)
 
             # clear auth data
             [server.clear_auth_data() for server in servers]
+            self._authorized = False
 
             _LOG.info('Logged out',
                       extra={'servers': servers, 'result': res})
@@ -171,8 +171,7 @@ class VisioHTTPClient:
         """
         while not self._authorized:
             self._authorized = await self.login(get_server=self.server_get,
-                                                post_servers=self.servers_post,
-                                                )
+                                                post_servers=self.servers_post)
             if not self._authorized:
                 await asyncio.sleep(delay=retry)
 
@@ -221,7 +220,7 @@ class VisioHTTPClient:
             while not server.is_authorized:  # and server.switch_server():
                 auth_data = await self.request(method='POST',
                                                url=self._URL_LOGIN.format(
-                                               base_url=server.current_url),
+                                                   base_url=server.current_url),
                                                json=server.auth_payload)
                 server.set_auth_data(**auth_data)
 
@@ -257,8 +256,8 @@ class VisioHTTPClient:
             post_tasks = [
                 self.request(method='POST',
                              url=self._URL_POST_LIGHT.format(
-                             base_url=server.current_url,
-                             device_id=str(dev_id)),
+                                 base_url=server.current_url,
+                                 device_id=str(dev_id)),
                              headers=server.auth_headers,
                              data=data)
                 for server in servers
@@ -288,9 +287,9 @@ class VisioHTTPClient:
             post_tasks = [
                 self.request(method='POST',
                              url=self._URL_POST_PROPERTY.format(
-                             base_url=server.current_url,
-                             property_id=property_.id_str,
-                             replaced_object_name=obj.replaced_name),
+                                 base_url=server.current_url,
+                                 property_id=property_.id_str,
+                                 replaced_object_name=obj.replaced_name),
                              headers=server.auth_headers,
                              data=value)
                 for server in servers
@@ -376,4 +375,3 @@ class VisioHTTPClient:
     #                      f'the server: {rejected_objects_id}')
     #         # todo: What should we doing with rejected objects?
     #         return rejected_objects_id
-

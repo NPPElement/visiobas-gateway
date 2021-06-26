@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, Json, validator
+from pydantic import BaseModel, Field, Json
 
 from .obj_property import ObjProperty
 from .obj_type import ObjType

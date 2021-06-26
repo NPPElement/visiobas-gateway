@@ -10,6 +10,8 @@
 2. [Object](#Object)
     - [Object `propertyList`](#Object-propertyList)
         - [Modbus Object `propertyList.modbus`](#Modbus-object-propertyListmodbus)
+    
+## Properties usage may change. If you found that one, please, lookup properties limits and description in `gateway.models` package. Also you can pm me or make PR.
 
 ## Gateway
 
@@ -34,9 +36,7 @@
 |--------|----|-------|--------|--------|-----------|
 |`846 deviceId`|`int`|-|yes|-|Id девайса
 |`371 propertyList`|`JSON-str`|-|yes|-|См. таблицу ниже
-|`11 apduTimeout`|`int`|TODO|-|-|Таймаут
 |`118 updateInterval`|`int`|60|-|-|Интервал полной отправки девайса на сервер (в любом случае)
-|`73 numberOfApduRetries`|`int`|2|-|-|Количество повторов, при неудачной попытке
 |`153 backupFailureTimeout`|`int`|TODO|-|-|(для сервера) Если шлюз не прислал данные на протяжении указанного периода — подсвечивается серым
 
 - ~~116 timeSynchronizationRecipients (Время синхронизации получателей)~~
@@ -45,6 +45,8 @@
 
 |Property|Type|Default|Required|Possible|Description|
 |--------|----|-------|--------|--------|-----------|
+|`11 apduTimeout`|`int`|6000|-|-|Timeout in milliseconds. Serial devices requires timeout around 500ms. 
+|`73 numberOfApduRetries`|`int`|3|-|-|Количество повторов, при неудачной попытке
 |`protocol`|`str`|-|yes|'BACnet', 'ModbusTCP', 'ModbusRTU', 'ModbusRTUoverTCP'|По какому протоколу опрашивается девайс
 |`address`|`str`|-|for TCP|'10.20.30.40', ...|IP адрес девайса
 |`port`|`int`|-|for TCP|-|Порт

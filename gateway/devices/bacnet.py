@@ -50,7 +50,8 @@ class BACnetDevice(BasePollingDevice):
                             extra={'device_id': self.id, 'exc': e, })
 
     def close_client(self) -> None:
-        self._client.disconnect()
+        pass
+        # self._client.disconnect() # todo: add check for client usage by other devices
 
     async def _poll_objects(self, objs: Collection[BACnetObj]) -> None:
         # def _sync_poll_objects(objs_: Collection[BACnetObj]) -> None:
