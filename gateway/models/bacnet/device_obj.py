@@ -32,8 +32,7 @@ class DevicePropertyListJsonModel(BaseModel):
     address: Optional[IPv4Address] = Field(default=None)
     port: Optional[int] = Field(default=None)
 
-    timeout: int = Field(
-        default=6000, alias=ObjProperty.apduTimeout.id_str, gt=0,
+    timeout: int = Field(..., alias=ObjProperty.apduTimeout.id_str, gt=0,  #  default=6000
         description='''
             The amount of time in milliseconds between retransmissions of an APDU requiring 
             acknowledgment for which no acknowledgment has been received. A suggested default 
