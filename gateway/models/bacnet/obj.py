@@ -122,7 +122,8 @@ class BACnetObj(BaseBACnetObjModel):
             RELIABILITY_LEN_LIMIT = 50
             str_exc = str(exc)[-RELIABILITY_LEN_LIMIT:]
             self.reliability = str_exc
-        self.reliability.strip().replace(
+
+        self.reliability = self.reliability.strip().replace(
             ' ', '-').replace(',', '-').replace(':', '-').replace(
             '.', '-').replace('/', '-').replace('[', '').replace(']', '')
 
