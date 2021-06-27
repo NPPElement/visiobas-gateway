@@ -8,8 +8,8 @@ import aiojobs
 from pymodbus.client.asynchronous.async_io import AsyncioModbusSerialClient
 from pymodbus.client.sync import ModbusSerialClient
 
-from ..models import (BACnetDeviceObj, BACnetObj, ModbusObj, ObjType, Protocol)
 from .base_device import BaseDevice
+from ..models import (BACnetDeviceObj, BACnetObj, ModbusObj, ObjType, Protocol)
 
 # Aliases
 VisioBASGateway = Any  # ...gateway_
@@ -46,7 +46,8 @@ class BasePollingDevice(BaseDevice, ABC):
     @property
     def is_client_connected(self) -> bool:
         return bool(
-            self._serial_connected.get(self.serial_port)) if self.protocol is Protocol.MODBUS_RTU else self._connected
+            self._serial_connected.get(
+                self.serial_port)) if self.protocol is Protocol.MODBUS_RTU else self._connected
 
     @classmethod
     async def create(cls, device_obj: BACnetDeviceObj, gateway) -> 'BasePollingDevice':
@@ -74,7 +75,8 @@ class BasePollingDevice(BaseDevice, ABC):
 
     @property
     def _polling_event(self) -> asyncio.Event:
-        return self._serial_polling[self.serial_port] if self.protocol is Protocol.MODBUS_RTU else self._polling
+        return self._serial_polling[
+            self.serial_port] if self.protocol is Protocol.MODBUS_RTU else self._polling
 
     @property
     def types_to_rq(self) -> tuple[ObjType, ...]:
@@ -184,7 +186,8 @@ class BasePollingDevice(BaseDevice, ABC):
         if self.is_client_connected:
             self._polling_event.set()
             for period, objs in self._objects.items():
-                await self._scheduler.spawn(self.periodic_poll(objs=objs, period=period, first_iter=True))
+                await self._scheduler.spawn(
+                    self.periodic_poll(objs=objs, period=period, first_iter=True))
             await self._scheduler.spawn(self._periodic_reset_unreachable())
         else:
             self._LOG.info('Client is not connected. Sleeping to next try',
@@ -198,10 +201,8 @@ class BasePollingDevice(BaseDevice, ABC):
         """Waits for finish of all polling tasks with timeout, and stop polling.
         Closes client.
         """
-        self._LOG.debug('stop call')
         self._polling_event.clear()
         await self._scheduler.close()
-        self._LOG.debug('scheduler closed')
         self.close_client()  # todo: left client open if used by another device
         self._LOG.info('Device stopped', extra={'device_id': self.id, })
 
@@ -210,7 +211,8 @@ class BasePollingDevice(BaseDevice, ABC):
 
         self._LOG.debug('Reset unreachable objects',
                         extra={'device_id': self.id,
-                               'unreachable_objects_number': len(self._unreachable_objects)})
+                               'unreachable_objects_number': len(
+                                   self._unreachable_objects)})
         self.load_objects(objs=self._unreachable_objects)
         self._unreachable_objects = set()
 
@@ -228,7 +230,8 @@ class BasePollingDevice(BaseDevice, ABC):
             nonexistent_objs = {obj for obj in objs if not obj.existing}
             objs -= nonexistent_objs
             self._LOG.info('Removed non-existent objects',
-                           extra={'device_id': self.id, 'nonexistent_objects': nonexistent_objs,
+                           extra={'device_id': self.id,
+                                  'nonexistent_objects': nonexistent_objs,
                                   'nonexistent_objects_number': len(nonexistent_objs)})
 
         _t_delta = datetime.now() - _t0
