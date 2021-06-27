@@ -16,7 +16,7 @@ class VisioMQTTClient:
         self._gateway = gateway
         self._settings = settings
 
-        self._stopped = False
+        self._stopped: asyncio.Event = None
         self._connected = False
         self._client: mqtt.Client = None
         self._paho_lock = asyncio.Lock()
@@ -28,6 +28,15 @@ class VisioMQTTClient:
         mqtt_client = cls(gateway=gateway, settings=settings)
         mqtt_client.setup()
         return mqtt_client
+
+    async def start(self) -> None:
+        self._stopped = asyncio.Event()
+
+        if self._client is None:
+            self.setup()
+
+        await self.connect(host=self._host, port=self._port)
+        await self.subscribe(self.topics_sub)
 
     def __repr__(self) -> str:
         return self.__class__.__name__
@@ -80,7 +89,7 @@ class VisioMQTTClient:
         """Initialize MQTT client."""
         self._client = mqtt.Client(client_id=self._client_id,
                                    protocol=mqtt.MQTTv311,
-                                   transport='tcp'  # todo ws?
+                                   transport='tcp'  # todo ws
                                    )  # todo add protocol version choice
         self._client.username_pw_set(username=self._username, password=self._password)
 
@@ -135,15 +144,22 @@ class VisioMQTTClient:
     #         _log.info(f'{self} stopped.')
 
     async def stop(self) -> None:
-        self._stopped = True
+        self._stopped.set()
         _LOG.info('Stopping')
         await self.async_disconnect()
+
+    async def wait_connect(self) -> None:
+        """Ensures the connection with MQTT broker."""
+        while not self._connected:
+            await self.connect(host=self._host, port=self._port)
 
     async def connect(self, host: str, port: int = 1883) -> None:
         """Connect to the broker. Without subscriptions."""
         try:
-            await self._client.connect_async(host=host, port=port)
+            await self._client.connect_async(host=host, port=port,
+                                             keepalive=self._keepalive)
             self._client.reconnect_delay_set()
+            self._connected = True
         except OSError as e:
             _LOG.warning('Failed to connect to MQTT broker',
                          extra={'host': host, 'port': port, 'exc': e})
