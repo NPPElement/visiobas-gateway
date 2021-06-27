@@ -23,6 +23,12 @@ class VisioMQTTClient:
 
         self.setup()
 
+    @classmethod
+    def create(cls, gateway, settings: MQTTSettings) -> 'VisioMQTTClient':
+        mqtt_client = cls(gateway=gateway, settings=settings)
+        mqtt_client.setup()
+        return mqtt_client
+
     def __repr__(self) -> str:
         return self.__class__.__name__
 

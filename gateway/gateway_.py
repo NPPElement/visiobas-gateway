@@ -9,7 +9,8 @@ from gateway.api import VisioGtwApi
 from gateway.clients import VisioHTTPClient, VisioMQTTClient
 from gateway.devices import AsyncModbusDevice, SyncModbusDevice, BACnetDevice, SUNAPIDevice
 from gateway.models import (ObjType, BACnetDeviceObj, ModbusObj, Protocol,
-                            BACnetObj, HTTPSettings, GatewaySettings, ApiSettings)
+                            BACnetObj, HTTPSettings, GatewaySettings, ApiSettings,
+                            MQTTSettings)
 from gateway.utils import get_file_logger
 from gateway.verifier import BACnetVerifier
 
@@ -35,8 +36,10 @@ class VisioBASGateway:
         self.api: VisioGtwApi = None
         self.verifier = BACnetVerifier(override_threshold=settings.override_threshold)
 
-        self._devices: dict[int, Union[AsyncModbusDevice, SyncModbusDevice,
-                                       BACnetDevice, SUNAPIDevice]] = {}
+        self._devices: dict[int, Union[AsyncModbusDevice,
+                                       SyncModbusDevice,
+                                       BACnetDevice,
+                                       SUNAPIDevice]] = {}
         # self._cameras = dict[int, Union[SUNAPIDevice]]
 
         # TODO: updating event to return msg in case controlling at update time.
@@ -95,14 +98,12 @@ class VisioBASGateway:
     async def async_setup(self) -> None:
         """Set up Gateway and spawn update task."""
         self.http_client = VisioHTTPClient(gateway=self, settings=HTTPSettings())
-        # self.mqtt_client = VisioBASMQTTClient.from_yaml(
-        #     gateway=self, yaml_path=self.MQTT_CFG_PATH)
+        self.mqtt_client = VisioMQTTClient.create(gateway=self, settings=MQTTSettings())
+
         self.api = VisioGtwApi.create(gateway=self, settings=ApiSettings())
         await self._scheduler.spawn(self.api.start())
 
-        # TODO: run MQTT here
         await self._scheduler.spawn(coro=self.periodic_update())
-        # self._upd_task = self.loop.create_task(self.periodic_update())
 
     async def periodic_update(self) -> None:
         """Spawn periodic update task."""
@@ -231,10 +232,11 @@ class VisioBASGateway:
                 extract_tasks = [
                     self.async_add_job(self._extract_objects, obj_data, dev_obj)
                     for obj_data in objs_data
-                    if not isinstance(obj_data, aiohttp.ClientError)]
+                    if not isinstance(obj_data, aiohttp.ClientError)
+                ]
                 objs_lists = await asyncio.gather(*extract_tasks)
-                objs = [obj for lst in objs_lists for obj in lst if
-                        obj]  # flat list of lists
+                objs = [obj for lst in objs_lists for obj in lst
+                        if obj]  # flat list of lists
 
                 if not len(objs):
                     _LOG.warning("There aren't polling objects",
