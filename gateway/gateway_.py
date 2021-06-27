@@ -3,7 +3,6 @@ from typing import Callable, Any, Optional, Union, Awaitable, Collection
 
 import aiohttp
 import aiojobs
-from aiohttp import ClientError
 from pydantic import ValidationError
 
 from gateway.api import VisioGtwApi
@@ -63,10 +62,6 @@ class VisioBASGateway:
     @property
     def upd_period(self) -> int:
         return self.settings.update_period
-
-    # @property
-    # def devices(self) -> dict[int, Union[AsyncModbusDevice]]:
-    #     return self._devices
 
     def get_device(self, dev_id: int) -> Optional[Union[AsyncModbusDevice]]:
         """
@@ -233,14 +228,17 @@ class VisioBASGateway:
                                                             obj_types=dev.types_to_rq)
                 _LOG.debug('Polling objects downloaded', extra={'device_id': dev_id})
 
-                extract_tasks = [self.async_add_job(self._extract_objects, obj_data, dev_obj)
-                                 for obj_data in objs_data
-                                 if not isinstance(obj_data, aiohttp.ClientError)]
+                extract_tasks = [
+                    self.async_add_job(self._extract_objects, obj_data, dev_obj)
+                    for obj_data in objs_data
+                    if not isinstance(obj_data, aiohttp.ClientError)]
                 objs_lists = await asyncio.gather(*extract_tasks)
-                objs = [obj for lst in objs_lists for obj in lst if obj]  # flat list of lists
+                objs = [obj for lst in objs_lists for obj in lst if
+                        obj]  # flat list of lists
 
                 if not len(objs):
-                    _LOG.warning("There aren't polling objects", extra={'device_id': dev_id})
+                    _LOG.warning("There aren't polling objects",
+                                 extra={'device_id': dev_id})
                     return None
 
                 _LOG.debug('Polling objects extracted',
