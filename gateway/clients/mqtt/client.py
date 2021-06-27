@@ -36,7 +36,6 @@ class VisioMQTTClient:
             self.setup()
 
         await self.connect(host=self._host, port=self._port)
-        await self.subscribe(self.topics_sub)
 
     def __repr__(self) -> str:
         return self.__class__.__name__
@@ -159,7 +158,6 @@ class VisioMQTTClient:
             await self._client.connect_async(host=host, port=port,
                                              keepalive=self._keepalive)
             self._client.reconnect_delay_set()
-            self._connected = True
         except OSError as e:
             _LOG.warning('Failed to connect to MQTT broker',
                          extra={'host': host, 'port': port, 'exc': e})
@@ -246,7 +244,7 @@ class VisioMQTTClient:
             _LOG.debug('Subscribed')
 
     def _on_message_cb(self, client, userdata, message: mqtt.MQTTMessage) -> None:
-        pass
+        pass # TODO: add JSON-RPC
         # msg_dct = self.decode(msg=message)
         # _log.debug(f'Received {message.topic}:{msg_dct}')
         # try:

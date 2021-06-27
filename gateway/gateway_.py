@@ -121,8 +121,6 @@ class VisioBASGateway:
             target: target to call.
             args: parameters for target to call.
         """
-        # todo: get loop
-
         if target is None:
             raise ValueError('None not allowed')
         self.loop.call_soon_threadsafe(self.async_add_job, target, *args)
@@ -158,11 +156,11 @@ class VisioBASGateway:
     async def _perform_start_tasks(self) -> None:
         """Performs starting tasks.
 
-        # Setup gateway steps: # todo update
-        #     - Log in to HTTP
-        #     - Load devices
-        #     - Start devices poll
-        #     - Connect to MQTT
+        Setup gateway steps:
+            - Log in to HTTP
+            - Load devices
+            - Start devices poll
+            - Start MQTT client
         """
         await self.http_client.wait_login()
 
@@ -177,21 +175,22 @@ class VisioBASGateway:
                             if dev.is_polling_device]
         await asyncio.gather(*start_poll_tasks)
 
+        await self.mqtt_client.start()
+
         _LOG.info('Start tasks performed',
                   extra={'gateway_settings': self.settings, })
 
     async def _perform_stop_tasks(self) -> None:
         """Performs stopping tasks.
 
-        # Stop gateway steps: # todo: update
-        #     - Unsubscribe to MQTT
-        #     - Stop devices poll
-        #     - Log out to HTTP
+        Stop gateway steps:
+            - Unsubscribe to MQTT
+            - Stop devices poll
+            - Log out to HTTP
         """
-        # todo await self.mqtt_client.unsubscribe(self.mqtt_client.topics)
+        await self.mqtt_client.async_disconnect()
 
         # Stop polling devices.
-        _LOG.debug('Call stop tasks')
         stop_device_polling_tasks = [dev.stop() for dev in self._devices.values()
                                      if dev.is_polling_device]
         await asyncio.gather(*stop_device_polling_tasks)
