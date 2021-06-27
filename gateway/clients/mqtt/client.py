@@ -1,34 +1,22 @@
 import asyncio
-import uuid
 from json import loads, JSONDecodeError
 from logging import getLogger
-from pathlib import Path
 from typing import Sequence, Union
 
 import paho.mqtt.client as mqtt
 
+from ...models import ResultCode, Qos, MQTTSettings
+
 # from .api import VisioMQTTApi
-from ...models import ResultCode, Qos
 
 _log = getLogger(__name__)
 
 
 class VisioMQTTClient:
-    """Control interactions via MQTT."""
 
-    def __init__(self, gateway, config: dict):
-        # TODO
+    def __init__(self, gateway, settings: MQTTSettings):
         self._gateway = gateway
-        self._config = config
-
-        self._host = config['host']
-        self._port = config['port']
-        self._username = config['username']
-        self._password = config['password']
-
-        self._qos = config.get('qos', Qos.AT_MOST_ONCE_DELIVERY)
-        self._retain = config.get('retain', True)
-        self._keepalive = config.get('keepalive', 60)
+        self._settings = settings
 
         self._stopped = False
         self._connected = False
@@ -36,21 +24,47 @@ class VisioMQTTClient:
         self._paho_lock = asyncio.Lock()
         # self.api = VisioMQTTApi(visio_mqtt_client=self, gateway=gateway)
 
-        self.init_client()
+        self.setup()
 
     def __repr__(self) -> str:
         return self.__class__.__name__
 
     @property
-    def topics(self) -> list[tuple[str, int]]:
-        return [(topic, self._qos) for topic in self._config['subscribe']]
+    def _host(self) -> str:
+        return self._settings.url.host
 
     @property
-    def client_id(self) -> str:
-        client_id = self._config.get('client_id')
-        if client_id is None:
-            client_id = mqtt.base62(uuid.uuid4().int, padding=22)
-        return client_id
+    def _port(self) -> int:
+        return int(self._settings.url.port)
+
+    @property
+    def _username(self) -> str:
+        return self._settings.url.user
+
+    @property
+    def _password(self) -> str:
+        return self._settings.url.password
+
+    @property
+    def _qos(self) -> int:
+        return int(self._settings.qos)
+
+    @property
+    def _retain(self) -> bool:
+        return self._settings.retain
+
+    @property
+    def _keepalive(self) -> int:
+        return self._settings.keepalive
+
+    @property
+    def topics_sub(self) -> list[tuple[str, int]]:
+        """Topics to subscribe."""
+        return [(topic, self._qos) for topic in self._settings.topics_sub]
+
+    @property
+    def _client_id(self) -> str:
+        return self._settings.client_id
 
     # @property
     # def certificate(self) -> str:
@@ -59,10 +73,9 @@ class VisioMQTTClient:
     # self._client.tls_set()
     #     # todo add certificate
 
-
-    def init_client(self) -> None:
+    def setup(self) -> None:
         """Initialize MQTT client."""
-        self._client = mqtt.Client(client_id=self.client_id,
+        self._client = mqtt.Client(client_id=self._client_id,
                                    protocol=mqtt.MQTTv311,
                                    transport='tcp'  # todo ws?
                                    )  # todo add protocol version choice
@@ -120,7 +133,7 @@ class VisioMQTTClient:
 
     async def stop(self) -> None:
         self._stopped = True
-        _log.info(f'Stopping {self} ...')
+        _log.info('Stopping')
         await self.async_disconnect()
 
     async def connect(self, host: str, port: int = 1883) -> None:
@@ -129,7 +142,8 @@ class VisioMQTTClient:
             await self._client.connect_async(host=host, port=port)
             self._client.reconnect_delay_set()
         except OSError as e:
-            _log.error(f'Failed to connect to MQTT broker {e}')
+            _log.warning('Failed to connect to MQTT broker',
+                         extra={'host': host, 'port': port, 'exc': e})
         self._client.loop_start()
         # self._client.loop_forever(retry_first_connection=True)
 
@@ -139,7 +153,8 @@ class VisioMQTTClient:
         def disconnect():
             """Disconnect to broker."""
             self._client.disconnect()
-            _log.debug(f'{self._client} Disconnecting to broker')
+            _log.debug('Disconnecting to broker',
+                       extra={'client': self._client})
             # self._connected = False # will call in internal callback
             self._client.loop_stop()
 
@@ -194,7 +209,7 @@ class VisioMQTTClient:
             # Subscribing in on_connect() means that if we lose the connection and
             # reconnect then subscriptions will be renewed.
             asyncio.run_coroutine_threadsafe(
-                self.subscribe(topics=self.topics),
+                self.subscribe(topics=self.topics_sub),
                 loop=self._gateway.loop
             )
         else:
