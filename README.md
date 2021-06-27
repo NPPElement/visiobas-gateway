@@ -58,8 +58,8 @@ Configuration can be changed in files:
 
 - `config/gateway.env` [template](/config/templates/gateway.env)
 - `config/http.env` [template](/config/templates/http.env)
+- `config/mqtt.env` [template](/config/templates/mqtt.env)
 - `config/api.env` [template](/config/templates/api.env)
-- TODO: mqtt
 
 ### Logging level
 
