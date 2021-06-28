@@ -66,6 +66,10 @@ class VisioBASGateway:
     def upd_period(self) -> int:
         return self.settings.update_period
 
+    @property
+    def _is_mqtt_enabled(self) -> bool:
+        return self.settings.mqtt_enable
+
     def get_device(self, dev_id: int) -> Optional[Union[AsyncModbusDevice]]:
         """
         Args:
@@ -98,7 +102,8 @@ class VisioBASGateway:
     async def async_setup(self) -> None:
         """Set up Gateway and spawn update task."""
         self.http_client = VisioHTTPClient(gateway=self, settings=HTTPSettings())
-        self.mqtt_client = VisioMQTTClient.create(gateway=self, settings=MQTTSettings())
+        if self._is_mqtt_enabled:
+            self.mqtt_client = VisioMQTTClient.create(gateway=self, settings=MQTTSettings())
 
         self.api = VisioGtwApi.create(gateway=self, settings=ApiSettings())
         await self._scheduler.spawn(self.api.start())
@@ -175,7 +180,8 @@ class VisioBASGateway:
                             if dev.is_polling_device]
         await asyncio.gather(*start_poll_tasks)
 
-        await self.mqtt_client.start()
+        if self._is_mqtt_enabled:
+            await self.mqtt_client.start()
 
         _LOG.info('Start tasks performed',
                   extra={'gateway_settings': self.settings, })
@@ -188,7 +194,8 @@ class VisioBASGateway:
             - Stop devices poll
             - Log out to HTTP
         """
-        await self.mqtt_client.async_disconnect()
+        if self._is_mqtt_enabled:
+            await self.mqtt_client.async_disconnect()
 
         # Stop polling devices.
         stop_device_polling_tasks = [dev.stop() for dev in self._devices.values()
@@ -302,6 +309,7 @@ class VisioBASGateway:
             str_ = ';'.join([obj.to_http_str() for obj in objs]) + ';'
             await self.http_client.post_device(servers=self.http_client.servers_post,
                                                dev_id=dev_id, data=str_)
+            # if self._is_mqtt_enabled:  # todo
         except Exception as e:
             _LOG.exception('Unexpected error', extra={'exc': e})
 
