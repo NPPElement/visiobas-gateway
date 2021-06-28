@@ -4,8 +4,8 @@ from typing import Sequence, Union
 
 import paho.mqtt.client as mqtt
 
-from ...models import ResultCode, Qos, MQTTSettings
-from ...utils import get_file_logger
+from models import ResultCode, Qos, MQTTSettings
+from utils import get_file_logger
 
 _LOG = get_file_logger(__name__)
 
@@ -13,7 +13,7 @@ _LOG = get_file_logger(__name__)
 class VisioMQTTClient:
 
     def __init__(self, gateway, settings: MQTTSettings):
-        self._gateway = gateway
+        self._gtw = gateway
         self._settings = settings
 
         self._stopped: asyncio.Event = None
@@ -175,7 +175,7 @@ class VisioMQTTClient:
             # self._connected = False # will call in internal callback
             self._client.loop_stop()
 
-        await self._gateway.add_job(disconnect)
+        await self._gtw.add_job(disconnect)
 
     async def subscribe(self, topics: Sequence[tuple[str, int]],
                         qos: int = Qos.AT_MOST_ONCE_DELIVERY) -> None:
@@ -185,7 +185,7 @@ class VisioMQTTClient:
             [("my/topic", 0), ("another/topic", 2)]
         """
         async with self._paho_lock:
-            result, mid = await self._gateway.add_job(
+            result, mid = await self._gtw.add_job(
                 self._client.subscribe, topics, qos
             )
         # check will perform in internal callback
@@ -197,7 +197,7 @@ class VisioMQTTClient:
     async def unsubscribe(self, topics: Union[list[str], str]) -> None:
         """Perform an unsubscription."""
         async with self._paho_lock:
-            result, mid = await self._gateway.add_job(
+            result, mid = await self._gtw.add_job(
                 self._client.unsubscribe, topics
             )
         if result == mqtt.MQTT_ERR_SUCCESS:
@@ -210,7 +210,7 @@ class VisioMQTTClient:
                       retain: bool = False) -> mqtt.MQTTMessageInfo:
         """Send message to the broker."""
         async with self._paho_lock:
-            msg_info = await self._gateway.add_job(
+            msg_info = await self._gtw.add_job(
                 self._client.publish, topic, payload, qos, retain
             )
             return msg_info
@@ -227,7 +227,7 @@ class VisioMQTTClient:
             # reconnect then subscriptions will be renewed.
             asyncio.run_coroutine_threadsafe(
                 self.subscribe(topics=self.topics_sub),
-                loop=self._gateway.loop
+                loop=self._gtw.loop
             )
         else:
             _LOG.warning(f'Failed connection to broker: {ResultCode(rc)}')
@@ -244,23 +244,16 @@ class VisioMQTTClient:
             _LOG.debug('Subscribed')
 
     def _on_message_cb(self, client, userdata, message: mqtt.MQTTMessage) -> None:
-        pass # TODO: add JSON-RPC
-        # msg_dct = self.decode(msg=message)
-        # _log.debug(f'Received {message.topic}:{msg_dct}')
-        # try:
-        #     if msg_dct.get('method') == 'value':
-        #         # todo: provide device_id and cache result (error) if device not polling
-        #         self.api.rpc_value(params=msg_dct['params'],
-        #                            topic=message.topic,
-        #                            gateway=self._gateway
-        #                            )
-        # except Exception as e:
-        #     _log.warning(f'Error: {e} :{msg_dct}',
-        #                  # exc_info=True
-        #                  )
+        """Handles RPC call via MQTT and makes HTTP requests to localhost"""
+        _LOG.debug('Received message',
+                   extra={'topic': message.topic, 'message': message, })
+        decoded_msg = self._decode(msg=message)
+        self._gtw.http_client.request(method='POST',
+                                      url='http://127.0.0.1:7070/json-rpc',
+                                      )
 
     @staticmethod
-    def decode(msg: mqtt.MQTTMessage) -> dict or str:
+    def _decode(msg: mqtt.MQTTMessage) -> Union[dict, str]:
         try:
             if isinstance(msg.payload, bytes):
                 content = loads(msg.payload.decode("utf-8", "ignore"))

@@ -3,15 +3,11 @@ from typing import Any, Union, Collection, Optional
 
 import aiohttp
 
-from ...models import (ObjType, HTTPServerConfig, HTTPSettings, ObjProperty,
-                       BaseBACnetObjModel)
-from ...utils import get_file_logger
+from models import (ObjType, HTTPServerConfig, HTTPSettings, ObjProperty,
+                    BaseBACnetObjModel)
+from utils import get_file_logger
 
 _LOG = get_file_logger(name=__name__)
-# _base_path = Path(__file__).resolve().parent.parent.parent
-
-# aliases
-VisioBASGateway = Any  # '...gateway_loop.VisioBASGateway'
 
 
 class VisioHTTPClient:
@@ -23,15 +19,13 @@ class VisioHTTPClient:
     _URL_POST_LIGHT = '{base_url}/vbas/gate/light/{device_id}'
     _URL_POST_PROPERTY = '{base_url}/vbas/arm/saveObjectParam/{property_id}/{replaced_object_name}'
 
-    def __init__(self, gateway: 'VisioBASGateway', settings: HTTPSettings):
+    def __init__(self, gateway, settings: HTTPSettings):
         self.gateway = gateway
         self._settings = settings
         self._timeout = aiohttp.ClientTimeout(total=settings.timeout)
         self._session = aiohttp.ClientSession(timeout=self._timeout)
 
-        # self._upd_task = None
         self._authorized = False
-        # self._stopped = False
 
     def __repr__(self) -> str:
         return self.__class__.__name__
@@ -55,36 +49,6 @@ class VisioHTTPClient:
     async def setup(self) -> None:
         """Wait for authorization then spawn a periodic update task."""
         await self.wait_login(retry=self.retry_delay)
-
-    # async def run_http_post_loop(self, queue: asyncio.Queue,
-    #                              post_nodes: Iterable[VisioHTTPNode],
-    #                              session
-    #                              ) -> None:
-    #     """Listen queue from verifier.
-    #     When receive data from verifier - send it to nodes via HTTP.
-    #
-    #     Designed as an endless loop. Can be stopped from gateway thread.
-    #     """
-    #     _log.info('Sending via HTTP loop started')
-    #     # Loop that receive data from verifier then send it to nodes via HTTP.
-    #     while not self._stopped:
-    #         try:
-    #             device_id, device_str = await queue.get()
-    #             _log.debug('Received data from BACnetVerifier: '
-    #                        f'Device[{device_id}]'
-    #                        )
-    #             # todo: change to fire and forget?
-    #             _ = await self.post_device(nodes=post_nodes,
-    #                                        device_id=device_id,
-    #                                        data=device_str,
-    #                                        session=session
-    #                                        )
-    #         except Exception as e:
-    #             _log.error(f"Receive or post error: {e}",
-    #                        exc_info=True
-    #                        )
-    #     else:  # received stop signal
-    #         _log.info(f'{self} stopped.')
 
     # async def post_gateway_address(self, dev_obj: BACnetDevice) -> None:
     #     """Post gateway address to polling device.
@@ -142,7 +106,8 @@ class VisioHTTPClient:
         _LOG.debug('Logging out', extra={'servers': servers})
         try:
             logout_tasks = [self.request(method='GET',
-                                         url=self._URL_LOGOUT.format(base_url=server.current_url),
+                                         url=self._URL_LOGOUT.format(
+                                             base_url=server.current_url),
                                          headers=server.auth_headers)
                             for server in servers]
             res = await asyncio.gather(*logout_tasks)
