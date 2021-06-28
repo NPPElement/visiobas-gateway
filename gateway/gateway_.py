@@ -244,7 +244,7 @@ class VisioBASGateway:
 
                 _LOG.debug('Polling objects extracted',
                            extra={'device_id': dev_id, 'objects_count': len(objs)})
-                await self.async_add_job(dev.load_objects, objs)
+                await self.async_add_job(dev.insert_objects, objs)
 
             self._devices.update({dev.id: dev})
             _LOG.info('Device loaded', extra={'device_id': dev_id})

@@ -163,10 +163,10 @@ class BasePollingDevice(BaseDevice, ABC):
             if obj.type.id == obj_type_id and obj.id == obj_id:
                 return obj
 
-    def load_objects(self, objs: Collection[Union[BACnetObj, ModbusObj]]) -> None:
-        """Groups objects by poll period and loads them into device for polling."""
+    def insert_objects(self, objs: Collection[Union[BACnetObj, ModbusObj]]) -> None:
+        """Groups objects by poll period and insert them into device for polling."""
         if not len(objs):
-            self._LOG.debug('No objects to load', extra={'device_id': self.id, })
+            self._LOG.debug('No objects to insert', extra={'device_id': self.id, })
             return None
 
         self._polling_event.clear()
@@ -177,7 +177,7 @@ class BasePollingDevice(BaseDevice, ABC):
             except KeyError:
                 self._objects[poll_period] = {obj}
         self._polling_event.set()
-        self._LOG.debug('Objects are grouped by period and loads to the device',
+        self._LOG.debug('Objects are grouped by period and inserted to device',
                         extra={'device_id': self.id, 'objects_number': len(objs)})
 
     async def start_periodic_pollings(self) -> None:
@@ -213,7 +213,7 @@ class BasePollingDevice(BaseDevice, ABC):
                         extra={'device_id': self.id,
                                'unreachable_objects_number': len(
                                    self._unreachable_objects)})
-        self.load_objects(objs=self._unreachable_objects)
+        self.insert_objects(objs=self._unreachable_objects)
         self._unreachable_objects = set()
 
         await self._scheduler.spawn(self._periodic_reset_unreachable())
