@@ -1,7 +1,8 @@
 import asyncio
 from json import loads, JSONDecodeError
-from typing import Sequence, Union
+from typing import Sequence, Union, Optional
 
+import aiohttp
 import paho.mqtt.client as mqtt
 
 from models import ResultCode, Qos, MQTTSettings
@@ -244,13 +245,40 @@ class VisioMQTTClient:
             _LOG.debug('Subscribed')
 
     def _on_message_cb(self, client, userdata, message: mqtt.MQTTMessage) -> None:
-        """Handles RPC call via MQTT and makes HTTP requests to localhost"""
         _LOG.debug('Received message',
                    extra={'topic': message.topic, 'message': message, })
         decoded_msg = self._decode(msg=message)
-        self._gtw.http_client.request(method='POST',
-                                      url='http://127.0.0.1:7070/json-rpc',
-                                      )
+
+        if isinstance(decoded_msg, dict) and decoded_msg.get('jsonrpc') == 2.0:
+            rpc_task = self._gtw.async_add_job(
+                self.jsonrpc_over_http, decoded_msg
+            )
+            self._gtw.add_job(
+                self._publish_rpc_response, rpc_task, message.topic
+            )
+
+    async def _publish_rpc_response(self, rpc_task: asyncio.Task, topic: str) -> None:
+        rpc_result = await rpc_task
+        await self.publish(topic=topic, payload=rpc_result)
+
+    async def jsonrpc_over_http(self, payload: dict) -> Optional[dict]:
+        """Performs JSON-RPC over HTTP.
+
+        Args:
+            payload:
+
+        Returns:
+            RPC Response is successful.
+        """
+        try:
+            return await self._gtw.http_client.request(
+                method='POST', url='http://127.0.0.1:7070/json-rpc',
+                json=payload, headers='application/json',
+            )
+        except (aiohttp.ClientError, Exception) as e:
+            _LOG.warning('JSON-RPC 2.0 Call exception',
+                         extra={'exc': e, 'payload': payload})
+            return {"jsonrpc": "2.0", 'result': {'success': False}}
 
     @staticmethod
     def _decode(msg: mqtt.MQTTMessage) -> Union[dict, str]:
