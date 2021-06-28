@@ -1,4 +1,5 @@
 import asyncio
+import http
 from typing import Any, Union, Collection, Optional
 
 import aiohttp
@@ -49,20 +50,6 @@ class VisioHTTPClient:
     async def setup(self) -> None:
         """Wait for authorization then spawn a periodic update task."""
         await self.wait_login(retry=self.retry_delay)
-
-    # async def post_gateway_address(self, dev_obj: BACnetDevice) -> None:
-    #     """Post gateway address to polling device.
-    #
-    #     Args:
-    #         dev_obj: Polling device object
-
-    #     DEPRECATED
-    #     """
-    #     # fixme import replace to ''
-    #     await self.post_property(value={'gtw_address': str(self.gateway.address)},
-    #                              property_=ObjProperty.deviceAddressBinding,
-    #                              obj=dev_obj,
-    #                              servers=self.servers_post)
 
     async def get_objs(self, dev_id: int, obj_types: Collection[ObjType]
                        ) -> tuple[Union[Any, Exception], ...]:
@@ -120,14 +107,10 @@ class VisioHTTPClient:
                       extra={'servers': servers, 'result': res})
             return True
 
-        except aiohttp.ClientResponseError as e:
+        except (aiohttp.ClientResponseError, Exception) as e:
             _LOG.warning('Failure logout', extra={'exc': e, })
             return False
-        except Exception as e:
-            _LOG.exception('Logout error:', extra={'exc': e, })
-            return False
 
-    # todo use async_backoff decorator for retry?
     async def wait_login(self, retry: int = 60) -> None:
         """Ensures the authorization.
 
@@ -196,12 +179,9 @@ class VisioHTTPClient:
                 _LOG.info('Successfully authorized', extra={'server': server})
             else:
                 _LOG.warning('Failed authorization', extra={'server': server})
-        except aiohttp.ClientError as e:
+        except (aiohttp.ClientError, Exception) as e:
             _LOG.warning('Failed authorization',
                          extra={'url': server.current_url, 'exc': e, })
-        except Exception as e:
-            _LOG.exception('Failed authorization to  {server}: {e}',
-                           extra={'url': server.current_url, 'exc': e, })
         finally:
             return server.is_authorized
 
@@ -231,13 +211,8 @@ class VisioHTTPClient:
             # TODO: What we should do with errors?
 
         except (asyncio.TimeoutError, aiohttp.ClientError,
-                ConnectionError) as e:
+                ConnectionError, Exception) as e:
             _LOG.warning('Failed to send', extra={'device_id': dev_id, 'exc': e, })
-            return False
-
-        except Exception as e:
-            _LOG.exception('Unhandled failed to send',
-                           extra={'device_id': dev_id, 'exc': e, })
             return False
         else:
             _LOG.debug('Successfully sent data',
@@ -277,9 +252,11 @@ class VisioHTTPClient:
                               'value': value, 'servers': servers, })
             return True
 
-    async def request(self, method: str, url: str, **kwargs) -> Union[list, dict]:
-        """Perform HTTP request and check response.
-        :return: extracted data
+    async def request(self, method: str, url: str, **kwargs) -> Optional[Union[list, dict]]:
+        """Performs HTTP request and check response.
+
+        Returns:
+            Data extracted from the response, if response is correct
         """
         # todo: need re-raise?
         _LOG.debug('Perform request',
@@ -290,34 +267,31 @@ class VisioHTTPClient:
             return data
 
     @staticmethod
-    async def _extract_response_data(response: aiohttp.ClientResponse) -> list or dict:
+    async def _extract_response_data(response: aiohttp.ClientResponse
+                                     ) -> Optional[Union[list, dict]]:
         """Checks the correctness of the response.
-        :param response: server's response
-        :return: response['data'] field after checks
+
+        Args:
+            response: server's response.
+
+        Returns:
+            response['data'] field if expected response.
+
+        Raises:
+            aiohttp.ClientError: if response is not successfully.
         """
         response.raise_for_status()
 
-        if response.status == 200:
-            response.raise_for_status()
+        if response.status == http.HTTPStatus.OK:
+            # response.raise_for_status()
             _json = await response.json()
-            if _json['success']:
-                _LOG.debug('Successfully response',
-                           extra={'url': response.url})
-                try:
-                    return _json['data']
-                except LookupError as e:
-                    # fixme
-                    _LOG.warning(f'Data extracting failed (most likely in logout)')  # ,
-                    # extra={'exc': e, })
+            if _json.get('success'):
+                _LOG.debug('Successfully response', extra={'url': response.url, })
+                return _json.get('data')
             else:
                 raise aiohttp.ClientError(f'Failure response: {response.url}\n{_json}')
         # else:
         #     # todo: switch to another server
-        #     # _log.warning('Server response status error: '
-        #     #              f'[{response.status}] {response.url}')
-        #     raise aiohttp.ClientError('Response status: '
-        #                               f'[{response.status}] {response.url}'
-        #                               )
 
     # @staticmethod
     # async def __check_rejected(device_id: int, data: list) -> list:
