@@ -5,8 +5,8 @@ from typing import Sequence, Union
 
 import paho.mqtt.client as mqtt
 
-from models import ResultCode, Qos, MQTTSettings
-from utils import get_file_logger
+from ..models import ResultCode, Qos, MQTTSettings
+from ..utils import get_file_logger
 
 _LOG = get_file_logger(__name__)
 
