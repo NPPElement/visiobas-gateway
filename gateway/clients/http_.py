@@ -21,7 +21,7 @@ class VisioHTTPClient:
     _URL_POST_PROPERTY = '{base_url}/vbas/arm/saveObjectParam/{property_id}/{replaced_object_name}'
 
     def __init__(self, gateway, settings: HTTPSettings):
-        self.gateway = gateway
+        self._gtw = gateway
         self._settings = settings
         self._timeout = aiohttp.ClientTimeout(total=settings.timeout)
         self._session = aiohttp.ClientSession(timeout=self._timeout)
@@ -62,8 +62,7 @@ class VisioHTTPClient:
             obj_types: types of objects
 
         Returns:
-            If provided one type - returns objects of this type or exception.
-            If provided several types - returns tuple of objects, exceptions.
+            Tuple of objects and exceptions (if they raised).
         """
         get_tasks = [
             self.request(method='GET',
@@ -287,7 +286,7 @@ class VisioHTTPClient:
                                           ) -> Optional[Union[list, dict]]:
         self.__doc__ = self._extract_response_data.__doc__
 
-        return await self.gateway.async_add_job(
+        return await self._gtw.async_add_job(
             self._extract_response_data, resp
         )
 

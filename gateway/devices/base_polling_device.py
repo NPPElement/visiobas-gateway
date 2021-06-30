@@ -180,8 +180,8 @@ class BasePollingDevice(BaseDevice, ABC):
         self._LOG.debug('Objects are grouped by period and inserted to device',
                         extra={'device_id': self.id, 'objects_number': len(objs)})
 
-    async def start_periodic_pollings(self) -> None:
-        """Starts periodic pollings for all periods."""
+    async def start_periodic_polls(self) -> None:
+        """Starts periodic polls for all periods."""
 
         if self.is_client_connected:
             self._polling_event.set()
@@ -195,7 +195,7 @@ class BasePollingDevice(BaseDevice, ABC):
                                   'seconds_to_next_try': self.reconnect_period, })
             await asyncio.sleep(delay=self.reconnect_period)
             await self._gtw.async_add_job(self.create_client)
-            await self._scheduler.spawn(self.start_periodic_pollings())
+            await self._scheduler.spawn(self.start_periodic_polls())
 
     async def stop(self) -> None:
         """Waits for finish of all polling tasks with timeout, and stop polling.
