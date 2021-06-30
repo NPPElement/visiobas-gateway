@@ -9,6 +9,7 @@ services:
     image: visiobas-gateway:3.2.5
     logging:
       #driver: none
+
       driver: "json-file"
       options:
         max-file: "2"

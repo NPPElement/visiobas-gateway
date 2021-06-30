@@ -1,8 +1,10 @@
+
 from logging import getLogger
 from multiprocessing import SimpleQueue
 from threading import Thread
 from time import sleep, time
 from typing import Iterable, Sequence
+
 
 from BAC0.core.io.IOExceptions import (ReadPropertyException,
                                        NoResponseFromController,
@@ -52,9 +54,9 @@ class BACnetDevice(Thread):
         self.support_rpm: set[BACnetObj] = objects
         self.not_support_rpm: set[BACnetObj] = set()
 
+
         # self.__objects_per_rpm = 25
         # todo: Should we use one RPM for several objects?
-
         self._active = True
         self._polling = True
 

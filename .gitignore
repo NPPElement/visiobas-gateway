@@ -7,11 +7,10 @@ build
 .github
 
 *.pyc
-*.log
-*.log.1
 
+*.log*
 *.DS_Store
 .DS_Store
 
-*address_cache
 config/prod/*
+

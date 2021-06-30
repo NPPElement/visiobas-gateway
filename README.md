@@ -122,6 +122,7 @@ sudo docker images -a | xargs -n 1 -I {} sudo docker rmi -f {}
 ```
 
 ```shell
+
 # Delete all containers
 sudo docker ps -a -q | xargs -n 1 -I {} sudo docker rm -f {}
 
