@@ -1,27 +1,39 @@
 # VisioBAS-Gateway
 
-Application for polling devices using various protocols and transmitting data to
+Service for polling devices using various protocols and transmitting data to
 the [VisioBAS system](https://github.com/NPPElement/visiobas-broker).
 
 ### Contents
 
-0. [API](#API)
-1. [Installation](#Installation)
+1. [Features](#Features)
+2. [API](#API)
+3. [Installation](#Installation)
     - [Install Docker](#a-Install-Docker)
     - [Install Docker Compose](#b-Install-Docker-Compose)
     - [Install VisioBAS gateway](#c-Install-VisioBAS-Gateway)
-2. [Setting](#Setting)
+4. [Setting](#Setting)
     - [Setting COM ports](#Setting-Serial-ports)
     - [Setting configuration](#Setting-configuration)
-3. [Launch/Update](#LaunchUpdate)
-4. [Remove](#Remove)
-5. [License Information](#License-Information)
+5. [Launch/Update](#LaunchUpdate)
+6. [Remove](#Remove)
+7. [License Information](#License-Information)
+
+## Features
+
+- Gateway provides the opportunity to poll devices from various vendors, using various
+  protocols. Standardization based on `BACnet` protocol.
+- Supported protocols: `BACnet`, `ModbusTCP`, `ModbusRTU`, `ModbusRTUoverTCP`
+  , `SUNAPI (not tested yet)`.
+- Clients: `HTTP`, `MQTT (not tested yet)`.
+- `JSON-RPC 2.0 API` (over `HTTP` and `MQTT`) to control devices and request info about device.
+- For processing events related to object's properties you can use verifier class.
+- Devices and clients periodically updates.
 
 ## API
 
-### `JSON-RPC 2.0` API Available on `http://host:port/json-rpc`.
+### `JSON-RPC 2.0 API` Available on `http://host:port/json-rpc`. Also you may use it by MQTT (provide topics for subscribe to use).
 
-~~Swagger docs available on http://host:port/~~ TODO: update
+TODO: update Swagger
 
 ```shell
 curl --header "Content-Type: application/json" \
@@ -51,8 +63,8 @@ cd /opt/visiobas-gateway
 
 ### Configuration
 
-Application configures via environment variables. Environment variables are provided via `.env` files. Paths to `.env` files
-are specified in `docker-compose.yaml`.
+Application configures via environment variables. Environment variables are provided
+via `.env` files. Paths to `.env` files are specified in `docker-compose.yaml`.
 
 Configuration can be changed in files:
 
@@ -63,8 +75,8 @@ Configuration can be changed in files:
 
 ### Logging level
 
-- Logging level You can change the logging level in the `docker-compose.yaml` file. You can choose one of the following
-  levels: `DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL`
+- Logging level You can change the logging level in the `docker-compose.yaml` file. You can
+  choose one of the following levels: `DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL`
 
 ### Objects configuration
 
@@ -90,7 +102,8 @@ id username # check user\group info
 
 ## Launch/Update
 
-To launch on the same machine with [VisioBAS system](https://github.com/NPPElement/visiobas-broker) - add
+To launch on the same machine
+with [VisioBAS system](https://github.com/NPPElement/visiobas-broker) - add
 in `docker-compose.yaml` the following network settings (commented now):
 
 ```yaml
