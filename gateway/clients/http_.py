@@ -51,8 +51,8 @@ class VisioHTTPClient:
         """Wait for authorization then spawn a periodic update task."""
         await self.wait_login(retry=self.retry_delay)
 
-    async def get_objs(self, dev_id: int, obj_types: Collection[ObjType]
-                       ) -> tuple[Union[Any, Exception], ...]:
+    async def get_objects(self, dev_id: int, obj_types: Collection[ObjType]
+                          ) -> tuple[Union[Any, Exception], ...]:
         """Requests objects of provided type.
 
         If one of requests failed - return error with responses.
@@ -70,18 +70,20 @@ class VisioHTTPClient:
                              base_url=self.server_get.current_url,
                              device_id=str(dev_id),
                              object_type_dashed=obj_type.name_dashed),
-                         headers=self.server_get.auth_headers
+                         headers=self.server_get.auth_headers,
+                         extract_data=True
                          ) for obj_type in obj_types
         ]
+        extracted_data = await asyncio.gather(*get_tasks, return_exceptions=True)
         # for resp in asyncio.as_completed(asyncio.gather(*rq_tasks)):
         #     await self.async_extract_response_data(resp=await resp)
         #     ...
 
-        extracted_objs_by_type = [
-            await self.async_extract_response_data(resp=await resp) for resp in
-            asyncio.as_completed(asyncio.gather(*get_tasks))
-        ]
-        return tuple(extracted_objs_by_type)
+        # extracted_objs_by_type = [
+        #     await self.async_extract_response_data(resp=await resp) for resp in
+        #     asyncio.as_completed(asyncio.gather(*get_tasks))
+        # ]
+        return extracted_data
 
     async def logout(self, servers: Optional[Collection[HTTPServerConfig]] = None) -> bool:
         """Performs log out from servers.
@@ -179,12 +181,13 @@ class VisioHTTPClient:
 
             while not server.is_authorized:
                 try:
-                    auth_resp = await self.request(
+                    auth_data = await self.request(
                         method='POST',
                         url=self._URL_LOGIN.format(base_url=server.current_url),
-                        json=server.auth_payload
+                        json=server.auth_payload,
+                        extract_data=True
                     )
-                    auth_data = await self.async_extract_response_data(resp=auth_resp)
+                    # auth_data = await self.async_extract_response_data(resp=auth_resp)
                     server.set_auth_data(**auth_data)
 
                 except (aiohttp.ClientError, Exception) as e:
@@ -223,16 +226,17 @@ class VisioHTTPClient:
                                  base_url=server.current_url,
                                  device_id=str(dev_id)),
                              headers=server.auth_headers,
-                             data=data
+                             data=data,
+                             extract_data=True
                              ) for server in servers
             ]
-            # await asyncio.gather(*post_tasks)
-
+            await asyncio.gather(*post_tasks)
             # TODO: What we should do with failed data?
-            failed_data = [
-                await self.async_extract_response_data(resp=await resp) for resp in
-                asyncio.as_completed(asyncio.gather(*post_tasks))
-            ]
+
+            # failed_data = [
+            #     await self.async_extract_response_data(resp=await resp) for resp in
+            #     asyncio.as_completed(asyncio.gather(*post_tasks))
+            # ]
 
         except (asyncio.TimeoutError, aiohttp.ClientError,
                 ConnectionError, Exception) as e:
@@ -247,7 +251,7 @@ class VisioHTTPClient:
                             property_: ObjProperty, obj: BaseBACnetObjModel,
                             servers: Collection[HTTPServerConfig],
                             ) -> bool:
-        """DO NOT USED NOW."""
+        """TODO: DO NOT USED NOW."""
         try:
             post_tasks = [
                 self.request(method='POST',
@@ -273,7 +277,10 @@ class VisioHTTPClient:
                               'value': value, 'servers': servers, })
             return True
 
-    async def request(self, method: str, url: str, **kwargs) -> aiohttp.ClientResponse:
+    async def request(self, method: str, url: str,
+                      *,
+                      extract_data: bool = False, **kwargs
+                      ) -> Union[aiohttp.ClientResponse, Union[dict, list]]:
         """Performs HTTP request.
 
         Returns:
@@ -282,8 +289,11 @@ class VisioHTTPClient:
         _LOG.debug('Perform request',
                    extra={'method': method, 'url': url,
                           'data': kwargs.get('data'), 'json': kwargs.get('json'), })
-        async with self._session.request(method=method, url=url, timeout=self._timeout,
-                                         **kwargs) as resp:
+        async with self._session.request(
+                method=method, url=url, timeout=self._timeout, **kwargs
+        ) as resp:
+            if extract_data:
+                return await self.async_extract_response_data(resp=resp)
             return resp
 
     async def async_extract_response_data(self, resp: aiohttp.ClientResponse
@@ -318,4 +328,5 @@ class VisioHTTPClient:
                 return json.get('data')
             else:
                 raise aiohttp.ClientPayloadError(
-                    f'Failure server result: {resp.url} {json}')
+                    f'Failure server result: {resp.url} {json}'
+                )

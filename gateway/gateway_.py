@@ -224,7 +224,7 @@ class VisioBASGateway:
         # TODO: If fails get objects from server - loads it from local.
         """
         try:
-            dev_obj_data = await self.http_client.get_objs(
+            dev_obj_data = await self.http_client.get_objects(
                 dev_id=dev_id, obj_types=(ObjType.DEVICE,))
             _LOG.debug('Device object downloaded', extra={'device_id': dev_id})
 
@@ -240,14 +240,14 @@ class VisioBASGateway:
 
             if dev.is_polling_device:
                 # todo: use for extractions tasks asyncio.as_completed(tasks):
-                objs_data = await self.http_client.get_objs(
+                objs_data = await self.http_client.get_objects(
                     dev_id=dev_id, obj_types=dev.types_to_rq)
                 _LOG.debug('Polling objects downloaded', extra={'device_id': dev_id, })
 
                 extract_tasks = [
                     self.async_add_job(self._extract_objects, obj_data, dev_obj)
                     for obj_data in objs_data
-                    if not isinstance(obj_data, aiohttp.ClientError)
+                    if not isinstance(obj_data, (aiohttp.ClientError, Exception))
                 ]
                 objs_lists = await asyncio.gather(*extract_tasks)
                 objs = [obj for lst in objs_lists
