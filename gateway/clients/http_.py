@@ -178,13 +178,18 @@ class VisioHTTPClient:
         try:
 
             while not server.is_authorized:
-                auth_resp = await self.request(
-                    method='POST',
-                    url=self._URL_LOGIN.format(base_url=server.current_url),
-                    json=server.auth_payload
-                )
-                auth_data = await self.async_extract_response_data(resp=auth_resp)
-                server.set_auth_data(**auth_data)
+                try:
+                    auth_resp = await self.request(
+                        method='POST',
+                        url=self._URL_LOGIN.format(base_url=server.current_url),
+                        json=server.auth_payload
+                    )
+                    auth_data = await self.async_extract_response_data(resp=auth_resp)
+                    server.set_auth_data(**auth_data)
+
+                except (aiohttp.ClientError, Exception) as e:
+                    _LOG.warning('Failed authorization',
+                                 extra={'url': server.current_url, 'exc': e, })
 
                 if not server.switch_current():
                     break
@@ -195,9 +200,7 @@ class VisioHTTPClient:
                 raise aiohttp.ClientError(
                     'Authorizations on primary and mirror servers are failed'
                 )
-        except (aiohttp.ClientError, Exception) as e:
-            _LOG.warning('Failed authorization',
-                         extra={'url': server.current_url, 'exc': e, })
+
         finally:
             return server.is_authorized
 
