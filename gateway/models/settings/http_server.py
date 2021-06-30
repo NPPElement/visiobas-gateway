@@ -71,7 +71,7 @@ class HTTPServerConfig(BaseModel):
         Uses in change server when current unavailable.
 
         Returns:
-            True: If url switched to unused
+            True: If url switched to unused.
             False: If url switched to already used.
         """
         self.current = self.current + 1 if self.current < self.urls_len - 1 else 0
