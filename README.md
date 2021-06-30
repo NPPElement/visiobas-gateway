@@ -1,60 +1,74 @@
-# Visiobas-Gateway
+# VisioBAS-Gateway
 
-It's the application for polling devices using various protocols and transmitting data to
-the visioBAS system.
+Application for polling devices using various protocols and transmitting data to
+the [VisioBAS system](https://github.com/NPPElement/visiobas-broker).
 
-# Contents
+### Contents
 
+0. [API](#API)
 1. [Installation](#Installation)
-    - [Install Docker](#Install-Docker)
-    - [Install Docker Compose](#Install-Docker-Compose)
-    - [Install VisioBAS gateway](#Install-VisioBAS-Gateway)
+    - [Install Docker](#a-Install-Docker)
+    - [Install Docker Compose](#b-Install-Docker-Compose)
+    - [Install VisioBAS gateway](#c-Install-VisioBAS-Gateway)
 2. [Setting](#Setting)
     - [Setting COM ports](#Setting-Serial-ports)
     - [Setting configuration](#Setting-configuration)
-3. [Launch](#Launch)
-4. [Update](#Update)
-5. [Remove](#Remove)
+3. [Launch/Update](#LaunchUpdate)
+4. [Remove](#Remove)
+5. [License Information](#License-Information)
+
+## API
+
+### `JSON-RPC 2.0` API Available on `http://host:port/json-rpc`.
+
+~~Swagger docs available on http://host:port/~~ TODO: update
+
+```shell
+curl --header "Content-Type: application/json" \
+  --request POST \
+  --data '{"jsonrpc":"2.0","method":"writeSetPoint","params":{"device_id":"35","object_type":"2","object_id":"1","property":"85","priority":"10","index":"-1","tag":"9","value":"40"},"id":""}' \
+  http://127.0.0.1:7070/json-rpc
+```
 
 ## Installation
 
-### Install Docker
+### a. [Install Docker](https://docs.docker.com/engine/install/)
 
-``` shell
-# Only for Debian
-apt install gnupg
+### b. [Install Docker Compose](https://docs.docker.com/compose/install/)
 
-sudo apt update
-sudo apt install apt-transport-https ca-certificates curl software-properties-common
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+### c. Install VisioBAS Gateway
 
-# Use Ubuntu or Debian
-sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu focal stable"
-sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/debian buster stable"
-
-sudo apt update
-apt-cache policy docker-ce
-sudo apt install docker-ce
-sudo systemctl status docker
-```
-
-### Install Docker Compose
-
-``` shell
-sudo curl -L https://github.com/docker/compose/releases/download/1.21.2/docker-compose-`uname -s`-`uname -m` -o /usr/local/bin/docker-compose
-sudo chmod +x /usr/local/bin/docker-compose
-docker-compose --version
-```
-
-### Install VisioBAS Gateway
-
-``` shell
+```shell
 cd /opt
 sudo git clone https://github.com/NPPElement/visiobas-gateway
-cd visiobas-gateway
+cd /opt/visiobas-gateway
+
+# Configure gateway now. Then:
+. run/install.sh
 ```
 
 ## Setting
+
+### Configuration
+
+Application configures via environment variables. Environment variables are provided via `.env` files. Paths to `.env` files
+are specified in `docker-compose.yaml`.
+
+Configuration can be changed in files:
+
+- `config/gateway.env` [template](/config/templates/gateway.env)
+- `config/http.env` [template](/config/templates/http.env)
+- `config/api.env` [template](/config/templates/api.env)
+- TODO: mqtt
+
+### Logging level
+
+- Logging level You can change the logging level in the `docker-compose.yaml` file. You can choose one of the following
+  levels: `DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL`
+
+### Objects configuration
+
+To configure objects properties read [this note](/docs/properties_ru.md).
 
 ### Setting Serial ports
 
@@ -74,54 +88,41 @@ sudo usermod -a -G dialout username # add to `dialout` group
 id username # check user\group info
 ```
 
+## Launch/Update
 
-### Setting configuration
+To launch on the same machine with [VisioBAS system](https://github.com/NPPElement/visiobas-broker) - add
+in `docker-compose.yaml` the following network settings (commented now):
 
-- To configure it, you need to edit the file `docker-compose.yaml`. HTTP's settings must be
-  specified in the `http_config.env`. HTTP's settings file
-  template [here](http_config.env.template).
-- Logging level You can change the logging level in the `docker-compose.yaml` file. You can
-  choose one of the following levels: `DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL`
-
-## Launch
-
-From the `visiobas-gateway` directory
-
-``` shell
-sudo docker-compose up -d
-
-# For enable docker logs
-sudo docker-compose logs -f
+```yaml
+networks:
+  default:
+    external: true
+    name: services_backend  # or your network name
 ```
 
-## Update
+Scripts for common actions available:
 
-``` shell
-sudo docker-compose down
-sudo docker-compose build
-sudo docker-compose up -d
-```
+```shell
+. run/logs_clear.sh  # Clear logs
 
-Or with full cleaning
-
-``` shell
-sudo docker-compose down 
-sudo docker images
-
-sudo docker rmi -f [image_id]
-# or
-sudo docker images -a | xargs -n 1 -I {} sudo docker rmi -f {}
-```
-
-``` shell
-# Set the data received after executing the previous command instead of the id
-sudo git pull
-sudo docker-compose up --build
+. run/update.sh  # Git pull + build + launch
 ```
 
 ## Remove
 
-``` shell
+To clean docker:
+
+```shell
+sudo docker-compose down 
+sudo docker images
+
+sudo docker rmi -f [image_id]
+# OR
+sudo docker images -a | xargs -n 1 -I {} sudo docker rmi -f {}
+```
+
+```shell
+
 # Delete all containers
 sudo docker ps -a -q | xargs -n 1 -I {} sudo docker rm -f {}
 
@@ -133,6 +134,6 @@ sudo systemctl daemon-reload
 sudo systemctl restart docker
 ```
 
-## License
+### [License Information](/LICENSE)
 
-GPL-3.0 License
+`GPL-3.0 License`

@@ -1,14 +1,16 @@
 venv
 .idea
+
+*.egg-info
+dist
+build
+.github
+
 *.pyc
+
 *.log*
 *.DS_Store
 .DS_Store
-*address_cache
-*.env
-gateway/utils/for_test.py
-*.yaml
 
-/dist
-/*.egg-info
-.github
+config/prod/*
+
