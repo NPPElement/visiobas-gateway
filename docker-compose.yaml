@@ -6,7 +6,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: visiobas-gateway:3.2.5
+    image: visiobas-gateway:3.3.0-alpha
     logging:
       #driver: none
       driver: "json-file"
