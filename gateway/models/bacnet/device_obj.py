@@ -52,7 +52,7 @@ class DevicePropertyListJsonModel(BaseModel):
             APDU_Timeout property.''')
 
     # todo check
-    internal_period: float = Field(default=0.3, alias='internalPeriod')
+    # internal_period: float = Field(default=0.3, alias='internalPeriod')
     reconnect_period: int = Field(default=5 * 60, alias='reconnectPeriod')
 
     def __str__(self) -> str:
