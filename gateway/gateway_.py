@@ -242,7 +242,7 @@ class VisioBASGateway:
                 # todo: use for extractions tasks asyncio.as_completed(tasks):
                 objs_data = await self.http_client.get_objs(
                     dev_id=dev_id, obj_types=dev.types_to_rq)
-                _LOG.debug('Polling objects downloaded', extra={'device_id': dev_id})
+                _LOG.debug('Polling objects downloaded', extra={'device_id': dev_id, })
 
                 extract_tasks = [
                     self.async_add_job(self._extract_objects, obj_data, dev_obj)
@@ -263,7 +263,7 @@ class VisioBASGateway:
                 await self.async_add_job(dev.insert_objects, objs)
 
             self._devices.update({dev.id: dev})
-            _LOG.info('Device loaded', extra={'device_id': dev_id})
+            _LOG.info('Device loaded', extra={'device_id': dev_id, })
             return dev
         except (ValidationError,) as e:  #
             _LOG.warning('Invalid device properties',

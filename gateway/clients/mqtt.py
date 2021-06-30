@@ -1,8 +1,8 @@
 import asyncio
-from json import loads, JSONDecodeError
-from typing import Sequence, Union, Optional
+from http import HTTPStatus
+from json import loads, dumps, JSONDecodeError
+from typing import Sequence, Union
 
-import aiohttp
 import paho.mqtt.client as mqtt
 
 from models import ResultCode, Qos, MQTTSettings
@@ -261,7 +261,7 @@ class VisioMQTTClient:
         rpc_result = await rpc_task
         await self.publish(topic=topic, payload=rpc_result)
 
-    async def jsonrpc_over_http(self, payload: dict) -> Optional[dict]:
+    async def jsonrpc_over_http(self, payload: dict) -> str:
         """Performs JSON-RPC over HTTP.
 
         Args:
@@ -270,15 +270,17 @@ class VisioMQTTClient:
         Returns:
             RPC Response is successful.
         """
-        try:
-            return await self._gtw.http_client.request(
-                method='POST', url='http://127.0.0.1:7070/json-rpc',
-                json=payload, headers='application/json',
-            )
-        except (aiohttp.ClientError, Exception) as e:
-            _LOG.warning('JSON-RPC 2.0 Call exception',
-                         extra={'exc': e, 'payload': payload})
-            return {"jsonrpc": "2.0", 'result': {'success': False}}
+        resp = await self._gtw.http_client.request(
+            method='POST', url='http://127.0.0.1:7070/json-rpc',
+            json=payload, headers='application/json',
+        )
+        if resp.status is HTTPStatus.OK:
+            return await resp.text()
+        else:
+            _LOG.warning('Failed JSON-RPC 2.0 over HTTP', extra={'http_response': resp, })
+            return dumps({
+                "jsonrpc": "2.0", 'result': {'success': False, 'http_status': resp.status, }
+            })
 
     @staticmethod
     def _decode(msg: mqtt.MQTTMessage) -> Union[dict, str]:
