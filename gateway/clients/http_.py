@@ -287,8 +287,7 @@ class VisioHTTPClient:
             Response instance.
         """
         _LOG.debug('Perform request',
-                   extra={'method': method, 'url': url,
-                          'data': kwargs.get('data'), 'json': kwargs.get('json'), })
+                   extra={'method': method, 'url': url, 'data': kwargs.get('data'), })
         async with self._session.request(
                 method=method, url=url, timeout=self._timeout, **kwargs
         ) as resp:
