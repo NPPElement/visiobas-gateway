@@ -82,7 +82,7 @@ Configuration can be changed in files:
 
 ### Objects configuration
 
-To configure objects properties read [this note](/docs/properties_ru.md).
+To configure objects properties read [/docs/properties.md](/docs/properties.md).
 
 ### Setting Serial ports
 
