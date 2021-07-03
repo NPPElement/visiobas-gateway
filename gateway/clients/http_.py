@@ -48,7 +48,7 @@ class VisioHTTPClient:
         return self._settings.servers_post
 
     async def setup(self) -> None:
-        """Wait for authorization then spawn a periodic update task."""
+        """Wait for authorization."""
         await self.wait_login(retry=self.retry_delay)
 
     async def get_objects(self, dev_id: int, obj_types: Collection[ObjType]
