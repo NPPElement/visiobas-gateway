@@ -70,39 +70,38 @@
 
 |Property|Type|Default|Required|Possible|Description|
 |--------|----|-------|--------|--------|-----------|
-|`371 propertyList`|`JSON-str`|-|for Modbus|-|См. таблицу ниже
-|`106 resolution`|`float`|0.1|-|-|Значение округляется с указанным шагом
-|`107 segmentationSupported`|`bool`|false|-|true, false|Поддерживается ли несколько сегментов в 1-м запросе.
+|`371 propertyList`|`JSON-str`|-|for Modbus|-|See table below.
+|`106 resolution`|`float`|0.1|-|-|`presentValue` rounds by this step.
+|`107 segmentationSupported`|`bool`|false|-|true, false|Is object support several segments on one request..
 
 ## Object `propertyList`
 
 |Property|Type|Default|Required|Possible|Description|
 |--------|----|-------|--------|--------|-----------|
-|`sendPeriod`|`int`|`device.updateInterval`|-|-|Интервал отправки значения на сервер в секундах
-|`pollPeriod`|`float`|`device.propertyList.pollInterval`|-|-|Интервал 'внутреннего' опроса объекта в секундах (если значение не изменилось, то не будет отправлено). Не реализовано.
-|`modbus`|`JSON`|-|for Modbus|-|Заполняется для Modbus объектов (См. таблицу ниже)
+|`sendPeriod`|`int`|`device.updateInterval`|-|-|Period in which the object will be sent to the server, whether it has been changed.
+|`pollPeriod`|`float`|`device.propertyList.pollInterval`|-|-|Period in which the object will poll by gateway. If the object has changed, it sends to the server, otherwise it does not.
+|`modbus`|`JSON`|-|for Modbus|-|Required for Modbus objects. See table below.
 
 ## Modbus object `propertyList.modbus`
 
 |Property|Type|Default|Required|Possible|Description|
 |--------|----|-------|--------|--------|-----------|
-|`address`|`int`|-|yes|-|Адрес регистра
-|`dataType`|`str`|-|yes|'int', 'uint', 'float', 'bool', 'bits', 'string'|Тип значения
-|`quantity`|`int`|1|-|-|Количество регистров
-|`functionRead`|`str`|'0x04'|-|'0x01', '0x02', '0x03', '0x04'|Функция для чтения
-|`functionWrite`|`str`|'0x06'|-|'0x05', '0x06', '0x15', '0x16'|Функция для записи
-|`dataLength`|`int`|`quantity` * 16|-|-|Используемое количество бит
-|`scale`|`float`|1.0|-|-|Для `A*X+B`: Коэффициент `A` — умножается для коррекции
-|`offset`|`float`|0.0|-|-|Для `A*X+B`: Коэффициент `B` — прибавляется для коррекции
-|`wordOrder`|`str`|depends on `dataType`|-|'big', 'little'|Порядок слов (см. под таблицей)
-|`byteOrder`|`str`|depends on `dataType`|-|'big', 'little'|Порядок байтов (см. под таблицей)
-|`repack`TODO|`bool`|false
+|`address`|`int`|-|yes|-|Register address.
+|`dataType`|`str`|-|yes|'int', 'uint', 'float', 'bool', 'bits', 'string'|Type of `presentValue`.
+|`quantity`|`int`|1|-|-|Number of registers.
+|`functionRead`|`str`|'0x04'|-|'0x01', '0x02', '0x03', '0x04'|Function for read `presentValue`.
+|`functionWrite`|`str`|'0x06'|-|'0x05', '0x06', '0x15', '0x16'|Function for write `presentValue`.
+|`dataLength`|`int`|`quantity` * 16|-|-|Number of using bits.
+|`scale`|`float`|1.0|-|-|For `A*X+B`: coefficient `A` — multiply for correction.
+|`offset`|`float`|0.0|-|-|For `A*X+B`: coefficient `B` — add for correction.
+|`wordOrder`|`str`|depends on `dataType`|-|'big', 'little'|Word order. See below
+|`byteOrder`|`str`|depends on `dataType`|-|'big', 'little'|Byte order. See below.
 
-- `modbus.wordOrder` Порядок слов.
-    - По умолчанию: `big` (старшим словом назад\обратный порядок)
-    - Для FLOAT32: `little`
-- `modbus.byteOrder` Порядок байтов.
-    - По умолчанию: `little` (старшим байтом вперед\прямой порядок)
+- `modbus.wordOrder` Word order.
+    - Default: `big` (Big endian\reverse order).
+    - Для FLOAT32: `big`
+- `modbus.byteOrder` Byte order.
+    - Default: `little` (Little endian\straight order).
         - Для FLOAT32: `big`
 
-Предлагаю ввести тип BIT (COIL) когда требуется только один бит ??
+TODO: add COIL type for one-bit values.
