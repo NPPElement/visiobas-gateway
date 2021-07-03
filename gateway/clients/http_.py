@@ -14,6 +14,10 @@ _LOG = get_file_logger(name=__name__)
 class VisioHTTPClient:
     """Control interactions via HTTP."""
 
+    # TODO: add decorator re-login on 401
+    # TODO: add decorator handle exceptions and log them
+    # TODO: refactor
+
     _URL_LOGIN = '{base_url}/auth/rest/login'
     _URL_LOGOUT = '{base_url}/auth/secure/logout'
     _URL_GET = '{base_url}/vbas/gate/get/{device_id}/{object_type_dashed}'
@@ -282,7 +286,12 @@ class VisioHTTPClient:
                       extract_data: bool = False, **kwargs
                       ) -> Union[aiohttp.ClientResponse, Union[dict, list]]:
         """Performs HTTP request.
+        Args:
+            Accept same parameters as aiohttp.ClientSession.request()
+            +
+            extract_data: If true: returns extracted data
 
+        # TODO: return rest + data
         Returns:
             Response instance.
         """

@@ -10,20 +10,18 @@ from .obj_property import ObjProperty
 from .status_flags import StatusFlags
 
 
-# class BACnetObjPropertyListModel(BaseModel):
-#
-#     def __repr__(self) -> str:
-#         return str(self.__dict__)
-
-
 class BACnetObjPropertyListJsonModel(BaseModel):
     # property_list: BACnetObjPropertyListModel = Field(default=None)
-    send_interval: float = Field(default=60, alias='sendPeriod',
-                                 description='Period to send data to server.')
+    poll_period: Optional[float] = Field(default=None, alias='pollPeriod',
+                                         description='Period to send data to server.')
 
     # TODO: add usage
-    # poll_period: float = Field(default=0.5, alias='pollPeriod',
-    #                            description='Period to internal object poll.')
+    send_period: Optional[float] = Field(default=None, alias='sendPeriod',
+                                         description='Period to send object to server.')
+
+    # @validator('poll_period')
+    # def set_default_poll_period_from_device(cls, v: Optional[float], values) -> float:
+    #     return v or values['dev_property_list'].poll_period
 
     def __str__(self) -> str:
         return str(self.__dict__)
@@ -62,10 +60,6 @@ class BACnetObj(BaseBACnetObjModel):
         Provides an indication of whether the `Present_Value` is "reliable" as far as 
         the BACnet Device can determine and, if not, why.''')
 
-    # todo find public property
-    # send_interval: Optional[float] = Field(default=60,
-    #                                        alias=ObjProperty.updateInterval.id_str)
-
     segmentation_supported: bool = Field(default=False,
                                          alias=ObjProperty.segmentationSupported.id_str)
     property_list: Json[BACnetObjPropertyListJsonModel] = Field(
@@ -74,12 +68,24 @@ class BACnetObj(BaseBACnetObjModel):
         for each property that exists within the object. The standard properties are not 
         included in the JSON.''')
 
+    # FIXME: hotfix
+    default_poll_period: Optional[float] = Field(
+        default=None,
+        description='Internal variable to set default value into propertyList')
+
+    # TODO: add usage
+    default_send_period: Optional[int] = Field(
+        default=None,
+        description='Internal variable to set default value into propertyList')
+
     _last_value: Optional[Union[int, float, str]] = PrivateAttr()
     _updated_at: Optional[datetime] = PrivateAttr()
 
     # exception: Optional[Exception] = None
     _unreachable_in_row: int = PrivateAttr(default=0)
-    _existing: bool = PrivateAttr(default=True)  # False if object not exists (incorrect object data on server).
+
+    # False if object not exists (incorrect object data on server).
+    _existing: bool = PrivateAttr(default=True)
 
     class Config:
         arbitrary_types_allowed = True
@@ -90,6 +96,20 @@ class BACnetObj(BaseBACnetObjModel):
         if values['type'].is_analog and not v:
             return 0.1  # default resolution value
         return v
+
+    # FIXME: hotfix
+    @validator('default_poll_period')
+    def set_default_poll_period(cls, v, values) -> None:
+        """Set default value to nested model."""
+        if values['property_list'].poll_period is None:
+            values['property_list'].poll_period = v
+
+    # FIXME: hotfix
+    @validator('default_send_period')
+    def set_default_send_period(cls, v, values) -> None:
+        """Set default value to nested model."""
+        if values['property_list'].send_period is None:
+            values['property_list'].send_period = v
 
     @property
     def existing(self) -> bool:
@@ -117,7 +137,9 @@ class BACnetObj(BaseBACnetObjModel):
 
         if isinstance(exc, (asyncio.TimeoutError, asyncio.CancelledError)):
             self.reliability = 'timeout'
-        elif isinstance(exc, (UnknownObjectError, )):  # todo: add modbus non-existent exceptions
+
+        # todo: add modbus non-existent exceptions
+        elif isinstance(exc, (UnknownObjectError,)):
             self._existing = False
             self.reliability = 'non-existent-object'
         elif isinstance(exc, (TypeError, ValueError)):
