@@ -286,7 +286,12 @@ class VisioHTTPClient:
                       extract_data: bool = False, **kwargs
                       ) -> Union[aiohttp.ClientResponse, Union[dict, list]]:
         """Performs HTTP request.
+        Args:
+            Accept same parameters with aiohttp.ClientSession.request()
+            +
+            extract_data: If true: returns extracted data
 
+        # TODO: return rest + data 
         Returns:
             Response instance.
         """
