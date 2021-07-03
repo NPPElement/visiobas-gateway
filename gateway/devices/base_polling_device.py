@@ -171,7 +171,7 @@ class BasePollingDevice(BaseDevice, ABC):
 
         self._polling_event.clear()
         for obj in objs:
-            poll_period = obj.property_list.send_interval
+            poll_period = obj.property_list.poll_period
             try:
                 self._objects[poll_period].add(obj)
             except KeyError:

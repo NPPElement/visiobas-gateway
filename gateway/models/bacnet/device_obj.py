@@ -51,9 +51,14 @@ class DevicePropertyListJsonModel(BaseModel):
             greater than zero, a non-zero value shall be placed in the Device object 
             APDU_Timeout property.''')
 
-    # todo check
-    # internal_period: float = Field(default=0.3, alias='internalPeriod')
-    reconnect_period: int = Field(default=5 * 60, alias='reconnectPeriod')
+    # TODO: add usage
+    send_period: float = Field(default=300, alias='sendPeriod',
+                               description='Period to internal object poll.')
+
+    poll_period: float = Field(default=90, alias='pollPeriod',
+                               description='Period to send data to server.')
+
+    reconnect_period: int = Field(default=300, alias='reconnectPeriod')
 
     def __str__(self) -> str:
         return str(self.__dict__)
