@@ -362,12 +362,18 @@ class VisioBASGateway:
             If object incorrect - returns None.
         """
         try:
+
+            defaults_from_device = {  # FIXME: hotfix
+                'default_poll_period': dev_obj.property_list.poll_period,
+                'default_send_period': dev_obj.property_list.send_period,
+            }
+
             protocol = dev_obj.property_list.protocol
             if protocol in {Protocol.MODBUS_TCP, Protocol.MODBUS_RTU,
                             Protocol.MODBUS_RTUOVERTCP}:
-                obj = ModbusObj(**obj_data)  # todo switch to parse_raw?
+                obj = ModbusObj(**obj_data, **defaults_from_device)
             elif protocol == Protocol.BACNET:
-                obj = BACnetObj(**obj_data)
+                obj = BACnetObj(**obj_data, **defaults_from_device)
             else:
                 raise NotImplementedError('Not implemented protocol factory.')
             return obj

@@ -72,6 +72,8 @@ class BACnetObj(BaseBACnetObjModel):
     default_poll_period: Optional[float] = Field(
         default=None,
         description='Internal variable to set default value into propertyList')
+
+    # TODO: add usage
     default_send_period: Optional[int] = Field(
         default=None,
         description='Internal variable to set default value into propertyList')
