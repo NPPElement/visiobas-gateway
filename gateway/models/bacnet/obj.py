@@ -16,8 +16,8 @@ class BACnetObjPropertyListJsonModel(BaseModel):
                                          description='Period to send data to server.')
 
     # TODO: add usage
-    # send_period: Optional[float] = Field(default=None, alias='sendPeriod',
-    #                            description='Period to internal object poll.')
+    send_period: Optional[float] = Field(default=None, alias='sendPeriod',
+                                         description='Period to send object to server.')
 
     # @validator('poll_period')
     # def set_default_poll_period_from_device(cls, v: Optional[float], values) -> float:
