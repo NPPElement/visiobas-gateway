@@ -1,0 +1,86 @@
+# import paho.mqtt.client as mqtt
+#
+# from ...api import ReadWriteMixin
+# from ...models import ObjProperty
+#
+#
+# class VisioMQTTApi(ReadWriteMixin):
+#
+#     def __init__(self, visio_mqtt_client, gateway):
+#         self.mqtt_client = visio_mqtt_client
+#         self._gateway = gateway
+#
+#     def publish(self, topic: str, payload: str = None, qos: int = 0,
+#                 retain: bool = False) -> mqtt.MQTTMessageInfo:
+#         return self.mqtt_client.publish(topic=topic, payload=payload,
+#                                         qos=qos, retain=retain)
+#
+#     # def rpc_value(self, params: dict, topic: str, gateway=None) -> None:
+#     #     if str(self._gateway) == 'VisioGateway':
+#     #         self.rpc_value_gtw(params=params, gateway=gateway)
+#     #     elif str(self._gateway) == 'VisioPanel':
+#     #         self.rpc_value_panel(params=params, topic=topic)
+#     #     else:
+#     #         raise ValueError('Please provide gateway or panel')
+#
+#     # def rpc_value_panel(self, params: dict, topic: str) -> None:
+#     #     # todo: default value
+#     #     # todo: validate params
+#     #     publish_topic = topic.replace('Set', 'Site')
+#     #
+#     #     if params['object_type'] == ObjType.BINARY_OUTPUT.id:
+#     #         _is_equal = self.write_with_check_i2c(value=params['value'],
+#     #                                               obj_id=params['object_identifier'],
+#     #                                               obj_type=params['object_type'],
+#     #                                               dev_id=params['device_id']
+#     #                                               )
+#     #         if not _is_equal:
+#     #             return None
+#     #         payload = '{0} {1} {2} {3}'.format(params['device_id'],
+#     #                                            params['object_type'],
+#     #                                            params['object_identifier'],
+#     #                                            params['value'],
+#     #                                            )
+#     #
+#     #     elif params['object_type'] == ObjType.BINARY_INPUT.id:
+#     #         value = self.read_i2c(obj_id=params['object_identifier'],
+#     #                               obj_type=params['object_type'],
+#     #                               dev_id=params['device_id']
+#     #                               )
+#     #         payload = '{0} {1} {2} {3}'.format(params['device_id'],
+#     #                                            params['object_type'],
+#     #                                            params['object_identifier'],
+#     #                                            value,
+#     #                                            )
+#     #     else:
+#     #         raise ValueError('Expected only BI or BO')
+#     #     self.publish(topic=publish_topic,
+#     #                  payload=payload,
+#     #                  )
+#
+#     # def rpc_value_gtw(self, params: dict, gateway) -> None:
+#     #     priority = 11 if params.get('priority') is None else params['priority']
+#     #
+#     #     device = self._gateway.get_device(dev_id=params['device_id'])
+#     #     obj = device.get_obj(obj_type_id=params['object_type'],
+#     #                          obj_id=params['object_identifier'])
+#     #     self.write(value=params['value'],
+#     #                obj=obj,
+#     #                device=device,
+#     #                priority=priority,
+#     #                prop=ObjProperty.presentValue
+#     #                )
+#     #     cur_value = self.read(obj=obj,
+#     #                           device=device,
+#     #                           prop=ObjProperty.presentValue
+#     #                           )
+#     #     sf = 0b0000  # fixme
+#     #     payload = '{0} {1} {2} {3} {4}'.format(device.id,
+#     #                                            obj.type,
+#     #                                            obj.id,
+#     #                                            cur_value,
+#     #                                            sf
+#     #                                            )
+#     #     self.publish(topic=obj.topic,  # todo: change topic here?
+#     #                  payload=payload,
+#     #                  )

@@ -1,3 +1,4 @@
+
 import uuid
 from typing import Optional
 
@@ -13,7 +14,6 @@ class MQTTSettings(BaseSettings):
     keepalive: int = Field(default=60, ge=1)
 
     topics_sub: list[str] = Field(default=None)
-
     client_id: Optional[str] = Field(default=None)  # todo add factory/validation
 
     # todo: add certificate

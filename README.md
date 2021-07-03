@@ -1,5 +1,6 @@
 # VisioBAS-Gateway
 
+
 Service for polling devices using various protocols and transmitting data to
 the [VisioBAS system](https://github.com/NPPElement/visiobas-broker).
 
@@ -65,6 +66,7 @@ cd /opt/visiobas-gateway
 
 Application configures via environment variables. Environment variables are provided
 via `.env` files. Paths to `.env` files are specified in `docker-compose.yaml`.
+
 
 Configuration can be changed in files:
 

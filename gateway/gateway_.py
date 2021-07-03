@@ -23,7 +23,6 @@ Device = Union[
     SUNAPIDevice
 ]
 
-
 class VisioBASGateway:
     """VisioBAS IoT Gateway."""
 
@@ -169,7 +168,6 @@ class VisioBASGateway:
             - Log in to HTTP
             - Load devices
             - Start devices poll
-            - Start MQTT client
         """
         await self.http_client.wait_login()
 
@@ -190,14 +188,13 @@ class VisioBASGateway:
         # await asyncio.gather(*start_poll_tasks)
 
         if self._is_mqtt_enabled:
-            await self.mqtt_client.start()
 
         _LOG.info('Start tasks performed',
                   extra={'gateway_settings': self.settings, })
 
     async def _perform_stop_tasks(self) -> None:
         """Performs stopping tasks.
-
+        
         Stop gateway steps:
             - Unsubscribe to MQTT
             - Stop devices poll
@@ -280,6 +277,7 @@ class VisioBASGateway:
     #         _LOG.info('Device polling started', extra={'device_id': dev_id})
     #     else:
     #         _LOG.warning('Is not a polling device', extra={'device_id': dev_id})
+
 
     @staticmethod
     def _parse_device_obj(dev_data: dict) -> Optional[BACnetDeviceObj]:
