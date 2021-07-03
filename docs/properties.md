@@ -78,8 +78,8 @@
 
 |Property|Type|Default|Required|Possible|Description|
 |--------|----|-------|--------|--------|-----------|
-|`sendPeriod`|`int`|`device.propertyList.sendPeriod`|-|-|Period in which the object will be sent to the server, whether it has been changed.
-|`pollPeriod`|`float`|`device.propertyList.pollPeriod`|-|-|Period in which the object will poll by gateway. If the object has changed, it sends to the server, otherwise it does not.
+|`sendPeriod`|`int`|[`device.propertyList.sendPeriod`](/docs/properties.md#device-propertylist)|-|-|Period in which the object will be sent to the server, whether it has been changed.
+|`pollPeriod`|`float`|[`device.propertyList.pollPeriod`](/docs/properties.md#device-propertylist)|-|-|Period in which the object will poll by gateway. If the object has changed, it sends to the server, otherwise it does not.
 |`modbus`|`JSON`|-|for Modbus|-|Required for Modbus objects. See table below.
 
 ## Modbus object `propertyList.modbus`
