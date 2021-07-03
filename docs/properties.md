@@ -78,8 +78,8 @@
 
 |Property|Type|Default|Required|Possible|Description|
 |--------|----|-------|--------|--------|-----------|
-|`sendPeriod`|`int`|`device.updateInterval`|-|-|Period in which the object will be sent to the server, whether it has been changed.
-|`pollPeriod`|`float`|`device.propertyList.pollInterval`|-|-|Period in which the object will poll by gateway. If the object has changed, it sends to the server, otherwise it does not.
+|`sendPeriod`|`int`|`device.propertyList.sendPeriod`|-|-|Period in which the object will be sent to the server, whether it has been changed.
+|`pollPeriod`|`float`|`device.propertyList.pollPeriod`|-|-|Period in which the object will poll by gateway. If the object has changed, it sends to the server, otherwise it does not.
 |`modbus`|`JSON`|-|for Modbus|-|Required for Modbus objects. See table below.
 
 ## Modbus object `propertyList.modbus`
@@ -99,9 +99,9 @@
 
 - `modbus.wordOrder` Word order.
     - Default: `big` (Big endian\reverse order).
-    - Для FLOAT32: `big`
+    - For FLOAT32: `big`
 - `modbus.byteOrder` Byte order.
     - Default: `little` (Little endian\straight order).
-        - Для FLOAT32: `big`
+    - For FLOAT32: `big`
 
 TODO: add COIL type for one-bit values.
