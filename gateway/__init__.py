@@ -2,7 +2,7 @@ from pathlib import Path
 
 """VisioBAS Gateway."""
 
-__version__ = '3.2.5'
+__version__ = '3.3.0-alpha'
 __author__ = 'VisioBAS, Matvey Ovtsin'
 __maintainer__ = __author__
 __email__ = 'mtovtsin@gmail.com'

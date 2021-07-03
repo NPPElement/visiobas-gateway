@@ -19,7 +19,11 @@ from .status_flags import StatusFlags
 class BACnetObjPropertyListJsonModel(BaseModel):
     # property_list: BACnetObjPropertyListModel = Field(default=None)
     send_interval: float = Field(default=60, alias='sendPeriod',
-                                 description='Period to internal object poll')
+                                 description='Period to send data to server.')
+
+    # TODO: add usage
+    # poll_period: float = Field(default=0.5, alias='pollPeriod',
+    #                            description='Period to internal object poll.')
 
     def __str__(self) -> str:
         return str(self.__dict__)

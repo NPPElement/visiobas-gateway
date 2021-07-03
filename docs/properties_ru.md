@@ -45,13 +45,13 @@
 
 |Property|Type|Default|Required|Possible|Description|
 |--------|----|-------|--------|--------|-----------|
-|`11 apduTimeout`|`int`|6000|-|-|Timeout in milliseconds. Serial devices requires timeout around 500ms. 
-|`73 numberOfApduRetries`|`int`|3|-|-|Количество повторов, при неудачной попытке
+|`apduTimeout`|`int`|6000|-|-|Timeout in milliseconds. Serial devices requires timeout around 500ms. 
+|`numberOfApduRetries`|`int`|3|-|-|Количество повторов, при неудачной попытке
 |`protocol`|`str`|-|yes|'BACnet', 'ModbusTCP', 'ModbusRTU', 'ModbusRTUoverTCP'|По какому протоколу опрашивается девайс
 |`address`|`str`|-|for TCP|'10.20.30.40', ...|IP адрес девайса
 |`port`|`int`|-|for TCP|-|Порт
 |`rtu`|`JSON`|-|for RTU|-|Заполняется для `protocol`='ModbusRTU' (см. таблицу ниже)
-|`pollInterval`|`float`|0.5|-|-|Интервал 'внутреннего' опроса девайса в секундах (если значение не изменилось, то не будет отправлено)
+|~~pollInterval~~|`float`|0.5|-|-|Интервал 'внутреннего' опроса девайса в секундах (если значение не изменилось, то не будет отправлено)
 
 ## ModbusRTU device `propertyList.rtu`
 
@@ -80,8 +80,8 @@
 
 |Property|Type|Default|Required|Possible|Description|
 |--------|----|-------|--------|--------|-----------|
-|`updateInterval`|`int`|`device.updateInterval`|-|-|Интервал отправки значения на сервер в секундах
-|`pollInterval`|`float`|`device.propertyList.pollInterval`|-|-|Интервал 'внутреннего' опроса объекта в секундах (если значение не изменилось, то не будет отправлено)
+|`sendPeriod`|`int`|`device.updateInterval`|-|-|Интервал отправки значения на сервер в секундах
+|`pollPeriod`|`float`|`device.propertyList.pollInterval`|-|-|Интервал 'внутреннего' опроса объекта в секундах (если значение не изменилось, то не будет отправлено). Не реализовано.
 |`modbus`|`JSON`|-|for Modbus|-|Заполняется для Modbus объектов (См. таблицу ниже)
 
 ## Modbus object `propertyList.modbus`

@@ -1,3 +1,4 @@
+
 # FIXME: This is deprecated package. It contain BACnet and I2C Connectors\devices,
 #  may be helpful in future.
 
@@ -11,5 +12,3 @@
 #            'ModbusConnector',
 #            'ModbusDevice'
 #            )
-
-

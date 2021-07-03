@@ -19,8 +19,10 @@ class GatewaySettings(BaseSettings):
 
     poll_device_ids: list[int] = Field(..., min_items=1)
 
-    modbus_sync: bool = Field(default=...,
+    modbus_sync: bool = Field(default=True,
                               description='Use synchronous client for Modbus protocol.')
+    mqtt_enable: bool = Field(default=False, # todo: temp
+                              description='Initialize connection by mqtt')
 
     api_url: AnyHttpUrl = Field(default='http://0.0.0.0:7070')
     api_priority: int = Field(

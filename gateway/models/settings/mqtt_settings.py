@@ -1,4 +1,9 @@
-from pydantic import BaseSettings, Field, AnyUrl
+
+import uuid
+from typing import Optional
+
+import paho.mqtt.client as mqtt
+from pydantic import BaseSettings, Field, AnyUrl, validator
 
 
 class MQTTSettings(BaseSettings):
@@ -9,6 +14,13 @@ class MQTTSettings(BaseSettings):
     keepalive: int = Field(default=60, ge=1)
 
     topics_sub: list[str] = Field(default=None)
+    client_id: Optional[str] = Field(default=None)  # todo add factory/validation
+
+    # todo: add certificate
+
+    @validator('client_id')
+    def create_client_id(cls, v: Optional[str]) -> str:
+        return v or mqtt.base62(uuid.uuid4().int, padding=22)
 
     class Config:
         # arbitrary_types_allowed = True
