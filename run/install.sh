@@ -7,6 +7,7 @@ sudo apt --assume-yes install docker docker.io
 sudo apt --assume-yes install htop mc curl
 sudo apt --assume-yes install git
 sudo apt --assume-yes install python3
+sudo python3 -m pip install setuptools
 
 # Install docker-compose from VisioBAS Cloud
 DESTINATION=/usr/bin/docker-compose
