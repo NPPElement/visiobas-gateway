@@ -371,12 +371,12 @@ class VisioBASGateway:
             protocol = dev_obj.property_list.protocol
             if protocol in {Protocol.MODBUS_TCP, Protocol.MODBUS_RTU,
                             Protocol.MODBUS_RTUOVERTCP}:
-                obj = ModbusObj(**obj_data, **defaults_from_device)
+                cls = ModbusObj
             elif protocol == Protocol.BACNET:
-                obj = BACnetObj(**obj_data, **defaults_from_device)
+                cls = BACnetObj
             else:
                 raise NotImplementedError('Not implemented protocol factory.')
-            return obj
+            return cls(**obj_data, **defaults_from_device)
         except ValidationError as e:
             _LOG.warning('Failed polling object creation. Please check objects settings',
                          extra={'device_id': dev_obj.id,

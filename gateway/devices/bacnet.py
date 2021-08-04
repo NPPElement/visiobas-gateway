@@ -160,6 +160,7 @@ class BACnetDevice(BasePollingDevice):
             self._LOG.debug('Read',
                             extra={'device_id': self.id, 'object_id': obj.id,
                                    'object_type': obj.type, 'response': response, })
+            # TODO: refactor set_property()
             if prop is ObjProperty.presentValue:
                 obj.set_pv(value=response)
             elif prop is ObjProperty.statusFlags:

@@ -29,6 +29,7 @@ class BACnetVerifier:
 
     @staticmethod
     def verify_pv(obj: BACnetObj) -> None:
+        # FIXME: detect changes
         if obj.pv in {True, 'active'}:
             obj._last_value = 1
         elif obj.pv in {False, 'inactive'}:
