@@ -5,25 +5,25 @@ from functools import lru_cache
 from typing import Any, Collection, Optional, Union
 
 import aiojobs
-from pymodbus.client.asynchronous.async_io import AsyncioModbusSerialClient
-from pymodbus.client.sync import ModbusSerialClient
 
 from ..models import BACnetDeviceObj, BACnetObj, ModbusObj, ObjType, Protocol
 from .base_device import BaseDevice
+
+# from pymodbus.client.asynchronous.async_io import AsyncioModbusSerialClient
+# from pymodbus.client.sync import ModbusSerialClient
+
 
 # Aliases
 VisioBASGateway = Any  # ...gateway_
 
 
 class BasePollingDevice(BaseDevice, ABC):
-    # TODO: implement Singleton by device_id
-
     _client_creation_lock: asyncio.Lock = None
 
     # Key is serial port name.
-    _serial_clients: dict[str : Union[ModbusSerialClient, AsyncioModbusSerialClient]] = {}
-    _serial_port_locks: dict[str : asyncio.Lock] = {}
-    _serial_polling: dict[str : asyncio.Event] = {}
+    _serial_clients: dict[str:Any] = {}  # noqa: #203
+    _serial_port_locks: dict[str : asyncio.Lock] = {}  # noqa: #203
+    _serial_polling: dict[str : asyncio.Event] = {}  # noqa: #203
     _serial_connected: dict[str, bool] = {}
 
     def __init__(self, device_obj: BACnetDeviceObj, gateway: "VisioBASGateway"):

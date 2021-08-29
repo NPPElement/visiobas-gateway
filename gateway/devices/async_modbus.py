@@ -147,7 +147,7 @@ class AsyncModbusDevice(BaseModbusDevice):
         return {
             ModbusReadFunc.READ_COILS: self._client.protocol.read_coils,
             ModbusReadFunc.READ_DISCRETE_INPUTS: self._client.protocol.read_discrete_inputs,
-            ModbusReadFunc.READ_HOLDING_REGISTERS: self._client.protocol.read_holding_registers,
+            ModbusReadFunc.READ_HOLDING_REGISTERS: self._client.protocol.read_holding_registers,  # noqa: E501
             ModbusReadFunc.READ_INPUT_REGISTERS: self._client.protocol.read_input_registers,
         }
 
