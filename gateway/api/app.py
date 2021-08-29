@@ -42,7 +42,7 @@ class VisioGtwApi:
     @property
     def handlers(
         self,
-    ) -> tuple[Union[JsonRPCViewAlias,], ...]:
+    ) -> tuple[Union[JsonRPCViewAlias], ...]:
         return JSON_RPC_HANDLERS  # todo add rest handlers
 
     @classmethod

@@ -196,7 +196,7 @@ class SyncModbusDevice(BaseModbusDevice):
             if rq.isError():
                 raise ModbusIOException("0x80")  # todo: resp.string
             self._LOG.debug(
-                f"Successfully write",
+                "Successfully write",
                 extra={
                     "device_id": self.id,
                     "object_id": obj.id,

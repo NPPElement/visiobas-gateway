@@ -37,7 +37,9 @@
 #     @response_schema(schema=ReadResultSchema, code=200)
 #     async def get(self):
 #         device = self.get_device(dev_id=self.device_id)
-#         obj = self.get_obj(device=device, obj_type=self.object_type, obj_id=self.object_id)
+#         obj = self.get_obj(
+#         device=device, obj_type=self.object_type, obj_id=self.object_id
+#         )
 #         try:
 #             value = self.read(prop=ObjProperty.presentValue,
 #                               obj=obj,
@@ -53,7 +55,9 @@
 #     @response_schema(schema=JsonRPCPostResponseSchema, code=HTTPStatus.OK.value)
 #     async def post(self):
 #         device = self.get_device(dev_id=self.device_id)
-#         obj = self.get_obj(device=device, obj_type=self.object_type, obj_id=self.object_id)
+#         obj = self.get_obj(
+#               device=device, obj_type=self.object_type, obj_id=self.object_id
+#         )
 #
 #         body = await self.request.json()
 #         try:
@@ -69,12 +73,13 @@
 #                                      status=HTTPStatus.OK.value
 #                                      )
 #             else:
-#                 return json_response({'success': False,
-#                                       'msg': 'The read value ins\'t equal to the written value.'
-#                                       # f'Written: {value} Read: {rvalue}'
-#                                       },
-#                                      status=HTTPStatus.BAD_GATEWAY.value
-#                                      )
+#                 return json_response(
+#                 {'success': False,
+#                           'msg': 'The read value ins\'t equal to the written value.'
+#                                    # f'Written: {value} Read: {rvalue}'
+#                                   },
+#                                 status=HTTPStatus.BAD_GATEWAY.value
+#                                  )
 #         except Exception as e:
 #             return HTTPBadGateway(reason=str(e))
 #

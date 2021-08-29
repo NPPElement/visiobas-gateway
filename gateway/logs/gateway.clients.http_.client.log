@@ -1,0 +1,463 @@
+INFO     [2021-05-07 23:13:50,790] gateway.clients.http_.client.from_yaml(53): Creating VisioBASHTTPClient from D:\JOB\VisioBas\visiobas-gateway\gateway\config\http.yaml...
+INFO     [2021-05-08 00:16:13,794] gateway.clients.http_.client.from_yaml(53): Creating VisioBASHTTPClient from D:\JOB\VisioBas\visiobas-gateway\gateway\config\http.yaml...
+DEBUG    [2021-05-08 00:16:13,808] gateway.clients.http_.client.login(223): Logging in to GET:login='canio' password='278d1de033a395fe9a2aa9e1d07416d8' url=URL('http://nppelement.com:8080'), POST:[login='canio' password='278d1de033a395fe9a2aa9e1d07416d8' url=URL('http://nppelement.com:8080')]...
+DEBUG    [2021-05-08 00:16:13,819] gateway.clients.http_.client._login_node(250): Authorization to login='canio' password='278d1de033a395fe9a2aa9e1d07416d8' url=URL('http://nppelement.com:8080')
+DEBUG    [2021-05-08 00:16:13,819] gateway.clients.http_.client._login_server(280): Authorization to login='canio' password='278d1de033a395fe9a2aa9e1d07416d8' url=URL('http://nppelement.com:8080')...
+DEBUG    [2021-05-08 00:16:13,820] gateway.clients.http_.client._rq(323): POST: http://nppelement.com:8080/auth/rest/login
+DEBUG    [2021-05-08 00:16:13,823] gateway.clients.http_.client._login_node(250): Authorization to login='canio' password='278d1de033a395fe9a2aa9e1d07416d8' url=URL('http://nppelement.com:8080')
+DEBUG    [2021-05-08 00:16:13,823] gateway.clients.http_.client._login_server(280): Authorization to login='canio' password='278d1de033a395fe9a2aa9e1d07416d8' url=URL('http://nppelement.com:8080')...
+DEBUG    [2021-05-08 00:16:13,823] gateway.clients.http_.client._rq(323): POST: http://nppelement.com:8080/auth/rest/login
+DEBUG    [2021-05-08 00:16:14,079] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/auth/rest/login
+ERROR    [2021-05-08 00:16:14,080] gateway.clients.http_.client._login_server(290): Failed authorization to  login='canio' password='278d1de033a395fe9a2aa9e1d07416d8' url=URL('http://nppelement.com:8080'): "HTTPServerConfig" object has no field "_auth_data"
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\clients\http_\client.py", line 285, in _login_server
+    server.set_auth_data(**auth_data)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\clients\http_\http_config.py", line 88, in set_auth_data
+    self._auth_data = AuthData(**kwargs)
+  File "pydantic\main.py", line 416, in pydantic.main.BaseModel.__setattr__
+ValueError: "HTTPServerConfig" object has no field "_auth_data"
+DEBUG    [2021-05-08 00:16:14,081] gateway.clients.http_.client._login_server(280): Authorization to login='canio' password='278d1de033a395fe9a2aa9e1d07416d8' url=URL('http://nppelement.com:8080')...
+DEBUG    [2021-05-08 00:16:14,081] gateway.clients.http_.client._rq(323): POST: http://nppelement.com:8080/auth/rest/login
+DEBUG    [2021-05-08 00:16:14,091] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/auth/rest/login
+ERROR    [2021-05-08 00:16:14,091] gateway.clients.http_.client._login_server(290): Failed authorization to  login='canio' password='278d1de033a395fe9a2aa9e1d07416d8' url=URL('http://nppelement.com:8080'): "HTTPServerConfig" object has no field "_auth_data"
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\clients\http_\client.py", line 285, in _login_server
+    server.set_auth_data(**auth_data)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\clients\http_\http_config.py", line 88, in set_auth_data
+    self._auth_data = AuthData(**kwargs)
+  File "pydantic\main.py", line 416, in pydantic.main.BaseModel.__setattr__
+ValueError: "HTTPServerConfig" object has no field "_auth_data"
+DEBUG    [2021-05-08 00:16:14,092] gateway.clients.http_.client._login_server(280): Authorization to login='canio' password='278d1de033a395fe9a2aa9e1d07416d8' url=URL('http://nppelement.com:8080')...
+DEBUG    [2021-05-08 00:16:14,092] gateway.clients.http_.client._rq(323): POST: http://nppelement.com:8080/auth/rest/login
+DEBUG    [2021-05-08 00:16:14,171] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/auth/rest/login
+ERROR    [2021-05-08 00:16:14,171] gateway.clients.http_.client._login_server(290): Failed authorization to  login='canio' password='278d1de033a395fe9a2aa9e1d07416d8' url=URL('http://nppelement.com:8080'): "HTTPServerConfig" object has no field "_auth_data"
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\clients\http_\client.py", line 285, in _login_server
+    server.set_auth_data(**auth_data)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\clients\http_\http_config.py", line 88, in set_auth_data
+    self._auth_data = AuthData(**kwargs)
+  File "pydantic\main.py", line 416, in pydantic.main.BaseModel.__setattr__
+ValueError: "HTTPServerConfig" object has no field "_auth_data"
+WARNING  [2021-05-08 00:16:14,172] gateway.clients.http_.client._login_node(260): Failed authorization to login='canio' password='278d1de033a395fe9a2aa9e1d07416d8' url=URL('http://nppelement.com:8080')
+DEBUG    [2021-05-08 00:16:14,178] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/auth/rest/login
+ERROR    [2021-05-08 00:16:14,178] gateway.clients.http_.client._login_server(290): Failed authorization to  login='canio' password='278d1de033a395fe9a2aa9e1d07416d8' url=URL('http://nppelement.com:8080'): "HTTPServerConfig" object has no field "_auth_data"
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\clients\http_\client.py", line 285, in _login_server
+    server.set_auth_data(**auth_data)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\clients\http_\http_config.py", line 88, in set_auth_data
+    self._auth_data = AuthData(**kwargs)
+  File "pydantic\main.py", line 416, in pydantic.main.BaseModel.__setattr__
+ValueError: "HTTPServerConfig" object has no field "_auth_data"
+WARNING  [2021-05-08 00:16:14,179] gateway.clients.http_.client._login_node(260): Failed authorization to login='canio' password='278d1de033a395fe9a2aa9e1d07416d8' url=URL('http://nppelement.com:8080')
+WARNING  [2021-05-08 00:16:14,180] gateway.clients.http_.client.login(236): Failed authorizations!
+INFO     [2021-05-08 00:17:56,947] gateway.clients.http_.client.from_yaml(53): Creating VisioBASHTTPClient from D:\JOB\VisioBas\visiobas-gateway\gateway\config\http.yaml...
+DEBUG    [2021-05-08 00:17:56,954] gateway.clients.http_.client.login(223): Logging in to GET:login='canio' password='278d1de033a395fe9a2aa9e1d07416d8' url=URL('http://nppelement.com:8080') auth_data=None, POST:[login='canio' password='278d1de033a395fe9a2aa9e1d07416d8' url=URL('http://nppelement.com:8080') auth_data=None]...
+DEBUG    [2021-05-08 00:17:56,957] gateway.clients.http_.client._login_node(250): Authorization to login='canio' password='278d1de033a395fe9a2aa9e1d07416d8' url=URL('http://nppelement.com:8080') auth_data=None
+DEBUG    [2021-05-08 00:17:56,957] gateway.clients.http_.client._login_server(280): Authorization to login='canio' password='278d1de033a395fe9a2aa9e1d07416d8' url=URL('http://nppelement.com:8080') auth_data=None...
+DEBUG    [2021-05-08 00:17:56,957] gateway.clients.http_.client._rq(323): POST: http://nppelement.com:8080/auth/rest/login
+DEBUG    [2021-05-08 00:17:56,960] gateway.clients.http_.client._login_node(250): Authorization to login='canio' password='278d1de033a395fe9a2aa9e1d07416d8' url=URL('http://nppelement.com:8080') auth_data=None
+DEBUG    [2021-05-08 00:17:56,960] gateway.clients.http_.client._login_server(280): Authorization to login='canio' password='278d1de033a395fe9a2aa9e1d07416d8' url=URL('http://nppelement.com:8080') auth_data=None...
+DEBUG    [2021-05-08 00:17:56,960] gateway.clients.http_.client._rq(323): POST: http://nppelement.com:8080/auth/rest/login
+DEBUG    [2021-05-08 00:17:57,140] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/auth/rest/login
+ERROR    [2021-05-08 00:17:57,141] gateway.clients.http_.client._login_server(290): Failed authorization to  login='canio' password='278d1de033a395fe9a2aa9e1d07416d8' url=URL('http://nppelement.com:8080') auth_data=AuthData(bearer_token='eyJ0eXAiOiJqd3QiLCJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJjYW5pbyIsImlkIjo0MywiaXNzIjoiYXV0aCIsImF1ZCI6WyJ2ZGVzayIsInZiYXMiLCJwdXNoIiwiYXV0aCJdLCJncm91cHMiOlsidXNlciIsImFkZFRvcGljIiwiY2xvc2VUb3BpYyJdLCJleHAiOjE2NTE5NTgxNjh9.LS88RSgz-3BkcsxXK2JgXjOrW77aXIyA9xtuSt91Lwv9UZaJIP_hbAh2Xmn3lHOQaLG3wod3XSM3ag43QsnguIEMdELBKQJCNJvWC_3ZNhXC3Hukdn8XXAskLgvglZGOUh496gdXslvQoVQat5OsJ38bVj-O0-sUsey4Us5dZ7nroyG-lZ7_0PWET6rjdpPaEV92KxfFsq2dp_7EbZ6FID186yJI4jlN9HEdJPOyHxJEWwee_M5flpJb9ojriPKBXWOEXfa-Ju-Hc7aWh9YF1jqYD_IsCyOtcM-L3MCRiHhhC3qEteVunMHZSJaNWCZKa9lVJnN2hQX1-k4kvOPo0Q', user_id=43, auth_user_id=232): "HTTPServerConfig" object has no field "_is_authorized"
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\clients\http_\client.py", line 285, in _login_server
+    server.set_auth_data(**auth_data)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\clients\http_\http_config.py", line 89, in set_auth_data
+    self._is_authorized = True
+  File "pydantic\main.py", line 416, in pydantic.main.BaseModel.__setattr__
+ValueError: "HTTPServerConfig" object has no field "_is_authorized"
+DEBUG    [2021-05-08 00:17:57,142] gateway.clients.http_.client._login_server(280): Authorization to login='canio' password='278d1de033a395fe9a2aa9e1d07416d8' url=URL('http://nppelement.com:8080') auth_data=None...
+DEBUG    [2021-05-08 00:17:57,143] gateway.clients.http_.client._rq(323): POST: http://nppelement.com:8080/auth/rest/login
+DEBUG    [2021-05-08 00:17:57,155] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/auth/rest/login
+ERROR    [2021-05-08 00:17:57,155] gateway.clients.http_.client._login_server(290): Failed authorization to  login='canio' password='278d1de033a395fe9a2aa9e1d07416d8' url=URL('http://nppelement.com:8080') auth_data=AuthData(bearer_token='eyJ0eXAiOiJqd3QiLCJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJjYW5pbyIsImlkIjo0MywiaXNzIjoiYXV0aCIsImF1ZCI6WyJ2ZGVzayIsInZiYXMiLCJwdXNoIiwiYXV0aCJdLCJncm91cHMiOlsidXNlciIsImFkZFRvcGljIiwiY2xvc2VUb3BpYyJdLCJleHAiOjE2NTE5NTgxNjh9.LS88RSgz-3BkcsxXK2JgXjOrW77aXIyA9xtuSt91Lwv9UZaJIP_hbAh2Xmn3lHOQaLG3wod3XSM3ag43QsnguIEMdELBKQJCNJvWC_3ZNhXC3Hukdn8XXAskLgvglZGOUh496gdXslvQoVQat5OsJ38bVj-O0-sUsey4Us5dZ7nroyG-lZ7_0PWET6rjdpPaEV92KxfFsq2dp_7EbZ6FID186yJI4jlN9HEdJPOyHxJEWwee_M5flpJb9ojriPKBXWOEXfa-Ju-Hc7aWh9YF1jqYD_IsCyOtcM-L3MCRiHhhC3qEteVunMHZSJaNWCZKa9lVJnN2hQX1-k4kvOPo0Q', user_id=43, auth_user_id=232): "HTTPServerConfig" object has no field "_is_authorized"
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\clients\http_\client.py", line 285, in _login_server
+    server.set_auth_data(**auth_data)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\clients\http_\http_config.py", line 89, in set_auth_data
+    self._is_authorized = True
+  File "pydantic\main.py", line 416, in pydantic.main.BaseModel.__setattr__
+ValueError: "HTTPServerConfig" object has no field "_is_authorized"
+DEBUG    [2021-05-08 00:17:57,156] gateway.clients.http_.client._login_server(280): Authorization to login='canio' password='278d1de033a395fe9a2aa9e1d07416d8' url=URL('http://nppelement.com:8080') auth_data=None...
+DEBUG    [2021-05-08 00:17:57,156] gateway.clients.http_.client._rq(323): POST: http://nppelement.com:8080/auth/rest/login
+DEBUG    [2021-05-08 00:17:57,272] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/auth/rest/login
+ERROR    [2021-05-08 00:17:57,272] gateway.clients.http_.client._login_server(290): Failed authorization to  login='canio' password='278d1de033a395fe9a2aa9e1d07416d8' url=URL('http://nppelement.com:8080') auth_data=AuthData(bearer_token='eyJ0eXAiOiJqd3QiLCJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJjYW5pbyIsImlkIjo0MywiaXNzIjoiYXV0aCIsImF1ZCI6WyJ2ZGVzayIsInZiYXMiLCJwdXNoIiwiYXV0aCJdLCJncm91cHMiOlsidXNlciIsImFkZFRvcGljIiwiY2xvc2VUb3BpYyJdLCJleHAiOjE2NTE5NTgxNjh9.LS88RSgz-3BkcsxXK2JgXjOrW77aXIyA9xtuSt91Lwv9UZaJIP_hbAh2Xmn3lHOQaLG3wod3XSM3ag43QsnguIEMdELBKQJCNJvWC_3ZNhXC3Hukdn8XXAskLgvglZGOUh496gdXslvQoVQat5OsJ38bVj-O0-sUsey4Us5dZ7nroyG-lZ7_0PWET6rjdpPaEV92KxfFsq2dp_7EbZ6FID186yJI4jlN9HEdJPOyHxJEWwee_M5flpJb9ojriPKBXWOEXfa-Ju-Hc7aWh9YF1jqYD_IsCyOtcM-L3MCRiHhhC3qEteVunMHZSJaNWCZKa9lVJnN2hQX1-k4kvOPo0Q', user_id=43, auth_user_id=232): "HTTPServerConfig" object has no field "_is_authorized"
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\clients\http_\client.py", line 285, in _login_server
+    server.set_auth_data(**auth_data)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\clients\http_\http_config.py", line 89, in set_auth_data
+    self._is_authorized = True
+  File "pydantic\main.py", line 416, in pydantic.main.BaseModel.__setattr__
+ValueError: "HTTPServerConfig" object has no field "_is_authorized"
+WARNING  [2021-05-08 00:17:57,272] gateway.clients.http_.client._login_node(260): Failed authorization to login='canio' password='278d1de033a395fe9a2aa9e1d07416d8' url=URL('http://nppelement.com:8080') auth_data=AuthData(bearer_token='eyJ0eXAiOiJqd3QiLCJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJjYW5pbyIsImlkIjo0MywiaXNzIjoiYXV0aCIsImF1ZCI6WyJ2ZGVzayIsInZiYXMiLCJwdXNoIiwiYXV0aCJdLCJncm91cHMiOlsidXNlciIsImFkZFRvcGljIiwiY2xvc2VUb3BpYyJdLCJleHAiOjE2NTE5NTgxNjh9.LS88RSgz-3BkcsxXK2JgXjOrW77aXIyA9xtuSt91Lwv9UZaJIP_hbAh2Xmn3lHOQaLG3wod3XSM3ag43QsnguIEMdELBKQJCNJvWC_3ZNhXC3Hukdn8XXAskLgvglZGOUh496gdXslvQoVQat5OsJ38bVj-O0-sUsey4Us5dZ7nroyG-lZ7_0PWET6rjdpPaEV92KxfFsq2dp_7EbZ6FID186yJI4jlN9HEdJPOyHxJEWwee_M5flpJb9ojriPKBXWOEXfa-Ju-Hc7aWh9YF1jqYD_IsCyOtcM-L3MCRiHhhC3qEteVunMHZSJaNWCZKa9lVJnN2hQX1-k4kvOPo0Q', user_id=43, auth_user_id=232)
+DEBUG    [2021-05-08 00:17:57,275] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/auth/rest/login
+ERROR    [2021-05-08 00:17:57,275] gateway.clients.http_.client._login_server(290): Failed authorization to  login='canio' password='278d1de033a395fe9a2aa9e1d07416d8' url=URL('http://nppelement.com:8080') auth_data=AuthData(bearer_token='eyJ0eXAiOiJqd3QiLCJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJjYW5pbyIsImlkIjo0MywiaXNzIjoiYXV0aCIsImF1ZCI6WyJ2ZGVzayIsInZiYXMiLCJwdXNoIiwiYXV0aCJdLCJncm91cHMiOlsidXNlciIsImFkZFRvcGljIiwiY2xvc2VUb3BpYyJdLCJleHAiOjE2NTE5NTgxNjh9.LS88RSgz-3BkcsxXK2JgXjOrW77aXIyA9xtuSt91Lwv9UZaJIP_hbAh2Xmn3lHOQaLG3wod3XSM3ag43QsnguIEMdELBKQJCNJvWC_3ZNhXC3Hukdn8XXAskLgvglZGOUh496gdXslvQoVQat5OsJ38bVj-O0-sUsey4Us5dZ7nroyG-lZ7_0PWET6rjdpPaEV92KxfFsq2dp_7EbZ6FID186yJI4jlN9HEdJPOyHxJEWwee_M5flpJb9ojriPKBXWOEXfa-Ju-Hc7aWh9YF1jqYD_IsCyOtcM-L3MCRiHhhC3qEteVunMHZSJaNWCZKa9lVJnN2hQX1-k4kvOPo0Q', user_id=43, auth_user_id=232): "HTTPServerConfig" object has no field "_is_authorized"
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\clients\http_\client.py", line 285, in _login_server
+    server.set_auth_data(**auth_data)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\clients\http_\http_config.py", line 89, in set_auth_data
+    self._is_authorized = True
+  File "pydantic\main.py", line 416, in pydantic.main.BaseModel.__setattr__
+ValueError: "HTTPServerConfig" object has no field "_is_authorized"
+WARNING  [2021-05-08 00:17:57,276] gateway.clients.http_.client._login_node(260): Failed authorization to login='canio' password='278d1de033a395fe9a2aa9e1d07416d8' url=URL('http://nppelement.com:8080') auth_data=AuthData(bearer_token='eyJ0eXAiOiJqd3QiLCJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJjYW5pbyIsImlkIjo0MywiaXNzIjoiYXV0aCIsImF1ZCI6WyJ2ZGVzayIsInZiYXMiLCJwdXNoIiwiYXV0aCJdLCJncm91cHMiOlsidXNlciIsImFkZFRvcGljIiwiY2xvc2VUb3BpYyJdLCJleHAiOjE2NTE5NTgxNjh9.LS88RSgz-3BkcsxXK2JgXjOrW77aXIyA9xtuSt91Lwv9UZaJIP_hbAh2Xmn3lHOQaLG3wod3XSM3ag43QsnguIEMdELBKQJCNJvWC_3ZNhXC3Hukdn8XXAskLgvglZGOUh496gdXslvQoVQat5OsJ38bVj-O0-sUsey4Us5dZ7nroyG-lZ7_0PWET6rjdpPaEV92KxfFsq2dp_7EbZ6FID186yJI4jlN9HEdJPOyHxJEWwee_M5flpJb9ojriPKBXWOEXfa-Ju-Hc7aWh9YF1jqYD_IsCyOtcM-L3MCRiHhhC3qEteVunMHZSJaNWCZKa9lVJnN2hQX1-k4kvOPo0Q', user_id=43, auth_user_id=232)
+WARNING  [2021-05-08 00:17:57,284] gateway.clients.http_.client.login(236): Failed authorizations!
+INFO     [2021-05-08 00:18:53,371] gateway.clients.http_.client.from_yaml(53): Creating VisioBASHTTPClient from D:\JOB\VisioBas\visiobas-gateway\gateway\config\http.yaml...
+DEBUG    [2021-05-08 00:18:53,379] gateway.clients.http_.client.login(223): Logging in to GET:login='canio' password='278d1de033a395fe9a2aa9e1d07416d8' url=URL('http://nppelement.com:8080') auth_data=None is_authorized=False, POST:[login='canio' password='278d1de033a395fe9a2aa9e1d07416d8' url=URL('http://nppelement.com:8080') auth_data=None is_authorized=False]...
+DEBUG    [2021-05-08 00:18:53,382] gateway.clients.http_.client._login_node(250): Authorization to login='canio' password='278d1de033a395fe9a2aa9e1d07416d8' url=URL('http://nppelement.com:8080') auth_data=None is_authorized=False
+DEBUG    [2021-05-08 00:18:53,382] gateway.clients.http_.client._login_server(280): Authorization to login='canio' password='278d1de033a395fe9a2aa9e1d07416d8' url=URL('http://nppelement.com:8080') auth_data=None is_authorized=False...
+DEBUG    [2021-05-08 00:18:53,382] gateway.clients.http_.client._rq(323): POST: http://nppelement.com:8080/auth/rest/login
+DEBUG    [2021-05-08 00:18:53,385] gateway.clients.http_.client._login_node(250): Authorization to login='canio' password='278d1de033a395fe9a2aa9e1d07416d8' url=URL('http://nppelement.com:8080') auth_data=None is_authorized=False
+DEBUG    [2021-05-08 00:18:53,385] gateway.clients.http_.client._login_server(280): Authorization to login='canio' password='278d1de033a395fe9a2aa9e1d07416d8' url=URL('http://nppelement.com:8080') auth_data=None is_authorized=False...
+DEBUG    [2021-05-08 00:18:53,385] gateway.clients.http_.client._rq(323): POST: http://nppelement.com:8080/auth/rest/login
+DEBUG    [2021-05-08 00:18:53,558] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/auth/rest/login
+DEBUG    [2021-05-08 00:18:53,558] gateway.clients.http_.client._login_server(286): Successfully authorized to login='canio' password='278d1de033a395fe9a2aa9e1d07416d8' url=URL('http://nppelement.com:8080') auth_data=AuthData(bearer_token='eyJ0eXAiOiJqd3QiLCJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJjYW5pbyIsImlkIjo0MywiaXNzIjoiYXV0aCIsImF1ZCI6WyJ2ZGVzayIsInZiYXMiLCJwdXNoIiwiYXV0aCJdLCJncm91cHMiOlsidXNlciIsImFkZFRvcGljIiwiY2xvc2VUb3BpYyJdLCJleHAiOjE2NTE5NTgyMjR9.M-3wVEzwG_9Ocb4NS9hZ1m-L4OwD45ABKgI3EOhZ521P6oY1yl2Ol-aonjcVgNxjp41DhFn9FajPSe_w3ctwVW3pycNxXu9yjkGzhEeweTsxv-3tMDYa41s7Xj0zb3tKRslWNds6SBtzxcecHV7QYecEzaw567hiVqRikv4_TWX7VIriGhBATDW6gp44v1QClLWQlA2k85FG7gpO5uHsHaiHSebUVjQWRuP-NqDBATDD6Hi6n7eTOfx3jG88vLNw1r-e1tboL2xLhCndxYBqLxSJUtHm_jXcG2GcErh-RyZBLHhh4y1T8NryZAFaNTsKECKvY7v-xnyDod9o9RF58w', user_id=43, auth_user_id=232) is_authorized=True
+INFO     [2021-05-08 00:18:53,558] gateway.clients.http_.client._login_node(258): Successfully authorized to login='canio' password='278d1de033a395fe9a2aa9e1d07416d8' url=URL('http://nppelement.com:8080') auth_data=AuthData(bearer_token='eyJ0eXAiOiJqd3QiLCJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJjYW5pbyIsImlkIjo0MywiaXNzIjoiYXV0aCIsImF1ZCI6WyJ2ZGVzayIsInZiYXMiLCJwdXNoIiwiYXV0aCJdLCJncm91cHMiOlsidXNlciIsImFkZFRvcGljIiwiY2xvc2VUb3BpYyJdLCJleHAiOjE2NTE5NTgyMjR9.M-3wVEzwG_9Ocb4NS9hZ1m-L4OwD45ABKgI3EOhZ521P6oY1yl2Ol-aonjcVgNxjp41DhFn9FajPSe_w3ctwVW3pycNxXu9yjkGzhEeweTsxv-3tMDYa41s7Xj0zb3tKRslWNds6SBtzxcecHV7QYecEzaw567hiVqRikv4_TWX7VIriGhBATDW6gp44v1QClLWQlA2k85FG7gpO5uHsHaiHSebUVjQWRuP-NqDBATDD6Hi6n7eTOfx3jG88vLNw1r-e1tboL2xLhCndxYBqLxSJUtHm_jXcG2GcErh-RyZBLHhh4y1T8NryZAFaNTsKECKvY7v-xnyDod9o9RF58w', user_id=43, auth_user_id=232) is_authorized=True
+DEBUG    [2021-05-08 00:18:53,561] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/auth/rest/login
+DEBUG    [2021-05-08 00:18:53,561] gateway.clients.http_.client._login_server(286): Successfully authorized to login='canio' password='278d1de033a395fe9a2aa9e1d07416d8' url=URL('http://nppelement.com:8080') auth_data=AuthData(bearer_token='eyJ0eXAiOiJqd3QiLCJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJjYW5pbyIsImlkIjo0MywiaXNzIjoiYXV0aCIsImF1ZCI6WyJ2ZGVzayIsInZiYXMiLCJwdXNoIiwiYXV0aCJdLCJncm91cHMiOlsidXNlciIsImFkZFRvcGljIiwiY2xvc2VUb3BpYyJdLCJleHAiOjE2NTE5NTgyMjR9.M-3wVEzwG_9Ocb4NS9hZ1m-L4OwD45ABKgI3EOhZ521P6oY1yl2Ol-aonjcVgNxjp41DhFn9FajPSe_w3ctwVW3pycNxXu9yjkGzhEeweTsxv-3tMDYa41s7Xj0zb3tKRslWNds6SBtzxcecHV7QYecEzaw567hiVqRikv4_TWX7VIriGhBATDW6gp44v1QClLWQlA2k85FG7gpO5uHsHaiHSebUVjQWRuP-NqDBATDD6Hi6n7eTOfx3jG88vLNw1r-e1tboL2xLhCndxYBqLxSJUtHm_jXcG2GcErh-RyZBLHhh4y1T8NryZAFaNTsKECKvY7v-xnyDod9o9RF58w', user_id=43, auth_user_id=232) is_authorized=True
+INFO     [2021-05-08 00:18:53,561] gateway.clients.http_.client._login_node(258): Successfully authorized to login='canio' password='278d1de033a395fe9a2aa9e1d07416d8' url=URL('http://nppelement.com:8080') auth_data=AuthData(bearer_token='eyJ0eXAiOiJqd3QiLCJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJjYW5pbyIsImlkIjo0MywiaXNzIjoiYXV0aCIsImF1ZCI6WyJ2ZGVzayIsInZiYXMiLCJwdXNoIiwiYXV0aCJdLCJncm91cHMiOlsidXNlciIsImFkZFRvcGljIiwiY2xvc2VUb3BpYyJdLCJleHAiOjE2NTE5NTgyMjR9.M-3wVEzwG_9Ocb4NS9hZ1m-L4OwD45ABKgI3EOhZ521P6oY1yl2Ol-aonjcVgNxjp41DhFn9FajPSe_w3ctwVW3pycNxXu9yjkGzhEeweTsxv-3tMDYa41s7Xj0zb3tKRslWNds6SBtzxcecHV7QYecEzaw567hiVqRikv4_TWX7VIriGhBATDW6gp44v1QClLWQlA2k85FG7gpO5uHsHaiHSebUVjQWRuP-NqDBATDD6Hi6n7eTOfx3jG88vLNw1r-e1tboL2xLhCndxYBqLxSJUtHm_jXcG2GcErh-RyZBLHhh4y1T8NryZAFaNTsKECKvY7v-xnyDod9o9RF58w', user_id=43, auth_user_id=232) is_authorized=True
+INFO     [2021-05-08 00:18:53,563] gateway.clients.http_.client.login(234): Successfully authorized to GET:login='canio' password='278d1de033a395fe9a2aa9e1d07416d8' url=URL('http://nppelement.com:8080') auth_data=AuthData(bearer_token='eyJ0eXAiOiJqd3QiLCJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJjYW5pbyIsImlkIjo0MywiaXNzIjoiYXV0aCIsImF1ZCI6WyJ2ZGVzayIsInZiYXMiLCJwdXNoIiwiYXV0aCJdLCJncm91cHMiOlsidXNlciIsImFkZFRvcGljIiwiY2xvc2VUb3BpYyJdLCJleHAiOjE2NTE5NTgyMjR9.M-3wVEzwG_9Ocb4NS9hZ1m-L4OwD45ABKgI3EOhZ521P6oY1yl2Ol-aonjcVgNxjp41DhFn9FajPSe_w3ctwVW3pycNxXu9yjkGzhEeweTsxv-3tMDYa41s7Xj0zb3tKRslWNds6SBtzxcecHV7QYecEzaw567hiVqRikv4_TWX7VIriGhBATDW6gp44v1QClLWQlA2k85FG7gpO5uHsHaiHSebUVjQWRuP-NqDBATDD6Hi6n7eTOfx3jG88vLNw1r-e1tboL2xLhCndxYBqLxSJUtHm_jXcG2GcErh-RyZBLHhh4y1T8NryZAFaNTsKECKvY7v-xnyDod9o9RF58w', user_id=43, auth_user_id=232) is_authorized=True, POST:[login='canio' password='278d1de033a395fe9a2aa9e1d07416d8' url=URL('http://nppelement.com:8080') auth_data=AuthData(bearer_token='eyJ0eXAiOiJqd3QiLCJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJjYW5pbyIsImlkIjo0MywiaXNzIjoiYXV0aCIsImF1ZCI6WyJ2ZGVzayIsInZiYXMiLCJwdXNoIiwiYXV0aCJdLCJncm91cHMiOlsidXNlciIsImFkZFRvcGljIiwiY2xvc2VUb3BpYyJdLCJleHAiOjE2NTE5NTgyMjR9.M-3wVEzwG_9Ocb4NS9hZ1m-L4OwD45ABKgI3EOhZ521P6oY1yl2Ol-aonjcVgNxjp41DhFn9FajPSe_w3ctwVW3pycNxXu9yjkGzhEeweTsxv-3tMDYa41s7Xj0zb3tKRslWNds6SBtzxcecHV7QYecEzaw567hiVqRikv4_TWX7VIriGhBATDW6gp44v1QClLWQlA2k85FG7gpO5uHsHaiHSebUVjQWRuP-NqDBATDD6Hi6n7eTOfx3jG88vLNw1r-e1tboL2xLhCndxYBqLxSJUtHm_jXcG2GcErh-RyZBLHhh4y1T8NryZAFaNTsKECKvY7v-xnyDod9o9RF58w', user_id=43, auth_user_id=232) is_authorized=True]
+DEBUG    [2021-05-08 00:18:53,572] gateway.clients.http_.client._rq(323): GET: http://nppelement.com:8080/vbas/gate/get/4015/device
+DEBUG    [2021-05-08 00:18:53,652] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/vbas/gate/get/4015/device
+DEBUG    [2021-05-08 00:18:53,699] gateway.clients.http_.client._rq(323): GET: http://nppelement.com:8080/vbas/gate/get/4015/analog-input
+DEBUG    [2021-05-08 00:18:53,704] gateway.clients.http_.client._rq(323): GET: http://nppelement.com:8080/vbas/gate/get/4015/analog-output
+DEBUG    [2021-05-08 00:18:53,709] gateway.clients.http_.client._rq(323): GET: http://nppelement.com:8080/vbas/gate/get/4015/analog-value
+DEBUG    [2021-05-08 00:18:53,712] gateway.clients.http_.client._rq(323): GET: http://nppelement.com:8080/vbas/gate/get/4015/binary-input
+DEBUG    [2021-05-08 00:18:53,714] gateway.clients.http_.client._rq(323): GET: http://nppelement.com:8080/vbas/gate/get/4015/binary-output
+DEBUG    [2021-05-08 00:18:53,717] gateway.clients.http_.client._rq(323): GET: http://nppelement.com:8080/vbas/gate/get/4015/binary-value
+DEBUG    [2021-05-08 00:18:53,719] gateway.clients.http_.client._rq(323): GET: http://nppelement.com:8080/vbas/gate/get/4015/multi-state-input
+DEBUG    [2021-05-08 00:18:53,722] gateway.clients.http_.client._rq(323): GET: http://nppelement.com:8080/vbas/gate/get/4015/multi-state-output
+DEBUG    [2021-05-08 00:18:53,725] gateway.clients.http_.client._rq(323): GET: http://nppelement.com:8080/vbas/gate/get/4015/multi-state-value
+DEBUG    [2021-05-08 00:18:53,772] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/vbas/gate/get/4015/analog-output
+DEBUG    [2021-05-08 00:18:53,778] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/vbas/gate/get/4015/analog-input
+DEBUG    [2021-05-08 00:18:53,875] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/vbas/gate/get/4015/binary-input
+DEBUG    [2021-05-08 00:18:53,891] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/vbas/gate/get/4015/multi-state-output
+DEBUG    [2021-05-08 00:18:53,907] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/vbas/gate/get/4015/multi-state-input
+DEBUG    [2021-05-08 00:18:53,914] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/vbas/gate/get/4015/analog-value
+DEBUG    [2021-05-08 00:18:53,915] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/vbas/gate/get/4015/binary-output
+DEBUG    [2021-05-08 00:18:53,917] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/vbas/gate/get/4015/multi-state-value
+DEBUG    [2021-05-08 00:18:53,927] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/vbas/gate/get/4015/binary-value
+INFO     [2021-05-08 00:32:32,377] gateway.clients.http_.client.from_yaml(53): Creating VisioBASHTTPClient from D:\JOB\VisioBas\visiobas-gateway\gateway\config\http.yaml...
+DEBUG    [2021-05-08 00:32:32,386] gateway.clients.http_.client.login(223): Logging in to GET:login='canio' password='278d1de033a395fe9a2aa9e1d07416d8' url=URL('http://nppelement.com:8080') auth_data=None is_authorized=False, POST:[login='canio' password='278d1de033a395fe9a2aa9e1d07416d8' url=URL('http://nppelement.com:8080') auth_data=None is_authorized=False]...
+DEBUG    [2021-05-08 00:32:32,390] gateway.clients.http_.client._login_node(250): Authorization to login='canio' password='278d1de033a395fe9a2aa9e1d07416d8' url=URL('http://nppelement.com:8080') auth_data=None is_authorized=False
+DEBUG    [2021-05-08 00:32:32,390] gateway.clients.http_.client._login_server(280): Authorization to <[Unauthorized]:http://nppelement.com:8080>...
+DEBUG    [2021-05-08 00:32:32,390] gateway.clients.http_.client._rq(323): POST: http://nppelement.com:8080/auth/rest/login
+DEBUG    [2021-05-08 00:32:32,393] gateway.clients.http_.client._login_node(250): Authorization to login='canio' password='278d1de033a395fe9a2aa9e1d07416d8' url=URL('http://nppelement.com:8080') auth_data=None is_authorized=False
+DEBUG    [2021-05-08 00:32:32,394] gateway.clients.http_.client._login_server(280): Authorization to <[Unauthorized]:http://nppelement.com:8080>...
+DEBUG    [2021-05-08 00:32:32,394] gateway.clients.http_.client._rq(323): POST: http://nppelement.com:8080/auth/rest/login
+DEBUG    [2021-05-08 00:32:32,584] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/auth/rest/login
+DEBUG    [2021-05-08 00:32:32,585] gateway.clients.http_.client._login_server(286): Successfully authorized to login='canio' password='278d1de033a395fe9a2aa9e1d07416d8' url=URL('http://nppelement.com:8080') auth_data=AuthData(bearer_token='eyJ0eXAiOiJqd3QiLCJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJjYW5pbyIsImlkIjo0MywiaXNzIjoiYXV0aCIsImF1ZCI6WyJ2ZGVzayIsInZiYXMiLCJwdXNoIiwiYXV0aCJdLCJncm91cHMiOlsidXNlciIsImFkZFRvcGljIiwiY2xvc2VUb3BpYyJdLCJleHAiOjE2NTE5NTkwNDN9.WsdPVjCiOc3_EtEzCb8A7bFjvRV9dDMvsk-OgMCOz5wqHohFo6JeAbz15rZMdy_iPrgOyw21tksZV4LGQI4yNmXw-t4GGs7VlbPmDPUuhxJ4iB_vlxY6SqnJjz1eAuCbmoCAvKYaFOFAcgf8vOEVQF9IM1nlsmBCsWapysqGqEpkfX7XSnMcQkPnIxRJzMML96toUASMVjk4iYUt4K5Wy_uBLyo1rH6F7Y3hIhsfUgtwBshQcbm_34QKD-vuChpM_hV35X-1WQZ9GFJbRupmjI7nl3W8a40lJaIGBnDfhBv5QrXyB03zouTZ_IK_-IW4a2BBsxbWTQgtwqvh29BVIXEA', user_id=43, auth_user_id=232) is_authorized=True
+INFO     [2021-05-08 00:32:32,585] gateway.clients.http_.client._login_node(258): Successfully authorized to login='canio' password='278d1de033a395fe9a2aa9e1d07416d8' url=URL('http://nppelement.com:8080') auth_data=AuthData(bearer_token='eyJ0eXAiOiJqd3QiLCJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJjYW5pbyIsImlkIjo0MywiaXNzIjoiYXV0aCIsImF1ZCI6WyJ2ZGVzayIsInZiYXMiLCJwdXNoIiwiYXV0aCJdLCJncm91cHMiOlsidXNlciIsImFkZFRvcGljIiwiY2xvc2VUb3BpYyJdLCJleHAiOjE2NTE5NTkwNDN9.WsdPVjCiOc3_EtEzCb8A7bFjvRV9dDMvsk-OgMCOz5wqHohFo6JeAbz15rZMdy_iPrgOyw21tksZV4LGQI4yNmXw-t4GGs7VlbPmDPUuhxJ4iB_vlxY6SqnJjz1eAuCbmoCAvKYaFOFAcgf8vOEVQF9IM1nlsmBCsWapysqGqEpkfX7XSnMcQkPnIxRJzMML96toUASMVjk4iYUt4K5Wy_uBLyo1rH6F7Y3hIhsfUgtwBshQcbm_34QKD-vuChpM_hV35X-1WQZ9GFJbRupmjI7nl3W8a40lJaIGBnDfhBv5QrXyB03zouTZ_IK_-IW4a2BBsxbWTQgtwqvh29BVIXEA', user_id=43, auth_user_id=232) is_authorized=True
+DEBUG    [2021-05-08 00:32:32,587] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/auth/rest/login
+DEBUG    [2021-05-08 00:32:32,588] gateway.clients.http_.client._login_server(286): Successfully authorized to login='canio' password='278d1de033a395fe9a2aa9e1d07416d8' url=URL('http://nppelement.com:8080') auth_data=AuthData(bearer_token='eyJ0eXAiOiJqd3QiLCJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJjYW5pbyIsImlkIjo0MywiaXNzIjoiYXV0aCIsImF1ZCI6WyJ2ZGVzayIsInZiYXMiLCJwdXNoIiwiYXV0aCJdLCJncm91cHMiOlsidXNlciIsImFkZFRvcGljIiwiY2xvc2VUb3BpYyJdLCJleHAiOjE2NTE5NTkwNDN9.WsdPVjCiOc3_EtEzCb8A7bFjvRV9dDMvsk-OgMCOz5wqHohFo6JeAbz15rZMdy_iPrgOyw21tksZV4LGQI4yNmXw-t4GGs7VlbPmDPUuhxJ4iB_vlxY6SqnJjz1eAuCbmoCAvKYaFOFAcgf8vOEVQF9IM1nlsmBCsWapysqGqEpkfX7XSnMcQkPnIxRJzMML96toUASMVjk4iYUt4K5Wy_uBLyo1rH6F7Y3hIhsfUgtwBshQcbm_34QKD-vuChpM_hV35X-1WQZ9GFJbRupmjI7nl3W8a40lJaIGBnDfhBv5QrXyB03zouTZ_IK_-IW4a2BBsxbWTQgtwqvh29BVIXEA', user_id=43, auth_user_id=232) is_authorized=True
+INFO     [2021-05-08 00:32:32,588] gateway.clients.http_.client._login_node(258): Successfully authorized to login='canio' password='278d1de033a395fe9a2aa9e1d07416d8' url=URL('http://nppelement.com:8080') auth_data=AuthData(bearer_token='eyJ0eXAiOiJqd3QiLCJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJjYW5pbyIsImlkIjo0MywiaXNzIjoiYXV0aCIsImF1ZCI6WyJ2ZGVzayIsInZiYXMiLCJwdXNoIiwiYXV0aCJdLCJncm91cHMiOlsidXNlciIsImFkZFRvcGljIiwiY2xvc2VUb3BpYyJdLCJleHAiOjE2NTE5NTkwNDN9.WsdPVjCiOc3_EtEzCb8A7bFjvRV9dDMvsk-OgMCOz5wqHohFo6JeAbz15rZMdy_iPrgOyw21tksZV4LGQI4yNmXw-t4GGs7VlbPmDPUuhxJ4iB_vlxY6SqnJjz1eAuCbmoCAvKYaFOFAcgf8vOEVQF9IM1nlsmBCsWapysqGqEpkfX7XSnMcQkPnIxRJzMML96toUASMVjk4iYUt4K5Wy_uBLyo1rH6F7Y3hIhsfUgtwBshQcbm_34QKD-vuChpM_hV35X-1WQZ9GFJbRupmjI7nl3W8a40lJaIGBnDfhBv5QrXyB03zouTZ_IK_-IW4a2BBsxbWTQgtwqvh29BVIXEA', user_id=43, auth_user_id=232) is_authorized=True
+INFO     [2021-05-08 00:32:32,589] gateway.clients.http_.client.login(234): Successfully authorized to GET:login='canio' password='278d1de033a395fe9a2aa9e1d07416d8' url=URL('http://nppelement.com:8080') auth_data=AuthData(bearer_token='eyJ0eXAiOiJqd3QiLCJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJjYW5pbyIsImlkIjo0MywiaXNzIjoiYXV0aCIsImF1ZCI6WyJ2ZGVzayIsInZiYXMiLCJwdXNoIiwiYXV0aCJdLCJncm91cHMiOlsidXNlciIsImFkZFRvcGljIiwiY2xvc2VUb3BpYyJdLCJleHAiOjE2NTE5NTkwNDN9.WsdPVjCiOc3_EtEzCb8A7bFjvRV9dDMvsk-OgMCOz5wqHohFo6JeAbz15rZMdy_iPrgOyw21tksZV4LGQI4yNmXw-t4GGs7VlbPmDPUuhxJ4iB_vlxY6SqnJjz1eAuCbmoCAvKYaFOFAcgf8vOEVQF9IM1nlsmBCsWapysqGqEpkfX7XSnMcQkPnIxRJzMML96toUASMVjk4iYUt4K5Wy_uBLyo1rH6F7Y3hIhsfUgtwBshQcbm_34QKD-vuChpM_hV35X-1WQZ9GFJbRupmjI7nl3W8a40lJaIGBnDfhBv5QrXyB03zouTZ_IK_-IW4a2BBsxbWTQgtwqvh29BVIXEA', user_id=43, auth_user_id=232) is_authorized=True, POST:[login='canio' password='278d1de033a395fe9a2aa9e1d07416d8' url=URL('http://nppelement.com:8080') auth_data=AuthData(bearer_token='eyJ0eXAiOiJqd3QiLCJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJjYW5pbyIsImlkIjo0MywiaXNzIjoiYXV0aCIsImF1ZCI6WyJ2ZGVzayIsInZiYXMiLCJwdXNoIiwiYXV0aCJdLCJncm91cHMiOlsidXNlciIsImFkZFRvcGljIiwiY2xvc2VUb3BpYyJdLCJleHAiOjE2NTE5NTkwNDN9.WsdPVjCiOc3_EtEzCb8A7bFjvRV9dDMvsk-OgMCOz5wqHohFo6JeAbz15rZMdy_iPrgOyw21tksZV4LGQI4yNmXw-t4GGs7VlbPmDPUuhxJ4iB_vlxY6SqnJjz1eAuCbmoCAvKYaFOFAcgf8vOEVQF9IM1nlsmBCsWapysqGqEpkfX7XSnMcQkPnIxRJzMML96toUASMVjk4iYUt4K5Wy_uBLyo1rH6F7Y3hIhsfUgtwBshQcbm_34QKD-vuChpM_hV35X-1WQZ9GFJbRupmjI7nl3W8a40lJaIGBnDfhBv5QrXyB03zouTZ_IK_-IW4a2BBsxbWTQgtwqvh29BVIXEA', user_id=43, auth_user_id=232) is_authorized=True]
+DEBUG    [2021-05-08 00:32:32,595] gateway.clients.http_.client._rq(323): GET: http://nppelement.com:8080/vbas/gate/get/4015/device
+DEBUG    [2021-05-08 00:32:32,678] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/vbas/gate/get/4015/device
+DEBUG    [2021-05-08 00:32:32,730] gateway.clients.http_.client._rq(323): GET: http://nppelement.com:8080/vbas/gate/get/4015/analog-input
+DEBUG    [2021-05-08 00:32:32,734] gateway.clients.http_.client._rq(323): GET: http://nppelement.com:8080/vbas/gate/get/4015/analog-output
+DEBUG    [2021-05-08 00:32:32,739] gateway.clients.http_.client._rq(323): GET: http://nppelement.com:8080/vbas/gate/get/4015/analog-value
+DEBUG    [2021-05-08 00:32:32,741] gateway.clients.http_.client._rq(323): GET: http://nppelement.com:8080/vbas/gate/get/4015/binary-input
+DEBUG    [2021-05-08 00:32:32,744] gateway.clients.http_.client._rq(323): GET: http://nppelement.com:8080/vbas/gate/get/4015/binary-output
+DEBUG    [2021-05-08 00:32:32,746] gateway.clients.http_.client._rq(323): GET: http://nppelement.com:8080/vbas/gate/get/4015/binary-value
+DEBUG    [2021-05-08 00:32:32,748] gateway.clients.http_.client._rq(323): GET: http://nppelement.com:8080/vbas/gate/get/4015/multi-state-input
+DEBUG    [2021-05-08 00:32:32,751] gateway.clients.http_.client._rq(323): GET: http://nppelement.com:8080/vbas/gate/get/4015/multi-state-output
+DEBUG    [2021-05-08 00:32:32,753] gateway.clients.http_.client._rq(323): GET: http://nppelement.com:8080/vbas/gate/get/4015/multi-state-value
+DEBUG    [2021-05-08 00:32:32,801] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/vbas/gate/get/4015/analog-output
+DEBUG    [2021-05-08 00:32:32,806] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/vbas/gate/get/4015/analog-input
+DEBUG    [2021-05-08 00:32:32,888] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/vbas/gate/get/4015/multi-state-output
+DEBUG    [2021-05-08 00:32:32,917] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/vbas/gate/get/4015/binary-value
+DEBUG    [2021-05-08 00:32:32,920] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/vbas/gate/get/4015/analog-value
+DEBUG    [2021-05-08 00:32:32,928] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/vbas/gate/get/4015/multi-state-input
+DEBUG    [2021-05-08 00:32:32,929] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/vbas/gate/get/4015/binary-output
+DEBUG    [2021-05-08 00:32:32,938] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/vbas/gate/get/4015/multi-state-value
+DEBUG    [2021-05-08 00:32:32,943] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/vbas/gate/get/4015/binary-input
+INFO     [2021-05-08 00:34:27,318] gateway.clients.http_.client.from_yaml(53): Creating VisioBASHTTPClient from D:\JOB\VisioBas\visiobas-gateway\gateway\config\http.yaml...
+DEBUG    [2021-05-08 00:34:27,326] gateway.clients.http_.client.login(223): Logging in to GET:login='canio' password='278d1de033a395fe9a2aa9e1d07416d8' url=URL('http://nppelement.com:8080') auth_data=None is_authorized=False, POST:[login='canio' password='278d1de033a395fe9a2aa9e1d07416d8' url=URL('http://nppelement.com:8080') auth_data=None is_authorized=False]...
+DEBUG    [2021-05-08 00:34:27,329] gateway.clients.http_.client._login_node(250): Authorization to login='canio' password='278d1de033a395fe9a2aa9e1d07416d8' url=URL('http://nppelement.com:8080') auth_data=None is_authorized=False
+DEBUG    [2021-05-08 00:34:27,329] gateway.clients.http_.client._login_server(280): Authorization to <[Unauthorized]:http://nppelement.com:8080>...
+DEBUG    [2021-05-08 00:34:27,329] gateway.clients.http_.client._rq(323): POST: http://nppelement.com:8080/auth/rest/login
+DEBUG    [2021-05-08 00:34:27,332] gateway.clients.http_.client._login_node(250): Authorization to login='canio' password='278d1de033a395fe9a2aa9e1d07416d8' url=URL('http://nppelement.com:8080') auth_data=None is_authorized=False
+DEBUG    [2021-05-08 00:34:27,332] gateway.clients.http_.client._login_server(280): Authorization to <[Unauthorized]:http://nppelement.com:8080>...
+DEBUG    [2021-05-08 00:34:27,332] gateway.clients.http_.client._rq(323): POST: http://nppelement.com:8080/auth/rest/login
+DEBUG    [2021-05-08 00:34:27,584] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/auth/rest/login
+DEBUG    [2021-05-08 00:34:27,584] gateway.clients.http_.client._login_server(286): Successfully authorized to login='canio' password='278d1de033a395fe9a2aa9e1d07416d8' url=URL('http://nppelement.com:8080') auth_data=AuthData(bearer_token='eyJ0eXAiOiJqd3QiLCJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJjYW5pbyIsImlkIjo0MywiaXNzIjoiYXV0aCIsImF1ZCI6WyJ2ZGVzayIsInZiYXMiLCJwdXNoIiwiYXV0aCJdLCJncm91cHMiOlsidXNlciIsImFkZFRvcGljIiwiY2xvc2VUb3BpYyJdLCJleHAiOjE2NTE5NTkxNTh9.b93gAs-RnC10-OzgN6fATLZLsjyawb1MFlngYMaMihKXFjMFOzfDzO-ZyEQbiX4sYGqWwiwN5t7AtECA5vYwPV2I6qvxnPfyeD0nzgnLte5luazjbK9Mxg685gQetuyAADHPi03MUn-QhLSorQT9avrCUSS6y7dsLPp4fmFTVHTjp4SpehScB-k5YCVaitI8fkB32EDT8D-Ofwwwz42zKg9DbpuNuuMef4tOIAIgnOsdk9HGE3VyA2b7o2HjPTJ3_1aGHyPlDv30D9L8DGVIWIg3eT8VV9lxxzkEGTpxgjwzfG67Wp0pKRyxcF3gux11FoMK_V8n1EKAXfvdTZMtrQ', user_id=43, auth_user_id=232) is_authorized=True
+INFO     [2021-05-08 00:34:27,584] gateway.clients.http_.client._login_node(258): Successfully authorized to login='canio' password='278d1de033a395fe9a2aa9e1d07416d8' url=URL('http://nppelement.com:8080') auth_data=AuthData(bearer_token='eyJ0eXAiOiJqd3QiLCJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJjYW5pbyIsImlkIjo0MywiaXNzIjoiYXV0aCIsImF1ZCI6WyJ2ZGVzayIsInZiYXMiLCJwdXNoIiwiYXV0aCJdLCJncm91cHMiOlsidXNlciIsImFkZFRvcGljIiwiY2xvc2VUb3BpYyJdLCJleHAiOjE2NTE5NTkxNTh9.b93gAs-RnC10-OzgN6fATLZLsjyawb1MFlngYMaMihKXFjMFOzfDzO-ZyEQbiX4sYGqWwiwN5t7AtECA5vYwPV2I6qvxnPfyeD0nzgnLte5luazjbK9Mxg685gQetuyAADHPi03MUn-QhLSorQT9avrCUSS6y7dsLPp4fmFTVHTjp4SpehScB-k5YCVaitI8fkB32EDT8D-Ofwwwz42zKg9DbpuNuuMef4tOIAIgnOsdk9HGE3VyA2b7o2HjPTJ3_1aGHyPlDv30D9L8DGVIWIg3eT8VV9lxxzkEGTpxgjwzfG67Wp0pKRyxcF3gux11FoMK_V8n1EKAXfvdTZMtrQ', user_id=43, auth_user_id=232) is_authorized=True
+DEBUG    [2021-05-08 00:34:27,585] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/auth/rest/login
+DEBUG    [2021-05-08 00:34:27,586] gateway.clients.http_.client._login_server(286): Successfully authorized to login='canio' password='278d1de033a395fe9a2aa9e1d07416d8' url=URL('http://nppelement.com:8080') auth_data=AuthData(bearer_token='eyJ0eXAiOiJqd3QiLCJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJjYW5pbyIsImlkIjo0MywiaXNzIjoiYXV0aCIsImF1ZCI6WyJ2ZGVzayIsInZiYXMiLCJwdXNoIiwiYXV0aCJdLCJncm91cHMiOlsidXNlciIsImFkZFRvcGljIiwiY2xvc2VUb3BpYyJdLCJleHAiOjE2NTE5NTkxNTh9.b93gAs-RnC10-OzgN6fATLZLsjyawb1MFlngYMaMihKXFjMFOzfDzO-ZyEQbiX4sYGqWwiwN5t7AtECA5vYwPV2I6qvxnPfyeD0nzgnLte5luazjbK9Mxg685gQetuyAADHPi03MUn-QhLSorQT9avrCUSS6y7dsLPp4fmFTVHTjp4SpehScB-k5YCVaitI8fkB32EDT8D-Ofwwwz42zKg9DbpuNuuMef4tOIAIgnOsdk9HGE3VyA2b7o2HjPTJ3_1aGHyPlDv30D9L8DGVIWIg3eT8VV9lxxzkEGTpxgjwzfG67Wp0pKRyxcF3gux11FoMK_V8n1EKAXfvdTZMtrQ', user_id=43, auth_user_id=232) is_authorized=True
+INFO     [2021-05-08 00:34:27,586] gateway.clients.http_.client._login_node(258): Successfully authorized to login='canio' password='278d1de033a395fe9a2aa9e1d07416d8' url=URL('http://nppelement.com:8080') auth_data=AuthData(bearer_token='eyJ0eXAiOiJqd3QiLCJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJjYW5pbyIsImlkIjo0MywiaXNzIjoiYXV0aCIsImF1ZCI6WyJ2ZGVzayIsInZiYXMiLCJwdXNoIiwiYXV0aCJdLCJncm91cHMiOlsidXNlciIsImFkZFRvcGljIiwiY2xvc2VUb3BpYyJdLCJleHAiOjE2NTE5NTkxNTh9.b93gAs-RnC10-OzgN6fATLZLsjyawb1MFlngYMaMihKXFjMFOzfDzO-ZyEQbiX4sYGqWwiwN5t7AtECA5vYwPV2I6qvxnPfyeD0nzgnLte5luazjbK9Mxg685gQetuyAADHPi03MUn-QhLSorQT9avrCUSS6y7dsLPp4fmFTVHTjp4SpehScB-k5YCVaitI8fkB32EDT8D-Ofwwwz42zKg9DbpuNuuMef4tOIAIgnOsdk9HGE3VyA2b7o2HjPTJ3_1aGHyPlDv30D9L8DGVIWIg3eT8VV9lxxzkEGTpxgjwzfG67Wp0pKRyxcF3gux11FoMK_V8n1EKAXfvdTZMtrQ', user_id=43, auth_user_id=232) is_authorized=True
+INFO     [2021-05-08 00:34:27,588] gateway.clients.http_.client.login(234): Successfully authorized to GET:login='canio' password='278d1de033a395fe9a2aa9e1d07416d8' url=URL('http://nppelement.com:8080') auth_data=AuthData(bearer_token='eyJ0eXAiOiJqd3QiLCJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJjYW5pbyIsImlkIjo0MywiaXNzIjoiYXV0aCIsImF1ZCI6WyJ2ZGVzayIsInZiYXMiLCJwdXNoIiwiYXV0aCJdLCJncm91cHMiOlsidXNlciIsImFkZFRvcGljIiwiY2xvc2VUb3BpYyJdLCJleHAiOjE2NTE5NTkxNTh9.b93gAs-RnC10-OzgN6fATLZLsjyawb1MFlngYMaMihKXFjMFOzfDzO-ZyEQbiX4sYGqWwiwN5t7AtECA5vYwPV2I6qvxnPfyeD0nzgnLte5luazjbK9Mxg685gQetuyAADHPi03MUn-QhLSorQT9avrCUSS6y7dsLPp4fmFTVHTjp4SpehScB-k5YCVaitI8fkB32EDT8D-Ofwwwz42zKg9DbpuNuuMef4tOIAIgnOsdk9HGE3VyA2b7o2HjPTJ3_1aGHyPlDv30D9L8DGVIWIg3eT8VV9lxxzkEGTpxgjwzfG67Wp0pKRyxcF3gux11FoMK_V8n1EKAXfvdTZMtrQ', user_id=43, auth_user_id=232) is_authorized=True, POST:[login='canio' password='278d1de033a395fe9a2aa9e1d07416d8' url=URL('http://nppelement.com:8080') auth_data=AuthData(bearer_token='eyJ0eXAiOiJqd3QiLCJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJjYW5pbyIsImlkIjo0MywiaXNzIjoiYXV0aCIsImF1ZCI6WyJ2ZGVzayIsInZiYXMiLCJwdXNoIiwiYXV0aCJdLCJncm91cHMiOlsidXNlciIsImFkZFRvcGljIiwiY2xvc2VUb3BpYyJdLCJleHAiOjE2NTE5NTkxNTh9.b93gAs-RnC10-OzgN6fATLZLsjyawb1MFlngYMaMihKXFjMFOzfDzO-ZyEQbiX4sYGqWwiwN5t7AtECA5vYwPV2I6qvxnPfyeD0nzgnLte5luazjbK9Mxg685gQetuyAADHPi03MUn-QhLSorQT9avrCUSS6y7dsLPp4fmFTVHTjp4SpehScB-k5YCVaitI8fkB32EDT8D-Ofwwwz42zKg9DbpuNuuMef4tOIAIgnOsdk9HGE3VyA2b7o2HjPTJ3_1aGHyPlDv30D9L8DGVIWIg3eT8VV9lxxzkEGTpxgjwzfG67Wp0pKRyxcF3gux11FoMK_V8n1EKAXfvdTZMtrQ', user_id=43, auth_user_id=232) is_authorized=True]
+DEBUG    [2021-05-08 00:34:27,592] gateway.clients.http_.client._rq(323): GET: http://nppelement.com:8080/vbas/gate/get/4015/device
+DEBUG    [2021-05-08 00:34:27,664] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/vbas/gate/get/4015/device
+DEBUG    [2021-05-08 00:34:27,701] gateway.clients.http_.client._rq(323): GET: http://nppelement.com:8080/vbas/gate/get/4015/analog-input
+DEBUG    [2021-05-08 00:34:27,707] gateway.clients.http_.client._rq(323): GET: http://nppelement.com:8080/vbas/gate/get/4015/analog-output
+DEBUG    [2021-05-08 00:34:27,712] gateway.clients.http_.client._rq(323): GET: http://nppelement.com:8080/vbas/gate/get/4015/analog-value
+DEBUG    [2021-05-08 00:34:27,714] gateway.clients.http_.client._rq(323): GET: http://nppelement.com:8080/vbas/gate/get/4015/binary-input
+DEBUG    [2021-05-08 00:34:27,718] gateway.clients.http_.client._rq(323): GET: http://nppelement.com:8080/vbas/gate/get/4015/binary-output
+DEBUG    [2021-05-08 00:34:27,722] gateway.clients.http_.client._rq(323): GET: http://nppelement.com:8080/vbas/gate/get/4015/binary-value
+DEBUG    [2021-05-08 00:34:27,725] gateway.clients.http_.client._rq(323): GET: http://nppelement.com:8080/vbas/gate/get/4015/multi-state-input
+DEBUG    [2021-05-08 00:34:27,729] gateway.clients.http_.client._rq(323): GET: http://nppelement.com:8080/vbas/gate/get/4015/multi-state-output
+DEBUG    [2021-05-08 00:34:27,733] gateway.clients.http_.client._rq(323): GET: http://nppelement.com:8080/vbas/gate/get/4015/multi-state-value
+DEBUG    [2021-05-08 00:34:27,785] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/vbas/gate/get/4015/analog-output
+DEBUG    [2021-05-08 00:34:27,793] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/vbas/gate/get/4015/analog-input
+DEBUG    [2021-05-08 00:34:27,922] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/vbas/gate/get/4015/multi-state-input
+DEBUG    [2021-05-08 00:34:27,923] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/vbas/gate/get/4015/analog-value
+DEBUG    [2021-05-08 00:34:27,924] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/vbas/gate/get/4015/binary-input
+DEBUG    [2021-05-08 00:34:27,924] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/vbas/gate/get/4015/multi-state-output
+DEBUG    [2021-05-08 00:34:27,927] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/vbas/gate/get/4015/binary-value
+DEBUG    [2021-05-08 00:34:27,928] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/vbas/gate/get/4015/binary-output
+DEBUG    [2021-05-08 00:34:27,929] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/vbas/gate/get/4015/multi-state-value
+INFO     [2021-05-08 00:34:57,149] gateway.clients.http_.client.from_yaml(53): Creating VisioBASHTTPClient from D:\JOB\VisioBas\visiobas-gateway\gateway\config\http.yaml...
+DEBUG    [2021-05-08 00:34:57,157] gateway.clients.http_.client.login(223): Logging in to GET:login='canio' password='278d1de033a395fe9a2aa9e1d07416d8' url=URL('http://nppelement.com:8080') auth_data=None is_authorized=False, POST:[login='canio' password='278d1de033a395fe9a2aa9e1d07416d8' url=URL('http://nppelement.com:8080') auth_data=None is_authorized=False]...
+DEBUG    [2021-05-08 00:34:57,161] gateway.clients.http_.client._login_node(250): Authorization to login='canio' password='278d1de033a395fe9a2aa9e1d07416d8' url=URL('http://nppelement.com:8080') auth_data=None is_authorized=False
+DEBUG    [2021-05-08 00:34:57,161] gateway.clients.http_.client._login_server(280): Authorization to <[Unauthorized]:http://nppelement.com:8080>...
+DEBUG    [2021-05-08 00:34:57,161] gateway.clients.http_.client._rq(323): POST: http://nppelement.com:8080/auth/rest/login
+DEBUG    [2021-05-08 00:34:57,164] gateway.clients.http_.client._login_node(250): Authorization to login='canio' password='278d1de033a395fe9a2aa9e1d07416d8' url=URL('http://nppelement.com:8080') auth_data=None is_authorized=False
+DEBUG    [2021-05-08 00:34:57,164] gateway.clients.http_.client._login_server(280): Authorization to <[Unauthorized]:http://nppelement.com:8080>...
+DEBUG    [2021-05-08 00:34:57,164] gateway.clients.http_.client._rq(323): POST: http://nppelement.com:8080/auth/rest/login
+DEBUG    [2021-05-08 00:34:57,340] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/auth/rest/login
+DEBUG    [2021-05-08 00:34:57,341] gateway.clients.http_.client._login_server(286): Successfully authorized to <[Authorized]:http://nppelement.com:8080>
+INFO     [2021-05-08 00:34:57,341] gateway.clients.http_.client._login_node(258): Successfully authorized to login='canio' password='278d1de033a395fe9a2aa9e1d07416d8' url=URL('http://nppelement.com:8080') auth_data=AuthData(bearer_token='eyJ0eXAiOiJqd3QiLCJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJjYW5pbyIsImlkIjo0MywiaXNzIjoiYXV0aCIsImF1ZCI6WyJ2ZGVzayIsInZiYXMiLCJwdXNoIiwiYXV0aCJdLCJncm91cHMiOlsidXNlciIsImFkZFRvcGljIiwiY2xvc2VUb3BpYyJdLCJleHAiOjE2NTE5NTkxODh9.hJcKS7dxUs6RXGFZnrb9qFePyHVJqtl-auJZ_MaRxhItVvllCLfG3lS-TG5w3EVt0Tk3czX0ucnQ9UZvOPWWM2sX29kMjqvQ_98NKNI6lj1eLgtwrrt_JKCBGUVtIVaX3qhWQXcEfAxWdnibHAt6qhnERlIKAsrnSozpfA5V_od3IyTFQZMOhYgTMMjAL2yvXOhdZrmq-1qrA_GvcTOyGuQJrJyU-z1kV3wY9LPhV1A3x6gsvWcOpKX-x3rp9-ds28z1MMUjK_zI1pokbiExh2hBrEZSmBGxd6YqgAIjgav84C6QhUbor9IKDrDXcK8arj93poyIiclb-NvAyEqad1w', user_id=43, auth_user_id=232) is_authorized=True
+DEBUG    [2021-05-08 00:34:57,343] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/auth/rest/login
+DEBUG    [2021-05-08 00:34:57,343] gateway.clients.http_.client._login_server(286): Successfully authorized to <[Authorized]:http://nppelement.com:8080>
+INFO     [2021-05-08 00:34:57,343] gateway.clients.http_.client._login_node(258): Successfully authorized to login='canio' password='278d1de033a395fe9a2aa9e1d07416d8' url=URL('http://nppelement.com:8080') auth_data=AuthData(bearer_token='eyJ0eXAiOiJqd3QiLCJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJjYW5pbyIsImlkIjo0MywiaXNzIjoiYXV0aCIsImF1ZCI6WyJ2ZGVzayIsInZiYXMiLCJwdXNoIiwiYXV0aCJdLCJncm91cHMiOlsidXNlciIsImFkZFRvcGljIiwiY2xvc2VUb3BpYyJdLCJleHAiOjE2NTE5NTkxODh9.hJcKS7dxUs6RXGFZnrb9qFePyHVJqtl-auJZ_MaRxhItVvllCLfG3lS-TG5w3EVt0Tk3czX0ucnQ9UZvOPWWM2sX29kMjqvQ_98NKNI6lj1eLgtwrrt_JKCBGUVtIVaX3qhWQXcEfAxWdnibHAt6qhnERlIKAsrnSozpfA5V_od3IyTFQZMOhYgTMMjAL2yvXOhdZrmq-1qrA_GvcTOyGuQJrJyU-z1kV3wY9LPhV1A3x6gsvWcOpKX-x3rp9-ds28z1MMUjK_zI1pokbiExh2hBrEZSmBGxd6YqgAIjgav84C6QhUbor9IKDrDXcK8arj93poyIiclb-NvAyEqad1w', user_id=43, auth_user_id=232) is_authorized=True
+INFO     [2021-05-08 00:34:57,344] gateway.clients.http_.client.login(234): Successfully authorized to GET:login='canio' password='278d1de033a395fe9a2aa9e1d07416d8' url=URL('http://nppelement.com:8080') auth_data=AuthData(bearer_token='eyJ0eXAiOiJqd3QiLCJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJjYW5pbyIsImlkIjo0MywiaXNzIjoiYXV0aCIsImF1ZCI6WyJ2ZGVzayIsInZiYXMiLCJwdXNoIiwiYXV0aCJdLCJncm91cHMiOlsidXNlciIsImFkZFRvcGljIiwiY2xvc2VUb3BpYyJdLCJleHAiOjE2NTE5NTkxODh9.hJcKS7dxUs6RXGFZnrb9qFePyHVJqtl-auJZ_MaRxhItVvllCLfG3lS-TG5w3EVt0Tk3czX0ucnQ9UZvOPWWM2sX29kMjqvQ_98NKNI6lj1eLgtwrrt_JKCBGUVtIVaX3qhWQXcEfAxWdnibHAt6qhnERlIKAsrnSozpfA5V_od3IyTFQZMOhYgTMMjAL2yvXOhdZrmq-1qrA_GvcTOyGuQJrJyU-z1kV3wY9LPhV1A3x6gsvWcOpKX-x3rp9-ds28z1MMUjK_zI1pokbiExh2hBrEZSmBGxd6YqgAIjgav84C6QhUbor9IKDrDXcK8arj93poyIiclb-NvAyEqad1w', user_id=43, auth_user_id=232) is_authorized=True, POST:[login='canio' password='278d1de033a395fe9a2aa9e1d07416d8' url=URL('http://nppelement.com:8080') auth_data=AuthData(bearer_token='eyJ0eXAiOiJqd3QiLCJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJjYW5pbyIsImlkIjo0MywiaXNzIjoiYXV0aCIsImF1ZCI6WyJ2ZGVzayIsInZiYXMiLCJwdXNoIiwiYXV0aCJdLCJncm91cHMiOlsidXNlciIsImFkZFRvcGljIiwiY2xvc2VUb3BpYyJdLCJleHAiOjE2NTE5NTkxODh9.hJcKS7dxUs6RXGFZnrb9qFePyHVJqtl-auJZ_MaRxhItVvllCLfG3lS-TG5w3EVt0Tk3czX0ucnQ9UZvOPWWM2sX29kMjqvQ_98NKNI6lj1eLgtwrrt_JKCBGUVtIVaX3qhWQXcEfAxWdnibHAt6qhnERlIKAsrnSozpfA5V_od3IyTFQZMOhYgTMMjAL2yvXOhdZrmq-1qrA_GvcTOyGuQJrJyU-z1kV3wY9LPhV1A3x6gsvWcOpKX-x3rp9-ds28z1MMUjK_zI1pokbiExh2hBrEZSmBGxd6YqgAIjgav84C6QhUbor9IKDrDXcK8arj93poyIiclb-NvAyEqad1w', user_id=43, auth_user_id=232) is_authorized=True]
+DEBUG    [2021-05-08 00:34:57,349] gateway.clients.http_.client._rq(323): GET: http://nppelement.com:8080/vbas/gate/get/4015/device
+DEBUG    [2021-05-08 00:34:57,424] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/vbas/gate/get/4015/device
+DEBUG    [2021-05-08 00:34:57,461] gateway.clients.http_.client._rq(323): GET: http://nppelement.com:8080/vbas/gate/get/4015/analog-input
+DEBUG    [2021-05-08 00:34:57,467] gateway.clients.http_.client._rq(323): GET: http://nppelement.com:8080/vbas/gate/get/4015/analog-output
+DEBUG    [2021-05-08 00:34:57,471] gateway.clients.http_.client._rq(323): GET: http://nppelement.com:8080/vbas/gate/get/4015/analog-value
+DEBUG    [2021-05-08 00:34:57,474] gateway.clients.http_.client._rq(323): GET: http://nppelement.com:8080/vbas/gate/get/4015/binary-input
+DEBUG    [2021-05-08 00:34:57,477] gateway.clients.http_.client._rq(323): GET: http://nppelement.com:8080/vbas/gate/get/4015/binary-output
+DEBUG    [2021-05-08 00:34:57,479] gateway.clients.http_.client._rq(323): GET: http://nppelement.com:8080/vbas/gate/get/4015/binary-value
+DEBUG    [2021-05-08 00:34:57,482] gateway.clients.http_.client._rq(323): GET: http://nppelement.com:8080/vbas/gate/get/4015/multi-state-input
+DEBUG    [2021-05-08 00:34:57,484] gateway.clients.http_.client._rq(323): GET: http://nppelement.com:8080/vbas/gate/get/4015/multi-state-output
+DEBUG    [2021-05-08 00:34:57,487] gateway.clients.http_.client._rq(323): GET: http://nppelement.com:8080/vbas/gate/get/4015/multi-state-value
+DEBUG    [2021-05-08 00:34:57,532] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/vbas/gate/get/4015/analog-output
+DEBUG    [2021-05-08 00:34:57,540] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/vbas/gate/get/4015/analog-input
+DEBUG    [2021-05-08 00:34:57,624] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/vbas/gate/get/4015/binary-output
+DEBUG    [2021-05-08 00:34:57,629] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/vbas/gate/get/4015/multi-state-input
+DEBUG    [2021-05-08 00:34:57,651] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/vbas/gate/get/4015/multi-state-value
+DEBUG    [2021-05-08 00:34:57,655] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/vbas/gate/get/4015/binary-value
+DEBUG    [2021-05-08 00:34:57,663] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/vbas/gate/get/4015/multi-state-output
+DEBUG    [2021-05-08 00:34:57,669] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/vbas/gate/get/4015/analog-value
+DEBUG    [2021-05-08 00:34:57,672] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/vbas/gate/get/4015/binary-input
+INFO     [2021-05-08 00:36:04,244] gateway.clients.http_.client.from_yaml(53): Creating VisioBASHTTPClient from D:\JOB\VisioBas\visiobas-gateway\gateway\config\http.yaml...
+DEBUG    [2021-05-08 00:36:04,250] gateway.clients.http_.client.login(223): Logging in to GET:<[Unauthorized]:http://nppelement.com:8080>, POST:[<[Unauthorized]:http://nppelement.com:8080>]...
+DEBUG    [2021-05-08 00:36:04,253] gateway.clients.http_.client._login_node(250): Authorization to <[Unauthorized]:http://nppelement.com:8080>
+DEBUG    [2021-05-08 00:36:04,253] gateway.clients.http_.client._login_server(280): Authorization to <[Unauthorized]:http://nppelement.com:8080>...
+DEBUG    [2021-05-08 00:36:04,254] gateway.clients.http_.client._rq(323): POST: http://nppelement.com:8080/auth/rest/login
+DEBUG    [2021-05-08 00:36:04,256] gateway.clients.http_.client._login_node(250): Authorization to <[Unauthorized]:http://nppelement.com:8080>
+DEBUG    [2021-05-08 00:36:04,256] gateway.clients.http_.client._login_server(280): Authorization to <[Unauthorized]:http://nppelement.com:8080>...
+DEBUG    [2021-05-08 00:36:04,256] gateway.clients.http_.client._rq(323): POST: http://nppelement.com:8080/auth/rest/login
+DEBUG    [2021-05-08 00:36:04,435] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/auth/rest/login
+DEBUG    [2021-05-08 00:36:04,436] gateway.clients.http_.client._login_server(286): Successfully authorized to <[Authorized]:http://nppelement.com:8080>
+INFO     [2021-05-08 00:36:04,436] gateway.clients.http_.client._login_node(258): Successfully authorized to <[Authorized]:http://nppelement.com:8080>
+DEBUG    [2021-05-08 00:36:04,438] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/auth/rest/login
+DEBUG    [2021-05-08 00:36:04,438] gateway.clients.http_.client._login_server(286): Successfully authorized to <[Authorized]:http://nppelement.com:8080>
+INFO     [2021-05-08 00:36:04,438] gateway.clients.http_.client._login_node(258): Successfully authorized to <[Authorized]:http://nppelement.com:8080>
+INFO     [2021-05-08 00:36:04,439] gateway.clients.http_.client.login(234): Successfully authorized to GET:<[Authorized]:http://nppelement.com:8080>, POST:[<[Authorized]:http://nppelement.com:8080>]
+DEBUG    [2021-05-08 00:36:04,443] gateway.clients.http_.client._rq(323): GET: http://nppelement.com:8080/vbas/gate/get/4015/device
+DEBUG    [2021-05-08 00:36:04,516] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/vbas/gate/get/4015/device
+DEBUG    [2021-05-08 00:36:04,568] gateway.clients.http_.client._rq(323): GET: http://nppelement.com:8080/vbas/gate/get/4015/analog-input
+DEBUG    [2021-05-08 00:36:04,573] gateway.clients.http_.client._rq(323): GET: http://nppelement.com:8080/vbas/gate/get/4015/analog-output
+DEBUG    [2021-05-08 00:36:04,577] gateway.clients.http_.client._rq(323): GET: http://nppelement.com:8080/vbas/gate/get/4015/analog-value
+DEBUG    [2021-05-08 00:36:04,579] gateway.clients.http_.client._rq(323): GET: http://nppelement.com:8080/vbas/gate/get/4015/binary-input
+DEBUG    [2021-05-08 00:36:04,582] gateway.clients.http_.client._rq(323): GET: http://nppelement.com:8080/vbas/gate/get/4015/binary-output
+DEBUG    [2021-05-08 00:36:04,584] gateway.clients.http_.client._rq(323): GET: http://nppelement.com:8080/vbas/gate/get/4015/binary-value
+DEBUG    [2021-05-08 00:36:04,587] gateway.clients.http_.client._rq(323): GET: http://nppelement.com:8080/vbas/gate/get/4015/multi-state-input
+DEBUG    [2021-05-08 00:36:04,589] gateway.clients.http_.client._rq(323): GET: http://nppelement.com:8080/vbas/gate/get/4015/multi-state-output
+DEBUG    [2021-05-08 00:36:04,592] gateway.clients.http_.client._rq(323): GET: http://nppelement.com:8080/vbas/gate/get/4015/multi-state-value
+DEBUG    [2021-05-08 00:36:04,641] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/vbas/gate/get/4015/analog-output
+DEBUG    [2021-05-08 00:36:04,643] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/vbas/gate/get/4015/analog-input
+DEBUG    [2021-05-08 00:36:04,735] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/vbas/gate/get/4015/multi-state-input
+DEBUG    [2021-05-08 00:36:04,753] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/vbas/gate/get/4015/binary-output
+DEBUG    [2021-05-08 00:36:04,758] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/vbas/gate/get/4015/analog-value
+DEBUG    [2021-05-08 00:36:04,758] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/vbas/gate/get/4015/multi-state-value
+DEBUG    [2021-05-08 00:36:04,769] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/vbas/gate/get/4015/binary-input
+DEBUG    [2021-05-08 00:36:04,775] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/vbas/gate/get/4015/multi-state-output
+DEBUG    [2021-05-08 00:36:04,780] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/vbas/gate/get/4015/binary-value
+INFO     [2021-05-08 00:40:29,932] gateway.clients.http_.client.from_yaml(53): Creating VisioBASHTTPClient from D:\JOB\VisioBas\visiobas-gateway\gateway\config\http.yaml...
+DEBUG    [2021-05-08 00:40:29,940] gateway.clients.http_.client.login(223): Logging in to GET:<[Unauthorized]:http://nppelement.com:8080>, POST:[<[Unauthorized]:http://nppelement.com:8080>]...
+DEBUG    [2021-05-08 00:40:29,942] gateway.clients.http_.client._login_node(250): Authorization to <[Unauthorized]:http://nppelement.com:8080>
+DEBUG    [2021-05-08 00:40:29,943] gateway.clients.http_.client._login_server(280): Authorization to <[Unauthorized]:http://nppelement.com:8080>...
+DEBUG    [2021-05-08 00:40:29,943] gateway.clients.http_.client._rq(323): POST: http://nppelement.com:8080/auth/rest/login
+DEBUG    [2021-05-08 00:40:29,946] gateway.clients.http_.client._login_node(250): Authorization to <[Unauthorized]:http://nppelement.com:8080>
+DEBUG    [2021-05-08 00:40:29,946] gateway.clients.http_.client._login_server(280): Authorization to <[Unauthorized]:http://nppelement.com:8080>...
+DEBUG    [2021-05-08 00:40:29,946] gateway.clients.http_.client._rq(323): POST: http://nppelement.com:8080/auth/rest/login
+DEBUG    [2021-05-08 00:40:30,160] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/auth/rest/login
+DEBUG    [2021-05-08 00:40:30,161] gateway.clients.http_.client._login_server(286): Successfully authorized to <[Authorized]:http://nppelement.com:8080>
+INFO     [2021-05-08 00:40:30,161] gateway.clients.http_.client._login_node(258): Successfully authorized to <[Authorized]:http://nppelement.com:8080>
+DEBUG    [2021-05-08 00:40:30,163] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/auth/rest/login
+DEBUG    [2021-05-08 00:40:30,164] gateway.clients.http_.client._login_server(286): Successfully authorized to <[Authorized]:http://nppelement.com:8080>
+INFO     [2021-05-08 00:40:30,164] gateway.clients.http_.client._login_node(258): Successfully authorized to <[Authorized]:http://nppelement.com:8080>
+INFO     [2021-05-08 00:40:30,166] gateway.clients.http_.client.login(234): Successfully authorized to GET:<[Authorized]:http://nppelement.com:8080>, POST:[<[Authorized]:http://nppelement.com:8080>]
+DEBUG    [2021-05-08 00:40:30,172] gateway.clients.http_.client._rq(323): GET: http://nppelement.com:8080/vbas/gate/get/4015/device
+DEBUG    [2021-05-08 00:40:30,244] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/vbas/gate/get/4015/device
+DEBUG    [2021-05-08 00:40:30,298] gateway.clients.http_.client._rq(323): GET: http://nppelement.com:8080/vbas/gate/get/4015/analog-input
+DEBUG    [2021-05-08 00:40:30,303] gateway.clients.http_.client._rq(323): GET: http://nppelement.com:8080/vbas/gate/get/4015/analog-output
+DEBUG    [2021-05-08 00:40:30,307] gateway.clients.http_.client._rq(323): GET: http://nppelement.com:8080/vbas/gate/get/4015/analog-value
+DEBUG    [2021-05-08 00:40:30,310] gateway.clients.http_.client._rq(323): GET: http://nppelement.com:8080/vbas/gate/get/4015/binary-input
+DEBUG    [2021-05-08 00:40:30,312] gateway.clients.http_.client._rq(323): GET: http://nppelement.com:8080/vbas/gate/get/4015/binary-output
+DEBUG    [2021-05-08 00:40:30,314] gateway.clients.http_.client._rq(323): GET: http://nppelement.com:8080/vbas/gate/get/4015/binary-value
+DEBUG    [2021-05-08 00:40:30,316] gateway.clients.http_.client._rq(323): GET: http://nppelement.com:8080/vbas/gate/get/4015/multi-state-input
+DEBUG    [2021-05-08 00:40:30,319] gateway.clients.http_.client._rq(323): GET: http://nppelement.com:8080/vbas/gate/get/4015/multi-state-output
+DEBUG    [2021-05-08 00:40:30,321] gateway.clients.http_.client._rq(323): GET: http://nppelement.com:8080/vbas/gate/get/4015/multi-state-value
+DEBUG    [2021-05-08 00:40:30,437] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/vbas/gate/get/4015/analog-output
+DEBUG    [2021-05-08 00:40:30,439] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/vbas/gate/get/4015/analog-input
+DEBUG    [2021-05-08 00:40:30,485] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/vbas/gate/get/4015/binary-output
+DEBUG    [2021-05-08 00:40:30,491] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/vbas/gate/get/4015/analog-value
+DEBUG    [2021-05-08 00:40:30,557] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/vbas/gate/get/4015/multi-state-output
+DEBUG    [2021-05-08 00:40:30,557] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/vbas/gate/get/4015/binary-value
+DEBUG    [2021-05-08 00:40:30,562] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/vbas/gate/get/4015/multi-state-input
+DEBUG    [2021-05-08 00:40:30,563] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/vbas/gate/get/4015/multi-state-value
+DEBUG    [2021-05-08 00:40:30,624] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/vbas/gate/get/4015/binary-input
+INFO     [2021-05-08 23:45:27,234] gateway.clients.http_.client.from_yaml(53): Creating VisioBASHTTPClient from D:\JOB\VisioBas\visiobas-gateway\gateway\config\http.yaml...
+DEBUG    [2021-05-08 23:45:27,291] gateway.clients.http_.client.login(223): Logging in to GET:<[Unauthorized]:http://nppelement.com:8080>, POST:[<[Unauthorized]:http://nppelement.com:8080>]...
+DEBUG    [2021-05-08 23:45:27,300] gateway.clients.http_.client._login_node(250): Authorization to <[Unauthorized]:http://nppelement.com:8080>
+DEBUG    [2021-05-08 23:45:27,300] gateway.clients.http_.client._login_server(280): Authorization to <[Unauthorized]:http://nppelement.com:8080>...
+DEBUG    [2021-05-08 23:45:27,300] gateway.clients.http_.client._rq(323): POST: http://nppelement.com:8080/auth/rest/login
+DEBUG    [2021-05-08 23:45:27,303] gateway.clients.http_.client._login_node(250): Authorization to <[Unauthorized]:http://nppelement.com:8080>
+DEBUG    [2021-05-08 23:45:27,303] gateway.clients.http_.client._login_server(280): Authorization to <[Unauthorized]:http://nppelement.com:8080>...
+DEBUG    [2021-05-08 23:45:27,303] gateway.clients.http_.client._rq(323): POST: http://nppelement.com:8080/auth/rest/login
+DEBUG    [2021-05-08 23:45:27,597] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/auth/rest/login
+DEBUG    [2021-05-08 23:45:27,597] gateway.clients.http_.client._login_server(286): Successfully authorized to <[Authorized]:http://nppelement.com:8080>
+INFO     [2021-05-08 23:45:27,597] gateway.clients.http_.client._login_node(258): Successfully authorized to <[Authorized]:http://nppelement.com:8080>
+DEBUG    [2021-05-08 23:45:27,604] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/auth/rest/login
+DEBUG    [2021-05-08 23:45:27,604] gateway.clients.http_.client._login_server(286): Successfully authorized to <[Authorized]:http://nppelement.com:8080>
+INFO     [2021-05-08 23:45:27,604] gateway.clients.http_.client._login_node(258): Successfully authorized to <[Authorized]:http://nppelement.com:8080>
+INFO     [2021-05-08 23:45:27,604] gateway.clients.http_.client.login(234): Successfully authorized to GET:<[Authorized]:http://nppelement.com:8080>, POST:[<[Authorized]:http://nppelement.com:8080>]
+DEBUG    [2021-05-08 23:45:27,604] gateway.clients.http_.client._rq(323): GET: http://nppelement.com:8080/vbas/gate/get/4015/device
+DEBUG    [2021-05-08 23:45:27,704] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/vbas/gate/get/4015/device
+DEBUG    [2021-05-08 23:45:27,775] gateway.clients.http_.client._rq(323): GET: http://nppelement.com:8080/vbas/gate/get/4015/analog-input
+DEBUG    [2021-05-08 23:45:27,781] gateway.clients.http_.client._rq(323): GET: http://nppelement.com:8080/vbas/gate/get/4015/analog-output
+DEBUG    [2021-05-08 23:45:27,786] gateway.clients.http_.client._rq(323): GET: http://nppelement.com:8080/vbas/gate/get/4015/analog-value
+DEBUG    [2021-05-08 23:45:27,789] gateway.clients.http_.client._rq(323): GET: http://nppelement.com:8080/vbas/gate/get/4015/binary-input
+DEBUG    [2021-05-08 23:45:27,791] gateway.clients.http_.client._rq(323): GET: http://nppelement.com:8080/vbas/gate/get/4015/binary-output
+DEBUG    [2021-05-08 23:45:27,794] gateway.clients.http_.client._rq(323): GET: http://nppelement.com:8080/vbas/gate/get/4015/binary-value
+DEBUG    [2021-05-08 23:45:27,797] gateway.clients.http_.client._rq(323): GET: http://nppelement.com:8080/vbas/gate/get/4015/multi-state-input
+DEBUG    [2021-05-08 23:45:27,800] gateway.clients.http_.client._rq(323): GET: http://nppelement.com:8080/vbas/gate/get/4015/multi-state-output
+DEBUG    [2021-05-08 23:45:27,802] gateway.clients.http_.client._rq(323): GET: http://nppelement.com:8080/vbas/gate/get/4015/multi-state-value
+DEBUG    [2021-05-08 23:45:27,844] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/vbas/gate/get/4015/analog-output
+DEBUG    [2021-05-08 23:45:27,860] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/vbas/gate/get/4015/analog-input
+DEBUG    [2021-05-08 23:45:27,952] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/vbas/gate/get/4015/multi-state-input
+DEBUG    [2021-05-08 23:45:27,952] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/vbas/gate/get/4015/binary-output
+DEBUG    [2021-05-08 23:45:27,968] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/vbas/gate/get/4015/binary-input
+DEBUG    [2021-05-08 23:45:27,985] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/vbas/gate/get/4015/binary-value
+DEBUG    [2021-05-08 23:45:27,985] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/vbas/gate/get/4015/multi-state-value
+DEBUG    [2021-05-08 23:45:28,001] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/vbas/gate/get/4015/multi-state-output
+DEBUG    [2021-05-08 23:45:28,001] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/vbas/gate/get/4015/analog-value
+INFO     [2021-05-09 00:09:50,256] gateway.clients.http_.client.from_yaml(53): Creating VisioBASHTTPClient from D:\JOB\VisioBas\visiobas-gateway\gateway\config\http.yaml...
+DEBUG    [2021-05-09 00:09:50,272] gateway.clients.http_.client.login(223): Logging in to GET:<[Unauthorized]:http://nppelement.com:8080>, POST:[<[Unauthorized]:http://nppelement.com:8080>]...
+DEBUG    [2021-05-09 00:09:50,272] gateway.clients.http_.client._login_node(250): Authorization to <[Unauthorized]:http://nppelement.com:8080>
+DEBUG    [2021-05-09 00:09:50,272] gateway.clients.http_.client._login_server(280): Authorization to <[Unauthorized]:http://nppelement.com:8080>...
+DEBUG    [2021-05-09 00:09:50,272] gateway.clients.http_.client._rq(323): POST: http://nppelement.com:8080/auth/rest/login
+DEBUG    [2021-05-09 00:09:50,272] gateway.clients.http_.client._login_node(250): Authorization to <[Unauthorized]:http://nppelement.com:8080>
+DEBUG    [2021-05-09 00:09:50,272] gateway.clients.http_.client._login_server(280): Authorization to <[Unauthorized]:http://nppelement.com:8080>...
+DEBUG    [2021-05-09 00:09:50,272] gateway.clients.http_.client._rq(323): POST: http://nppelement.com:8080/auth/rest/login
+DEBUG    [2021-05-09 00:09:50,441] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/auth/rest/login
+DEBUG    [2021-05-09 00:09:50,441] gateway.clients.http_.client._login_server(286): Successfully authorized to <[Authorized]:http://nppelement.com:8080>
+INFO     [2021-05-09 00:09:50,441] gateway.clients.http_.client._login_node(258): Successfully authorized to <[Authorized]:http://nppelement.com:8080>
+DEBUG    [2021-05-09 00:09:50,472] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/auth/rest/login
+DEBUG    [2021-05-09 00:09:50,472] gateway.clients.http_.client._login_server(286): Successfully authorized to <[Authorized]:http://nppelement.com:8080>
+INFO     [2021-05-09 00:09:50,472] gateway.clients.http_.client._login_node(258): Successfully authorized to <[Authorized]:http://nppelement.com:8080>
+INFO     [2021-05-09 00:09:50,472] gateway.clients.http_.client.login(234): Successfully authorized to GET:<[Authorized]:http://nppelement.com:8080>, POST:[<[Authorized]:http://nppelement.com:8080>]
+DEBUG    [2021-05-09 00:09:50,472] gateway.clients.http_.client._rq(323): GET: http://nppelement.com:8080/vbas/gate/get/4015/device
+DEBUG    [2021-05-09 00:09:50,557] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/vbas/gate/get/4015/device
+DEBUG    [2021-05-09 00:09:50,611] gateway.clients.http_.client._rq(323): GET: http://nppelement.com:8080/vbas/gate/get/4015/analog-input
+DEBUG    [2021-05-09 00:09:50,611] gateway.clients.http_.client._rq(323): GET: http://nppelement.com:8080/vbas/gate/get/4015/analog-output
+DEBUG    [2021-05-09 00:09:50,626] gateway.clients.http_.client._rq(323): GET: http://nppelement.com:8080/vbas/gate/get/4015/analog-value
+DEBUG    [2021-05-09 00:09:50,626] gateway.clients.http_.client._rq(323): GET: http://nppelement.com:8080/vbas/gate/get/4015/binary-input
+DEBUG    [2021-05-09 00:09:50,626] gateway.clients.http_.client._rq(323): GET: http://nppelement.com:8080/vbas/gate/get/4015/binary-output
+DEBUG    [2021-05-09 00:09:50,626] gateway.clients.http_.client._rq(323): GET: http://nppelement.com:8080/vbas/gate/get/4015/binary-value
+DEBUG    [2021-05-09 00:09:50,626] gateway.clients.http_.client._rq(323): GET: http://nppelement.com:8080/vbas/gate/get/4015/multi-state-input
+DEBUG    [2021-05-09 00:09:50,626] gateway.clients.http_.client._rq(323): GET: http://nppelement.com:8080/vbas/gate/get/4015/multi-state-output
+DEBUG    [2021-05-09 00:09:50,642] gateway.clients.http_.client._rq(323): GET: http://nppelement.com:8080/vbas/gate/get/4015/multi-state-value
+DEBUG    [2021-05-09 00:09:50,689] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/vbas/gate/get/4015/analog-output
+DEBUG    [2021-05-09 00:09:50,695] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/vbas/gate/get/4015/analog-input
+DEBUG    [2021-05-09 00:09:50,775] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/vbas/gate/get/4015/analog-value
+DEBUG    [2021-05-09 00:09:50,775] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/vbas/gate/get/4015/multi-state-input
+DEBUG    [2021-05-09 00:09:50,812] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/vbas/gate/get/4015/binary-input
+DEBUG    [2021-05-09 00:09:50,812] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/vbas/gate/get/4015/binary-output
+DEBUG    [2021-05-09 00:09:50,827] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/vbas/gate/get/4015/binary-value
+DEBUG    [2021-05-09 00:09:50,827] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/vbas/gate/get/4015/multi-state-output
+DEBUG    [2021-05-09 00:09:50,827] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/vbas/gate/get/4015/multi-state-value
+INFO     [2021-05-09 00:11:34,157] gateway.clients.http_.client.from_yaml(53): Creating VisioBASHTTPClient from D:\JOB\VisioBas\visiobas-gateway\gateway\config\http.yaml
+DEBUG    [2021-05-09 00:11:34,164] gateway.clients.http_.client.login(223): Logging in to GET:[Unauthorized:http://nppelement.com:8080], POST:[[Unauthorized:http://nppelement.com:8080]]...
+DEBUG    [2021-05-09 00:11:34,166] gateway.clients.http_.client._login_node(250): Authorization to [Unauthorized:http://nppelement.com:8080]
+DEBUG    [2021-05-09 00:11:34,166] gateway.clients.http_.client._login_server(280): Authorization to [Unauthorized:http://nppelement.com:8080]...
+DEBUG    [2021-05-09 00:11:34,167] gateway.clients.http_.client._rq(323): POST: http://nppelement.com:8080/auth/rest/login
+DEBUG    [2021-05-09 00:11:34,170] gateway.clients.http_.client._login_node(250): Authorization to [Unauthorized:http://nppelement.com:8080]
+DEBUG    [2021-05-09 00:11:34,171] gateway.clients.http_.client._login_server(280): Authorization to [Unauthorized:http://nppelement.com:8080]...
+DEBUG    [2021-05-09 00:11:34,171] gateway.clients.http_.client._rq(323): POST: http://nppelement.com:8080/auth/rest/login
+DEBUG    [2021-05-09 00:11:34,339] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/auth/rest/login
+DEBUG    [2021-05-09 00:11:34,339] gateway.clients.http_.client._login_server(286): Successfully authorized to [Authorized:http://nppelement.com:8080]
+INFO     [2021-05-09 00:11:34,339] gateway.clients.http_.client._login_node(258): Successfully authorized to [Authorized:http://nppelement.com:8080]
+DEBUG    [2021-05-09 00:11:34,349] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/auth/rest/login
+DEBUG    [2021-05-09 00:11:34,349] gateway.clients.http_.client._login_server(286): Successfully authorized to [Authorized:http://nppelement.com:8080]
+INFO     [2021-05-09 00:11:34,349] gateway.clients.http_.client._login_node(258): Successfully authorized to [Authorized:http://nppelement.com:8080]
+INFO     [2021-05-09 00:11:34,351] gateway.clients.http_.client.login(234): Successfully authorized to GET:[Authorized:http://nppelement.com:8080], POST:[[Authorized:http://nppelement.com:8080]]
+DEBUG    [2021-05-09 00:11:34,356] gateway.clients.http_.client._rq(323): GET: http://nppelement.com:8080/vbas/gate/get/4015/device
+DEBUG    [2021-05-09 00:11:34,436] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/vbas/gate/get/4015/device
+DEBUG    [2021-05-09 00:11:34,475] gateway.clients.http_.client._rq(323): GET: http://nppelement.com:8080/vbas/gate/get/4015/analog-input
+DEBUG    [2021-05-09 00:11:34,480] gateway.clients.http_.client._rq(323): GET: http://nppelement.com:8080/vbas/gate/get/4015/analog-output
+DEBUG    [2021-05-09 00:11:34,485] gateway.clients.http_.client._rq(323): GET: http://nppelement.com:8080/vbas/gate/get/4015/analog-value
+DEBUG    [2021-05-09 00:11:34,488] gateway.clients.http_.client._rq(323): GET: http://nppelement.com:8080/vbas/gate/get/4015/binary-input
+DEBUG    [2021-05-09 00:11:34,491] gateway.clients.http_.client._rq(323): GET: http://nppelement.com:8080/vbas/gate/get/4015/binary-output
+DEBUG    [2021-05-09 00:11:34,493] gateway.clients.http_.client._rq(323): GET: http://nppelement.com:8080/vbas/gate/get/4015/binary-value
+DEBUG    [2021-05-09 00:11:34,496] gateway.clients.http_.client._rq(323): GET: http://nppelement.com:8080/vbas/gate/get/4015/multi-state-input
+DEBUG    [2021-05-09 00:11:34,499] gateway.clients.http_.client._rq(323): GET: http://nppelement.com:8080/vbas/gate/get/4015/multi-state-output
+DEBUG    [2021-05-09 00:11:34,501] gateway.clients.http_.client._rq(323): GET: http://nppelement.com:8080/vbas/gate/get/4015/multi-state-value
+DEBUG    [2021-05-09 00:11:34,549] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/vbas/gate/get/4015/analog-output
+DEBUG    [2021-05-09 00:11:34,553] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/vbas/gate/get/4015/analog-input
+DEBUG    [2021-05-09 00:11:34,645] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/vbas/gate/get/4015/binary-value
+DEBUG    [2021-05-09 00:11:34,655] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/vbas/gate/get/4015/multi-state-input
+DEBUG    [2021-05-09 00:11:34,666] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/vbas/gate/get/4015/binary-output
+DEBUG    [2021-05-09 00:11:34,679] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/vbas/gate/get/4015/analog-value
+DEBUG    [2021-05-09 00:11:34,683] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/vbas/gate/get/4015/binary-input
+DEBUG    [2021-05-09 00:11:34,684] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/vbas/gate/get/4015/multi-state-value
+DEBUG    [2021-05-09 00:11:34,687] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/vbas/gate/get/4015/multi-state-output
+INFO     [2021-05-09 00:12:02,709] gateway.clients.http_.client.from_yaml(53): Creating VisioBASHTTPClient from D:\JOB\VisioBas\visiobas-gateway\gateway\config\http.yaml
+DEBUG    [2021-05-09 00:12:02,709] gateway.clients.http_.client.login(223): Logging in to GET:[Unauthorized:nppelement.com], POST:[[Unauthorized:nppelement.com]]...
+DEBUG    [2021-05-09 00:12:02,709] gateway.clients.http_.client._login_node(250): Authorization to [Unauthorized:nppelement.com]
+DEBUG    [2021-05-09 00:12:02,709] gateway.clients.http_.client._login_server(280): Authorization to [Unauthorized:nppelement.com]...
+DEBUG    [2021-05-09 00:12:02,709] gateway.clients.http_.client._rq(323): POST: http://nppelement.com:8080/auth/rest/login
+DEBUG    [2021-05-09 00:12:02,709] gateway.clients.http_.client._login_node(250): Authorization to [Unauthorized:nppelement.com]
+DEBUG    [2021-05-09 00:12:02,709] gateway.clients.http_.client._login_server(280): Authorization to [Unauthorized:nppelement.com]...
+DEBUG    [2021-05-09 00:12:02,709] gateway.clients.http_.client._rq(323): POST: http://nppelement.com:8080/auth/rest/login
+DEBUG    [2021-05-09 00:12:02,909] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/auth/rest/login
+DEBUG    [2021-05-09 00:12:02,909] gateway.clients.http_.client._login_server(286): Successfully authorized to [Authorized:nppelement.com]
+INFO     [2021-05-09 00:12:02,909] gateway.clients.http_.client._login_node(258): Successfully authorized to [Authorized:nppelement.com]
+DEBUG    [2021-05-09 00:12:02,909] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/auth/rest/login
+DEBUG    [2021-05-09 00:12:02,909] gateway.clients.http_.client._login_server(286): Successfully authorized to [Authorized:nppelement.com]
+INFO     [2021-05-09 00:12:02,909] gateway.clients.http_.client._login_node(258): Successfully authorized to [Authorized:nppelement.com]
+INFO     [2021-05-09 00:12:02,909] gateway.clients.http_.client.login(234): Successfully authorized to GET:[Authorized:nppelement.com], POST:[[Authorized:nppelement.com]]
+DEBUG    [2021-05-09 00:12:02,909] gateway.clients.http_.client._rq(323): GET: http://nppelement.com:8080/vbas/gate/get/4015/device
+DEBUG    [2021-05-09 00:12:02,994] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/vbas/gate/get/4015/device
+DEBUG    [2021-05-09 00:12:03,041] gateway.clients.http_.client._rq(323): GET: http://nppelement.com:8080/vbas/gate/get/4015/analog-input
+DEBUG    [2021-05-09 00:12:03,056] gateway.clients.http_.client._rq(323): GET: http://nppelement.com:8080/vbas/gate/get/4015/analog-output
+DEBUG    [2021-05-09 00:12:03,056] gateway.clients.http_.client._rq(323): GET: http://nppelement.com:8080/vbas/gate/get/4015/analog-value
+DEBUG    [2021-05-09 00:12:03,056] gateway.clients.http_.client._rq(323): GET: http://nppelement.com:8080/vbas/gate/get/4015/binary-input
+DEBUG    [2021-05-09 00:12:03,056] gateway.clients.http_.client._rq(323): GET: http://nppelement.com:8080/vbas/gate/get/4015/binary-output
+DEBUG    [2021-05-09 00:12:03,072] gateway.clients.http_.client._rq(323): GET: http://nppelement.com:8080/vbas/gate/get/4015/binary-value
+DEBUG    [2021-05-09 00:12:03,072] gateway.clients.http_.client._rq(323): GET: http://nppelement.com:8080/vbas/gate/get/4015/multi-state-input
+DEBUG    [2021-05-09 00:12:03,072] gateway.clients.http_.client._rq(323): GET: http://nppelement.com:8080/vbas/gate/get/4015/multi-state-output
+DEBUG    [2021-05-09 00:12:03,079] gateway.clients.http_.client._rq(323): GET: http://nppelement.com:8080/vbas/gate/get/4015/multi-state-value
+DEBUG    [2021-05-09 00:12:03,126] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/vbas/gate/get/4015/analog-output
+DEBUG    [2021-05-09 00:12:03,126] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/vbas/gate/get/4015/analog-input
+DEBUG    [2021-05-09 00:12:03,242] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/vbas/gate/get/4015/analog-value
+DEBUG    [2021-05-09 00:12:03,242] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/vbas/gate/get/4015/binary-value
+DEBUG    [2021-05-09 00:12:03,257] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/vbas/gate/get/4015/binary-input
+DEBUG    [2021-05-09 00:12:03,257] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/vbas/gate/get/4015/multi-state-output
+DEBUG    [2021-05-09 00:12:03,257] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/vbas/gate/get/4015/binary-output
+DEBUG    [2021-05-09 00:12:03,257] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/vbas/gate/get/4015/multi-state-value
+DEBUG    [2021-05-09 00:12:03,257] gateway.clients.http_.client._extract_response_data(340): Successfully response: http://nppelement.com:8080/vbas/gate/get/4015/multi-state-input
+INFO     [2021-05-09 01:17:26,149] gateway.clients.http_.client.from_yaml(51): Creating VisioBASHTTPClient from D:\JOB\VisioBas\visiobas-gateway\tests\models\config\http-template.yaml
+INFO     [2021-05-09 01:18:42,184] gateway.clients.http_.client.from_yaml(51): Creating VisioBASHTTPClient from D:\JOB\VisioBas\visiobas-gateway\tests\models\config\http-template.yaml
+INFO     [2021-05-09 01:24:05,148] gateway.clients.http_.client.from_yaml(51): Creating VisioBASHTTPClient from D:\JOB\VisioBas\visiobas-gateway\tests\models\config\http-template.yaml
+DEBUG    [2021-05-09 01:24:05,148] gateway.clients.http_.client.from_yaml(52): Config dict: {'timeout': 30, 'retry': 60, 'get_node': {'primary': {'url': 'http://get-main.com:8080', 'login': 'login', 'password': 'password'}, 'mirror': {'url': 'http://get-mirror.com:8080', 'login': 'login', 'password': 'password'}}, 'post': [{'node1': {'primary': {'url': 'http://post1-main.com:8080', 'login': 'login', 'password': 'password'}}}, {'node2': {'primary': {'url': 'http://post2-main.com:8080', 'login': 'login', 'password': 'password'}, 'mirror': {'url': 'http://post2-mirror.com:8080', 'login': 'login', 'password': 'password'}}}]}
+INFO     [2021-05-09 01:27:15,987] gateway.clients.http_.client.from_yaml(51): Creating VisioBASHTTPClient from D:\JOB\VisioBas\visiobas-gateway\tests\models\config\http-template.yaml
+DEBUG    [2021-05-09 01:27:15,987] gateway.clients.http_.client.from_yaml(52): Config dict: {'timeout': 30, 'retry': 60, 'get_node': {'primary': {'url': 'http://get-main.com:8080', 'login': 'login', 'password': 'password'}, 'mirror': {'url': 'http://get-mirror.com:8080', 'login': 'login', 'password': 'password'}}, 'post': [{'node1': {'primary': {'url': 'http://post1-main.com:8080', 'login': 'login', 'password': 'password'}}}, {'node2': {'primary': {'url': 'http://post2-main.com:8080', 'login': 'login', 'password': 'password'}, 'mirror': {'url': 'http://post2-mirror.com:8080', 'login': 'login', 'password': 'password'}}}]}
+INFO     [2021-05-09 01:28:28,972] gateway.clients.http_.client.from_yaml(51): Creating VisioBASHTTPClient from D:\JOB\VisioBas\visiobas-gateway\tests\models\config\http-template.yaml
+DEBUG    [2021-05-09 01:28:28,972] gateway.clients.http_.client.from_yaml(52): Config dict: {'timeout': 30, 'retry': 60, 'get_node': {'primary': {'url': 'http://get-main.com:8080', 'login': 'login', 'password': 'password'}, 'mirror': {'url': 'http://get-mirror.com:8080', 'login': 'login', 'password': 'password'}}, 'post': [{'node1': {'primary': {'url': 'http://post1-main.com:8080', 'login': 'login', 'password': 'password'}}}, {'node2': {'primary': {'url': 'http://post2-main.com:8080', 'login': 'login', 'password': 'password'}, 'mirror': {'url': 'http://post2-mirror.com:8080', 'login': 'login', 'password': 'password'}}}]}
+INFO     [2021-05-09 02:56:53,015] gateway.clients.http_.client.from_yaml(56): Creating VisioBASHTTPClient from D:\JOB\VisioBas\visiobas-gateway\tests\models\config\http-template.yaml
+DEBUG    [2021-05-09 02:56:53,015] gateway.clients.http_.client.from_yaml(57): Config dict: {'timeout': 30, 'retry': 60, 'get_node': {'primary': {'url': 'http://get-main.com:8080', 'login': 'login', 'password': 'password'}, 'mirror': {'url': 'http://get-mirror.com:8080', 'login': 'login', 'password': 'password'}}, 'post': [{'node1': {'primary': {'url': 'http://post1-main.com:8080', 'login': 'login', 'password': 'password'}}}, {'node2': {'primary': {'url': 'http://post2-main.com:8080', 'login': 'login', 'password': 'password'}, 'mirror': {'url': 'http://post2-mirror.com:8080', 'login': 'login', 'password': 'password'}}}]}

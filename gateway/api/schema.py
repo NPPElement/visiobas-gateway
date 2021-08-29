@@ -6,40 +6,6 @@ from marshmallow import Schema
 from marshmallow.fields import Bool, Field, Float, Int, Nested, Str
 from marshmallow.validate import Equal, Range
 
-# POST http://visiobas:7070/json-rpc
-# get_properties_example = '{"jsonrpc":"2.0","method":"requestBacnetProperties","params":{"device_id":2099232,"object_type_name":"binary-value","object_id":36,"fields":[87]},"id":""}'
-
-
-# POST http://visiobas:7070/json-rpc
-ex1 = (
-    '{"jsonrpc":"2.0","method":"writeSetPoint",'
-    '"params":{'
-    '"device_id":"2099232",'
-    '"object_type":"5",'
-    '"object_id":"36",'
-    '"property":"85",'
-    '"priority":"10",'
-    '"index":"-1",'
-    '"tag":"9",'
-    '"value":"1"},'
-    '"id":""}'
-)
-
-# POST http://visiobas:7070/json-rpc
-ex2 = (
-    '{"jsonrpc":"2.0","method":"writeSetPoint",'
-    '"params":{'
-    '"device_id":"2098185",'
-    '"object_type":"5",'
-    '"object_id":"3",'
-    '"property":"85",'
-    '"priority":"10",'
-    '"index":"-1",'
-    '"tag":"9",'
-    '"value":"1"},'
-    '"id":""}'
-)
-
 
 class ParamsSchema(Schema):
     device_id = Int(min=0, strict=True, required=True)

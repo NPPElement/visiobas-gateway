@@ -47,7 +47,7 @@ class SUNAPIDevice(BaseDevice):
             "Presetvideoanalysis2",
             "ptzsettings",
         }
-        actions = {}  # todo
+        # actions = {}  # todo
 
         if cgi == "control":
             if submenu not in control_submenus:
@@ -63,7 +63,8 @@ class SUNAPIDevice(BaseDevice):
             device_ip=self.address, cgi=cgi
         )
 
-        # ex = 'http://<Device IP>/stw‐cgi/ptzcontrol.cgi?msubmenu=absolute&action=control&Pan=90&Zoom=30&Tilt=25'
+        # ex = 'http://<Device IP>/stw‐cgi/ptzcontrol.cgi?
+        # msubmenu=absolute&action=control&Pan=90&Zoom=30&Tilt=25'
 
         self._gtw.http_client.request(
             method="POST",

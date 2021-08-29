@@ -19,19 +19,18 @@ class BaseBACnetObjModel(BaseModel):
         ...,
         ge=0,
         alias=ObjProperty.objectIdentifier.id_str,
-        description="""
-        Is a numeric code that is used to identify the object. It shall be unique within 
-        the BACnet Device that maintains it.""",
+        description="""Is a numeric code that is used to identify the object.
+        It shall be unique within the BACnet Device that maintains it.""",
     )
 
     name: str = Field(
         ...,
         alias=ObjProperty.objectName.id_str,
         min_length=1,
-        description="""
-    Represent a name for the object that is unique within the BACnet Device that 
-    maintains it. The minimum length of the string shall be one character. The set of 
-    characters used in the Object_Name shall be restricted to printable characters.""",
+        description="""Represent a name for the object that is unique within the
+        BACnet Device that maintains it. The minimum length of the string shall be one
+        character. The set of characters used in the Object_Name shall be restricted to
+        printable characters.""",
     )
 
     property_list: Json = Field(alias=ObjProperty.propertyList.id_str)

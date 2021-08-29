@@ -37,8 +37,7 @@ class BACnetObj(BaseBACnetObjModel):
         default=None,
         alias=ObjProperty.resolution.id_str,
         gt=0,
-        description="""
-        Indicates the smallest recognizable change in `Present_Value` in 
+        description="""Indicates the smallest recognizable change in `Present_Value` in
         engineering units (read-only).""",
     )
     # pv: LastValue = Field(default=LastValue(resolution=resolution),
@@ -48,24 +47,22 @@ class BACnetObj(BaseBACnetObjModel):
         default=StatusFlags(flags=0b0000),
         # alias=ObjProperty.statusFlags.id_str, # todo read from server?
         description="""
-        Status flags. represents four Boolean flags that indicate the general "health" of 
-        an value. Three of the flags are associated with the values of other properties of 
-        this object. A more detailed status could be determined by reading the properties 
-        that are linked to these flags. The relationship between individual flags is 
+        Status flags. represents four Boolean flags that indicate the general "health" of
+        an value. Three of the flags are associated with the values of other properties of
+        this object. A more detailed status could be determined by reading the properties
+        that are linked to these flags. The relationship between individual flags is
         not defined by the protocol.""",
     )
     pa: Optional[Union[str, tuple]] = Field(
         alias=ObjProperty.priorityArray.id_str,
-        description="""
-        Priority array. This property is a read-only array that contains prioritized 
-        commands that are in effect for this object.""",
+        description="""Priority array. This property is a read-only array that contains
+        prioritized commands that are in effect for this object.""",
     )
     reliability: Optional[Union[int, str]] = Field(
         default=None,
         alias=ObjProperty.reliability.id_str,
-        description="""
-        Provides an indication of whether the `Present_Value` is "reliable" as far as 
-        the BACnet Device can determine and, if not, why.""",
+        description="""Provides an indication of whether the `Present_Value` is
+        "reliable" as far as the BACnet Device can determine and, if not, why.""",
     )
 
     segmentation_supported: bool = Field(
@@ -74,10 +71,9 @@ class BACnetObj(BaseBACnetObjModel):
     property_list: Json[BACnetObjPropertyListJsonModel] = Field(
         ...,
         alias=ObjProperty.propertyList.id_str,
-        description="""
-        This read-only property is a JSON of property identifiers, one property identifier 
-        for each property that exists within the object. The standard properties are not 
-        included in the JSON.""",
+        description="""This read-only property is a JSON of property identifiers, one
+        property identifier  for each property that exists within the object. The standard
+        properties are not included in the JSON.""",
     )
 
     # FIXME: hotfix

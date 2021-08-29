@@ -4,7 +4,9 @@ from logging import Formatter
 class ExtraFormatter(Formatter):
     """Formatter for display `extra` params.
 
-    Adopted from: https://stackoverflow.com/questions/56559971/show-extra-fields-when-logging-to-console-in-python
+    Adopted from:
+        <https://stackoverflow.com/questions/56559971/show-extra-fields-when
+    -logging-to-console-in-python>
     """
 
     # Keys in `extra` must not have reserved names

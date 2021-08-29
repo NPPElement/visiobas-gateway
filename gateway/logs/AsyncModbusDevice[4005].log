@@ -1,0 +1,1723 @@
+WARNING  [2021-04-27 14:19:05,574] AsyncModbusDevice[4005].connect_client(137): Failed to connect to device
+DEBUG    [2021-04-27 14:19:05,804] AsyncModbusDevice[4005]._sort_objects_by_period(163): Objects to poll are grouped by periods
+DEBUG    [2021-04-27 14:19:05,804] AsyncModbusDevice[4005].load_objects(145): Objects to poll are loaded to device
+DEBUG    [2021-04-27 14:19:05,808] AsyncModbusDevice[4005].start_periodic_polls(241): Objects = {60: [ModbusObj{'type': ObjType.analogInput, 'device_id': 4005, 'id': 18, 'property_list': {'send_interval': 60, 'modbus': {'address': 28, 'quantity': 2, 'func_read': ModbusFunc.READ_HOLDING_REGISTERS, 'func_write': ModbusFunc.WRITE_REGISTER, 'scale': 1.0, 'offset': 0.0, 'data_type': 'float', 'data_length': 32, 'byte_order': 'big', 'word_order': 'little', 'repack': False, 'bit': None}}, 'resolution': 1.0, 'segmentation_supported': False}, ModbusObj{'type': ObjType.analogInput, 'device_id': 4005, 'id': 2, 'property_list': {'send_interval': 60, 'modbus': {'address': 3, 'quantity': 2, 'func_read': ModbusFunc.READ_HOLDING_REGISTERS, 'func_write': ModbusFunc.WRITE_REGISTER, 'scale': 1.0, 'offset': 0.0, 'data_type': 'float', 'data_length': 32, 'byte_order': 'big', 'word_order': 'little', 'repack': False, 'bit': None}}, 'resolution': 0.1, 'segmentation_supported': False}, ModbusObj{'type': ObjType.analogInput, 'device_id': 4005, 'id': 19, 'property_list': {'send_interval': 60, 'modbus': {'address': 30, 'quantity': 2, 'func_read': ModbusFunc.READ_HOLDING_REGISTERS, 'func_write': ModbusFunc.WRITE_REGISTER, 'scale': 1.0, 'offset': 0.0, 'data_type': 'float', 'data_length': 32, 'byte_order': 'big', 'word_order': 'little', 'repack': False, 'bit': None}}, 'resolution': 1.0, 'segmentation_supported': False}, ModbusObj{'type': ObjType.analogInput, 'device_id': 4005, 'id': 3, 'property_list': {'send_interval': 60, 'modbus': {'address': 5, 'quantity': 2, 'func_read': ModbusFunc.READ_HOLDING_REGISTERS, 'func_write': ModbusFunc.WRITE_REGISTER, 'scale': 1.0, 'offset': 0.0, 'data_type': 'float', 'data_length': 32, 'byte_order': 'big', 'word_order': 'little', 'repack': False, 'bit': None}}, 'resolution': 0.1, 'segmentation_supported': False}, ModbusObj{'type': ObjType.analogInput, 'device_id': 4005, 'id': 4, 'property_list': {'send_interval': 60, 'modbus': {'address': 7, 'quantity': 2, 'func_read': ModbusFunc.READ_HOLDING_REGISTERS, 'func_write': ModbusFunc.WRITE_REGISTER, 'scale': 1.0, 'offset': 0.0, 'data_type': 'float', 'data_length': 32, 'byte_order': 'big', 'word_order': 'little', 'repack': False, 'bit': None}}, 'resolution': 0.1, 'segmentation_supported': False}, ModbusObj{'type': ObjType.analogValue, 'device_id': 4005, 'id': 15, 'property_list': {'send_interval': 60, 'modbus': {'address': 21, 'quantity': 2, 'func_read': ModbusFunc.READ_HOLDING_REGISTERS, 'func_write': ModbusFunc.WRITE_REGISTER, 'scale': 1.0, 'offset': 0.0, 'data_type': 'float', 'data_length': 32, 'byte_order': 'big', 'word_order': 'little', 'repack': False, 'bit': None}}, 'resolution': 1.0, 'segmentation_supported': False}, ModbusObj{'type': ObjType.analogValue, 'device_id': 4005, 'id': 16, 'property_list': {'send_interval': 60, 'modbus': {'address': 23, 'quantity': 2, 'func_read': ModbusFunc.READ_HOLDING_REGISTERS, 'func_write': ModbusFunc.WRITE_REGISTER, 'scale': 1.0, 'offset': 0.0, 'data_type': 'float', 'data_length': 32, 'byte_order': 'big', 'word_order': 'little', 'repack': False, 'bit': None}}, 'resolution': 1.0, 'segmentation_supported': False}, ModbusObj{'type': ObjType.analogValue, 'device_id': 4005, 'id': 17, 'property_list': {'send_interval': 60, 'modbus': {'address': 26, 'quantity': 2, 'func_read': ModbusFunc.READ_HOLDING_REGISTERS, 'func_write': ModbusFunc.WRITE_REGISTER, 'scale': 1.0, 'offset': 0.0, 'data_type': 'float', 'data_length': 32, 'byte_order': 'big', 'word_order': 'little', 'repack': False, 'bit': None}}, 'resolution': 1.0, 'segmentation_supported': False}, ModbusObj{'type': ObjType.binaryInput, 'device_id': 4005, 'id': 5, 'property_list': {'send_interval': 60, 'modbus': {'address': 10, 'quantity': 1, 'func_read': ModbusFunc.READ_HOLDING_REGISTERS, 'func_write': ModbusFunc.WRITE_REGISTER, 'scale': 1.0, 'offset': 0.0, 'data_type': 'bool', 'data_length': 16, 'byte_order': 'little', 'word_order': 'big', 'repack': False, 'bit': None}}, 'resolution': 0.1, 'segmentation_supported': False}, ModbusObj{'type': ObjType.binaryInput, 'device_id': 4005, 'id': 6, 'property_list': {'send_interval': 60, 'modbus': {'address': 11, 'quantity': 1, 'func_read': ModbusFunc.READ_HOLDING_REGISTERS, 'func_write': ModbusFunc.WRITE_REGISTER, 'scale': 1.0, 'offset': 0.0, 'data_type': 'bool', 'data_length': 16, 'byte_order': 'little', 'word_order': 'big', 'repack': False, 'bit': None}}, 'resolution': 0.1, 'segmentation_supported': False}, ModbusObj{'type': ObjType.binaryInput, 'device_id': 4005, 'id': 7, 'property_list': {'send_interval': 60, 'modbus': {'address': 12, 'quantity': 1, 'func_read': ModbusFunc.READ_HOLDING_REGISTERS, 'func_write': ModbusFunc.WRITE_REGISTER, 'scale': 1.0, 'offset': 0.0, 'data_type': 'bool', 'data_length': 16, 'byte_order': 'little', 'word_order': 'big', 'repack': False, 'bit': None}}, 'resolution': 0.1, 'segmentation_supported': False}, ModbusObj{'type': ObjType.binaryInput, 'device_id': 4005, 'id': 8, 'property_list': {'send_interval': 60, 'modbus': {'address': 13, 'quantity': 1, 'func_read': ModbusFunc.READ_HOLDING_REGISTERS, 'func_write': ModbusFunc.WRITE_REGISTER, 'scale': 1.0, 'offset': 0.0, 'data_type': 'bool', 'data_length': 16, 'byte_order': 'little', 'word_order': 'big', 'repack': False, 'bit': None}}, 'resolution': 0.1, 'segmentation_supported': False}, ModbusObj{'type': ObjType.binaryInput, 'device_id': 4005, 'id': 9, 'property_list': {'send_interval': 60, 'modbus': {'address': 14, 'quantity': 1, 'func_read': ModbusFunc.READ_HOLDING_REGISTERS, 'func_write': ModbusFunc.WRITE_REGISTER, 'scale': 1.0, 'offset': 0.0, 'data_type': 'bool', 'data_length': 16, 'byte_order': 'little', 'word_order': 'big', 'repack': False, 'bit': None}}, 'resolution': 0.1, 'segmentation_supported': False}, ModbusObj{'type': ObjType.binaryInput, 'device_id': 4005, 'id': 10, 'property_list': {'send_interval': 60, 'modbus': {'address': 15, 'quantity': 1, 'func_read': ModbusFunc.READ_HOLDING_REGISTERS, 'func_write': ModbusFunc.WRITE_REGISTER, 'scale': 1.0, 'offset': 0.0, 'data_type': 'bool', 'data_length': 16, 'byte_order': 'little', 'word_order': 'big', 'repack': False, 'bit': None}}, 'resolution': 0.1, 'segmentation_supported': False}, ModbusObj{'type': ObjType.binaryInput, 'device_id': 4005, 'id': 11, 'property_list': {'send_interval': 60, 'modbus': {'address': 16, 'quantity': 1, 'func_read': ModbusFunc.READ_HOLDING_REGISTERS, 'func_write': ModbusFunc.WRITE_REGISTER, 'scale': 1.0, 'offset': 0.0, 'data_type': 'bool', 'data_length': 16, 'byte_order': 'little', 'word_order': 'big', 'repack': False, 'bit': None}}, 'resolution': 0.1, 'segmentation_supported': False}, ModbusObj{'type': ObjType.binaryInput, 'device_id': 4005, 'id': 12, 'property_list': {'send_interval': 60, 'modbus': {'address': 18, 'quantity': 1, 'func_read': ModbusFunc.READ_HOLDING_REGISTERS, 'func_write': ModbusFunc.WRITE_REGISTER, 'scale': 1.0, 'offset': 0.0, 'data_type': 'bool', 'data_length': 16, 'byte_order': 'little', 'word_order': 'big', 'repack': False, 'bit': None}}, 'resolution': 0.1, 'segmentation_supported': False}, ModbusObj{'type': ObjType.binaryInput, 'device_id': 4005, 'id': 1, 'property_list': {'send_interval': 60, 'modbus': {'address': 2, 'quantity': 1, 'func_read': ModbusFunc.READ_HOLDING_REGISTERS, 'func_write': ModbusFunc.WRITE_REGISTER, 'scale': 1.0, 'offset': 0.0, 'data_type': 'bool', 'data_length': 16, 'byte_order': 'little', 'word_order': 'big', 'repack': False, 'bit': None}}, 'resolution': 0.1, 'segmentation_supported': False}, ModbusObj{'type': ObjType.binaryInput, 'device_id': 4005, 'id': 20, 'property_list': {'send_interval': 60, 'modbus': {'address': 32, 'quantity': 1, 'func_read': ModbusFunc.READ_HOLDING_REGISTERS, 'func_write': ModbusFunc.WRITE_REGISTER, 'scale': 1.0, 'offset': 0.0, 'data_type': 'bool', 'data_length': 16, 'byte_order': 'little', 'word_order': 'big', 'repack': False, 'bit': None}}, 'resolution': 0.1, 'segmentation_supported': False}, ModbusObj{'type': ObjType.binaryInput, 'device_id': 4005, 'id': 21, 'property_list': {'send_interval': 60, 'modbus': {'address': 34, 'quantity': 1, 'func_read': ModbusFunc.READ_HOLDING_REGISTERS, 'func_write': ModbusFunc.WRITE_REGISTER, 'scale': 1.0, 'offset': 0.0, 'data_type': 'bool', 'data_length': 16, 'byte_order': 'little', 'word_order': 'big', 'repack': False, 'bit': None}}, 'resolution': 0.1, 'segmentation_supported': False}, ModbusObj{'type': ObjType.binaryInput, 'device_id': 4005, 'id': 22, 'property_list': {'send_interval': 60, 'modbus': {'address': 35, 'quantity': 1, 'func_read': ModbusFunc.READ_HOLDING_REGISTERS, 'func_write': ModbusFunc.WRITE_REGISTER, 'scale': 1.0, 'offset': 0.0, 'data_type': 'bool', 'data_length': 16, 'byte_order': 'little', 'word_order': 'big', 'repack': False, 'bit': None}}, 'resolution': 0.1, 'segmentation_supported': False}, ModbusObj{'type': ObjType.binaryInput, 'device_id': 4005, 'id': 23, 'property_list': {'send_interval': 60, 'modbus': {'address': 36, 'quantity': 1, 'func_read': ModbusFunc.READ_HOLDING_REGISTERS, 'func_write': ModbusFunc.WRITE_REGISTER, 'scale': 1.0, 'offset': 0.0, 'data_type': 'bool', 'data_length': 16, 'byte_order': 'little', 'word_order': 'big', 'repack': False, 'bit': None}}, 'resolution': 0.1, 'segmentation_supported': False}, ModbusObj{'type': ObjType.binaryInput, 'device_id': 4005, 'id': 24, 'property_list': {'send_interval': 60, 'modbus': {'address': 37, 'quantity': 1, 'func_read': ModbusFunc.READ_HOLDING_REGISTERS, 'func_write': ModbusFunc.WRITE_REGISTER, 'scale': 1.0, 'offset': 0.0, 'data_type': 'bool', 'data_length': 16, 'byte_order': 'little', 'word_order': 'big', 'repack': False, 'bit': None}}, 'resolution': 0.1, 'segmentation_supported': False}, ModbusObj{'type': ObjType.binaryInput, 'device_id': 4005, 'id': 25, 'property_list': {'send_interval': 60, 'modbus': {'address': 38, 'quantity': 1, 'func_read': ModbusFunc.READ_HOLDING_REGISTERS, 'func_write': ModbusFunc.WRITE_REGISTER, 'scale': 1.0, 'offset': 0.0, 'data_type': 'bool', 'data_length': 16, 'byte_order': 'little', 'word_order': 'big', 'repack': False, 'bit': None}}, 'resolution': 0.1, 'segmentation_supported': False}, ModbusObj{'type': ObjType.binaryInput, 'device_id': 4005, 'id': 26, 'property_list': {'send_interval': 60, 'modbus': {'address': 39, 'quantity': 1, 'func_read': ModbusFunc.READ_HOLDING_REGISTERS, 'func_write': ModbusFunc.WRITE_REGISTER, 'scale': 1.0, 'offset': 0.0, 'data_type': 'bool', 'data_length': 16, 'byte_order': 'little', 'word_order': 'big', 'repack': False, 'bit': None}}, 'resolution': 0.1, 'segmentation_supported': False}, ModbusObj{'type': ObjType.binaryInput, 'device_id': 4005, 'id': 27, 'property_list': {'send_interval': 60, 'modbus': {'address': 40, 'quantity': 1, 'func_read': ModbusFunc.READ_HOLDING_REGISTERS, 'func_write': ModbusFunc.WRITE_REGISTER, 'scale': 1.0, 'offset': 0.0, 'data_type': 'bool', 'data_length': 16, 'byte_order': 'little', 'word_order': 'big', 'repack': False, 'bit': None}}, 'resolution': 0.1, 'segmentation_supported': False}, ModbusObj{'type': ObjType.binaryValue, 'device_id': 4005, 'id': 13, 'property_list': {'send_interval': 60, 'modbus': {'address': 19, 'quantity': 1, 'func_read': ModbusFunc.READ_HOLDING_REGISTERS, 'func_write': ModbusFunc.WRITE_REGISTER, 'scale': 1.0, 'offset': 0.0, 'data_type': 'bool', 'data_length': 16, 'byte_order': 'little', 'word_order': 'big', 'repack': False, 'bit': None}}, 'resolution': 0.1, 'segmentation_supported': False}, ModbusObj{'type': ObjType.binaryValue, 'device_id': 4005, 'id': 14, 'property_list': {'send_interval': 60, 'modbus': {'address': 20, 'quantity': 1, 'func_read': ModbusFunc.READ_HOLDING_REGISTERS, 'func_write': ModbusFunc.WRITE_REGISTER, 'scale': 1.0, 'offset': 0.0, 'data_type': 'bool', 'data_length': 16, 'byte_order': 'little', 'word_order': 'big', 'repack': False, 'bit': None}}, 'resolution': 0.1, 'segmentation_supported': False}, ModbusObj{'type': ObjType.binaryValue, 'device_id': 4005, 'id': 28, 'property_list': {'send_interval': 60, 'modbus': {'address': 42, 'quantity': 1, 'func_read': ModbusFunc.READ_HOLDING_REGISTERS, 'func_write': ModbusFunc.WRITE_REGISTER, 'scale': 1.0, 'offset': 0.0, 'data_type': 'bool', 'data_length': 16, 'byte_order': 'little', 'word_order': 'big', 'repack': False, 'bit': None}}, 'resolution': 0.1, 'segmentation_supported': False}]}
+DEBUG    [2021-04-27 14:19:05,820] AsyncModbusDevice[4005].start_periodic_polls(246): Periodic polls started
+DEBUG    [2021-04-27 14:19:05,820] AsyncModbusDevice[4005].periodic_poll(250): Periodic poll task created for period 60
+DEBUG    [2021-04-27 14:19:05,820] AsyncModbusDevice[4005]._poll_objects(273): Performing read tasks...
+DEBUG    [2021-04-27 14:19:05,834] AsyncModbusDevice[4005]._read_and_log(262): Reading...
+ERROR    [2021-04-27 14:19:05,834] AsyncModbusDevice[4005]._read_and_log(266): Cannot read and log Ensure client connected
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 263, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 194, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 169, in read_funcs
+    raise ConnectionError('Ensure client connected')
+ConnectionError: Ensure client connected
+DEBUG    [2021-04-27 14:19:05,835] AsyncModbusDevice[4005]._read_and_log(262): Reading...
+ERROR    [2021-04-27 14:19:05,835] AsyncModbusDevice[4005]._read_and_log(266): Cannot read and log Ensure client connected
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 263, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 194, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 169, in read_funcs
+    raise ConnectionError('Ensure client connected')
+ConnectionError: Ensure client connected
+DEBUG    [2021-04-27 14:19:05,835] AsyncModbusDevice[4005]._read_and_log(262): Reading...
+ERROR    [2021-04-27 14:19:05,836] AsyncModbusDevice[4005]._read_and_log(266): Cannot read and log Ensure client connected
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 263, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 194, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 169, in read_funcs
+    raise ConnectionError('Ensure client connected')
+ConnectionError: Ensure client connected
+DEBUG    [2021-04-27 14:19:05,836] AsyncModbusDevice[4005]._read_and_log(262): Reading...
+ERROR    [2021-04-27 14:19:05,836] AsyncModbusDevice[4005]._read_and_log(266): Cannot read and log Ensure client connected
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 263, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 194, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 169, in read_funcs
+    raise ConnectionError('Ensure client connected')
+ConnectionError: Ensure client connected
+DEBUG    [2021-04-27 14:19:05,836] AsyncModbusDevice[4005]._read_and_log(262): Reading...
+ERROR    [2021-04-27 14:19:05,837] AsyncModbusDevice[4005]._read_and_log(266): Cannot read and log Ensure client connected
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 263, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 194, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 169, in read_funcs
+    raise ConnectionError('Ensure client connected')
+ConnectionError: Ensure client connected
+DEBUG    [2021-04-27 14:19:05,837] AsyncModbusDevice[4005]._read_and_log(262): Reading...
+ERROR    [2021-04-27 14:19:05,837] AsyncModbusDevice[4005]._read_and_log(266): Cannot read and log Ensure client connected
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 263, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 194, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 169, in read_funcs
+    raise ConnectionError('Ensure client connected')
+ConnectionError: Ensure client connected
+DEBUG    [2021-04-27 14:19:05,837] AsyncModbusDevice[4005]._read_and_log(262): Reading...
+ERROR    [2021-04-27 14:19:05,838] AsyncModbusDevice[4005]._read_and_log(266): Cannot read and log Ensure client connected
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 263, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 194, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 169, in read_funcs
+    raise ConnectionError('Ensure client connected')
+ConnectionError: Ensure client connected
+DEBUG    [2021-04-27 14:19:05,851] AsyncModbusDevice[4005]._read_and_log(262): Reading...
+ERROR    [2021-04-27 14:19:05,851] AsyncModbusDevice[4005]._read_and_log(266): Cannot read and log Ensure client connected
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 263, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 194, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 169, in read_funcs
+    raise ConnectionError('Ensure client connected')
+ConnectionError: Ensure client connected
+DEBUG    [2021-04-27 14:19:05,852] AsyncModbusDevice[4005]._read_and_log(262): Reading...
+ERROR    [2021-04-27 14:19:05,852] AsyncModbusDevice[4005]._read_and_log(266): Cannot read and log Ensure client connected
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 263, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 194, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 169, in read_funcs
+    raise ConnectionError('Ensure client connected')
+ConnectionError: Ensure client connected
+DEBUG    [2021-04-27 14:19:05,853] AsyncModbusDevice[4005]._read_and_log(262): Reading...
+ERROR    [2021-04-27 14:19:05,853] AsyncModbusDevice[4005]._read_and_log(266): Cannot read and log Ensure client connected
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 263, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 194, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 169, in read_funcs
+    raise ConnectionError('Ensure client connected')
+ConnectionError: Ensure client connected
+DEBUG    [2021-04-27 14:19:05,853] AsyncModbusDevice[4005]._read_and_log(262): Reading...
+ERROR    [2021-04-27 14:19:05,853] AsyncModbusDevice[4005]._read_and_log(266): Cannot read and log Ensure client connected
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 263, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 194, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 169, in read_funcs
+    raise ConnectionError('Ensure client connected')
+ConnectionError: Ensure client connected
+DEBUG    [2021-04-27 14:19:05,854] AsyncModbusDevice[4005]._read_and_log(262): Reading...
+ERROR    [2021-04-27 14:19:05,854] AsyncModbusDevice[4005]._read_and_log(266): Cannot read and log Ensure client connected
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 263, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 194, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 169, in read_funcs
+    raise ConnectionError('Ensure client connected')
+ConnectionError: Ensure client connected
+DEBUG    [2021-04-27 14:19:05,854] AsyncModbusDevice[4005]._read_and_log(262): Reading...
+ERROR    [2021-04-27 14:19:05,854] AsyncModbusDevice[4005]._read_and_log(266): Cannot read and log Ensure client connected
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 263, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 194, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 169, in read_funcs
+    raise ConnectionError('Ensure client connected')
+ConnectionError: Ensure client connected
+DEBUG    [2021-04-27 14:19:05,866] AsyncModbusDevice[4005]._read_and_log(262): Reading...
+ERROR    [2021-04-27 14:19:05,866] AsyncModbusDevice[4005]._read_and_log(266): Cannot read and log Ensure client connected
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 263, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 194, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 169, in read_funcs
+    raise ConnectionError('Ensure client connected')
+ConnectionError: Ensure client connected
+DEBUG    [2021-04-27 14:19:05,867] AsyncModbusDevice[4005]._read_and_log(262): Reading...
+ERROR    [2021-04-27 14:19:05,867] AsyncModbusDevice[4005]._read_and_log(266): Cannot read and log Ensure client connected
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 263, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 194, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 169, in read_funcs
+    raise ConnectionError('Ensure client connected')
+ConnectionError: Ensure client connected
+DEBUG    [2021-04-27 14:19:05,867] AsyncModbusDevice[4005]._read_and_log(262): Reading...
+ERROR    [2021-04-27 14:19:05,867] AsyncModbusDevice[4005]._read_and_log(266): Cannot read and log Ensure client connected
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 263, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 194, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 169, in read_funcs
+    raise ConnectionError('Ensure client connected')
+ConnectionError: Ensure client connected
+DEBUG    [2021-04-27 14:19:05,868] AsyncModbusDevice[4005]._read_and_log(262): Reading...
+ERROR    [2021-04-27 14:19:05,868] AsyncModbusDevice[4005]._read_and_log(266): Cannot read and log Ensure client connected
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 263, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 194, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 169, in read_funcs
+    raise ConnectionError('Ensure client connected')
+ConnectionError: Ensure client connected
+DEBUG    [2021-04-27 14:19:05,868] AsyncModbusDevice[4005]._read_and_log(262): Reading...
+ERROR    [2021-04-27 14:19:05,869] AsyncModbusDevice[4005]._read_and_log(266): Cannot read and log Ensure client connected
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 263, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 194, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 169, in read_funcs
+    raise ConnectionError('Ensure client connected')
+ConnectionError: Ensure client connected
+DEBUG    [2021-04-27 14:19:05,869] AsyncModbusDevice[4005]._read_and_log(262): Reading...
+ERROR    [2021-04-27 14:19:05,869] AsyncModbusDevice[4005]._read_and_log(266): Cannot read and log Ensure client connected
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 263, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 194, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 169, in read_funcs
+    raise ConnectionError('Ensure client connected')
+ConnectionError: Ensure client connected
+DEBUG    [2021-04-27 14:19:05,883] AsyncModbusDevice[4005]._read_and_log(262): Reading...
+ERROR    [2021-04-27 14:19:05,883] AsyncModbusDevice[4005]._read_and_log(266): Cannot read and log Ensure client connected
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 263, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 194, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 169, in read_funcs
+    raise ConnectionError('Ensure client connected')
+ConnectionError: Ensure client connected
+DEBUG    [2021-04-27 14:19:05,884] AsyncModbusDevice[4005]._read_and_log(262): Reading...
+ERROR    [2021-04-27 14:19:05,884] AsyncModbusDevice[4005]._read_and_log(266): Cannot read and log Ensure client connected
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 263, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 194, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 169, in read_funcs
+    raise ConnectionError('Ensure client connected')
+ConnectionError: Ensure client connected
+DEBUG    [2021-04-27 14:19:05,884] AsyncModbusDevice[4005]._read_and_log(262): Reading...
+ERROR    [2021-04-27 14:19:05,884] AsyncModbusDevice[4005]._read_and_log(266): Cannot read and log Ensure client connected
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 263, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 194, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 169, in read_funcs
+    raise ConnectionError('Ensure client connected')
+ConnectionError: Ensure client connected
+DEBUG    [2021-04-27 14:19:05,885] AsyncModbusDevice[4005]._read_and_log(262): Reading...
+ERROR    [2021-04-27 14:19:05,885] AsyncModbusDevice[4005]._read_and_log(266): Cannot read and log Ensure client connected
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 263, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 194, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 169, in read_funcs
+    raise ConnectionError('Ensure client connected')
+ConnectionError: Ensure client connected
+DEBUG    [2021-04-27 14:19:05,885] AsyncModbusDevice[4005]._read_and_log(262): Reading...
+ERROR    [2021-04-27 14:19:05,885] AsyncModbusDevice[4005]._read_and_log(266): Cannot read and log Ensure client connected
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 263, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 194, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 169, in read_funcs
+    raise ConnectionError('Ensure client connected')
+ConnectionError: Ensure client connected
+DEBUG    [2021-04-27 14:19:05,886] AsyncModbusDevice[4005]._read_and_log(262): Reading...
+ERROR    [2021-04-27 14:19:05,886] AsyncModbusDevice[4005]._read_and_log(266): Cannot read and log Ensure client connected
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 263, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 194, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 169, in read_funcs
+    raise ConnectionError('Ensure client connected')
+ConnectionError: Ensure client connected
+DEBUG    [2021-04-27 14:19:05,897] AsyncModbusDevice[4005]._read_and_log(262): Reading...
+ERROR    [2021-04-27 14:19:05,897] AsyncModbusDevice[4005]._read_and_log(266): Cannot read and log Ensure client connected
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 263, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 194, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 169, in read_funcs
+    raise ConnectionError('Ensure client connected')
+ConnectionError: Ensure client connected
+DEBUG    [2021-04-27 14:19:05,898] AsyncModbusDevice[4005]._read_and_log(262): Reading...
+ERROR    [2021-04-27 14:19:05,898] AsyncModbusDevice[4005]._read_and_log(266): Cannot read and log Ensure client connected
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 263, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 194, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 169, in read_funcs
+    raise ConnectionError('Ensure client connected')
+ConnectionError: Ensure client connected
+DEBUG    [2021-04-27 14:19:05,898] AsyncModbusDevice[4005]._read_and_log(262): Reading...
+ERROR    [2021-04-27 14:19:05,898] AsyncModbusDevice[4005]._read_and_log(266): Cannot read and log Ensure client connected
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 263, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 194, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 169, in read_funcs
+    raise ConnectionError('Ensure client connected')
+ConnectionError: Ensure client connected
+WARNING  [2021-04-27 14:22:59,840] AsyncModbusDevice[4005].connect_client(137): Failed to connect to device
+DEBUG    [2021-04-27 14:23:00,066] AsyncModbusDevice[4005]._sort_objects_by_period(163): Objects to poll are grouped by periods
+DEBUG    [2021-04-27 14:23:00,066] AsyncModbusDevice[4005].load_objects(145): Objects to poll are loaded to device
+DEBUG    [2021-04-27 14:23:00,070] AsyncModbusDevice[4005].start_periodic_polls(241): Objects = {60: [ModbusObj{'type': ObjType.analogInput, 'device_id': 4005, 'id': 18, 'property_list': {'send_interval': 60, 'modbus': {'address': 28, 'quantity': 2, 'func_read': ModbusFunc.READ_HOLDING_REGISTERS, 'func_write': ModbusFunc.WRITE_REGISTER, 'scale': 1.0, 'offset': 0.0, 'data_type': 'float', 'data_length': 32, 'byte_order': 'big', 'word_order': 'little', 'repack': False, 'bit': None}}, 'resolution': 1.0, 'segmentation_supported': False}, ModbusObj{'type': ObjType.analogInput, 'device_id': 4005, 'id': 2, 'property_list': {'send_interval': 60, 'modbus': {'address': 3, 'quantity': 2, 'func_read': ModbusFunc.READ_HOLDING_REGISTERS, 'func_write': ModbusFunc.WRITE_REGISTER, 'scale': 1.0, 'offset': 0.0, 'data_type': 'float', 'data_length': 32, 'byte_order': 'big', 'word_order': 'little', 'repack': False, 'bit': None}}, 'resolution': 0.1, 'segmentation_supported': False}, ModbusObj{'type': ObjType.analogInput, 'device_id': 4005, 'id': 19, 'property_list': {'send_interval': 60, 'modbus': {'address': 30, 'quantity': 2, 'func_read': ModbusFunc.READ_HOLDING_REGISTERS, 'func_write': ModbusFunc.WRITE_REGISTER, 'scale': 1.0, 'offset': 0.0, 'data_type': 'float', 'data_length': 32, 'byte_order': 'big', 'word_order': 'little', 'repack': False, 'bit': None}}, 'resolution': 1.0, 'segmentation_supported': False}, ModbusObj{'type': ObjType.analogInput, 'device_id': 4005, 'id': 3, 'property_list': {'send_interval': 60, 'modbus': {'address': 5, 'quantity': 2, 'func_read': ModbusFunc.READ_HOLDING_REGISTERS, 'func_write': ModbusFunc.WRITE_REGISTER, 'scale': 1.0, 'offset': 0.0, 'data_type': 'float', 'data_length': 32, 'byte_order': 'big', 'word_order': 'little', 'repack': False, 'bit': None}}, 'resolution': 0.1, 'segmentation_supported': False}, ModbusObj{'type': ObjType.analogInput, 'device_id': 4005, 'id': 4, 'property_list': {'send_interval': 60, 'modbus': {'address': 7, 'quantity': 2, 'func_read': ModbusFunc.READ_HOLDING_REGISTERS, 'func_write': ModbusFunc.WRITE_REGISTER, 'scale': 1.0, 'offset': 0.0, 'data_type': 'float', 'data_length': 32, 'byte_order': 'big', 'word_order': 'little', 'repack': False, 'bit': None}}, 'resolution': 0.1, 'segmentation_supported': False}, ModbusObj{'type': ObjType.analogValue, 'device_id': 4005, 'id': 15, 'property_list': {'send_interval': 60, 'modbus': {'address': 21, 'quantity': 2, 'func_read': ModbusFunc.READ_HOLDING_REGISTERS, 'func_write': ModbusFunc.WRITE_REGISTER, 'scale': 1.0, 'offset': 0.0, 'data_type': 'float', 'data_length': 32, 'byte_order': 'big', 'word_order': 'little', 'repack': False, 'bit': None}}, 'resolution': 1.0, 'segmentation_supported': False}, ModbusObj{'type': ObjType.analogValue, 'device_id': 4005, 'id': 16, 'property_list': {'send_interval': 60, 'modbus': {'address': 23, 'quantity': 2, 'func_read': ModbusFunc.READ_HOLDING_REGISTERS, 'func_write': ModbusFunc.WRITE_REGISTER, 'scale': 1.0, 'offset': 0.0, 'data_type': 'float', 'data_length': 32, 'byte_order': 'big', 'word_order': 'little', 'repack': False, 'bit': None}}, 'resolution': 1.0, 'segmentation_supported': False}, ModbusObj{'type': ObjType.analogValue, 'device_id': 4005, 'id': 17, 'property_list': {'send_interval': 60, 'modbus': {'address': 26, 'quantity': 2, 'func_read': ModbusFunc.READ_HOLDING_REGISTERS, 'func_write': ModbusFunc.WRITE_REGISTER, 'scale': 1.0, 'offset': 0.0, 'data_type': 'float', 'data_length': 32, 'byte_order': 'big', 'word_order': 'little', 'repack': False, 'bit': None}}, 'resolution': 1.0, 'segmentation_supported': False}, ModbusObj{'type': ObjType.binaryInput, 'device_id': 4005, 'id': 5, 'property_list': {'send_interval': 60, 'modbus': {'address': 10, 'quantity': 1, 'func_read': ModbusFunc.READ_HOLDING_REGISTERS, 'func_write': ModbusFunc.WRITE_REGISTER, 'scale': 1.0, 'offset': 0.0, 'data_type': 'bool', 'data_length': 16, 'byte_order': 'little', 'word_order': 'big', 'repack': False, 'bit': None}}, 'resolution': 0.1, 'segmentation_supported': False}, ModbusObj{'type': ObjType.binaryInput, 'device_id': 4005, 'id': 6, 'property_list': {'send_interval': 60, 'modbus': {'address': 11, 'quantity': 1, 'func_read': ModbusFunc.READ_HOLDING_REGISTERS, 'func_write': ModbusFunc.WRITE_REGISTER, 'scale': 1.0, 'offset': 0.0, 'data_type': 'bool', 'data_length': 16, 'byte_order': 'little', 'word_order': 'big', 'repack': False, 'bit': None}}, 'resolution': 0.1, 'segmentation_supported': False}, ModbusObj{'type': ObjType.binaryInput, 'device_id': 4005, 'id': 7, 'property_list': {'send_interval': 60, 'modbus': {'address': 12, 'quantity': 1, 'func_read': ModbusFunc.READ_HOLDING_REGISTERS, 'func_write': ModbusFunc.WRITE_REGISTER, 'scale': 1.0, 'offset': 0.0, 'data_type': 'bool', 'data_length': 16, 'byte_order': 'little', 'word_order': 'big', 'repack': False, 'bit': None}}, 'resolution': 0.1, 'segmentation_supported': False}, ModbusObj{'type': ObjType.binaryInput, 'device_id': 4005, 'id': 8, 'property_list': {'send_interval': 60, 'modbus': {'address': 13, 'quantity': 1, 'func_read': ModbusFunc.READ_HOLDING_REGISTERS, 'func_write': ModbusFunc.WRITE_REGISTER, 'scale': 1.0, 'offset': 0.0, 'data_type': 'bool', 'data_length': 16, 'byte_order': 'little', 'word_order': 'big', 'repack': False, 'bit': None}}, 'resolution': 0.1, 'segmentation_supported': False}, ModbusObj{'type': ObjType.binaryInput, 'device_id': 4005, 'id': 9, 'property_list': {'send_interval': 60, 'modbus': {'address': 14, 'quantity': 1, 'func_read': ModbusFunc.READ_HOLDING_REGISTERS, 'func_write': ModbusFunc.WRITE_REGISTER, 'scale': 1.0, 'offset': 0.0, 'data_type': 'bool', 'data_length': 16, 'byte_order': 'little', 'word_order': 'big', 'repack': False, 'bit': None}}, 'resolution': 0.1, 'segmentation_supported': False}, ModbusObj{'type': ObjType.binaryInput, 'device_id': 4005, 'id': 10, 'property_list': {'send_interval': 60, 'modbus': {'address': 15, 'quantity': 1, 'func_read': ModbusFunc.READ_HOLDING_REGISTERS, 'func_write': ModbusFunc.WRITE_REGISTER, 'scale': 1.0, 'offset': 0.0, 'data_type': 'bool', 'data_length': 16, 'byte_order': 'little', 'word_order': 'big', 'repack': False, 'bit': None}}, 'resolution': 0.1, 'segmentation_supported': False}, ModbusObj{'type': ObjType.binaryInput, 'device_id': 4005, 'id': 11, 'property_list': {'send_interval': 60, 'modbus': {'address': 16, 'quantity': 1, 'func_read': ModbusFunc.READ_HOLDING_REGISTERS, 'func_write': ModbusFunc.WRITE_REGISTER, 'scale': 1.0, 'offset': 0.0, 'data_type': 'bool', 'data_length': 16, 'byte_order': 'little', 'word_order': 'big', 'repack': False, 'bit': None}}, 'resolution': 0.1, 'segmentation_supported': False}, ModbusObj{'type': ObjType.binaryInput, 'device_id': 4005, 'id': 12, 'property_list': {'send_interval': 60, 'modbus': {'address': 18, 'quantity': 1, 'func_read': ModbusFunc.READ_HOLDING_REGISTERS, 'func_write': ModbusFunc.WRITE_REGISTER, 'scale': 1.0, 'offset': 0.0, 'data_type': 'bool', 'data_length': 16, 'byte_order': 'little', 'word_order': 'big', 'repack': False, 'bit': None}}, 'resolution': 0.1, 'segmentation_supported': False}, ModbusObj{'type': ObjType.binaryInput, 'device_id': 4005, 'id': 1, 'property_list': {'send_interval': 60, 'modbus': {'address': 2, 'quantity': 1, 'func_read': ModbusFunc.READ_HOLDING_REGISTERS, 'func_write': ModbusFunc.WRITE_REGISTER, 'scale': 1.0, 'offset': 0.0, 'data_type': 'bool', 'data_length': 16, 'byte_order': 'little', 'word_order': 'big', 'repack': False, 'bit': None}}, 'resolution': 0.1, 'segmentation_supported': False}, ModbusObj{'type': ObjType.binaryInput, 'device_id': 4005, 'id': 20, 'property_list': {'send_interval': 60, 'modbus': {'address': 32, 'quantity': 1, 'func_read': ModbusFunc.READ_HOLDING_REGISTERS, 'func_write': ModbusFunc.WRITE_REGISTER, 'scale': 1.0, 'offset': 0.0, 'data_type': 'bool', 'data_length': 16, 'byte_order': 'little', 'word_order': 'big', 'repack': False, 'bit': None}}, 'resolution': 0.1, 'segmentation_supported': False}, ModbusObj{'type': ObjType.binaryInput, 'device_id': 4005, 'id': 21, 'property_list': {'send_interval': 60, 'modbus': {'address': 34, 'quantity': 1, 'func_read': ModbusFunc.READ_HOLDING_REGISTERS, 'func_write': ModbusFunc.WRITE_REGISTER, 'scale': 1.0, 'offset': 0.0, 'data_type': 'bool', 'data_length': 16, 'byte_order': 'little', 'word_order': 'big', 'repack': False, 'bit': None}}, 'resolution': 0.1, 'segmentation_supported': False}, ModbusObj{'type': ObjType.binaryInput, 'device_id': 4005, 'id': 22, 'property_list': {'send_interval': 60, 'modbus': {'address': 35, 'quantity': 1, 'func_read': ModbusFunc.READ_HOLDING_REGISTERS, 'func_write': ModbusFunc.WRITE_REGISTER, 'scale': 1.0, 'offset': 0.0, 'data_type': 'bool', 'data_length': 16, 'byte_order': 'little', 'word_order': 'big', 'repack': False, 'bit': None}}, 'resolution': 0.1, 'segmentation_supported': False}, ModbusObj{'type': ObjType.binaryInput, 'device_id': 4005, 'id': 23, 'property_list': {'send_interval': 60, 'modbus': {'address': 36, 'quantity': 1, 'func_read': ModbusFunc.READ_HOLDING_REGISTERS, 'func_write': ModbusFunc.WRITE_REGISTER, 'scale': 1.0, 'offset': 0.0, 'data_type': 'bool', 'data_length': 16, 'byte_order': 'little', 'word_order': 'big', 'repack': False, 'bit': None}}, 'resolution': 0.1, 'segmentation_supported': False}, ModbusObj{'type': ObjType.binaryInput, 'device_id': 4005, 'id': 24, 'property_list': {'send_interval': 60, 'modbus': {'address': 37, 'quantity': 1, 'func_read': ModbusFunc.READ_HOLDING_REGISTERS, 'func_write': ModbusFunc.WRITE_REGISTER, 'scale': 1.0, 'offset': 0.0, 'data_type': 'bool', 'data_length': 16, 'byte_order': 'little', 'word_order': 'big', 'repack': False, 'bit': None}}, 'resolution': 0.1, 'segmentation_supported': False}, ModbusObj{'type': ObjType.binaryInput, 'device_id': 4005, 'id': 25, 'property_list': {'send_interval': 60, 'modbus': {'address': 38, 'quantity': 1, 'func_read': ModbusFunc.READ_HOLDING_REGISTERS, 'func_write': ModbusFunc.WRITE_REGISTER, 'scale': 1.0, 'offset': 0.0, 'data_type': 'bool', 'data_length': 16, 'byte_order': 'little', 'word_order': 'big', 'repack': False, 'bit': None}}, 'resolution': 0.1, 'segmentation_supported': False}, ModbusObj{'type': ObjType.binaryInput, 'device_id': 4005, 'id': 26, 'property_list': {'send_interval': 60, 'modbus': {'address': 39, 'quantity': 1, 'func_read': ModbusFunc.READ_HOLDING_REGISTERS, 'func_write': ModbusFunc.WRITE_REGISTER, 'scale': 1.0, 'offset': 0.0, 'data_type': 'bool', 'data_length': 16, 'byte_order': 'little', 'word_order': 'big', 'repack': False, 'bit': None}}, 'resolution': 0.1, 'segmentation_supported': False}, ModbusObj{'type': ObjType.binaryInput, 'device_id': 4005, 'id': 27, 'property_list': {'send_interval': 60, 'modbus': {'address': 40, 'quantity': 1, 'func_read': ModbusFunc.READ_HOLDING_REGISTERS, 'func_write': ModbusFunc.WRITE_REGISTER, 'scale': 1.0, 'offset': 0.0, 'data_type': 'bool', 'data_length': 16, 'byte_order': 'little', 'word_order': 'big', 'repack': False, 'bit': None}}, 'resolution': 0.1, 'segmentation_supported': False}, ModbusObj{'type': ObjType.binaryValue, 'device_id': 4005, 'id': 13, 'property_list': {'send_interval': 60, 'modbus': {'address': 19, 'quantity': 1, 'func_read': ModbusFunc.READ_HOLDING_REGISTERS, 'func_write': ModbusFunc.WRITE_REGISTER, 'scale': 1.0, 'offset': 0.0, 'data_type': 'bool', 'data_length': 16, 'byte_order': 'little', 'word_order': 'big', 'repack': False, 'bit': None}}, 'resolution': 0.1, 'segmentation_supported': False}, ModbusObj{'type': ObjType.binaryValue, 'device_id': 4005, 'id': 14, 'property_list': {'send_interval': 60, 'modbus': {'address': 20, 'quantity': 1, 'func_read': ModbusFunc.READ_HOLDING_REGISTERS, 'func_write': ModbusFunc.WRITE_REGISTER, 'scale': 1.0, 'offset': 0.0, 'data_type': 'bool', 'data_length': 16, 'byte_order': 'little', 'word_order': 'big', 'repack': False, 'bit': None}}, 'resolution': 0.1, 'segmentation_supported': False}, ModbusObj{'type': ObjType.binaryValue, 'device_id': 4005, 'id': 28, 'property_list': {'send_interval': 60, 'modbus': {'address': 42, 'quantity': 1, 'func_read': ModbusFunc.READ_HOLDING_REGISTERS, 'func_write': ModbusFunc.WRITE_REGISTER, 'scale': 1.0, 'offset': 0.0, 'data_type': 'bool', 'data_length': 16, 'byte_order': 'little', 'word_order': 'big', 'repack': False, 'bit': None}}, 'resolution': 0.1, 'segmentation_supported': False}]}
+DEBUG    [2021-04-27 14:23:00,082] AsyncModbusDevice[4005].start_periodic_polls(246): Periodic polls started
+DEBUG    [2021-04-27 14:23:00,082] AsyncModbusDevice[4005].periodic_poll(250): Periodic poll task created for period 60
+DEBUG    [2021-04-27 14:23:00,083] AsyncModbusDevice[4005]._poll_objects(273): Performing read tasks...
+DEBUG    [2021-04-27 14:23:00,095] AsyncModbusDevice[4005]._read_and_log(262): Reading...
+ERROR    [2021-04-27 14:23:00,095] AsyncModbusDevice[4005]._read_and_log(266): Cannot read and log Ensure client connected
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 263, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 194, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 169, in read_funcs
+    raise ConnectionError('Ensure client connected')
+ConnectionError: Ensure client connected
+DEBUG    [2021-04-27 14:23:00,096] AsyncModbusDevice[4005]._read_and_log(262): Reading...
+ERROR    [2021-04-27 14:23:00,096] AsyncModbusDevice[4005]._read_and_log(266): Cannot read and log Ensure client connected
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 263, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 194, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 169, in read_funcs
+    raise ConnectionError('Ensure client connected')
+ConnectionError: Ensure client connected
+DEBUG    [2021-04-27 14:23:00,096] AsyncModbusDevice[4005]._read_and_log(262): Reading...
+ERROR    [2021-04-27 14:23:00,096] AsyncModbusDevice[4005]._read_and_log(266): Cannot read and log Ensure client connected
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 263, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 194, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 169, in read_funcs
+    raise ConnectionError('Ensure client connected')
+ConnectionError: Ensure client connected
+DEBUG    [2021-04-27 14:23:00,097] AsyncModbusDevice[4005]._read_and_log(262): Reading...
+ERROR    [2021-04-27 14:23:00,097] AsyncModbusDevice[4005]._read_and_log(266): Cannot read and log Ensure client connected
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 263, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 194, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 169, in read_funcs
+    raise ConnectionError('Ensure client connected')
+ConnectionError: Ensure client connected
+DEBUG    [2021-04-27 14:23:00,097] AsyncModbusDevice[4005]._read_and_log(262): Reading...
+ERROR    [2021-04-27 14:23:00,097] AsyncModbusDevice[4005]._read_and_log(266): Cannot read and log Ensure client connected
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 263, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 194, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 169, in read_funcs
+    raise ConnectionError('Ensure client connected')
+ConnectionError: Ensure client connected
+DEBUG    [2021-04-27 14:23:00,098] AsyncModbusDevice[4005]._read_and_log(262): Reading...
+ERROR    [2021-04-27 14:23:00,098] AsyncModbusDevice[4005]._read_and_log(266): Cannot read and log Ensure client connected
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 263, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 194, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 169, in read_funcs
+    raise ConnectionError('Ensure client connected')
+ConnectionError: Ensure client connected
+DEBUG    [2021-04-27 14:23:00,098] AsyncModbusDevice[4005]._read_and_log(262): Reading...
+ERROR    [2021-04-27 14:23:00,098] AsyncModbusDevice[4005]._read_and_log(266): Cannot read and log Ensure client connected
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 263, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 194, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 169, in read_funcs
+    raise ConnectionError('Ensure client connected')
+ConnectionError: Ensure client connected
+DEBUG    [2021-04-27 14:23:00,111] AsyncModbusDevice[4005]._read_and_log(262): Reading...
+ERROR    [2021-04-27 14:23:00,112] AsyncModbusDevice[4005]._read_and_log(266): Cannot read and log Ensure client connected
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 263, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 194, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 169, in read_funcs
+    raise ConnectionError('Ensure client connected')
+ConnectionError: Ensure client connected
+DEBUG    [2021-04-27 14:23:00,112] AsyncModbusDevice[4005]._read_and_log(262): Reading...
+ERROR    [2021-04-27 14:23:00,112] AsyncModbusDevice[4005]._read_and_log(266): Cannot read and log Ensure client connected
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 263, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 194, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 169, in read_funcs
+    raise ConnectionError('Ensure client connected')
+ConnectionError: Ensure client connected
+DEBUG    [2021-04-27 14:23:00,113] AsyncModbusDevice[4005]._read_and_log(262): Reading...
+ERROR    [2021-04-27 14:23:00,113] AsyncModbusDevice[4005]._read_and_log(266): Cannot read and log Ensure client connected
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 263, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 194, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 169, in read_funcs
+    raise ConnectionError('Ensure client connected')
+ConnectionError: Ensure client connected
+DEBUG    [2021-04-27 14:23:00,113] AsyncModbusDevice[4005]._read_and_log(262): Reading...
+ERROR    [2021-04-27 14:23:00,113] AsyncModbusDevice[4005]._read_and_log(266): Cannot read and log Ensure client connected
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 263, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 194, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 169, in read_funcs
+    raise ConnectionError('Ensure client connected')
+ConnectionError: Ensure client connected
+DEBUG    [2021-04-27 14:23:00,114] AsyncModbusDevice[4005]._read_and_log(262): Reading...
+ERROR    [2021-04-27 14:23:00,114] AsyncModbusDevice[4005]._read_and_log(266): Cannot read and log Ensure client connected
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 263, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 194, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 169, in read_funcs
+    raise ConnectionError('Ensure client connected')
+ConnectionError: Ensure client connected
+DEBUG    [2021-04-27 14:23:00,114] AsyncModbusDevice[4005]._read_and_log(262): Reading...
+ERROR    [2021-04-27 14:23:00,114] AsyncModbusDevice[4005]._read_and_log(266): Cannot read and log Ensure client connected
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 263, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 194, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 169, in read_funcs
+    raise ConnectionError('Ensure client connected')
+ConnectionError: Ensure client connected
+DEBUG    [2021-04-27 14:23:00,127] AsyncModbusDevice[4005]._read_and_log(262): Reading...
+ERROR    [2021-04-27 14:23:00,127] AsyncModbusDevice[4005]._read_and_log(266): Cannot read and log Ensure client connected
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 263, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 194, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 169, in read_funcs
+    raise ConnectionError('Ensure client connected')
+ConnectionError: Ensure client connected
+DEBUG    [2021-04-27 14:23:00,128] AsyncModbusDevice[4005]._read_and_log(262): Reading...
+ERROR    [2021-04-27 14:23:00,128] AsyncModbusDevice[4005]._read_and_log(266): Cannot read and log Ensure client connected
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 263, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 194, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 169, in read_funcs
+    raise ConnectionError('Ensure client connected')
+ConnectionError: Ensure client connected
+DEBUG    [2021-04-27 14:23:00,128] AsyncModbusDevice[4005]._read_and_log(262): Reading...
+ERROR    [2021-04-27 14:23:00,128] AsyncModbusDevice[4005]._read_and_log(266): Cannot read and log Ensure client connected
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 263, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 194, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 169, in read_funcs
+    raise ConnectionError('Ensure client connected')
+ConnectionError: Ensure client connected
+DEBUG    [2021-04-27 14:23:00,129] AsyncModbusDevice[4005]._read_and_log(262): Reading...
+ERROR    [2021-04-27 14:23:00,129] AsyncModbusDevice[4005]._read_and_log(266): Cannot read and log Ensure client connected
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 263, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 194, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 169, in read_funcs
+    raise ConnectionError('Ensure client connected')
+ConnectionError: Ensure client connected
+DEBUG    [2021-04-27 14:23:00,129] AsyncModbusDevice[4005]._read_and_log(262): Reading...
+ERROR    [2021-04-27 14:23:00,129] AsyncModbusDevice[4005]._read_and_log(266): Cannot read and log Ensure client connected
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 263, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 194, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 169, in read_funcs
+    raise ConnectionError('Ensure client connected')
+ConnectionError: Ensure client connected
+DEBUG    [2021-04-27 14:23:00,130] AsyncModbusDevice[4005]._read_and_log(262): Reading...
+ERROR    [2021-04-27 14:23:00,130] AsyncModbusDevice[4005]._read_and_log(266): Cannot read and log Ensure client connected
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 263, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 194, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 169, in read_funcs
+    raise ConnectionError('Ensure client connected')
+ConnectionError: Ensure client connected
+DEBUG    [2021-04-27 14:23:00,142] AsyncModbusDevice[4005]._read_and_log(262): Reading...
+ERROR    [2021-04-27 14:23:00,142] AsyncModbusDevice[4005]._read_and_log(266): Cannot read and log Ensure client connected
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 263, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 194, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 169, in read_funcs
+    raise ConnectionError('Ensure client connected')
+ConnectionError: Ensure client connected
+DEBUG    [2021-04-27 14:23:00,143] AsyncModbusDevice[4005]._read_and_log(262): Reading...
+ERROR    [2021-04-27 14:23:00,143] AsyncModbusDevice[4005]._read_and_log(266): Cannot read and log Ensure client connected
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 263, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 194, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 169, in read_funcs
+    raise ConnectionError('Ensure client connected')
+ConnectionError: Ensure client connected
+DEBUG    [2021-04-27 14:23:00,143] AsyncModbusDevice[4005]._read_and_log(262): Reading...
+ERROR    [2021-04-27 14:23:00,143] AsyncModbusDevice[4005]._read_and_log(266): Cannot read and log Ensure client connected
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 263, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 194, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 169, in read_funcs
+    raise ConnectionError('Ensure client connected')
+ConnectionError: Ensure client connected
+DEBUG    [2021-04-27 14:23:00,144] AsyncModbusDevice[4005]._read_and_log(262): Reading...
+ERROR    [2021-04-27 14:23:00,144] AsyncModbusDevice[4005]._read_and_log(266): Cannot read and log Ensure client connected
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 263, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 194, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 169, in read_funcs
+    raise ConnectionError('Ensure client connected')
+ConnectionError: Ensure client connected
+DEBUG    [2021-04-27 14:23:00,144] AsyncModbusDevice[4005]._read_and_log(262): Reading...
+ERROR    [2021-04-27 14:23:00,144] AsyncModbusDevice[4005]._read_and_log(266): Cannot read and log Ensure client connected
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 263, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 194, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 169, in read_funcs
+    raise ConnectionError('Ensure client connected')
+ConnectionError: Ensure client connected
+DEBUG    [2021-04-27 14:23:00,145] AsyncModbusDevice[4005]._read_and_log(262): Reading...
+ERROR    [2021-04-27 14:23:00,145] AsyncModbusDevice[4005]._read_and_log(266): Cannot read and log Ensure client connected
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 263, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 194, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 169, in read_funcs
+    raise ConnectionError('Ensure client connected')
+ConnectionError: Ensure client connected
+DEBUG    [2021-04-27 14:23:00,159] AsyncModbusDevice[4005]._read_and_log(262): Reading...
+ERROR    [2021-04-27 14:23:00,159] AsyncModbusDevice[4005]._read_and_log(266): Cannot read and log Ensure client connected
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 263, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 194, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 169, in read_funcs
+    raise ConnectionError('Ensure client connected')
+ConnectionError: Ensure client connected
+DEBUG    [2021-04-27 14:23:00,159] AsyncModbusDevice[4005]._read_and_log(262): Reading...
+ERROR    [2021-04-27 14:23:00,159] AsyncModbusDevice[4005]._read_and_log(266): Cannot read and log Ensure client connected
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 263, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 194, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 169, in read_funcs
+    raise ConnectionError('Ensure client connected')
+ConnectionError: Ensure client connected
+DEBUG    [2021-04-27 14:23:00,160] AsyncModbusDevice[4005]._read_and_log(262): Reading...
+ERROR    [2021-04-27 14:23:00,160] AsyncModbusDevice[4005]._read_and_log(266): Cannot read and log Ensure client connected
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 263, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 194, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 169, in read_funcs
+    raise ConnectionError('Ensure client connected')
+ConnectionError: Ensure client connected
+DEBUG    [2021-05-03 22:33:14,955] AsyncModbusDevice[4005].create(53): Device created
+DEBUG    [2021-05-03 22:33:14,955] AsyncModbusDevice[4005].create_client(64): Creating pymodbus client
+DEBUG    [2021-05-03 22:33:14,986] AsyncModbusDevice[4005].create_client(108): Client created
+DEBUG    [2021-05-03 22:33:15,272] AsyncModbusDevice[4005]._sort_objects_by_period(191): Objects to poll are grouped by periods
+DEBUG    [2021-05-03 22:33:15,272] AsyncModbusDevice[4005].load_objects(173): Objects to poll are loaded to device
+DEBUG    [2021-05-03 22:33:15,272] AsyncModbusDevice[4005].start_periodic_polls(275): Objects = {60: [ModbusObj, ModbusObj, ModbusObj, ModbusObj, ModbusObj, ModbusObj, ModbusObj, ModbusObj, ModbusObj, ModbusObj, ModbusObj, ModbusObj, ModbusObj, ModbusObj, ModbusObj, ModbusObj, ModbusObj, ModbusObj, ModbusObj, ModbusObj, ModbusObj, ModbusObj, ModbusObj, ModbusObj, ModbusObj, ModbusObj, ModbusObj, ModbusObj]}
+DEBUG    [2021-05-03 22:33:15,272] AsyncModbusDevice[4005].start_periodic_polls(282): Periodic polls started
+DEBUG    [2021-05-03 22:33:15,288] AsyncModbusDevice[4005].periodic_poll(286): Periodic poll task created for period 60
+DEBUG    [2021-05-03 22:33:15,288] AsyncModbusDevice[4005]._poll_objects(310): Performing read tasks...
+DEBUG    [2021-05-03 22:33:15,335] AsyncModbusDevice[4005]._read_and_log(299): Reading...
+ERROR    [2021-05-03 22:33:15,335] AsyncModbusDevice[4005]._read_and_log(303): Cannot read and log 'NoneType' object has no attribute 'read_coils'
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 300, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 222, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 198, in read_funcs
+    read_funcs = {1: self._client.protocol.read_coils,
+AttributeError: 'NoneType' object has no attribute 'read_coils'
+DEBUG    [2021-05-03 22:33:15,335] AsyncModbusDevice[4005]._read_and_log(299): Reading...
+ERROR    [2021-05-03 22:33:15,335] AsyncModbusDevice[4005]._read_and_log(303): Cannot read and log 'NoneType' object has no attribute 'read_coils'
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 300, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 222, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 198, in read_funcs
+    read_funcs = {1: self._client.protocol.read_coils,
+AttributeError: 'NoneType' object has no attribute 'read_coils'
+DEBUG    [2021-05-03 22:33:15,335] AsyncModbusDevice[4005]._read_and_log(299): Reading...
+ERROR    [2021-05-03 22:33:15,335] AsyncModbusDevice[4005]._read_and_log(303): Cannot read and log 'NoneType' object has no attribute 'read_coils'
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 300, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 222, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 198, in read_funcs
+    read_funcs = {1: self._client.protocol.read_coils,
+AttributeError: 'NoneType' object has no attribute 'read_coils'
+DEBUG    [2021-05-03 22:33:15,357] AsyncModbusDevice[4005]._read_and_log(299): Reading...
+ERROR    [2021-05-03 22:33:15,357] AsyncModbusDevice[4005]._read_and_log(303): Cannot read and log 'NoneType' object has no attribute 'read_coils'
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 300, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 222, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 198, in read_funcs
+    read_funcs = {1: self._client.protocol.read_coils,
+AttributeError: 'NoneType' object has no attribute 'read_coils'
+DEBUG    [2021-05-03 22:33:15,357] AsyncModbusDevice[4005]._read_and_log(299): Reading...
+ERROR    [2021-05-03 22:33:15,357] AsyncModbusDevice[4005]._read_and_log(303): Cannot read and log 'NoneType' object has no attribute 'read_coils'
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 300, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 222, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 198, in read_funcs
+    read_funcs = {1: self._client.protocol.read_coils,
+AttributeError: 'NoneType' object has no attribute 'read_coils'
+DEBUG    [2021-05-03 22:33:15,357] AsyncModbusDevice[4005]._read_and_log(299): Reading...
+ERROR    [2021-05-03 22:33:15,357] AsyncModbusDevice[4005]._read_and_log(303): Cannot read and log 'NoneType' object has no attribute 'read_coils'
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 300, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 222, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 198, in read_funcs
+    read_funcs = {1: self._client.protocol.read_coils,
+AttributeError: 'NoneType' object has no attribute 'read_coils'
+DEBUG    [2021-05-03 22:33:15,357] AsyncModbusDevice[4005]._read_and_log(299): Reading...
+ERROR    [2021-05-03 22:33:15,357] AsyncModbusDevice[4005]._read_and_log(303): Cannot read and log 'NoneType' object has no attribute 'read_coils'
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 300, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 222, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 198, in read_funcs
+    read_funcs = {1: self._client.protocol.read_coils,
+AttributeError: 'NoneType' object has no attribute 'read_coils'
+DEBUG    [2021-05-03 22:33:15,357] AsyncModbusDevice[4005]._read_and_log(299): Reading...
+ERROR    [2021-05-03 22:33:15,357] AsyncModbusDevice[4005]._read_and_log(303): Cannot read and log 'NoneType' object has no attribute 'read_coils'
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 300, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 222, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 198, in read_funcs
+    read_funcs = {1: self._client.protocol.read_coils,
+AttributeError: 'NoneType' object has no attribute 'read_coils'
+DEBUG    [2021-05-03 22:33:15,357] AsyncModbusDevice[4005]._read_and_log(299): Reading...
+ERROR    [2021-05-03 22:33:15,357] AsyncModbusDevice[4005]._read_and_log(303): Cannot read and log 'NoneType' object has no attribute 'read_coils'
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 300, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 222, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 198, in read_funcs
+    read_funcs = {1: self._client.protocol.read_coils,
+AttributeError: 'NoneType' object has no attribute 'read_coils'
+DEBUG    [2021-05-03 22:33:15,372] AsyncModbusDevice[4005]._read_and_log(299): Reading...
+ERROR    [2021-05-03 22:33:15,372] AsyncModbusDevice[4005]._read_and_log(303): Cannot read and log 'NoneType' object has no attribute 'read_coils'
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 300, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 222, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 198, in read_funcs
+    read_funcs = {1: self._client.protocol.read_coils,
+AttributeError: 'NoneType' object has no attribute 'read_coils'
+DEBUG    [2021-05-03 22:33:15,372] AsyncModbusDevice[4005]._read_and_log(299): Reading...
+ERROR    [2021-05-03 22:33:15,372] AsyncModbusDevice[4005]._read_and_log(303): Cannot read and log 'NoneType' object has no attribute 'read_coils'
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 300, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 222, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 198, in read_funcs
+    read_funcs = {1: self._client.protocol.read_coils,
+AttributeError: 'NoneType' object has no attribute 'read_coils'
+DEBUG    [2021-05-03 22:33:15,372] AsyncModbusDevice[4005]._read_and_log(299): Reading...
+ERROR    [2021-05-03 22:33:15,372] AsyncModbusDevice[4005]._read_and_log(303): Cannot read and log 'NoneType' object has no attribute 'read_coils'
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 300, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 222, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 198, in read_funcs
+    read_funcs = {1: self._client.protocol.read_coils,
+AttributeError: 'NoneType' object has no attribute 'read_coils'
+DEBUG    [2021-05-03 22:33:15,372] AsyncModbusDevice[4005]._read_and_log(299): Reading...
+ERROR    [2021-05-03 22:33:15,372] AsyncModbusDevice[4005]._read_and_log(303): Cannot read and log 'NoneType' object has no attribute 'read_coils'
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 300, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 222, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 198, in read_funcs
+    read_funcs = {1: self._client.protocol.read_coils,
+AttributeError: 'NoneType' object has no attribute 'read_coils'
+DEBUG    [2021-05-03 22:33:15,372] AsyncModbusDevice[4005]._read_and_log(299): Reading...
+ERROR    [2021-05-03 22:33:15,372] AsyncModbusDevice[4005]._read_and_log(303): Cannot read and log 'NoneType' object has no attribute 'read_coils'
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 300, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 222, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 198, in read_funcs
+    read_funcs = {1: self._client.protocol.read_coils,
+AttributeError: 'NoneType' object has no attribute 'read_coils'
+DEBUG    [2021-05-03 22:33:15,372] AsyncModbusDevice[4005]._read_and_log(299): Reading...
+ERROR    [2021-05-03 22:33:15,372] AsyncModbusDevice[4005]._read_and_log(303): Cannot read and log 'NoneType' object has no attribute 'read_coils'
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 300, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 222, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 198, in read_funcs
+    read_funcs = {1: self._client.protocol.read_coils,
+AttributeError: 'NoneType' object has no attribute 'read_coils'
+DEBUG    [2021-05-03 22:33:15,388] AsyncModbusDevice[4005]._read_and_log(299): Reading...
+ERROR    [2021-05-03 22:33:15,388] AsyncModbusDevice[4005]._read_and_log(303): Cannot read and log 'NoneType' object has no attribute 'read_coils'
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 300, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 222, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 198, in read_funcs
+    read_funcs = {1: self._client.protocol.read_coils,
+AttributeError: 'NoneType' object has no attribute 'read_coils'
+DEBUG    [2021-05-03 22:33:15,388] AsyncModbusDevice[4005]._read_and_log(299): Reading...
+ERROR    [2021-05-03 22:33:15,388] AsyncModbusDevice[4005]._read_and_log(303): Cannot read and log 'NoneType' object has no attribute 'read_coils'
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 300, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 222, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 198, in read_funcs
+    read_funcs = {1: self._client.protocol.read_coils,
+AttributeError: 'NoneType' object has no attribute 'read_coils'
+DEBUG    [2021-05-03 22:33:15,388] AsyncModbusDevice[4005]._read_and_log(299): Reading...
+ERROR    [2021-05-03 22:33:15,388] AsyncModbusDevice[4005]._read_and_log(303): Cannot read and log 'NoneType' object has no attribute 'read_coils'
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 300, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 222, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 198, in read_funcs
+    read_funcs = {1: self._client.protocol.read_coils,
+AttributeError: 'NoneType' object has no attribute 'read_coils'
+DEBUG    [2021-05-03 22:33:15,388] AsyncModbusDevice[4005]._read_and_log(299): Reading...
+ERROR    [2021-05-03 22:33:15,388] AsyncModbusDevice[4005]._read_and_log(303): Cannot read and log 'NoneType' object has no attribute 'read_coils'
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 300, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 222, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 198, in read_funcs
+    read_funcs = {1: self._client.protocol.read_coils,
+AttributeError: 'NoneType' object has no attribute 'read_coils'
+DEBUG    [2021-05-03 22:33:15,388] AsyncModbusDevice[4005]._read_and_log(299): Reading...
+ERROR    [2021-05-03 22:33:15,388] AsyncModbusDevice[4005]._read_and_log(303): Cannot read and log 'NoneType' object has no attribute 'read_coils'
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 300, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 222, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 198, in read_funcs
+    read_funcs = {1: self._client.protocol.read_coils,
+AttributeError: 'NoneType' object has no attribute 'read_coils'
+DEBUG    [2021-05-03 22:33:15,388] AsyncModbusDevice[4005]._read_and_log(299): Reading...
+ERROR    [2021-05-03 22:33:15,388] AsyncModbusDevice[4005]._read_and_log(303): Cannot read and log 'NoneType' object has no attribute 'read_coils'
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 300, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 222, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 198, in read_funcs
+    read_funcs = {1: self._client.protocol.read_coils,
+AttributeError: 'NoneType' object has no attribute 'read_coils'
+DEBUG    [2021-05-03 22:33:15,403] AsyncModbusDevice[4005]._read_and_log(299): Reading...
+ERROR    [2021-05-03 22:33:15,404] AsyncModbusDevice[4005]._read_and_log(303): Cannot read and log 'NoneType' object has no attribute 'read_coils'
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 300, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 222, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 198, in read_funcs
+    read_funcs = {1: self._client.protocol.read_coils,
+AttributeError: 'NoneType' object has no attribute 'read_coils'
+DEBUG    [2021-05-03 22:33:15,404] AsyncModbusDevice[4005]._read_and_log(299): Reading...
+ERROR    [2021-05-03 22:33:15,404] AsyncModbusDevice[4005]._read_and_log(303): Cannot read and log 'NoneType' object has no attribute 'read_coils'
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 300, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 222, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 198, in read_funcs
+    read_funcs = {1: self._client.protocol.read_coils,
+AttributeError: 'NoneType' object has no attribute 'read_coils'
+DEBUG    [2021-05-03 22:33:15,404] AsyncModbusDevice[4005]._read_and_log(299): Reading...
+ERROR    [2021-05-03 22:33:15,404] AsyncModbusDevice[4005]._read_and_log(303): Cannot read and log 'NoneType' object has no attribute 'read_coils'
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 300, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 222, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 198, in read_funcs
+    read_funcs = {1: self._client.protocol.read_coils,
+AttributeError: 'NoneType' object has no attribute 'read_coils'
+DEBUG    [2021-05-03 22:33:15,404] AsyncModbusDevice[4005]._read_and_log(299): Reading...
+ERROR    [2021-05-03 22:33:15,404] AsyncModbusDevice[4005]._read_and_log(303): Cannot read and log 'NoneType' object has no attribute 'read_coils'
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 300, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 222, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 198, in read_funcs
+    read_funcs = {1: self._client.protocol.read_coils,
+AttributeError: 'NoneType' object has no attribute 'read_coils'
+DEBUG    [2021-05-03 22:33:15,404] AsyncModbusDevice[4005]._read_and_log(299): Reading...
+ERROR    [2021-05-03 22:33:15,404] AsyncModbusDevice[4005]._read_and_log(303): Cannot read and log 'NoneType' object has no attribute 'read_coils'
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 300, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 222, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 198, in read_funcs
+    read_funcs = {1: self._client.protocol.read_coils,
+AttributeError: 'NoneType' object has no attribute 'read_coils'
+DEBUG    [2021-05-03 22:33:15,404] AsyncModbusDevice[4005]._read_and_log(299): Reading...
+ERROR    [2021-05-03 22:33:15,404] AsyncModbusDevice[4005]._read_and_log(303): Cannot read and log 'NoneType' object has no attribute 'read_coils'
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 300, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 222, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 198, in read_funcs
+    read_funcs = {1: self._client.protocol.read_coils,
+AttributeError: 'NoneType' object has no attribute 'read_coils'
+DEBUG    [2021-05-03 22:33:15,420] AsyncModbusDevice[4005]._read_and_log(299): Reading...
+ERROR    [2021-05-03 22:33:15,420] AsyncModbusDevice[4005]._read_and_log(303): Cannot read and log 'NoneType' object has no attribute 'read_coils'
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 300, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 222, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 198, in read_funcs
+    read_funcs = {1: self._client.protocol.read_coils,
+AttributeError: 'NoneType' object has no attribute 'read_coils'
+DEBUG    [2021-05-03 22:33:43,464] AsyncModbusDevice[4005].create(53): Device created
+DEBUG    [2021-05-03 22:33:43,464] AsyncModbusDevice[4005].create_client(64): Creating pymodbus client
+DEBUG    [2021-05-03 22:33:43,480] AsyncModbusDevice[4005].create_client(108): Client created
+DEBUG    [2021-05-03 22:33:43,779] AsyncModbusDevice[4005]._sort_objects_by_period(191): Objects to poll are grouped by periods
+DEBUG    [2021-05-03 22:33:43,794] AsyncModbusDevice[4005].load_objects(173): Objects to poll are loaded to device
+DEBUG    [2021-05-03 22:33:43,794] AsyncModbusDevice[4005].start_periodic_polls(275): Objects = {60: [ModbusObj, ModbusObj, ModbusObj, ModbusObj, ModbusObj, ModbusObj, ModbusObj, ModbusObj, ModbusObj, ModbusObj, ModbusObj, ModbusObj, ModbusObj, ModbusObj, ModbusObj, ModbusObj, ModbusObj, ModbusObj, ModbusObj, ModbusObj, ModbusObj, ModbusObj, ModbusObj, ModbusObj, ModbusObj, ModbusObj, ModbusObj, ModbusObj]}
+DEBUG    [2021-05-03 22:33:43,794] AsyncModbusDevice[4005].start_periodic_polls(282): Periodic polls started
+DEBUG    [2021-05-03 22:33:43,810] AsyncModbusDevice[4005].periodic_poll(286): Periodic poll task created for period 60
+DEBUG    [2021-05-03 22:33:43,810] AsyncModbusDevice[4005]._poll_objects(310): Performing read tasks...
+DEBUG    [2021-05-03 22:33:43,865] AsyncModbusDevice[4005]._read_and_log(299): Reading...
+ERROR    [2021-05-03 22:33:43,865] AsyncModbusDevice[4005]._read_and_log(303): Cannot read and log 'NoneType' object has no attribute 'read_coils'
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 300, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 222, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 198, in read_funcs
+    read_funcs = {1: self._client.protocol.read_coils,
+AttributeError: 'NoneType' object has no attribute 'read_coils'
+DEBUG    [2021-05-03 22:33:43,865] AsyncModbusDevice[4005]._read_and_log(299): Reading...
+ERROR    [2021-05-03 22:33:43,865] AsyncModbusDevice[4005]._read_and_log(303): Cannot read and log 'NoneType' object has no attribute 'read_coils'
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 300, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 222, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 198, in read_funcs
+    read_funcs = {1: self._client.protocol.read_coils,
+AttributeError: 'NoneType' object has no attribute 'read_coils'
+DEBUG    [2021-05-03 22:33:43,865] AsyncModbusDevice[4005]._read_and_log(299): Reading...
+ERROR    [2021-05-03 22:33:43,865] AsyncModbusDevice[4005]._read_and_log(303): Cannot read and log 'NoneType' object has no attribute 'read_coils'
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 300, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 222, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 198, in read_funcs
+    read_funcs = {1: self._client.protocol.read_coils,
+AttributeError: 'NoneType' object has no attribute 'read_coils'
+DEBUG    [2021-05-03 22:33:43,865] AsyncModbusDevice[4005]._read_and_log(299): Reading...
+ERROR    [2021-05-03 22:33:43,865] AsyncModbusDevice[4005]._read_and_log(303): Cannot read and log 'NoneType' object has no attribute 'read_coils'
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 300, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 222, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 198, in read_funcs
+    read_funcs = {1: self._client.protocol.read_coils,
+AttributeError: 'NoneType' object has no attribute 'read_coils'
+DEBUG    [2021-05-03 22:33:43,865] AsyncModbusDevice[4005]._read_and_log(299): Reading...
+ERROR    [2021-05-03 22:33:43,865] AsyncModbusDevice[4005]._read_and_log(303): Cannot read and log 'NoneType' object has no attribute 'read_coils'
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 300, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 222, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 198, in read_funcs
+    read_funcs = {1: self._client.protocol.read_coils,
+AttributeError: 'NoneType' object has no attribute 'read_coils'
+DEBUG    [2021-05-03 22:33:43,881] AsyncModbusDevice[4005]._read_and_log(299): Reading...
+ERROR    [2021-05-03 22:33:43,881] AsyncModbusDevice[4005]._read_and_log(303): Cannot read and log 'NoneType' object has no attribute 'read_coils'
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 300, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 222, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 198, in read_funcs
+    read_funcs = {1: self._client.protocol.read_coils,
+AttributeError: 'NoneType' object has no attribute 'read_coils'
+DEBUG    [2021-05-03 22:33:43,881] AsyncModbusDevice[4005]._read_and_log(299): Reading...
+ERROR    [2021-05-03 22:33:43,881] AsyncModbusDevice[4005]._read_and_log(303): Cannot read and log 'NoneType' object has no attribute 'read_coils'
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 300, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 222, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 198, in read_funcs
+    read_funcs = {1: self._client.protocol.read_coils,
+AttributeError: 'NoneType' object has no attribute 'read_coils'
+DEBUG    [2021-05-03 22:33:43,881] AsyncModbusDevice[4005]._read_and_log(299): Reading...
+ERROR    [2021-05-03 22:33:43,881] AsyncModbusDevice[4005]._read_and_log(303): Cannot read and log 'NoneType' object has no attribute 'read_coils'
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 300, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 222, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 198, in read_funcs
+    read_funcs = {1: self._client.protocol.read_coils,
+AttributeError: 'NoneType' object has no attribute 'read_coils'
+DEBUG    [2021-05-03 22:33:43,881] AsyncModbusDevice[4005]._read_and_log(299): Reading...
+ERROR    [2021-05-03 22:33:43,881] AsyncModbusDevice[4005]._read_and_log(303): Cannot read and log 'NoneType' object has no attribute 'read_coils'
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 300, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 222, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 198, in read_funcs
+    read_funcs = {1: self._client.protocol.read_coils,
+AttributeError: 'NoneType' object has no attribute 'read_coils'
+DEBUG    [2021-05-03 22:33:43,881] AsyncModbusDevice[4005]._read_and_log(299): Reading...
+ERROR    [2021-05-03 22:33:43,881] AsyncModbusDevice[4005]._read_and_log(303): Cannot read and log 'NoneType' object has no attribute 'read_coils'
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 300, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 222, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 198, in read_funcs
+    read_funcs = {1: self._client.protocol.read_coils,
+AttributeError: 'NoneType' object has no attribute 'read_coils'
+DEBUG    [2021-05-03 22:33:43,881] AsyncModbusDevice[4005]._read_and_log(299): Reading...
+ERROR    [2021-05-03 22:33:43,881] AsyncModbusDevice[4005]._read_and_log(303): Cannot read and log 'NoneType' object has no attribute 'read_coils'
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 300, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 222, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 198, in read_funcs
+    read_funcs = {1: self._client.protocol.read_coils,
+AttributeError: 'NoneType' object has no attribute 'read_coils'
+DEBUG    [2021-05-03 22:33:43,897] AsyncModbusDevice[4005]._read_and_log(299): Reading...
+ERROR    [2021-05-03 22:33:43,897] AsyncModbusDevice[4005]._read_and_log(303): Cannot read and log 'NoneType' object has no attribute 'read_coils'
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 300, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 222, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 198, in read_funcs
+    read_funcs = {1: self._client.protocol.read_coils,
+AttributeError: 'NoneType' object has no attribute 'read_coils'
+DEBUG    [2021-05-03 22:33:43,897] AsyncModbusDevice[4005]._read_and_log(299): Reading...
+ERROR    [2021-05-03 22:33:43,897] AsyncModbusDevice[4005]._read_and_log(303): Cannot read and log 'NoneType' object has no attribute 'read_coils'
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 300, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 222, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 198, in read_funcs
+    read_funcs = {1: self._client.protocol.read_coils,
+AttributeError: 'NoneType' object has no attribute 'read_coils'
+DEBUG    [2021-05-03 22:33:43,897] AsyncModbusDevice[4005]._read_and_log(299): Reading...
+ERROR    [2021-05-03 22:33:43,897] AsyncModbusDevice[4005]._read_and_log(303): Cannot read and log 'NoneType' object has no attribute 'read_coils'
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 300, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 222, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 198, in read_funcs
+    read_funcs = {1: self._client.protocol.read_coils,
+AttributeError: 'NoneType' object has no attribute 'read_coils'
+DEBUG    [2021-05-03 22:33:43,897] AsyncModbusDevice[4005]._read_and_log(299): Reading...
+ERROR    [2021-05-03 22:33:43,897] AsyncModbusDevice[4005]._read_and_log(303): Cannot read and log 'NoneType' object has no attribute 'read_coils'
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 300, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 222, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 198, in read_funcs
+    read_funcs = {1: self._client.protocol.read_coils,
+AttributeError: 'NoneType' object has no attribute 'read_coils'
+DEBUG    [2021-05-03 22:33:43,897] AsyncModbusDevice[4005]._read_and_log(299): Reading...
+ERROR    [2021-05-03 22:33:43,897] AsyncModbusDevice[4005]._read_and_log(303): Cannot read and log 'NoneType' object has no attribute 'read_coils'
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 300, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 222, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 198, in read_funcs
+    read_funcs = {1: self._client.protocol.read_coils,
+AttributeError: 'NoneType' object has no attribute 'read_coils'
+DEBUG    [2021-05-03 22:33:43,897] AsyncModbusDevice[4005]._read_and_log(299): Reading...
+ERROR    [2021-05-03 22:33:43,897] AsyncModbusDevice[4005]._read_and_log(303): Cannot read and log 'NoneType' object has no attribute 'read_coils'
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 300, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 222, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 198, in read_funcs
+    read_funcs = {1: self._client.protocol.read_coils,
+AttributeError: 'NoneType' object has no attribute 'read_coils'
+DEBUG    [2021-05-03 22:33:43,913] AsyncModbusDevice[4005]._read_and_log(299): Reading...
+ERROR    [2021-05-03 22:33:43,913] AsyncModbusDevice[4005]._read_and_log(303): Cannot read and log 'NoneType' object has no attribute 'read_coils'
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 300, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 222, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 198, in read_funcs
+    read_funcs = {1: self._client.protocol.read_coils,
+AttributeError: 'NoneType' object has no attribute 'read_coils'
+DEBUG    [2021-05-03 22:33:43,913] AsyncModbusDevice[4005]._read_and_log(299): Reading...
+ERROR    [2021-05-03 22:33:43,913] AsyncModbusDevice[4005]._read_and_log(303): Cannot read and log 'NoneType' object has no attribute 'read_coils'
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 300, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 222, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 198, in read_funcs
+    read_funcs = {1: self._client.protocol.read_coils,
+AttributeError: 'NoneType' object has no attribute 'read_coils'
+DEBUG    [2021-05-03 22:33:43,913] AsyncModbusDevice[4005]._read_and_log(299): Reading...
+ERROR    [2021-05-03 22:33:43,913] AsyncModbusDevice[4005]._read_and_log(303): Cannot read and log 'NoneType' object has no attribute 'read_coils'
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 300, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 222, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 198, in read_funcs
+    read_funcs = {1: self._client.protocol.read_coils,
+AttributeError: 'NoneType' object has no attribute 'read_coils'
+DEBUG    [2021-05-03 22:33:43,913] AsyncModbusDevice[4005]._read_and_log(299): Reading...
+ERROR    [2021-05-03 22:33:43,913] AsyncModbusDevice[4005]._read_and_log(303): Cannot read and log 'NoneType' object has no attribute 'read_coils'
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 300, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 222, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 198, in read_funcs
+    read_funcs = {1: self._client.protocol.read_coils,
+AttributeError: 'NoneType' object has no attribute 'read_coils'
+DEBUG    [2021-05-03 22:33:43,913] AsyncModbusDevice[4005]._read_and_log(299): Reading...
+ERROR    [2021-05-03 22:33:43,913] AsyncModbusDevice[4005]._read_and_log(303): Cannot read and log 'NoneType' object has no attribute 'read_coils'
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 300, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 222, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 198, in read_funcs
+    read_funcs = {1: self._client.protocol.read_coils,
+AttributeError: 'NoneType' object has no attribute 'read_coils'
+DEBUG    [2021-05-03 22:33:43,913] AsyncModbusDevice[4005]._read_and_log(299): Reading...
+ERROR    [2021-05-03 22:33:43,913] AsyncModbusDevice[4005]._read_and_log(303): Cannot read and log 'NoneType' object has no attribute 'read_coils'
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 300, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 222, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 198, in read_funcs
+    read_funcs = {1: self._client.protocol.read_coils,
+AttributeError: 'NoneType' object has no attribute 'read_coils'
+DEBUG    [2021-05-03 22:33:43,935] AsyncModbusDevice[4005]._read_and_log(299): Reading...
+ERROR    [2021-05-03 22:33:43,935] AsyncModbusDevice[4005]._read_and_log(303): Cannot read and log 'NoneType' object has no attribute 'read_coils'
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 300, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 222, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 198, in read_funcs
+    read_funcs = {1: self._client.protocol.read_coils,
+AttributeError: 'NoneType' object has no attribute 'read_coils'
+DEBUG    [2021-05-03 22:33:43,935] AsyncModbusDevice[4005]._read_and_log(299): Reading...
+ERROR    [2021-05-03 22:33:43,935] AsyncModbusDevice[4005]._read_and_log(303): Cannot read and log 'NoneType' object has no attribute 'read_coils'
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 300, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 222, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 198, in read_funcs
+    read_funcs = {1: self._client.protocol.read_coils,
+AttributeError: 'NoneType' object has no attribute 'read_coils'
+DEBUG    [2021-05-03 22:33:43,935] AsyncModbusDevice[4005]._read_and_log(299): Reading...
+ERROR    [2021-05-03 22:33:43,935] AsyncModbusDevice[4005]._read_and_log(303): Cannot read and log 'NoneType' object has no attribute 'read_coils'
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 300, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 222, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 198, in read_funcs
+    read_funcs = {1: self._client.protocol.read_coils,
+AttributeError: 'NoneType' object has no attribute 'read_coils'
+DEBUG    [2021-05-03 22:33:43,935] AsyncModbusDevice[4005]._read_and_log(299): Reading...
+ERROR    [2021-05-03 22:33:43,935] AsyncModbusDevice[4005]._read_and_log(303): Cannot read and log 'NoneType' object has no attribute 'read_coils'
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 300, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 222, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 198, in read_funcs
+    read_funcs = {1: self._client.protocol.read_coils,
+AttributeError: 'NoneType' object has no attribute 'read_coils'
+DEBUG    [2021-05-03 22:33:43,935] AsyncModbusDevice[4005]._read_and_log(299): Reading...
+ERROR    [2021-05-03 22:33:43,935] AsyncModbusDevice[4005]._read_and_log(303): Cannot read and log 'NoneType' object has no attribute 'read_coils'
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 300, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 222, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 198, in read_funcs
+    read_funcs = {1: self._client.protocol.read_coils,
+AttributeError: 'NoneType' object has no attribute 'read_coils'
+DEBUG    [2021-05-03 22:34:43,933] AsyncModbusDevice[4005].periodic_poll(286): Periodic poll task created for period 60
+DEBUG    [2021-05-03 22:34:43,939] AsyncModbusDevice[4005]._poll_objects(310): Performing read tasks...
+DEBUG    [2021-05-03 22:34:43,954] AsyncModbusDevice[4005]._read_and_log(299): Reading...
+ERROR    [2021-05-03 22:34:43,954] AsyncModbusDevice[4005]._read_and_log(303): Cannot read and log 'NoneType' object has no attribute 'read_coils'
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 300, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 222, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 198, in read_funcs
+    read_funcs = {1: self._client.protocol.read_coils,
+AttributeError: 'NoneType' object has no attribute 'read_coils'
+DEBUG    [2021-05-03 22:34:43,954] AsyncModbusDevice[4005]._read_and_log(299): Reading...
+ERROR    [2021-05-03 22:34:43,954] AsyncModbusDevice[4005]._read_and_log(303): Cannot read and log 'NoneType' object has no attribute 'read_coils'
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 300, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 222, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 198, in read_funcs
+    read_funcs = {1: self._client.protocol.read_coils,
+AttributeError: 'NoneType' object has no attribute 'read_coils'
+DEBUG    [2021-05-03 22:34:43,954] AsyncModbusDevice[4005]._read_and_log(299): Reading...
+ERROR    [2021-05-03 22:34:43,954] AsyncModbusDevice[4005]._read_and_log(303): Cannot read and log 'NoneType' object has no attribute 'read_coils'
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 300, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 222, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 198, in read_funcs
+    read_funcs = {1: self._client.protocol.read_coils,
+AttributeError: 'NoneType' object has no attribute 'read_coils'
+DEBUG    [2021-05-03 22:34:43,954] AsyncModbusDevice[4005]._read_and_log(299): Reading...
+ERROR    [2021-05-03 22:34:43,954] AsyncModbusDevice[4005]._read_and_log(303): Cannot read and log 'NoneType' object has no attribute 'read_coils'
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 300, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 222, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 198, in read_funcs
+    read_funcs = {1: self._client.protocol.read_coils,
+AttributeError: 'NoneType' object has no attribute 'read_coils'
+DEBUG    [2021-05-03 22:34:43,954] AsyncModbusDevice[4005]._read_and_log(299): Reading...
+ERROR    [2021-05-03 22:34:43,954] AsyncModbusDevice[4005]._read_and_log(303): Cannot read and log 'NoneType' object has no attribute 'read_coils'
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 300, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 222, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 198, in read_funcs
+    read_funcs = {1: self._client.protocol.read_coils,
+AttributeError: 'NoneType' object has no attribute 'read_coils'
+DEBUG    [2021-05-03 22:34:43,954] AsyncModbusDevice[4005]._read_and_log(299): Reading...
+ERROR    [2021-05-03 22:34:43,954] AsyncModbusDevice[4005]._read_and_log(303): Cannot read and log 'NoneType' object has no attribute 'read_coils'
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 300, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 222, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 198, in read_funcs
+    read_funcs = {1: self._client.protocol.read_coils,
+AttributeError: 'NoneType' object has no attribute 'read_coils'
+DEBUG    [2021-05-03 22:34:43,970] AsyncModbusDevice[4005]._read_and_log(299): Reading...
+ERROR    [2021-05-03 22:34:43,970] AsyncModbusDevice[4005]._read_and_log(303): Cannot read and log 'NoneType' object has no attribute 'read_coils'
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 300, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 222, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 198, in read_funcs
+    read_funcs = {1: self._client.protocol.read_coils,
+AttributeError: 'NoneType' object has no attribute 'read_coils'
+DEBUG    [2021-05-03 22:34:43,970] AsyncModbusDevice[4005]._read_and_log(299): Reading...
+ERROR    [2021-05-03 22:34:43,970] AsyncModbusDevice[4005]._read_and_log(303): Cannot read and log 'NoneType' object has no attribute 'read_coils'
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 300, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 222, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 198, in read_funcs
+    read_funcs = {1: self._client.protocol.read_coils,
+AttributeError: 'NoneType' object has no attribute 'read_coils'
+DEBUG    [2021-05-03 22:34:43,970] AsyncModbusDevice[4005]._read_and_log(299): Reading...
+ERROR    [2021-05-03 22:34:43,970] AsyncModbusDevice[4005]._read_and_log(303): Cannot read and log 'NoneType' object has no attribute 'read_coils'
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 300, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 222, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 198, in read_funcs
+    read_funcs = {1: self._client.protocol.read_coils,
+AttributeError: 'NoneType' object has no attribute 'read_coils'
+DEBUG    [2021-05-03 22:34:43,970] AsyncModbusDevice[4005]._read_and_log(299): Reading...
+ERROR    [2021-05-03 22:34:43,970] AsyncModbusDevice[4005]._read_and_log(303): Cannot read and log 'NoneType' object has no attribute 'read_coils'
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 300, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 222, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 198, in read_funcs
+    read_funcs = {1: self._client.protocol.read_coils,
+AttributeError: 'NoneType' object has no attribute 'read_coils'
+DEBUG    [2021-05-03 22:34:43,970] AsyncModbusDevice[4005]._read_and_log(299): Reading...
+ERROR    [2021-05-03 22:34:43,970] AsyncModbusDevice[4005]._read_and_log(303): Cannot read and log 'NoneType' object has no attribute 'read_coils'
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 300, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 222, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 198, in read_funcs
+    read_funcs = {1: self._client.protocol.read_coils,
+AttributeError: 'NoneType' object has no attribute 'read_coils'
+DEBUG    [2021-05-03 22:34:43,970] AsyncModbusDevice[4005]._read_and_log(299): Reading...
+ERROR    [2021-05-03 22:34:43,970] AsyncModbusDevice[4005]._read_and_log(303): Cannot read and log 'NoneType' object has no attribute 'read_coils'
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 300, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 222, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 198, in read_funcs
+    read_funcs = {1: self._client.protocol.read_coils,
+AttributeError: 'NoneType' object has no attribute 'read_coils'
+DEBUG    [2021-05-03 22:34:43,986] AsyncModbusDevice[4005]._read_and_log(299): Reading...
+ERROR    [2021-05-03 22:34:43,986] AsyncModbusDevice[4005]._read_and_log(303): Cannot read and log 'NoneType' object has no attribute 'read_coils'
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 300, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 222, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 198, in read_funcs
+    read_funcs = {1: self._client.protocol.read_coils,
+AttributeError: 'NoneType' object has no attribute 'read_coils'
+DEBUG    [2021-05-03 22:34:43,986] AsyncModbusDevice[4005]._read_and_log(299): Reading...
+ERROR    [2021-05-03 22:34:43,986] AsyncModbusDevice[4005]._read_and_log(303): Cannot read and log 'NoneType' object has no attribute 'read_coils'
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 300, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 222, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 198, in read_funcs
+    read_funcs = {1: self._client.protocol.read_coils,
+AttributeError: 'NoneType' object has no attribute 'read_coils'
+DEBUG    [2021-05-03 22:34:43,986] AsyncModbusDevice[4005]._read_and_log(299): Reading...
+ERROR    [2021-05-03 22:34:43,986] AsyncModbusDevice[4005]._read_and_log(303): Cannot read and log 'NoneType' object has no attribute 'read_coils'
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 300, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 222, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 198, in read_funcs
+    read_funcs = {1: self._client.protocol.read_coils,
+AttributeError: 'NoneType' object has no attribute 'read_coils'
+DEBUG    [2021-05-03 22:34:43,986] AsyncModbusDevice[4005]._read_and_log(299): Reading...
+ERROR    [2021-05-03 22:34:43,986] AsyncModbusDevice[4005]._read_and_log(303): Cannot read and log 'NoneType' object has no attribute 'read_coils'
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 300, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 222, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 198, in read_funcs
+    read_funcs = {1: self._client.protocol.read_coils,
+AttributeError: 'NoneType' object has no attribute 'read_coils'
+DEBUG    [2021-05-03 22:34:43,986] AsyncModbusDevice[4005]._read_and_log(299): Reading...
+ERROR    [2021-05-03 22:34:43,986] AsyncModbusDevice[4005]._read_and_log(303): Cannot read and log 'NoneType' object has no attribute 'read_coils'
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 300, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 222, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 198, in read_funcs
+    read_funcs = {1: self._client.protocol.read_coils,
+AttributeError: 'NoneType' object has no attribute 'read_coils'
+DEBUG    [2021-05-03 22:34:43,986] AsyncModbusDevice[4005]._read_and_log(299): Reading...
+ERROR    [2021-05-03 22:34:43,986] AsyncModbusDevice[4005]._read_and_log(303): Cannot read and log 'NoneType' object has no attribute 'read_coils'
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 300, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 222, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 198, in read_funcs
+    read_funcs = {1: self._client.protocol.read_coils,
+AttributeError: 'NoneType' object has no attribute 'read_coils'
+DEBUG    [2021-05-03 22:34:44,002] AsyncModbusDevice[4005]._read_and_log(299): Reading...
+ERROR    [2021-05-03 22:34:44,002] AsyncModbusDevice[4005]._read_and_log(303): Cannot read and log 'NoneType' object has no attribute 'read_coils'
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 300, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 222, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 198, in read_funcs
+    read_funcs = {1: self._client.protocol.read_coils,
+AttributeError: 'NoneType' object has no attribute 'read_coils'
+DEBUG    [2021-05-03 22:34:44,002] AsyncModbusDevice[4005]._read_and_log(299): Reading...
+ERROR    [2021-05-03 22:34:44,002] AsyncModbusDevice[4005]._read_and_log(303): Cannot read and log 'NoneType' object has no attribute 'read_coils'
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 300, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 222, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 198, in read_funcs
+    read_funcs = {1: self._client.protocol.read_coils,
+AttributeError: 'NoneType' object has no attribute 'read_coils'
+DEBUG    [2021-05-03 22:34:44,002] AsyncModbusDevice[4005]._read_and_log(299): Reading...
+ERROR    [2021-05-03 22:34:44,002] AsyncModbusDevice[4005]._read_and_log(303): Cannot read and log 'NoneType' object has no attribute 'read_coils'
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 300, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 222, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 198, in read_funcs
+    read_funcs = {1: self._client.protocol.read_coils,
+AttributeError: 'NoneType' object has no attribute 'read_coils'
+DEBUG    [2021-05-03 22:34:44,002] AsyncModbusDevice[4005]._read_and_log(299): Reading...
+ERROR    [2021-05-03 22:34:44,002] AsyncModbusDevice[4005]._read_and_log(303): Cannot read and log 'NoneType' object has no attribute 'read_coils'
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 300, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 222, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 198, in read_funcs
+    read_funcs = {1: self._client.protocol.read_coils,
+AttributeError: 'NoneType' object has no attribute 'read_coils'
+DEBUG    [2021-05-03 22:34:44,002] AsyncModbusDevice[4005]._read_and_log(299): Reading...
+ERROR    [2021-05-03 22:34:44,002] AsyncModbusDevice[4005]._read_and_log(303): Cannot read and log 'NoneType' object has no attribute 'read_coils'
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 300, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 222, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 198, in read_funcs
+    read_funcs = {1: self._client.protocol.read_coils,
+AttributeError: 'NoneType' object has no attribute 'read_coils'
+DEBUG    [2021-05-03 22:34:44,002] AsyncModbusDevice[4005]._read_and_log(299): Reading...
+ERROR    [2021-05-03 22:34:44,002] AsyncModbusDevice[4005]._read_and_log(303): Cannot read and log 'NoneType' object has no attribute 'read_coils'
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 300, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 222, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 198, in read_funcs
+    read_funcs = {1: self._client.protocol.read_coils,
+AttributeError: 'NoneType' object has no attribute 'read_coils'
+DEBUG    [2021-05-03 22:34:44,017] AsyncModbusDevice[4005]._read_and_log(299): Reading...
+ERROR    [2021-05-03 22:34:44,017] AsyncModbusDevice[4005]._read_and_log(303): Cannot read and log 'NoneType' object has no attribute 'read_coils'
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 300, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 222, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 198, in read_funcs
+    read_funcs = {1: self._client.protocol.read_coils,
+AttributeError: 'NoneType' object has no attribute 'read_coils'
+DEBUG    [2021-05-03 22:34:44,017] AsyncModbusDevice[4005]._read_and_log(299): Reading...
+ERROR    [2021-05-03 22:34:44,017] AsyncModbusDevice[4005]._read_and_log(303): Cannot read and log 'NoneType' object has no attribute 'read_coils'
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 300, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 222, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 198, in read_funcs
+    read_funcs = {1: self._client.protocol.read_coils,
+AttributeError: 'NoneType' object has no attribute 'read_coils'
+DEBUG    [2021-05-03 22:34:44,017] AsyncModbusDevice[4005]._read_and_log(299): Reading...
+ERROR    [2021-05-03 22:34:44,017] AsyncModbusDevice[4005]._read_and_log(303): Cannot read and log 'NoneType' object has no attribute 'read_coils'
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 300, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 222, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 198, in read_funcs
+    read_funcs = {1: self._client.protocol.read_coils,
+AttributeError: 'NoneType' object has no attribute 'read_coils'
+DEBUG    [2021-05-03 22:34:44,017] AsyncModbusDevice[4005]._read_and_log(299): Reading...
+ERROR    [2021-05-03 22:34:44,017] AsyncModbusDevice[4005]._read_and_log(303): Cannot read and log 'NoneType' object has no attribute 'read_coils'
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 300, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 222, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 198, in read_funcs
+    read_funcs = {1: self._client.protocol.read_coils,
+AttributeError: 'NoneType' object has no attribute 'read_coils'
+DEBUG    [2021-05-03 22:35:22,163] AsyncModbusDevice[4005].create(53): Device created
+DEBUG    [2021-05-03 22:35:22,163] AsyncModbusDevice[4005].create_client(64): Creating pymodbus client
+DEBUG    [2021-05-03 22:35:22,179] AsyncModbusDevice[4005].create_client(108): Client created
+DEBUG    [2021-05-03 22:35:22,480] AsyncModbusDevice[4005]._sort_objects_by_period(191): Objects to poll are grouped by periods
+DEBUG    [2021-05-03 22:35:22,480] AsyncModbusDevice[4005].load_objects(173): Objects to poll are loaded to device
+DEBUG    [2021-05-03 22:35:22,480] AsyncModbusDevice[4005].start_periodic_polls(275): Objects = {60: [ModbusObj, ModbusObj, ModbusObj, ModbusObj, ModbusObj, ModbusObj, ModbusObj, ModbusObj, ModbusObj, ModbusObj, ModbusObj, ModbusObj, ModbusObj, ModbusObj, ModbusObj, ModbusObj, ModbusObj, ModbusObj, ModbusObj, ModbusObj, ModbusObj, ModbusObj, ModbusObj, ModbusObj, ModbusObj, ModbusObj, ModbusObj, ModbusObj]}
+DEBUG    [2021-05-03 22:35:22,480] AsyncModbusDevice[4005].start_periodic_polls(282): Periodic polls started
+DEBUG    [2021-05-03 22:35:22,495] AsyncModbusDevice[4005].periodic_poll(286): Periodic poll task created for period 60
+DEBUG    [2021-05-03 22:35:22,495] AsyncModbusDevice[4005]._poll_objects(310): Performing read tasks...
+DEBUG    [2021-05-03 22:35:22,564] AsyncModbusDevice[4005]._read_and_log(299): Reading...
+ERROR    [2021-05-03 22:35:22,564] AsyncModbusDevice[4005]._read_and_log(303): Cannot read and log 'NoneType' object has no attribute 'read_coils'
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 300, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 222, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 198, in read_funcs
+    read_funcs = {1: self._client.protocol.read_coils,
+AttributeError: 'NoneType' object has no attribute 'read_coils'
+DEBUG    [2021-05-03 22:35:22,564] AsyncModbusDevice[4005]._read_and_log(299): Reading...
+ERROR    [2021-05-03 22:35:22,564] AsyncModbusDevice[4005]._read_and_log(303): Cannot read and log 'NoneType' object has no attribute 'read_coils'
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 300, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 222, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 198, in read_funcs
+    read_funcs = {1: self._client.protocol.read_coils,
+AttributeError: 'NoneType' object has no attribute 'read_coils'
+DEBUG    [2021-05-03 22:35:22,564] AsyncModbusDevice[4005]._read_and_log(299): Reading...
+ERROR    [2021-05-03 22:35:22,564] AsyncModbusDevice[4005]._read_and_log(303): Cannot read and log 'NoneType' object has no attribute 'read_coils'
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 300, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 222, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 198, in read_funcs
+    read_funcs = {1: self._client.protocol.read_coils,
+AttributeError: 'NoneType' object has no attribute 'read_coils'
+DEBUG    [2021-05-03 22:35:22,564] AsyncModbusDevice[4005]._read_and_log(299): Reading...
+ERROR    [2021-05-03 22:35:22,564] AsyncModbusDevice[4005]._read_and_log(303): Cannot read and log 'NoneType' object has no attribute 'read_coils'
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 300, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 222, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 198, in read_funcs
+    read_funcs = {1: self._client.protocol.read_coils,
+AttributeError: 'NoneType' object has no attribute 'read_coils'
+DEBUG    [2021-05-03 22:35:22,564] AsyncModbusDevice[4005]._read_and_log(299): Reading...
+ERROR    [2021-05-03 22:35:22,564] AsyncModbusDevice[4005]._read_and_log(303): Cannot read and log 'NoneType' object has no attribute 'read_coils'
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 300, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 222, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 198, in read_funcs
+    read_funcs = {1: self._client.protocol.read_coils,
+AttributeError: 'NoneType' object has no attribute 'read_coils'
+DEBUG    [2021-05-03 22:35:22,564] AsyncModbusDevice[4005]._read_and_log(299): Reading...
+ERROR    [2021-05-03 22:35:22,564] AsyncModbusDevice[4005]._read_and_log(303): Cannot read and log 'NoneType' object has no attribute 'read_coils'
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 300, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 222, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 198, in read_funcs
+    read_funcs = {1: self._client.protocol.read_coils,
+AttributeError: 'NoneType' object has no attribute 'read_coils'
+DEBUG    [2021-05-03 22:35:22,580] AsyncModbusDevice[4005]._read_and_log(299): Reading...
+ERROR    [2021-05-03 22:35:22,580] AsyncModbusDevice[4005]._read_and_log(303): Cannot read and log 'NoneType' object has no attribute 'read_coils'
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 300, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 222, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 198, in read_funcs
+    read_funcs = {1: self._client.protocol.read_coils,
+AttributeError: 'NoneType' object has no attribute 'read_coils'
+DEBUG    [2021-05-03 22:35:22,580] AsyncModbusDevice[4005]._read_and_log(299): Reading...
+ERROR    [2021-05-03 22:35:22,580] AsyncModbusDevice[4005]._read_and_log(303): Cannot read and log 'NoneType' object has no attribute 'read_coils'
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 300, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 222, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 198, in read_funcs
+    read_funcs = {1: self._client.protocol.read_coils,
+AttributeError: 'NoneType' object has no attribute 'read_coils'
+DEBUG    [2021-05-03 22:35:22,580] AsyncModbusDevice[4005]._read_and_log(299): Reading...
+ERROR    [2021-05-03 22:35:22,580] AsyncModbusDevice[4005]._read_and_log(303): Cannot read and log 'NoneType' object has no attribute 'read_coils'
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 300, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 222, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 198, in read_funcs
+    read_funcs = {1: self._client.protocol.read_coils,
+AttributeError: 'NoneType' object has no attribute 'read_coils'
+DEBUG    [2021-05-03 22:35:22,580] AsyncModbusDevice[4005]._read_and_log(299): Reading...
+ERROR    [2021-05-03 22:35:22,580] AsyncModbusDevice[4005]._read_and_log(303): Cannot read and log 'NoneType' object has no attribute 'read_coils'
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 300, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 222, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 198, in read_funcs
+    read_funcs = {1: self._client.protocol.read_coils,
+AttributeError: 'NoneType' object has no attribute 'read_coils'
+DEBUG    [2021-05-03 22:35:22,580] AsyncModbusDevice[4005]._read_and_log(299): Reading...
+ERROR    [2021-05-03 22:35:22,580] AsyncModbusDevice[4005]._read_and_log(303): Cannot read and log 'NoneType' object has no attribute 'read_coils'
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 300, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 222, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 198, in read_funcs
+    read_funcs = {1: self._client.protocol.read_coils,
+AttributeError: 'NoneType' object has no attribute 'read_coils'
+DEBUG    [2021-05-03 22:35:22,580] AsyncModbusDevice[4005]._read_and_log(299): Reading...
+ERROR    [2021-05-03 22:35:22,580] AsyncModbusDevice[4005]._read_and_log(303): Cannot read and log 'NoneType' object has no attribute 'read_coils'
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 300, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 222, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 198, in read_funcs
+    read_funcs = {1: self._client.protocol.read_coils,
+AttributeError: 'NoneType' object has no attribute 'read_coils'
+DEBUG    [2021-05-03 22:35:22,596] AsyncModbusDevice[4005]._read_and_log(299): Reading...
+ERROR    [2021-05-03 22:35:22,596] AsyncModbusDevice[4005]._read_and_log(303): Cannot read and log 'NoneType' object has no attribute 'read_coils'
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 300, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 222, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 198, in read_funcs
+    read_funcs = {1: self._client.protocol.read_coils,
+AttributeError: 'NoneType' object has no attribute 'read_coils'
+DEBUG    [2021-05-03 22:35:22,596] AsyncModbusDevice[4005]._read_and_log(299): Reading...
+ERROR    [2021-05-03 22:35:22,596] AsyncModbusDevice[4005]._read_and_log(303): Cannot read and log 'NoneType' object has no attribute 'read_coils'
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 300, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 222, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 198, in read_funcs
+    read_funcs = {1: self._client.protocol.read_coils,
+AttributeError: 'NoneType' object has no attribute 'read_coils'
+DEBUG    [2021-05-03 22:35:22,596] AsyncModbusDevice[4005]._read_and_log(299): Reading...
+ERROR    [2021-05-03 22:35:22,596] AsyncModbusDevice[4005]._read_and_log(303): Cannot read and log 'NoneType' object has no attribute 'read_coils'
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 300, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 222, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 198, in read_funcs
+    read_funcs = {1: self._client.protocol.read_coils,
+AttributeError: 'NoneType' object has no attribute 'read_coils'
+DEBUG    [2021-05-03 22:35:22,596] AsyncModbusDevice[4005]._read_and_log(299): Reading...
+ERROR    [2021-05-03 22:35:22,596] AsyncModbusDevice[4005]._read_and_log(303): Cannot read and log 'NoneType' object has no attribute 'read_coils'
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 300, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 222, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 198, in read_funcs
+    read_funcs = {1: self._client.protocol.read_coils,
+AttributeError: 'NoneType' object has no attribute 'read_coils'
+DEBUG    [2021-05-03 22:35:22,596] AsyncModbusDevice[4005]._read_and_log(299): Reading...
+ERROR    [2021-05-03 22:35:22,596] AsyncModbusDevice[4005]._read_and_log(303): Cannot read and log 'NoneType' object has no attribute 'read_coils'
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 300, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 222, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 198, in read_funcs
+    read_funcs = {1: self._client.protocol.read_coils,
+AttributeError: 'NoneType' object has no attribute 'read_coils'
+DEBUG    [2021-05-03 22:35:22,596] AsyncModbusDevice[4005]._read_and_log(299): Reading...
+ERROR    [2021-05-03 22:35:22,596] AsyncModbusDevice[4005]._read_and_log(303): Cannot read and log 'NoneType' object has no attribute 'read_coils'
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 300, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 222, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 198, in read_funcs
+    read_funcs = {1: self._client.protocol.read_coils,
+AttributeError: 'NoneType' object has no attribute 'read_coils'
+DEBUG    [2021-05-03 22:35:22,611] AsyncModbusDevice[4005]._read_and_log(299): Reading...
+ERROR    [2021-05-03 22:35:22,611] AsyncModbusDevice[4005]._read_and_log(303): Cannot read and log 'NoneType' object has no attribute 'read_coils'
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 300, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 222, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 198, in read_funcs
+    read_funcs = {1: self._client.protocol.read_coils,
+AttributeError: 'NoneType' object has no attribute 'read_coils'
+DEBUG    [2021-05-03 22:35:22,611] AsyncModbusDevice[4005]._read_and_log(299): Reading...
+ERROR    [2021-05-03 22:35:22,611] AsyncModbusDevice[4005]._read_and_log(303): Cannot read and log 'NoneType' object has no attribute 'read_coils'
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 300, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 222, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 198, in read_funcs
+    read_funcs = {1: self._client.protocol.read_coils,
+AttributeError: 'NoneType' object has no attribute 'read_coils'
+DEBUG    [2021-05-03 22:35:22,611] AsyncModbusDevice[4005]._read_and_log(299): Reading...
+ERROR    [2021-05-03 22:35:22,611] AsyncModbusDevice[4005]._read_and_log(303): Cannot read and log 'NoneType' object has no attribute 'read_coils'
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 300, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 222, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 198, in read_funcs
+    read_funcs = {1: self._client.protocol.read_coils,
+AttributeError: 'NoneType' object has no attribute 'read_coils'
+DEBUG    [2021-05-03 22:35:22,611] AsyncModbusDevice[4005]._read_and_log(299): Reading...
+ERROR    [2021-05-03 22:35:22,611] AsyncModbusDevice[4005]._read_and_log(303): Cannot read and log 'NoneType' object has no attribute 'read_coils'
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 300, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 222, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 198, in read_funcs
+    read_funcs = {1: self._client.protocol.read_coils,
+AttributeError: 'NoneType' object has no attribute 'read_coils'
+DEBUG    [2021-05-03 22:35:22,617] AsyncModbusDevice[4005]._read_and_log(299): Reading...
+ERROR    [2021-05-03 22:35:22,617] AsyncModbusDevice[4005]._read_and_log(303): Cannot read and log 'NoneType' object has no attribute 'read_coils'
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 300, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 222, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 198, in read_funcs
+    read_funcs = {1: self._client.protocol.read_coils,
+AttributeError: 'NoneType' object has no attribute 'read_coils'
+DEBUG    [2021-05-03 22:35:22,617] AsyncModbusDevice[4005]._read_and_log(299): Reading...
+ERROR    [2021-05-03 22:35:22,617] AsyncModbusDevice[4005]._read_and_log(303): Cannot read and log 'NoneType' object has no attribute 'read_coils'
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 300, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 222, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 198, in read_funcs
+    read_funcs = {1: self._client.protocol.read_coils,
+AttributeError: 'NoneType' object has no attribute 'read_coils'
+DEBUG    [2021-05-03 22:35:22,633] AsyncModbusDevice[4005]._read_and_log(299): Reading...
+ERROR    [2021-05-03 22:35:22,633] AsyncModbusDevice[4005]._read_and_log(303): Cannot read and log 'NoneType' object has no attribute 'read_coils'
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 300, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 222, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 198, in read_funcs
+    read_funcs = {1: self._client.protocol.read_coils,
+AttributeError: 'NoneType' object has no attribute 'read_coils'
+DEBUG    [2021-05-03 22:35:22,633] AsyncModbusDevice[4005]._read_and_log(299): Reading...
+ERROR    [2021-05-03 22:35:22,633] AsyncModbusDevice[4005]._read_and_log(303): Cannot read and log 'NoneType' object has no attribute 'read_coils'
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 300, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 222, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 198, in read_funcs
+    read_funcs = {1: self._client.protocol.read_coils,
+AttributeError: 'NoneType' object has no attribute 'read_coils'
+DEBUG    [2021-05-03 22:35:22,633] AsyncModbusDevice[4005]._read_and_log(299): Reading...
+ERROR    [2021-05-03 22:35:22,633] AsyncModbusDevice[4005]._read_and_log(303): Cannot read and log 'NoneType' object has no attribute 'read_coils'
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 300, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 222, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 198, in read_funcs
+    read_funcs = {1: self._client.protocol.read_coils,
+AttributeError: 'NoneType' object has no attribute 'read_coils'
+DEBUG    [2021-05-03 22:35:22,633] AsyncModbusDevice[4005]._read_and_log(299): Reading...
+ERROR    [2021-05-03 22:35:22,633] AsyncModbusDevice[4005]._read_and_log(303): Cannot read and log 'NoneType' object has no attribute 'read_coils'
+Traceback (most recent call last):
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 300, in _read_and_log
+    value = await self.read(obj=obj)
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 222, in read
+    if read_cmd_code not in self.read_funcs:
+  File "D:\JOB\VisioBas\visiobas-gateway\gateway\devices\async_modbus.py", line 198, in read_funcs
+    read_funcs = {1: self._client.protocol.read_coils,
+AttributeError: 'NoneType' object has no attribute 'read_coils'

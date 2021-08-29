@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "visiobas-gateway"
-version = "3.2.5"
+version = "3.3.0"
 description = "Polling devices using various protocols and transmitting data to the VisioBAS system"
 repository = "https://github.com/NPPElement/visiobas-gateway"
 keywords = ["VisioBAS", "Gateway", "BACnet", "Modbus"]
@@ -44,7 +44,6 @@ exclude = '''
   /(
     | \.git
     | \.venv
-    | \venv
     | \.mypy_cache
     | tests
   )/
