@@ -173,9 +173,7 @@ class BaseModbusDevice(BasePollingDevice):
             # scaled = [scaled] + [0] * 7
             return int(bool(scaled))
 
-        builder = BinaryPayloadBuilder(
-            byteorder=obj.byte_order, wordorder=obj.word_order
-        )
+        builder = BinaryPayloadBuilder(byteorder=obj.byte_order, wordorder=obj.word_order)
         build_funcs = {
             # 1: {DataType.BOOL: builder.add_bits},
             8: {

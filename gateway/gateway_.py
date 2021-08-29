@@ -7,12 +7,7 @@ from pydantic import ValidationError
 
 from gateway.api import VisioGtwApi
 from gateway.clients import VisioHTTPClient, VisioMQTTClient
-from gateway.devices import (
-    AsyncModbusDevice,
-    BACnetDevice,
-    SUNAPIDevice,
-    SyncModbusDevice,
-)
+from gateway.devices import AsyncModbusDevice, BACnetDevice, SUNAPIDevice, SyncModbusDevice
 from gateway.models import (
     ApiSettings,
     BACnetDeviceObj,
@@ -116,9 +111,7 @@ class VisioBASGateway:
         """Set up Gateway and spawn update task."""
         self.http_client = VisioHTTPClient(gateway=self, settings=HTTPSettings())
         if self._is_mqtt_enabled:
-            self.mqtt_client = VisioMQTTClient.create(
-                gateway=self, settings=MQTTSettings()
-            )
+            self.mqtt_client = VisioMQTTClient.create(gateway=self, settings=MQTTSettings())
 
         self.api = VisioGtwApi.create(gateway=self, settings=ApiSettings())
         await self._scheduler.spawn(self.api.start())
@@ -258,9 +251,7 @@ class VisioBASGateway:
 
             # objs in the list, so get [0] element in `dev_obj_data[0]` below
             # request one type - 'device', so [0] element of tuple below
-            dev_obj = await self.async_add_job(
-                self._parse_device_obj, dev_obj_data[0][0]
-            )
+            dev_obj = await self.async_add_job(self._parse_device_obj, dev_obj_data[0][0])
             dev = await self.device_factory(dev_obj=dev_obj)
 
             if dev.is_polling_device:
@@ -391,9 +382,7 @@ class VisioBASGateway:
                 Protocol.MODBUS_RTUOVERTCP,
                 Protocol.MODBUS_RTU,
             }:
-                cls = (
-                    SyncModbusDevice if self.settings.modbus_sync else AsyncModbusDevice
-                )
+                cls = SyncModbusDevice if self.settings.modbus_sync else AsyncModbusDevice
                 device = await cls.create(device_obj=dev_obj, gateway=self)
             elif protocol is Protocol.BACNET:
                 device = await BACnetDevice.create(device_obj=dev_obj, gateway=self)

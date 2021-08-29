@@ -22,9 +22,7 @@ class ModbusObjPropertyListModel(BaseModel):
     )
 
     # For recalculate A*X+B (X - value)
-    scale: float = Field(
-        default=1.0, description="Multiplier `A` for recalculate A*X+B"
-    )
+    scale: float = Field(default=1.0, description="Multiplier `A` for recalculate A*X+B")
     offset: float = Field(default=0.0, description="Adding `B` for recalculate A*X+B")
 
     data_type: Union[DataType, str] = Field(..., alias="dataType")
@@ -45,9 +43,7 @@ class ModbusObjPropertyListModel(BaseModel):
     bit: Optional[int] = Field(default=None, ge=0, le=16)  # TODO: change to 'bitmask'?
 
     @validator("func_write")
-    def validate_consistent(
-        cls, v: ModbusWriteFunc, values
-    ) -> Optional[ModbusWriteFunc]:
+    def validate_consistent(cls, v: ModbusWriteFunc, values) -> Optional[ModbusWriteFunc]:
         # TODO: add funcs mapping
         if v is None:
             return v

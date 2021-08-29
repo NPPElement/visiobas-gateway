@@ -21,9 +21,7 @@ class BasePollingDevice(BaseDevice, ABC):
     _client_creation_lock: asyncio.Lock = None
 
     # Key is serial port name.
-    _serial_clients: dict[
-        str : Union[ModbusSerialClient, AsyncioModbusSerialClient]
-    ] = {}
+    _serial_clients: dict[str : Union[ModbusSerialClient, AsyncioModbusSerialClient]] = {}
     _serial_port_locks: dict[str : asyncio.Lock] = {}
     _serial_polling: dict[str : asyncio.Event] = {}
     _serial_connected: dict[str, bool] = {}
@@ -118,22 +116,16 @@ class BasePollingDevice(BaseDevice, ABC):
         raise NotImplementedError
 
     @abstractmethod
-    async def _poll_objects(
-        self, objs: Collection[Union[BACnetObj, ModbusObj]]
-    ) -> None:
+    async def _poll_objects(self, objs: Collection[Union[BACnetObj, ModbusObj]]) -> None:
         raise NotImplementedError
 
     @abstractmethod
     async def read(self, obj: BACnetObj, **kwargs) -> Optional[Union[int, float, str]]:
-        raise NotImplementedError(
-            "You should implement async read method for your device"
-        )
+        raise NotImplementedError("You should implement async read method for your device")
 
     @abstractmethod
     async def write(self, value: Union[int, float], obj: BACnetObj, **kwargs) -> None:
-        raise NotImplementedError(
-            "You should implement async write method for your device"
-        )
+        raise NotImplementedError("You should implement async write method for your device")
 
     async def write_with_check(
         self, value: Union[int, float], obj: BACnetObj, **kwargs
@@ -264,7 +256,7 @@ class BasePollingDevice(BaseDevice, ABC):
         objs: set[Union[BACnetObj, ModbusObj]],
         period: int,
         *,
-        first_iter: bool = False
+        first_iter: bool = False,
     ) -> None:
         self._LOG.debug(
             "Polling started",
@@ -298,9 +290,7 @@ class BasePollingDevice(BaseDevice, ABC):
 
         if _t_delta.seconds > period:
             # period *= 1.5
-            self._LOG.warning(
-                "Polling period is too short!", extra={"device_id": self.id}
-            )
+            self._LOG.warning("Polling period is too short!", extra={"device_id": self.id})
         await self._scheduler.spawn(self._process_polled(objs=objs))
         await asyncio.sleep(delay=period - _t_delta.seconds)
 

@@ -35,9 +35,7 @@ class ExtraFormatter(Formatter):
 
     def format(self, record):
         string = super().format(record)
-        extra = {
-            k: v for k, v in record.__dict__.items() if k not in self.reserved_keys
-        }
+        extra = {k: v for k, v in record.__dict__.items() if k not in self.reserved_keys}
         if len(extra) > 0:
             string += " >>> " + str(extra)
         return string

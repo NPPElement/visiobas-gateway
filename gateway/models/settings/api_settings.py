@@ -2,12 +2,8 @@ from pydantic import AnyHttpUrl, BaseSettings, Field
 
 
 class ApiSettings(BaseSettings):
-    url: AnyHttpUrl = Field(
-        default="http://0.0.0.0:7070", description="Url to run API."
-    )
-    priority: int = Field(
-        default=11, description="Priority to write through gateway API."
-    )
+    url: AnyHttpUrl = Field(default="http://0.0.0.0:7070", description="Url to run API.")
+    priority: int = Field(default=11, description="Priority to write through gateway API.")
 
     class Config:
         env_prefix = "GTW_API_"

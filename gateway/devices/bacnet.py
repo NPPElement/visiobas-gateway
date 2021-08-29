@@ -46,9 +46,7 @@ class BACnetDevice(BasePollingDevice):
                 self._LOG.debug("Creating BAC0 client", extra={"device_id": self.id})
                 self.__class__._client = Lite()  # todo params
             else:
-                self._LOG.debug(
-                    "BAC0 client already created", extra={"device_id": self.id}
-                )
+                self._LOG.debug("BAC0 client already created", extra={"device_id": self.id})
 
         except (InitializationError, NetworkInterfaceException, Exception) as e:
             self._LOG.debug(
@@ -121,7 +119,7 @@ class BACnetDevice(BasePollingDevice):
         value: Union[int, float],
         obj: BACnetObj,
         # prop: ObjProperty, priority: Optional[int]
-        **kwargs
+        **kwargs,
     ) -> bool:
         prop = kwargs.get("prop")
         priority = kwargs.get("priority")
@@ -176,7 +174,7 @@ class BACnetDevice(BasePollingDevice):
         self,
         obj: BACnetObj,
         # prop: ObjProperty
-        **kwargs
+        **kwargs,
     ) -> Any:
         prop = kwargs.get("prop")
 
@@ -186,9 +184,7 @@ class BACnetDevice(BasePollingDevice):
 
     def read_property(self, obj: BACnetObj, prop: ObjProperty) -> Any:
         try:
-            request = " ".join(
-                [self.address_port, obj.type.name, str(obj.id), prop.name]
-            )
+            request = " ".join([self.address_port, obj.type.name, str(obj.id), prop.name])
             response = self.__class__._client.read(request)
             self._LOG.debug(
                 "Read",
@@ -285,8 +281,7 @@ class BACnetDevice(BasePollingDevice):
         priorities = [
             v[0] if k[0] != "null" else None
             for k, v in [
-                zip(*pa.value[i].dict_contents().items())
-                for i in range(1, pa.value[0] + 1)
+                zip(*pa.value[i].dict_contents().items()) for i in range(1, pa.value[0] + 1)
             ]
         ]
 

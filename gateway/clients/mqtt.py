@@ -223,9 +223,7 @@ class VisioMQTTClient:
         # _log.debug(f'Published: {client} {userdata} {mid}')
         pass
 
-    def _on_connect_callback(
-        self, client, userdata, flags, rc, properties=None
-    ) -> None:
+    def _on_connect_callback(self, client, userdata, flags, rc, properties=None) -> None:
         if rc == ResultCode.CONNECTION_SUCCESSFUL.rc:
             self._connected = True
             _LOG.info("Connected to broker")

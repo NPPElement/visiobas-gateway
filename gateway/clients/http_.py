@@ -100,9 +100,7 @@ class VisioHTTPClient:
         # ]
         return extracted_data
 
-    async def logout(
-        self, servers: Optional[Collection[HTTPServerConfig]] = None
-    ) -> bool:
+    async def logout(self, servers: Optional[Collection[HTTPServerConfig]] = None) -> bool:
         """Performs log out from servers.
 
         Args:

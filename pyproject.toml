@@ -36,6 +36,29 @@ isort .\
  && pylint gateway\
 """
 
+[tool.black]
+line-length = 92
+target_version = ['py39']
+exclude = '''
+(
+  /(
+    | \.git
+    | \.venv
+    | \venv
+    | \.mypy_cache
+    | tests
+  )/
+)
+'''
+
+[tool.isort]
+line_length = 92
+profile = "black"
+skip = [".venv", "tests"]
+
+[tool.pylint.format]
+max-line-length = 92
+
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"

@@ -117,9 +117,7 @@ class BACnetConnector(Thread, Connector):
                         device_ids=self.device_ids, obj_types=self.__types_to_request
                     )
 
-                    if (
-                        devices_objects
-                    ):  # If received devices with objects from the server
+                    if devices_objects:  # If received devices with objects from the server
                         _log.info(
                             "Received devices with "
                             f"objects: {[*devices_objects.keys()]} "
@@ -131,8 +129,7 @@ class BACnetConnector(Thread, Connector):
                             default_update_interval=self.default_update_period,
                         )
                         _log.info(
-                            "Received update intervals for devices. "
-                            "Starting them ..."
+                            "Received update intervals for devices. " "Starting them ..."
                         )
 
                         # Unpack json from server to BACnetObjects class
@@ -282,9 +279,7 @@ class BACnetConnector(Thread, Connector):
         # Extract update_interval from server's response
         for dev_id, obj_types in device_objs.items():
             try:
-                prop_371 = obj_types[ObjType.DEVICE][0][
-                    str(ObjProperty.propertyList.id)
-                ]
+                prop_371 = obj_types[ObjType.DEVICE][0][str(ObjProperty.propertyList.id)]
                 upd_interval = loads(prop_371)["update_interval"]
                 devices_intervals[dev_id] = upd_interval
             except LookupError as e:
