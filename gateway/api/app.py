@@ -1,13 +1,13 @@
 import asyncio
-from typing import Union, Any
+from typing import Any, Union
 
 import aiohttp_cors
 from aiohttp.web import Application
-from aiohttp.web_runner import TCPSite, AppRunner
+from aiohttp.web_runner import AppRunner, TCPSite
 
-from .jsonrpc import JSON_RPC_HANDLERS
 from ..models import ApiSettings
 from ..utils import get_file_logger
+from .jsonrpc import JSON_RPC_HANDLERS
 
 # from aiohttp_apispec import setup_aiohttp_apispec
 
@@ -40,11 +40,13 @@ class VisioGtwApi:
         return int(self._settings.port)
 
     @property
-    def handlers(self) -> tuple[Union[JsonRPCViewAlias,], ...]:
+    def handlers(
+        self,
+    ) -> tuple[Union[JsonRPCViewAlias,], ...]:
         return JSON_RPC_HANDLERS  # todo add rest handlers
 
     @classmethod
-    def create(cls, gateway, settings: ApiSettings) -> 'VisioGtwApi':
+    def create(cls, gateway, settings: ApiSettings) -> "VisioGtwApi":
         api = cls(gateway=gateway, settings=settings)
         api._app = api.create_app()
         return api
@@ -65,35 +67,43 @@ class VisioGtwApi:
         Returns:
             Instance of the application, ready to run.
         """
-        _LOG.debug('Creating app')
+        _LOG.debug("Creating app")
         app = Application()
-        app['gateway'] = self._gateway
+        app["gateway"] = self._gateway
 
         # Configure default CORS settings.
-        cors = aiohttp_cors.setup(app, defaults={
-            '*': aiohttp_cors.ResourceOptions(
-                expose_headers='*',
-                allow_headers='*',
-                allow_methods=['POST', ]
-            )
-        })
+        cors = aiohttp_cors.setup(
+            app,
+            defaults={
+                "*": aiohttp_cors.ResourceOptions(
+                    expose_headers="*",
+                    allow_headers="*",
+                    allow_methods=[
+                        "POST",
+                    ],
+                )
+            },
+        )
 
         # Register handlers
         for handler in self.handlers:
-            _LOG.debug('Registering handler',
-                       extra={'handler': handler.__name__, 'url': handler.URL_PATH, })
-            cors.add(
-                app.router.add_route('*', handler.URL_PATH, handler)
+            _LOG.debug(
+                "Registering handler",
+                extra={
+                    "handler": handler.__name__,
+                    "url": handler.URL_PATH,
+                },
             )
+            cors.add(app.router.add_route("*", handler.URL_PATH, handler))
 
         # Swagger docs
         # setup_aiohttp_apispec(app=app, title='VisioBASGateway API',
         #                       swagger_path='/', error_callback=None)
         return app
 
-    async def run_app(self, app: Application,
-                      host: str = '0.0.0.0',
-                      port: int = 7070) -> None:
+    async def run_app(
+        self, app: Application, host: str = "0.0.0.0", port: int = 7070
+    ) -> None:
         """Runs application and blocks until stopped.
 
         Args:
@@ -101,21 +111,33 @@ class VisioGtwApi:
             host: TCP/IP hostname to serve on.
             port: TCP/IP port to serve on.
         """
-        _LOG.info('Starting app', extra={'host': host, 'port': port, })
+        _LOG.info(
+            "Starting app",
+            extra={
+                "host": host,
+                "port": port,
+            },
+        )
         runner = AppRunner(app=app)
         await runner.setup()
         site = TCPSite(runner=runner, host=host, port=port)
         await site.start()
 
         await self._stopped.wait()
-        _LOG.debug('Stopping app', extra={'host': host, 'port': port, })
+        _LOG.debug(
+            "Stopping app",
+            extra={
+                "host": host,
+                "port": port,
+            },
+        )
         await runner.cleanup()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
+
     async def main():
         api = VisioGtwApi.create(gateway=None, settings=ApiSettings())
         await api.start()
-
 
     asyncio.run(main())

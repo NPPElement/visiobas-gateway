@@ -1,9 +1,8 @@
-
 import uuid
 from typing import Optional
 
 import paho.mqtt.client as mqtt
-from pydantic import BaseSettings, Field, AnyUrl, validator
+from pydantic import AnyUrl, BaseSettings, Field, validator
 
 
 class MQTTSettings(BaseSettings):
@@ -18,12 +17,12 @@ class MQTTSettings(BaseSettings):
 
     # todo: add certificate
 
-    @validator('client_id')
+    @validator("client_id")
     def create_client_id(cls, v: Optional[str]) -> str:
         return v or mqtt.base62(uuid.uuid4().int, padding=22)
 
     class Config:
         # arbitrary_types_allowed = True
-        env_prefix = 'GTW_MQTT_'
-        env_file = '.env'
-        env_file_encoding = 'utf-8'
+        env_prefix = "GTW_MQTT_"
+        env_file = ".env"
+        env_file_encoding = "utf-8"

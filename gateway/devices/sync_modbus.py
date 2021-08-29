@@ -1,15 +1,21 @@
 import asyncio
 import struct
-from typing import Union, Any, Callable, Optional, Collection
+from typing import Any, Callable, Collection, Optional, Union
 
 from pymodbus.client.sync import ModbusSerialClient, ModbusTcpClient
 from pymodbus.exceptions import ModbusException, ModbusIOException
 from pymodbus.framer.rtu_framer import ModbusRtuFramer
 from pymodbus.framer.socket_framer import ModbusSocketFramer
 
+from ..models import (
+    BACnetDeviceObj,
+    ModbusObj,
+    ModbusReadFunc,
+    ModbusWriteFunc,
+    Protocol,
+    StatusFlags,
+)
 from .base_modbus import BaseModbusDevice
-from ..models import (BACnetDeviceObj, Protocol, ModbusReadFunc, ModbusWriteFunc, ModbusObj,
-                      StatusFlags)
 
 # aliases # TODO
 # BACnetDeviceModel = Any  # ...models
@@ -24,43 +30,69 @@ class SyncModbusDevice(BaseModbusDevice):
     async def create_client(self) -> None:
         """Initializes synchronous modbus client."""
 
-        self._LOG.debug('Creating pymodbus client', extra={'device_id': self.id})
+        self._LOG.debug("Creating pymodbus client", extra={"device_id": self.id})
         try:
             if self.protocol in {Protocol.MODBUS_TCP, Protocol.MODBUS_RTUOVERTCP}:
-                framer = ModbusRtuFramer if self.protocol is Protocol.MODBUS_RTUOVERTCP else ModbusSocketFramer
-                self._client = ModbusTcpClient(host=str(self.address), port=self.port,
-                                               framer=framer, retries=self.retries,
-                                               retry_on_empty=True, retry_on_invalid=True,
-                                               timeout=self.timeout)
+                framer = (
+                    ModbusRtuFramer
+                    if self.protocol is Protocol.MODBUS_RTUOVERTCP
+                    else ModbusSocketFramer
+                )
+                self._client = ModbusTcpClient(
+                    host=str(self.address),
+                    port=self.port,
+                    framer=framer,
+                    retries=self.retries,
+                    retry_on_empty=True,
+                    retry_on_invalid=True,
+                    timeout=self.timeout,
+                )
                 self._connected = self._client.connect()
             elif self.protocol is Protocol.MODBUS_RTU:
                 if not self._serial_clients.get(self.serial_port):
-                    self._LOG.debug('Serial port not using. Creating sync client',
-                                    extra={'device_id': self.id,
-                                           'serial_port': self.serial_port, })
-                    self._client = ModbusSerialClient(method='rtu',
-                                                      port=self.serial_port,
-                                                      baudrate=self._dev_obj.baudrate,
-                                                      bytesize=self._dev_obj.bytesize,
-                                                      parity=self._dev_obj.parity,
-                                                      stopbits=self._dev_obj.stopbits,
-                                                      timeout=self.timeout)
+                    self._LOG.debug(
+                        "Serial port not using. Creating sync client",
+                        extra={
+                            "device_id": self.id,
+                            "serial_port": self.serial_port,
+                        },
+                    )
+                    self._client = ModbusSerialClient(
+                        method="rtu",
+                        port=self.serial_port,
+                        baudrate=self._dev_obj.baudrate,
+                        bytesize=self._dev_obj.bytesize,
+                        parity=self._dev_obj.parity,
+                        stopbits=self._dev_obj.stopbits,
+                        timeout=self.timeout,
+                    )
                     self._serial_clients.update({self.serial_port: self._client})
                     self._serial_polling.update({self.serial_port: asyncio.Event()})
-                    self._serial_connected.update({self.serial_port: self._client.connect()})
+                    self._serial_connected.update(
+                        {self.serial_port: self._client.connect()}
+                    )
                 else:
-                    self._LOG.debug('Serial port already using. Getting client',
-                                    extra={'device_id': self.id,
-                                           'serial_port': self.serial_port, })
+                    self._LOG.debug(
+                        "Serial port already using. Getting client",
+                        extra={
+                            "device_id": self.id,
+                            "serial_port": self.serial_port,
+                        },
+                    )
                     self._client = self._serial_clients[self.serial_port]
             else:
-                raise NotImplementedError('Other methods not support yet')
+                raise NotImplementedError("Other methods not support yet")
 
         except ModbusException as e:
-            self._LOG.warning('Cannot create client',
-                              extra={'device_id': self.id, 'exc': e, })
+            self._LOG.warning(
+                "Cannot create client",
+                extra={
+                    "device_id": self.id,
+                    "exc": e,
+                },
+            )
         else:
-            self._LOG.debug('Client created', extra={'device_id': self.id})
+            self._LOG.debug("Client created", extra={"device_id": self.id})
 
     def close_client(self) -> None:
         self._client.close()
@@ -91,7 +123,7 @@ class SyncModbusDevice(BaseModbusDevice):
         }
 
     async def read(self, obj: ModbusObj, **kwargs) -> Optional[Union[int, float]]:
-        if kwargs.get('wait', True):
+        if kwargs.get("wait", True):
             await self._polling_event.wait()
         return await self._gtw.async_add_job(self.sync_read, obj)
 
@@ -102,10 +134,10 @@ class SyncModbusDevice(BaseModbusDevice):
         """
         try:
             if obj.func_read is ModbusReadFunc.READ_FILE:
-                raise ModbusException('func-not-support')  # todo: implement 0x14 func
-            resp = self.read_funcs[obj.func_read](address=obj.address,
-                                                  count=obj.quantity,
-                                                  unit=self.unit)
+                raise ModbusException("func-not-support")  # todo: implement 0x14 func
+            resp = self.read_funcs[obj.func_read](
+                address=obj.address, count=obj.quantity, unit=self.unit
+            )
             if resp.isError():
                 raise ModbusIOException(str(resp))
 
@@ -114,14 +146,20 @@ class SyncModbusDevice(BaseModbusDevice):
             obj.set_pv(value=value)
             obj.sf = StatusFlags()
             obj.reliability = None
-        except (TypeError, ValueError, AttributeError,
-                ModbusException, Exception) as e:
+        except (TypeError, ValueError, AttributeError, ModbusException, Exception) as e:
             obj.set_exc(exc=e)
-            self._LOG.warning('Read error',
-                              extra={'device_id': self.id, 'object_id': obj.id,
-                                     'object_type': obj.type, 'register': obj.address,
-                                     'quantity': obj.quantity, 'exc': e,
-                                     'unreachable_in_row': obj.unreachable_in_row, })
+            self._LOG.warning(
+                "Read error",
+                extra={
+                    "device_id": self.id,
+                    "object_id": obj.id,
+                    "object_type": obj.type,
+                    "register": obj.address,
+                    "quantity": obj.quantity,
+                    "exc": e,
+                    "unreachable_in_row": obj.unreachable_in_row,
+                },
+            )
         # except Exception as e:
         #     obj.exception = e
         #     self._LOG.exception(f'Unexpected read error: {e}',
@@ -143,13 +181,12 @@ class SyncModbusDevice(BaseModbusDevice):
         """
         try:
             if obj.func_write is None:
-                raise ModbusException('Object cannot be overwritten')
+                raise ModbusException("Object cannot be overwritten")
 
             payload = self._build_payload(value=value, obj=obj)
 
-            if (
-                    obj.func_write is ModbusWriteFunc.WRITE_REGISTER
-                    and isinstance(payload, list)
+            if obj.func_write is ModbusWriteFunc.WRITE_REGISTER and isinstance(
+                payload, list
             ):
                 # FIXME: hotfix
                 assert len(payload) == 1
@@ -157,16 +194,29 @@ class SyncModbusDevice(BaseModbusDevice):
 
             rq = self.write_funcs[obj.func_write](obj.address, payload, unit=self.unit)
             if rq.isError():
-                raise ModbusIOException('0x80')  # todo: resp.string
-            self._LOG.debug(f'Successfully write',
-                            extra={'device_id': self.id, 'object_id': obj.id,
-                                   'object_type': obj.type, 'address': obj.address,
-                                   'value': value, })
+                raise ModbusIOException("0x80")  # todo: resp.string
+            self._LOG.debug(
+                f"Successfully write",
+                extra={
+                    "device_id": self.id,
+                    "object_id": obj.id,
+                    "object_type": obj.type,
+                    "address": obj.address,
+                    "value": value,
+                },
+            )
         except (ModbusException, struct.error, Exception) as e:
-            self._LOG.warning('Failed write',
-                              extra={'device_id': self.id, 'object_id': obj.id,
-                                     'object_type': obj.type, 'register': obj.address,
-                                     'quantity': obj.quantity, 'exc': e, })
+            self._LOG.warning(
+                "Failed write",
+                extra={
+                    "device_id": self.id,
+                    "object_id": obj.id,
+                    "object_type": obj.type,
+                    "register": obj.address,
+                    "quantity": obj.quantity,
+                    "exc": e,
+                },
+            )
         # except Exception as e:
         #     self._LOG.exception('Unhandled error',
         #                         extra={'device_id': self.id, 'object_id': obj.id,

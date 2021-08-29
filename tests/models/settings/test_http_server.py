@@ -8,11 +8,11 @@ class MyTestCase(unittest.TestCase):
         HTTPServerConfig.parse_raw(self.raw)
 
     def setUp(self) -> None:
-        self.raw = '''
+        self.raw = """
         {"urls":["http://login:password@get-main.com:8080",
                 "http://login:password@get-mirror.com:8080"]}
-        '''
+        """
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

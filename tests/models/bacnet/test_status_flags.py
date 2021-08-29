@@ -1,6 +1,6 @@
 import unittest
 
-from models.bacnet import StatusFlags, StatusFlag
+from models.bacnet import StatusFlag, StatusFlags
 
 
 class MyTestCase(unittest.TestCase):
@@ -22,5 +22,5 @@ class MyTestCase(unittest.TestCase):
         self.all_disabled = StatusFlags(flags=0)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

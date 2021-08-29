@@ -1,6 +1,6 @@
 from copy import copy
 from enum import Enum, unique
-from typing import Union, Collection
+from typing import Collection, Union
 
 from pydantic import BaseModel, Field, validator
 
@@ -8,6 +8,7 @@ from pydantic import BaseModel, Field, validator
 @unique
 class StatusFlag(Enum):
     """StatusFlag representation by int."""
+
     OUT_OF_SERVICE = 0b1000  # принимается ли значения сервером
     OVERRIDEN = 0b0100
     FAULT = 0b0010
@@ -15,9 +16,9 @@ class StatusFlag(Enum):
 
 
 class StatusFlags(BaseModel):
-    flags: Union['StatusFlags', int, list[int], tuple[int]] = Field(default=0b0000)
+    flags: Union["StatusFlags", int, list[int], tuple[int]] = Field(default=0b0000)
 
-    @validator('flags')
+    @validator("flags")
     def cast_flags(cls, v: Union[int, Collection[StatusFlag]]) -> int:
         if isinstance(v, int):
             return v
@@ -64,7 +65,7 @@ class StatusFlags(BaseModel):
         return bool(self.flags & flag.value)
 
     @property
-    def for_http(self) -> 'StatusFlags':
+    def for_http(self) -> "StatusFlags":
         """
         Returns:
             Copy of StatusFlags, with except: disabled flags:

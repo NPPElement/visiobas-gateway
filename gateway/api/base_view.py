@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from typing import Optional, Any
+from typing import Any, Optional
 
 from aiohttp.web_urldispatcher import View
 
@@ -14,14 +14,13 @@ ObjAlias = Any  # Union['..models.BACnetObj',]
 
 
 class BaseView(View):
-
     @property
     def gtw(self) -> VisioBASGatewayAlias:
         """
         Returns:
             Gateway instance.
         """
-        return self.request.app['gateway']
+        return self.request.app["gateway"]
 
     def get_device(self, dev_id: int) -> Optional[DeviceAlias]:
         """

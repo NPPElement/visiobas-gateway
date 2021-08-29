@@ -2,21 +2,20 @@ from pathlib import Path
 
 """VisioBAS Gateway."""
 
-__version__ = '3.3.0-alpha'
-__author__ = 'VisioBAS, Matvey Ovtsin'
+__version__ = "3.3.0-alpha"
+__author__ = "VisioBAS, Matvey Ovtsin"
 __maintainer__ = __author__
-__email__ = 'mtovtsin@gmail.com'
-__url__ = '<info.visiobas.com>'
-__license__ = 'GNU General Public License v3.0'
+__email__ = "mtovtsin@gmail.com"
+__url__ = "<info.visiobas.com>"
+__license__ = "GNU General Public License v3.0"
 
 BASE_DIR = Path(__file__).resolve().parent
 
 __all__ = [
-    '__author__',
-    '__email__',
-    '__license__',
-    '__maintainer__',
-    '__version__',
-
-    'BASE_DIR',
+    "__author__",
+    "__email__",
+    "__license__",
+    "__maintainer__",
+    "__version__",
+    "BASE_DIR",
 ]

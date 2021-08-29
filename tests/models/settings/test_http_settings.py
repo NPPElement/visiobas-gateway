@@ -9,11 +9,13 @@ class MyTestCase(unittest.TestCase):
         self.assertTrue(self.http_env_path.exists())
 
     def setUp(self) -> None:
-        self.http_env_path = Path(
-            __file__).resolve().parent.parent.parent.parent / 'gateway/config/http.env'
+        self.http_env_path = (
+            Path(__file__).resolve().parent.parent.parent.parent
+            / "gateway/config/http.env"
+        )
 
         self.http_settings = HTTPSettings(_env_file=self.http_env_path)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

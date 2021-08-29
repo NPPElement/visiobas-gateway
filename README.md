@@ -77,7 +77,7 @@ Configuration can be changed in files:
 
 ### Logging level
 
-- Logging level You can change the logging level in the `docker-compose.yaml` file. You can
+- You can change the logging level in the `docker-compose.yaml` file. You can
   choose one of the following levels: `DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL`
 
 ### Objects configuration

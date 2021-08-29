@@ -2,15 +2,17 @@ import logging
 
 from pymodbus.client.sync import ModbusTcpClient as ModbusClient
 
-FORMAT = ('%(asctime)-15s %(threadName)-15s '
-          '%(levelname)-8s %(module)-15s:%(lineno)-8s %(message)s')
+FORMAT = (
+    "%(asctime)-15s %(threadName)-15s "
+    "%(levelname)-8s %(module)-15s:%(lineno)-8s %(message)s"
+)
 logging.basicConfig(format=FORMAT)
 _log = logging.getLogger()
 _log.setLevel(logging.INFO)
 
 UNIT = 0x1
 
-client = ModbusClient('localhost', port=5020)
+client = ModbusClient("localhost", port=5020)
 client.connect()
 
 
@@ -52,30 +54,30 @@ _log.info("Write to a holding register and read back")
 rr = client.read_holding_registers(0, 33, unit=UNIT)
 # assert (not rq.isError())  # test that we are not an error
 # assert (rr.registers[0] == 10)  # test the expected value
-_log.info(f'{rr} isError:{rr.isError()} registers:{rr.registers}')
+_log.info(f"{rr} isError:{rr.isError()} registers:{rr.registers}")
 
 _log.info("Write to multiple holding registers and read back")
 rq = client.write_registers(1, [10] * 8, unit=UNIT)
 rr = client.read_holding_registers(1, 8, unit=UNIT)
-assert (not rq.isError())  # test that we are not an error
-assert (rr.registers == [10] * 8)  # test the expected value
+assert not rq.isError()  # test that we are not an error
+assert rr.registers == [10] * 8  # test the expected value
 
 _log.info("Read input registers")
 rr = client.read_input_registers(1, 8, unit=UNIT)
-assert (not rq.isError())  # test that we are not an error
+assert not rq.isError()  # test that we are not an error
 
 arguments = {
-    'read_address': 1,
-    'read_count': 8,
-    'write_address': 1,
-    'write_registers': [20] * 8,
+    "read_address": 1,
+    "read_count": 8,
+    "write_address": 1,
+    "write_registers": [20] * 8,
 }
 _log.info("Read write registeres simulataneously")
 rq = client.readwrite_registers(unit=UNIT, **arguments)
 rr = client.read_holding_registers(1, 8, unit=UNIT)
-assert (not rq.isError())  # test that we are not an error
-assert (rq.registers == [20] * 8)  # test the expected value
-assert (rr.registers == [20] * 8)  # test the expected value
+assert not rq.isError()  # test that we are not an error
+assert rq.registers == [20] * 8  # test the expected value
+assert rr.registers == [20] * 8  # test the expected value
 
 # ----------------------------------------------------------------------- #
 # close the client

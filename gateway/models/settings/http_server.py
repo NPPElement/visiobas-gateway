@@ -1,11 +1,11 @@
 from hashlib import md5
 from typing import Optional
 
-from pydantic import Field, BaseModel, validator, AnyHttpUrl
+from pydantic import AnyHttpUrl, BaseModel, Field, validator
 
 
 class AuthData(BaseModel):
-    bearer_token: str = Field(..., alias='token')
+    bearer_token: str = Field(..., alias="token")
     user_id: int = Field(...)
     auth_user_id: int = Field(...)
 
@@ -15,15 +15,15 @@ class HTTPServerConfig(BaseModel):
     current = 0
     auth_data: Optional[AuthData] = None
 
-    @validator('urls')
+    @validator("urls")
     def hash_passwords(cls, v: list[AnyHttpUrl]) -> list[AnyHttpUrl]:
         for url in v:
             if not url.password:
-                raise ValueError('Password expected')
+                raise ValueError("Password expected")
             if not url.user:
-                raise ValueError('User expected')
+                raise ValueError("User expected")
             if not url.port:
-                raise ValueError('Port expected')
+                raise ValueError("Port expected")
         return v
 
     @property
@@ -37,7 +37,7 @@ class HTTPServerConfig(BaseModel):
     @property
     def current_url(self) -> str:
         url_ = self._current_url
-        return url_.scheme + '://' + url_.host + ':' + url_.port
+        return url_.scheme + "://" + url_.host + ":" + url_.port
 
     @property
     def is_authorized(self) -> bool:
@@ -45,13 +45,15 @@ class HTTPServerConfig(BaseModel):
 
     @property
     def auth_payload(self) -> dict[str, str]:
-        return {'login': self._current_url.user,
-                'password': self._get_hash(self._current_url.password)}
+        return {
+            "login": self._current_url.user,
+            "password": self._get_hash(self._current_url.password),
+        }
 
     @property
     def auth_headers(self) -> Optional[dict[str, str]]:
         if self.auth_data:
-            return {'Authorization': f'Bearer {self.auth_data.bearer_token}'}
+            return {"Authorization": f"Bearer {self.auth_data.bearer_token}"}
 
     def __str__(self) -> str:
         return str(self._current_url.host)

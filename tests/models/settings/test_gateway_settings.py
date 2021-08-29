@@ -9,10 +9,12 @@ class MyTestCase(unittest.TestCase):
         self.assertTrue(self.gateway_env_path.exists())
 
     def setUp(self) -> None:
-        self.gateway_env_path = Path(
-            __file__).resolve().parent.parent.parent.parent / 'gateway/config/gateway.env'
+        self.gateway_env_path = (
+            Path(__file__).resolve().parent.parent.parent.parent
+            / "gateway/config/gateway.env"
+        )
         self.gtw_settings = GatewaySettings(_env_file=self.gateway_env_path)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

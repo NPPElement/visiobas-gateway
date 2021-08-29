@@ -1,4 +1,5 @@
 from .verifier import BACnetVerifier
 
-__all__ = ['BACnetVerifier',
-           ]
+__all__ = [
+    "BACnetVerifier",
+]

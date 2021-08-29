@@ -1,50 +1,62 @@
-from typing import Union, Optional
+from typing import Optional, Union
 
-from pydantic import Field, Json, BaseModel, validator
+from pydantic import BaseModel, Field, Json, validator
 from pymodbus.constants import Endian
 
-from .data_type import DataType
-from .func_code import ModbusReadFunc, ModbusWriteFunc
 from ..bacnet.obj import BACnetObj, BACnetObjPropertyListJsonModel
 from ..bacnet.obj_property import ObjProperty
+from .data_type import DataType
+from .func_code import ModbusReadFunc, ModbusWriteFunc
 
 
 class ModbusObjPropertyListModel(BaseModel):
     address: int = Field(ge=0)
     quantity: int = Field(gt=0)
-    func_read: ModbusReadFunc = Field(default=ModbusReadFunc.READ_HOLDING_REGISTERS,
-                                      alias='functionRead')
+    func_read: ModbusReadFunc = Field(
+        default=ModbusReadFunc.READ_HOLDING_REGISTERS, alias="functionRead"
+    )
     func_write: Optional[ModbusWriteFunc] = Field(
-        default=None, alias='functionWrite',
-        description='Function to write value. None if read only object.')
+        default=None,
+        alias="functionWrite",
+        description="Function to write value. None if read only object.",
+    )
 
     # For recalculate A*X+B (X - value)
-    scale: float = Field(default=1., description='Multiplier `A` for recalculate A*X+B')
-    offset: float = Field(default=.0, description='Adding `B` for recalculate A*X+B')
+    scale: float = Field(
+        default=1.0, description="Multiplier `A` for recalculate A*X+B"
+    )
+    offset: float = Field(default=0.0, description="Adding `B` for recalculate A*X+B")
 
-    data_type: Union[DataType, str] = Field(..., alias='dataType')
-    data_length: int = Field(default=16, ge=1, lt=64, alias='dataLength',
-                             # todo calc default: quantity * 16
-                             description='The number of bits in which the value is stored')
+    data_type: Union[DataType, str] = Field(..., alias="dataType")
+    data_length: int = Field(
+        default=16,
+        ge=1,
+        lt=64,
+        alias="dataLength",
+        # todo calc default: quantity * 16
+        description="The number of bits in which the value is stored",
+    )
 
-    byte_order: Union[str, Endian] = Field(default='little', alias='byteOrder')
-    word_order: Union[str, Endian] = Field(default='big', alias='wordOrder')
+    byte_order: Union[str, Endian] = Field(default="little", alias="byteOrder")
+    word_order: Union[str, Endian] = Field(default="big", alias="wordOrder")
     # repack: bool = Field(default=False)  # todo for encode
 
     # bitmask = int todo
     bit: Optional[int] = Field(default=None, ge=0, le=16)  # TODO: change to 'bitmask'?
 
-    @validator('func_write')
-    def validate_consistent(cls, v: ModbusWriteFunc, values) -> Optional[ModbusWriteFunc]:
+    @validator("func_write")
+    def validate_consistent(
+        cls, v: ModbusWriteFunc, values
+    ) -> Optional[ModbusWriteFunc]:
         # TODO: add funcs mapping
         if v is None:
             return v
-        elif values['func_read'].for_register and v.for_register:
+        elif values["func_read"].for_register and v.for_register:
             return v
-        elif values['func_read'].for_coil and v.for_coil:
+        elif values["func_read"].for_coil and v.for_coil:
             return v
         else:
-            raise ValueError('Make sure func_read and func_write are consistent.')
+            raise ValueError("Make sure func_read and func_write are consistent.")
 
     class Config:
         arbitrary_types_allowed = True
@@ -60,15 +72,15 @@ class ModbusObjPropertyListModel(BaseModel):
     #     if 'data_length' in values and values['data_length'] > 1 and v is None:
     #         raise ValueError('If `data_length`==1, `bit` value expected')
 
-    @validator('byte_order')
+    @validator("byte_order")
     def cast_byte_order(cls, v: str) -> Endian:
-        return Endian.Big if v == 'big' else Endian.Little
+        return Endian.Big if v == "big" else Endian.Little
 
-    @validator('word_order')
+    @validator("word_order")
     def cast_word_order(cls, v: str) -> Endian:
-        return Endian.Big if v == 'big' else Endian.Little
+        return Endian.Big if v == "big" else Endian.Little
 
-    @validator('data_type')
+    @validator("data_type")
     def cast_data_type(cls, v: Union[DataType, str]) -> DataType:
         if isinstance(v, str):
             return DataType(v.lower())
@@ -87,7 +99,8 @@ class ModbusPropertyListJsonModel(BACnetObjPropertyListJsonModel):
 
 class ModbusObj(BACnetObj):
     property_list: Json[ModbusPropertyListJsonModel] = Field(
-        alias=ObjProperty.propertyList.id_str)
+        alias=ObjProperty.propertyList.id_str
+    )
 
     def __str__(self) -> str:
         return str(self.__dict__)

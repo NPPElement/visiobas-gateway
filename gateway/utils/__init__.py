@@ -11,9 +11,8 @@ __all__ = [  # 'read_address_cache',
     # 'cast_to_bit',
     # 'get_fault_obj_properties',
     # 'cast_2_registers',
-    'get_file_logger',
-    'ExtraFormatter',
+    "get_file_logger",
+    "ExtraFormatter",
     # 'disable_loggers',
-
     # 'Singleton',
 ]

@@ -1,5 +1,5 @@
 import asyncio
-from typing import Callable, Any, Optional, Union, Awaitable, Collection
+from typing import Any, Awaitable, Callable, Collection, Optional, Union
 
 import aiohttp
 import aiojobs
@@ -7,21 +7,30 @@ from pydantic import ValidationError
 
 from gateway.api import VisioGtwApi
 from gateway.clients import VisioHTTPClient, VisioMQTTClient
-from gateway.devices import AsyncModbusDevice, SyncModbusDevice, BACnetDevice, SUNAPIDevice
-from gateway.models import (ObjType, BACnetDeviceObj, ModbusObj, Protocol,
-                            BACnetObj, HTTPSettings, GatewaySettings, ApiSettings,
-                            MQTTSettings)
+from gateway.devices import (
+    AsyncModbusDevice,
+    BACnetDevice,
+    SUNAPIDevice,
+    SyncModbusDevice,
+)
+from gateway.models import (
+    ApiSettings,
+    BACnetDeviceObj,
+    BACnetObj,
+    GatewaySettings,
+    HTTPSettings,
+    ModbusObj,
+    MQTTSettings,
+    ObjType,
+    Protocol,
+)
 from gateway.utils import get_file_logger
 from gateway.verifier import BACnetVerifier
 
 _LOG = get_file_logger(__name__)
 
 # Aliases
-Device = Union[
-    AsyncModbusDevice, SyncModbusDevice,
-    BACnetDevice,
-    SUNAPIDevice
-]
+Device = Union[AsyncModbusDevice, SyncModbusDevice, BACnetDevice, SUNAPIDevice]
 
 
 class VisioBASGateway:
@@ -49,7 +58,7 @@ class VisioBASGateway:
         # TODO: updating event to return msg in case controlling at update time.
 
     @classmethod
-    async def create(cls, settings: GatewaySettings) -> 'VisioBASGateway':
+    async def create(cls, settings: GatewaySettings) -> "VisioBASGateway":
         gateway = cls(settings=settings)
         gateway._scheduler = await aiojobs.create_scheduler(close_timeout=60, limit=100)
         return gateway
@@ -107,7 +116,9 @@ class VisioBASGateway:
         """Set up Gateway and spawn update task."""
         self.http_client = VisioHTTPClient(gateway=self, settings=HTTPSettings())
         if self._is_mqtt_enabled:
-            self.mqtt_client = VisioMQTTClient.create(gateway=self, settings=MQTTSettings())
+            self.mqtt_client = VisioMQTTClient.create(
+                gateway=self, settings=MQTTSettings()
+            )
 
         self.api = VisioGtwApi.create(gateway=self, settings=ApiSettings())
         await self._scheduler.spawn(self.api.start())
@@ -131,11 +142,12 @@ class VisioBASGateway:
             args: parameters for target to call.
         """
         if target is None:
-            raise ValueError('None not allowed')
+            raise ValueError("None not allowed")
         self.loop.call_soon_threadsafe(self.async_add_job, target, *args)
 
-    def async_add_job(self, target: Callable, *args: Any
-                      ) -> Optional[Union[asyncio.Future, Awaitable]]:
+    def async_add_job(
+        self, target: Callable, *args: Any
+    ) -> Optional[Union[asyncio.Future, Awaitable]]:
         """Adds a job from within the event loop.
 
         Args:
@@ -146,7 +158,7 @@ class VisioBASGateway:
             task or future object
         """
         if target is None:
-            raise ValueError('None not allowed')
+            raise ValueError("None not allowed")
 
         if asyncio.iscoroutine(target) or asyncio.iscoroutinefunction(target):
             # await self._scheduler.spawn(target(*args))
@@ -173,8 +185,9 @@ class VisioBASGateway:
         await self.http_client.wait_login()
 
         # Load devices.
-        load_device_tasks = [self.load_device(dev_id=dev_id)
-                             for dev_id in self.poll_device_ids]
+        load_device_tasks = [
+            self.load_device(dev_id=dev_id) for dev_id in self.poll_device_ids
+        ]
         # await asyncio.gather(*load_device_tasks)
 
         for dev in asyncio.as_completed(load_device_tasks):
@@ -191,12 +204,16 @@ class VisioBASGateway:
         # if self._is_mqtt_enabled:
         # TODO: subscribe
 
-        _LOG.info('Start tasks performed',
-                  extra={'gateway_settings': self.settings, })
+        _LOG.info(
+            "Start tasks performed",
+            extra={
+                "gateway_settings": self.settings,
+            },
+        )
 
     async def _perform_stop_tasks(self) -> None:
         """Performs stopping tasks.
-        
+
         Stop gateway steps:
             - Unsubscribe to MQTT
             - Stop devices poll
@@ -206,13 +223,14 @@ class VisioBASGateway:
             await self.mqtt_client.async_disconnect()
 
         # Stop polling devices.
-        stop_device_polling_tasks = [dev.stop() for dev in self._devices.values()
-                                     if dev.is_polling_device]
+        stop_device_polling_tasks = [
+            dev.stop() for dev in self._devices.values() if dev.is_polling_device
+        ]
         await asyncio.gather(*stop_device_polling_tasks)
         self._devices = {}
 
         await self.http_client.logout()
-        _LOG.info('Stop tasks performed')
+        _LOG.info("Stop tasks performed")
 
     async def load_device(self, dev_id: int) -> Optional[Device]:
         """Tries to download an object of device from server.
@@ -224,24 +242,38 @@ class VisioBASGateway:
         """
         try:
             dev_obj_data = await self.http_client.get_objects(
-                dev_id=dev_id, obj_types=(ObjType.DEVICE,))
-            _LOG.debug('Device object downloaded', extra={'device_id': dev_id})
+                dev_id=dev_id, obj_types=(ObjType.DEVICE,)
+            )
+            _LOG.debug("Device object downloaded", extra={"device_id": dev_id})
 
             if not dev_obj_data or isinstance(dev_obj_data[0], Exception):
-                _LOG.warning('Empty device object or exception',
-                             extra={'device_id': dev_id, 'data': dev_obj_data, })
+                _LOG.warning(
+                    "Empty device object or exception",
+                    extra={
+                        "device_id": dev_id,
+                        "data": dev_obj_data,
+                    },
+                )
                 return None
 
             # objs in the list, so get [0] element in `dev_obj_data[0]` below
             # request one type - 'device', so [0] element of tuple below
-            dev_obj = await self.async_add_job(self._parse_device_obj, dev_obj_data[0][0])
+            dev_obj = await self.async_add_job(
+                self._parse_device_obj, dev_obj_data[0][0]
+            )
             dev = await self.device_factory(dev_obj=dev_obj)
 
             if dev.is_polling_device:
                 # todo: use for extractions tasks asyncio.as_completed(tasks):
                 objs_data = await self.http_client.get_objects(
-                    dev_id=dev_id, obj_types=dev.types_to_rq)
-                _LOG.debug('Polling objects downloaded', extra={'device_id': dev_id, })
+                    dev_id=dev_id, obj_types=dev.types_to_rq
+                )
+                _LOG.debug(
+                    "Polling objects downloaded",
+                    extra={
+                        "device_id": dev_id,
+                    },
+                )
 
                 extract_tasks = [
                     self.async_add_job(self._extract_objects, obj_data, dev_obj)
@@ -249,27 +281,46 @@ class VisioBASGateway:
                     if not isinstance(obj_data, (aiohttp.ClientError, Exception))
                 ]
                 objs_lists = await asyncio.gather(*extract_tasks)
-                objs = [obj for lst in objs_lists
-                        for obj in lst if obj]  # Flat list of lists.
+                objs = [
+                    obj for lst in objs_lists for obj in lst if obj
+                ]  # Flat list of lists.
 
                 if not len(objs):
-                    _LOG.warning("There aren't polling objects",
-                                 extra={'device_id': dev_id})
+                    _LOG.warning(
+                        "There aren't polling objects", extra={"device_id": dev_id}
+                    )
                     return None
 
-                _LOG.debug('Polling objects extracted',
-                           extra={'device_id': dev_id, 'objects_count': len(objs)})
+                _LOG.debug(
+                    "Polling objects extracted",
+                    extra={"device_id": dev_id, "objects_count": len(objs)},
+                )
                 await self.async_add_job(dev.insert_objects, objs)
 
             self._devices.update({dev.id: dev})
-            _LOG.info('Device loaded', extra={'device_id': dev_id, })
+            _LOG.info(
+                "Device loaded",
+                extra={
+                    "device_id": dev_id,
+                },
+            )
             return dev
         except (ValidationError,) as e:  #
-            _LOG.warning('Invalid device properties',
-                         extra={'device_id': dev_id, 'exc': e, })
+            _LOG.warning(
+                "Invalid device properties",
+                extra={
+                    "device_id": dev_id,
+                    "exc": e,
+                },
+            )
         except (TypeError, AttributeError, Exception) as e:
-            _LOG.exception('Unhandled load device exception',
-                           extra={'device_id': dev_id, 'exc': e, })
+            _LOG.exception(
+                "Unhandled load device exception",
+                extra={
+                    "device_id": dev_id,
+                    "exc": e,
+                },
+            )
 
     # async def start_device_poll(self, dev_id: int) -> None:
     #     """Starts poll of device."""
@@ -288,19 +339,22 @@ class VisioBASGateway:
             Parsed and validated device object, if no errors throw.
         """
         dev_obj = BACnetDeviceObj(**dev_data)
-        _LOG.debug('Device object parsed', extra={'device_object': dev_obj})
+        _LOG.debug("Device object parsed", extra={"device_object": dev_obj})
         return dev_obj
 
-    def _extract_objects(self, objs_data: tuple, dev_obj: BACnetDeviceObj
-                         ) -> list[ModbusObj]:
+    def _extract_objects(
+        self, objs_data: tuple, dev_obj: BACnetDeviceObj
+    ) -> list[ModbusObj]:
         """Parses and validate objects data from JSON.
 
         Returns:
             List of parsed and validated objects.
         """
-        objs = [self.object_factory(dev_obj=dev_obj, obj_data=obj_data)
-                for obj_data in objs_data
-                if not None and not isinstance(obj_data, (aiohttp.ClientError, Exception))]
+        objs = [
+            self.object_factory(dev_obj=dev_obj, obj_data=obj_data)
+            for obj_data in objs_data
+            if not None and not isinstance(obj_data, (aiohttp.ClientError, Exception))
+        ]
         return objs
 
     async def verify_objects(self, objs: Collection[BACnetObj]) -> None:
@@ -315,12 +369,13 @@ class VisioBASGateway:
 
         try:
             dev_id = list(objs)[0].device_id
-            str_ = ';'.join([obj.to_http_str() for obj in objs]) + ';'
-            await self.http_client.post_device(servers=self.http_client.servers_post,
-                                               dev_id=dev_id, data=str_)
+            str_ = ";".join([obj.to_http_str() for obj in objs]) + ";"
+            await self.http_client.post_device(
+                servers=self.http_client.servers_post, dev_id=dev_id, data=str_
+            )
             # if self._is_mqtt_enabled:  # todo
         except Exception as e:
-            _LOG.exception('Unexpected error', extra={'exc': e})
+            _LOG.exception("Unexpected error", extra={"exc": e})
 
     async def device_factory(self, dev_obj: BACnetDeviceObj) -> Optional[Device]:
         """Creates device for provided protocol.
@@ -332,29 +387,44 @@ class VisioBASGateway:
             protocol = dev_obj.property_list.protocol
 
             if protocol in {
-                Protocol.MODBUS_TCP, Protocol.MODBUS_RTUOVERTCP, Protocol.MODBUS_RTU
+                Protocol.MODBUS_TCP,
+                Protocol.MODBUS_RTUOVERTCP,
+                Protocol.MODBUS_RTU,
             }:
-                cls = SyncModbusDevice if self.settings.modbus_sync else AsyncModbusDevice
+                cls = (
+                    SyncModbusDevice if self.settings.modbus_sync else AsyncModbusDevice
+                )
                 device = await cls.create(device_obj=dev_obj, gateway=self)
             elif protocol is Protocol.BACNET:
                 device = await BACnetDevice.create(device_obj=dev_obj, gateway=self)
             elif protocol is Protocol.SUNAPI:
                 device = SUNAPIDevice(device_obj=dev_obj, gateway=self)
             else:
-                raise NotImplementedError('Device factory not implemented')
+                raise NotImplementedError("Device factory not implemented")
 
-            _LOG.debug('Device object created', extra={'device_id': device.id})
+            _LOG.debug("Device object created", extra={"device_id": device.id})
             return device
         except (ValidationError, AttributeError) as e:
-            _LOG.warning('Failed device creation',
-                         extra={'device_id': dev_obj.id, 'exc': e, })
+            _LOG.warning(
+                "Failed device creation",
+                extra={
+                    "device_id": dev_obj.id,
+                    "exc": e,
+                },
+            )
         except Exception as e:
-            _LOG.exception('Unhandled failed device creation',
-                           extra={'device_id': dev_obj.id, 'exc': e, })
+            _LOG.exception(
+                "Unhandled failed device creation",
+                extra={
+                    "device_id": dev_obj.id,
+                    "exc": e,
+                },
+            )
 
     @staticmethod
-    def object_factory(dev_obj: BACnetDeviceObj, obj_data: dict[str, Any]
-                       ) -> Optional[Union[ModbusObj, BACnetObj]]:
+    def object_factory(
+        dev_obj: BACnetDeviceObj, obj_data: dict[str, Any]
+    ) -> Optional[Union[ModbusObj, BACnetObj]]:
         """Creates object for provided protocol data.
 
         Returns:
@@ -364,24 +434,37 @@ class VisioBASGateway:
         try:
 
             defaults_from_device = {  # FIXME: hotfix
-                'default_poll_period': dev_obj.property_list.poll_period,
-                'default_send_period': dev_obj.property_list.send_period,
+                "default_poll_period": dev_obj.property_list.poll_period,
+                "default_send_period": dev_obj.property_list.send_period,
             }
 
             protocol = dev_obj.property_list.protocol
-            if protocol in {Protocol.MODBUS_TCP, Protocol.MODBUS_RTU,
-                            Protocol.MODBUS_RTUOVERTCP}:
+            if protocol in {
+                Protocol.MODBUS_TCP,
+                Protocol.MODBUS_RTU,
+                Protocol.MODBUS_RTUOVERTCP,
+            }:
                 cls = ModbusObj
             elif protocol == Protocol.BACNET:
                 cls = BACnetObj
             else:
-                raise NotImplementedError('Not implemented protocol factory.')
+                raise NotImplementedError("Not implemented protocol factory.")
             return cls(**obj_data, **defaults_from_device)
         except ValidationError as e:
-            _LOG.warning('Failed polling object creation. Please check objects settings',
-                         extra={'device_id': dev_obj.id,
-                                'object_data': obj_data, 'exc': e, })
+            _LOG.warning(
+                "Failed polling object creation. Please check objects settings",
+                extra={
+                    "device_id": dev_obj.id,
+                    "object_data": obj_data,
+                    "exc": e,
+                },
+            )
         except Exception as e:
-            _LOG.exception('Unhandled object creation exception',
-                           extra={'device_id': dev_obj.id,
-                                  'object_data': obj_data, 'exc': e, })
+            _LOG.exception(
+                "Unhandled object creation exception",
+                extra={
+                    "device_id": dev_obj.id,
+                    "object_data": obj_data,
+                    "exc": e,
+                },
+            )

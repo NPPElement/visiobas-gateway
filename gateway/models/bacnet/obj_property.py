@@ -4,6 +4,7 @@ from enum import Enum, unique
 @unique
 class ObjProperty(Enum):
     """Represent properties of BACnet object."""
+
     ackedTransitions = 0
     ackRequired = 1
     action = 2

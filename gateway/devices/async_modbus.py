@@ -1,22 +1,32 @@
 import asyncio
 import struct
-from typing import Any, Callable, Union, Collection, Optional
+from typing import Any, Callable, Collection, Optional, Union
 
-from pymodbus.bit_read_message import (ReadCoilsResponse, ReadDiscreteInputsResponse)
-from pymodbus.client.asynchronous.async_io import (AsyncioModbusSerialClient,
-                                                   AsyncioModbusTcpClient)
+from pymodbus.bit_read_message import ReadCoilsResponse, ReadDiscreteInputsResponse
+from pymodbus.client.asynchronous.async_io import (
+    AsyncioModbusSerialClient,
+    AsyncioModbusTcpClient,
+)
 from pymodbus.client.asynchronous.schedulers import ASYNC_IO
 from pymodbus.client.asynchronous.serial import AsyncModbusSerialClient
 from pymodbus.client.asynchronous.tcp import AsyncModbusTCPClient
 from pymodbus.exceptions import ModbusException, ModbusIOException
 from pymodbus.framer.socket_framer import ModbusSocketFramer
-from pymodbus.register_read_message import (ReadHoldingRegistersResponse,
-                                            ReadInputRegistersResponse)
+from pymodbus.register_read_message import (
+    ReadHoldingRegistersResponse,
+    ReadInputRegistersResponse,
+)
 from pymodbus.transaction import ModbusRtuFramer
 
+from ..models import (
+    BACnetDeviceObj,
+    ModbusObj,
+    ModbusReadFunc,
+    ModbusWriteFunc,
+    Protocol,
+    StatusFlags,
+)
 from .base_modbus import BaseModbusDevice
-from ..models import (BACnetDeviceObj, ModbusObj, Protocol, ModbusReadFunc, ModbusWriteFunc,
-                      StatusFlags)
 
 # aliases # TODO
 # BACnetDeviceModel = Any  # ...models
@@ -24,8 +34,7 @@ VisioBASGateway = Any  # ...gateway_loop
 
 
 class AsyncModbusDevice(BaseModbusDevice):
-
-    def __init__(self, device_obj: BACnetDeviceObj, gateway: 'VisioBASGateway'):
+    def __init__(self, device_obj: BACnetDeviceObj, gateway: "VisioBASGateway"):
         super().__init__(device_obj, gateway)
         self._loop: asyncio.AbstractEventLoop = None
         self._client: Union[AsyncioModbusTcpClient, AsyncioModbusSerialClient] = None
@@ -38,56 +47,80 @@ class AsyncModbusDevice(BaseModbusDevice):
         Async pymodbus not support `timeout` param. Default: 2 sec
         See: <https://github.com/riptideio/pymodbus/issues/349>
         """
-        self._LOG.debug('Creating pymodbus client', extra={'device_id': self.id})
+        self._LOG.debug("Creating pymodbus client", extra={"device_id": self.id})
         try:
             loop = self._gtw.loop
             asyncio.set_event_loop(loop=self._gtw.loop)
 
             if self.protocol in {Protocol.MODBUS_TCP, Protocol.MODBUS_RTUOVERTCP}:
-                framer = ModbusRtuFramer if self.protocol is Protocol.MODBUS_RTUOVERTCP else ModbusSocketFramer
+                framer = (
+                    ModbusRtuFramer
+                    if self.protocol is Protocol.MODBUS_RTUOVERTCP
+                    else ModbusSocketFramer
+                )
                 self._loop, self._client = AsyncModbusTCPClient(
                     scheduler=ASYNC_IO,
-                    host=str(self.address), port=self.port, framer=framer,
-                    retries=self.retries, retry_on_empty=True, retry_on_invalid=True,
-                    loop=loop, timeout=self.timeout
+                    host=str(self.address),
+                    port=self.port,
+                    framer=framer,
+                    retries=self.retries,
+                    retry_on_empty=True,
+                    retry_on_invalid=True,
+                    loop=loop,
+                    timeout=self.timeout,
                 )
             elif self.protocol is Protocol.MODBUS_RTU:
-                if (
-                        not self._serial_clients.get(self.serial_port)
-                        or not self._serial_port_locks.get(self.serial_port)
-                ):
-                    self._LOG.debug('Serial port not using. Creating async client',
-                                    extra={'device_id': self.id,
-                                           'serial_port': self.serial_port, })
+                if not self._serial_clients.get(
+                    self.serial_port
+                ) or not self._serial_port_locks.get(self.serial_port):
+                    self._LOG.debug(
+                        "Serial port not using. Creating async client",
+                        extra={
+                            "device_id": self.id,
+                            "serial_port": self.serial_port,
+                        },
+                    )
 
                     self._loop, self._client = AsyncModbusSerialClient(
                         scheduler=ASYNC_IO,
-                        method='rtu', port=self.serial_port,
+                        method="rtu",
+                        port=self.serial_port,
                         baudrate=self._dev_obj.baudrate,
                         bytesize=self._dev_obj.bytesize,
                         parity=self._dev_obj.parity,
                         stopbits=self._dev_obj.stopbits,
-                        loop=loop, timeout=self.timeout
+                        loop=loop,
+                        timeout=self.timeout,
                     )
                     self._serial_port_locks.update({self.serial_port: asyncio.Lock()})
                     self._serial_clients.update({self.serial_port: self._client})
                     self._serial_polling.update({self.serial_port: asyncio.Event()})
-                    self._serial_connected.update({self.serial_port: self._client.connect()})
-                elif (
-                        self._serial_clients.get(self.serial_port)
-                        and self._serial_port_locks.get(self.serial_port)
-                ):
-                    self._LOG.debug('Serial port already using. Getting client',
-                                    extra={'device_id': self.id,
-                                           'serial_port': self.serial_port, })
+                    self._serial_connected.update(
+                        {self.serial_port: self._client.connect()}
+                    )
+                elif self._serial_clients.get(
+                    self.serial_port
+                ) and self._serial_port_locks.get(self.serial_port):
+                    self._LOG.debug(
+                        "Serial port already using. Getting client",
+                        extra={
+                            "device_id": self.id,
+                            "serial_port": self.serial_port,
+                        },
+                    )
                     self._client = self._serial_clients[self.serial_port]
             else:
-                raise NotImplementedError('Other methods not support yet')
+                raise NotImplementedError("Other methods not support yet")
         except ModbusException as e:
-            self._LOG.warning('Cannot create client',
-                              extra={'device_id': self.id, 'exc': e, })
+            self._LOG.warning(
+                "Cannot create client",
+                extra={
+                    "device_id": self.id,
+                    "exc": e,
+                },
+            )
         else:
-            self._LOG.debug('Client created', extra={'device_id': self.id})
+            self._LOG.debug("Client created", extra={"device_id": self.id})
 
     def close_client(self) -> None:
         self._client.stop()
@@ -97,7 +130,7 @@ class AsyncModbusDevice(BaseModbusDevice):
 
     @property
     def is_client_connected(self) -> bool:
-        if hasattr(self._client, 'protocol') and self._client.protocol is not None:
+        if hasattr(self._client, "protocol") and self._client.protocol is not None:
             return True
         return False
 
@@ -132,36 +165,48 @@ class AsyncModbusDevice(BaseModbusDevice):
 
         Updates object and return value.
         """
-        if kwargs.get('wait', True):
+        if kwargs.get("wait", True):
             await self._polling_event.wait()
         try:
             if obj.func_read is ModbusReadFunc.READ_FILE:
-                raise ModbusException('func-not-support')  # todo: implement 0x14 func
+                raise ModbusException("func-not-support")  # todo: implement 0x14 func
 
             # Using lock because pymodbus doesn't handle async requests internally.
             # Maybe this will change in pymodbus v3.0.0
             async with self.lock:
-                resp = await self.read_funcs[obj.func_read](address=obj.address,
-                                                            count=obj.quantity,
-                                                            unit=self.unit)
+                resp = await self.read_funcs[obj.func_read](
+                    address=obj.address, count=obj.quantity, unit=self.unit
+                )
             if resp.isError():
-                raise ModbusIOException('0x80')  # todo: resp.string
+                raise ModbusIOException("0x80")  # todo: resp.string
 
             value = await self.decode(resp=resp, obj=obj)
             obj.set_pv(value=value)
             obj.sf = StatusFlags()
             obj.reliability = None
 
-        except (TypeError, AttributeError, ValueError,
-                asyncio.TimeoutError, asyncio.CancelledError,
-                ModbusException, Exception
-                ) as e:
+        except (
+            TypeError,
+            AttributeError,
+            ValueError,
+            asyncio.TimeoutError,
+            asyncio.CancelledError,
+            ModbusException,
+            Exception,
+        ) as e:
             obj.set_exc(exc=e)
-            self._LOG.warning('Read error',
-                              extra={'device_id': self.id, 'object_id': obj.id,
-                                     'object_type': obj.type, 'register': obj.address,
-                                     'quantity': obj.quantity, 'exc': e,
-                                     'unreachable_in_row': obj.unreachable_in_row, })
+            self._LOG.warning(
+                "Read error",
+                extra={
+                    "device_id": self.id,
+                    "object_id": obj.id,
+                    "object_type": obj.type,
+                    "register": obj.address,
+                    "quantity": obj.quantity,
+                    "exc": e,
+                    "unreachable_in_row": obj.unreachable_in_row,
+                },
+            )
         # except Exception as e:
         #     obj.exception = e
         #     self._LOG.exception(f'Unexpected read error: {e}',
@@ -180,13 +225,12 @@ class AsyncModbusDevice(BaseModbusDevice):
         """
         try:
             if obj.func_write is None:
-                raise ModbusException('Object cannot be overwritten')
+                raise ModbusException("Object cannot be overwritten")
 
             payload = await self.build(value=value, obj=obj)
 
-            if (
-                    obj.func_write is ModbusWriteFunc.WRITE_REGISTER
-                    and isinstance(payload, list)
+            if obj.func_write is ModbusWriteFunc.WRITE_REGISTER and isinstance(
+                payload, list
             ):
                 # FIXME: hotfix
                 assert len(payload) == 1
@@ -196,35 +240,51 @@ class AsyncModbusDevice(BaseModbusDevice):
             # Maybe this will change in pymodbus v3.0.0
 
             async with self.lock:
-                rq = await self.write_funcs[obj.func_write](obj.address,
-                                                            payload,  # skip_encode=True,
-                                                            unit=self.unit)
+                rq = await self.write_funcs[obj.func_write](
+                    obj.address, payload, unit=self.unit  # skip_encode=True,
+                )
             if rq.isError():
                 raise ModbusIOException(str(rq))
 
-            self._LOG.debug('Successfully write',
-                            extra={'device_id': self.id, 'object_id': obj.id,
-                                   'object_type': obj.type, 'address': obj.address,
-                                   'value': value, })
+            self._LOG.debug(
+                "Successfully write",
+                extra={
+                    "device_id": self.id,
+                    "object_id": obj.id,
+                    "object_type": obj.type,
+                    "address": obj.address,
+                    "value": value,
+                },
+            )
 
-        except (ModbusException, struct.error,
-                asyncio.TimeoutError, Exception
-                ) as e:
-            self._LOG.warning('Failed write',
-                              extra={'device_id': self.id, 'object_id': obj.id,
-                                     'object_type': obj.type, 'register': obj.address,
-                                     'quantity': obj.quantity, 'exc': e, })
+        except (ModbusException, struct.error, asyncio.TimeoutError, Exception) as e:
+            self._LOG.warning(
+                "Failed write",
+                extra={
+                    "device_id": self.id,
+                    "object_id": obj.id,
+                    "object_type": obj.type,
+                    "register": obj.address,
+                    "quantity": obj.quantity,
+                    "exc": e,
+                },
+            )
         # except Exception as e:
         #     self._LOG.exception('Unhandled error',
         #                         extra={'device_id': self.id, 'object_id': obj.id,
         #                                'object_type': obj.type, 'register': obj.address,
         #                                'quantity': obj.quantity, 'exc': e, })
 
-    async def decode(self, resp: Union[ReadCoilsResponse,
-                                       ReadDiscreteInputsResponse,
-                                       ReadHoldingRegistersResponse,
-                                       ReadInputRegistersResponse],
-                     obj: ModbusObj) -> Union[bool, int, float]:
+    async def decode(
+        self,
+        resp: Union[
+            ReadCoilsResponse,
+            ReadDiscreteInputsResponse,
+            ReadHoldingRegistersResponse,
+            ReadInputRegistersResponse,
+        ],
+        obj: ModbusObj,
+    ) -> Union[bool, int, float]:
         """Decodes non-error response from modbus read function.
 
         Args:
@@ -236,8 +296,9 @@ class AsyncModbusDevice(BaseModbusDevice):
         """
         return await self._gtw.async_add_job(self._decode_response, resp, obj)
 
-    async def build(self, value: Union[int, float], obj: ModbusObj
-                    ) -> Union[int, list[Union[int, bytes, bool]]]:
+    async def build(
+        self, value: Union[int, float], obj: ModbusObj
+    ) -> Union[int, list[Union[int, bytes, bool]]]:
         """Build payload with value.
 
         Args:

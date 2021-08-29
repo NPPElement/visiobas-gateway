@@ -1,13 +1,13 @@
 from ipaddress import IPv4Address
 from typing import Optional
 
-from pydantic import Field, BaseModel, Json, validator
+from pydantic import BaseModel, Field, Json, validator
 from pymodbus.constants import Defaults
 
+from ..protocol import Protocol
 from .base_obj import BaseBACnetObjModel
 from .obj_property import ObjProperty
 from .obj_type import ObjType
-from ..protocol import Protocol
 
 
 class DeviceRTUPropertyListModel(BaseModel):
@@ -33,32 +33,40 @@ class DevicePropertyListJsonModel(BaseModel):
     port: Optional[int] = Field(default=None)
 
     timeout: int = Field(
-        default=6000, alias='apduTimeout', gt=0,  # alias=ObjProperty.apduTimeout.id_str
-        description='''
+        default=6000,
+        alias="apduTimeout",
+        gt=0,  # alias=ObjProperty.apduTimeout.id_str
+        description="""
             The amount of time in milliseconds between retransmissions of an APDU requiring 
             acknowledgment for which no acknowledgment has been received. A suggested default 
             value for this property is 6,000 milliseconds for devices that permit modification 
             of this parameter. Otherwise, the default value shall be 10,000 milliseconds. 
             This value shall be non-zero if the Device object property called 
-            Number_Of_APDU_Retries is non-zero.''')
+            Number_Of_APDU_Retries is non-zero.""",
+    )
     retries: int = Field(
-        default=3, alias='numberOfApduRetries', ge=0,
+        default=3,
+        alias="numberOfApduRetries",
+        ge=0,
         # alias=ObjProperty.numberOfApduRetries.id_str
-        description='''
+        description="""
             Indicates the maximum number of times that an APDU shall be retransmitted. 
             A suggested default value for this property is 3. If this device does not perform 
             retries, then this property shall be set to zero. If the value of this property is 
             greater than zero, a non-zero value shall be placed in the Device object 
-            APDU_Timeout property.''')
+            APDU_Timeout property.""",
+    )
 
     # TODO: add usage
-    send_period: float = Field(default=300, alias='sendPeriod',
-                               description='Period to internal object poll.')
+    send_period: float = Field(
+        default=300, alias="sendPeriod", description="Period to internal object poll."
+    )
 
-    poll_period: float = Field(default=90, alias='pollPeriod',
-                               description='Period to send data to server.')
+    poll_period: float = Field(
+        default=90, alias="pollPeriod", description="Period to send data to server."
+    )
 
-    reconnect_period: int = Field(default=300, alias='reconnectPeriod')
+    reconnect_period: int = Field(default=300, alias="reconnectPeriod")
 
     def __str__(self) -> str:
         return str(self.__dict__)
@@ -66,10 +74,10 @@ class DevicePropertyListJsonModel(BaseModel):
     def __repr__(self) -> str:
         return str(self)
 
-    @validator('rtu')
+    @validator("rtu")
     def port_in_rtu_required(cls, v: DeviceRTUPropertyListModel, values):
-        if values['protocol'] is Protocol.MODBUS_RTU and not v.port:
-            raise ValueError('ModbusRTU required port')
+        if values["protocol"] is Protocol.MODBUS_RTU and not v.port:
+            raise ValueError("ModbusRTU required port")
         return v
 
 
@@ -81,7 +89,8 @@ class BACnetDeviceObj(BaseBACnetObjModel):
     # internal_sync_delay =
 
     property_list: Json[DevicePropertyListJsonModel] = Field(
-        ..., alias=ObjProperty.propertyList.id_str)
+        ..., alias=ObjProperty.propertyList.id_str
+    )
 
     def __str__(self) -> str:
         return self.__class__.__name__ + str(self.__dict__)
@@ -91,10 +100,17 @@ class BACnetDeviceObj(BaseBACnetObjModel):
 
     @property
     def types_to_rq(self) -> tuple[ObjType, ...]:
-        return (ObjType.ANALOG_INPUT, ObjType.ANALOG_OUTPUT, ObjType.ANALOG_VALUE,
-                ObjType.BINARY_INPUT, ObjType.BINARY_OUTPUT, ObjType.BINARY_VALUE,
-                ObjType.MULTI_STATE_INPUT, ObjType.MULTI_STATE_OUTPUT,
-                ObjType.MULTI_STATE_VALUE,)
+        return (
+            ObjType.ANALOG_INPUT,
+            ObjType.ANALOG_OUTPUT,
+            ObjType.ANALOG_VALUE,
+            ObjType.BINARY_INPUT,
+            ObjType.BINARY_OUTPUT,
+            ObjType.BINARY_VALUE,
+            ObjType.MULTI_STATE_INPUT,
+            ObjType.MULTI_STATE_OUTPUT,
+            ObjType.MULTI_STATE_VALUE,
+        )
 
     @property
     def protocol(self) -> Protocol:

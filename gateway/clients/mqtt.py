@@ -1,18 +1,17 @@
 import asyncio
 from http import HTTPStatus
-from json import loads, dumps, JSONDecodeError
+from json import JSONDecodeError, dumps, loads
 from typing import Sequence, Union
 
 import paho.mqtt.client as mqtt
 
-from ..models import ResultCode, Qos, MQTTSettings
+from ..models import MQTTSettings, Qos, ResultCode
 from ..utils import get_file_logger
 
 _LOG = get_file_logger(__name__)
 
 
 class VisioMQTTClient:
-
     def __init__(self, gateway, settings: MQTTSettings):
         self._gtw = gateway
         self._settings = settings
@@ -25,7 +24,7 @@ class VisioMQTTClient:
         self.setup()
 
     @classmethod
-    def create(cls, gateway, settings: MQTTSettings) -> 'VisioMQTTClient':
+    def create(cls, gateway, settings: MQTTSettings) -> "VisioMQTTClient":
         mqtt_client = cls(gateway=gateway, settings=settings)
         mqtt_client.setup()
         return mqtt_client
@@ -87,10 +86,11 @@ class VisioMQTTClient:
 
     def setup(self) -> None:
         """Initialize MQTT client."""
-        self._client = mqtt.Client(client_id=self._client_id,
-                                   protocol=mqtt.MQTTv311,
-                                   transport='tcp'  # todo ws
-                                   )  # todo add protocol version choice
+        self._client = mqtt.Client(
+            client_id=self._client_id,
+            protocol=mqtt.MQTTv311,
+            transport="tcp",  # todo ws
+        )  # todo add protocol version choice
         self._client.username_pw_set(username=self._username, password=self._password)
 
         # Set up external MQTT broker callbacks
@@ -145,7 +145,7 @@ class VisioMQTTClient:
 
     async def stop(self) -> None:
         self._stopped.set()
-        _LOG.info('Stopping')
+        _LOG.info("Stopping")
         await self.async_disconnect()
 
     async def wait_connect(self) -> None:
@@ -156,12 +156,15 @@ class VisioMQTTClient:
     async def connect(self, host: str, port: int = 1883) -> None:
         """Connect to the broker. Without subscriptions."""
         try:
-            await self._client.connect_async(host=host, port=port,
-                                             keepalive=self._keepalive)
+            await self._client.connect_async(
+                host=host, port=port, keepalive=self._keepalive
+            )
             self._client.reconnect_delay_set()
         except OSError as e:
-            _LOG.warning('Failed to connect to MQTT broker',
-                         extra={'host': host, 'port': port, 'exc': e})
+            _LOG.warning(
+                "Failed to connect to MQTT broker",
+                extra={"host": host, "port": port, "exc": e},
+            )
         self._client.loop_start()
         # self._client.loop_forever(retry_first_connection=True)
 
@@ -171,24 +174,22 @@ class VisioMQTTClient:
         def disconnect():
             """Disconnect to broker."""
             self._client.disconnect()
-            _LOG.debug('Disconnecting to broker',
-                       extra={'client': self._client})
+            _LOG.debug("Disconnecting to broker", extra={"client": self._client})
             # self._connected = False # will call in internal callback
             self._client.loop_stop()
 
         await self._gtw.add_job(disconnect)
 
-    async def subscribe(self, topics: Sequence[tuple[str, int]],
-                        qos: int = Qos.AT_MOST_ONCE_DELIVERY) -> None:
+    async def subscribe(
+        self, topics: Sequence[tuple[str, int]], qos: int = Qos.AT_MOST_ONCE_DELIVERY
+    ) -> None:
         """Perform a subscription.
 
         Topics example:
             [("my/topic", 0), ("another/topic", 2)]
         """
         async with self._paho_lock:
-            result, mid = await self._gtw.add_job(
-                self._client.subscribe, topics, qos
-            )
+            result, mid = await self._gtw.add_job(self._client.subscribe, topics, qos)
         # check will perform in internal callback
         # if result == mqtt.MQTT_ERR_SUCCESS:
         #     _log.debug(f'Subscribed to topics: {topics}')
@@ -198,17 +199,19 @@ class VisioMQTTClient:
     async def unsubscribe(self, topics: Union[list[str], str]) -> None:
         """Perform an unsubscription."""
         async with self._paho_lock:
-            result, mid = await self._gtw.add_job(
-                self._client.unsubscribe, topics
-            )
+            result, mid = await self._gtw.add_job(self._client.unsubscribe, topics)
         if result == mqtt.MQTT_ERR_SUCCESS:
-            _LOG.debug(f'Unsubscribed from topics: {topics}')
+            _LOG.debug(f"Unsubscribed from topics: {topics}")
         else:
-            _LOG.warning(f'Failed unsubscription to {topics}')
+            _LOG.warning(f"Failed unsubscription to {topics}")
 
-    async def publish(self, topic: str, payload: str = None,
-                      qos: int = Qos.AT_MOST_ONCE_DELIVERY,
-                      retain: bool = False) -> mqtt.MQTTMessageInfo:
+    async def publish(
+        self,
+        topic: str,
+        payload: str = None,
+        qos: int = Qos.AT_MOST_ONCE_DELIVERY,
+        retain: bool = False,
+    ) -> mqtt.MQTTMessageInfo:
         """Send message to the broker."""
         async with self._paho_lock:
             msg_info = await self._gtw.add_job(
@@ -220,42 +223,44 @@ class VisioMQTTClient:
         # _log.debug(f'Published: {client} {userdata} {mid}')
         pass
 
-    def _on_connect_callback(self, client, userdata, flags, rc, properties=None) -> None:
+    def _on_connect_callback(
+        self, client, userdata, flags, rc, properties=None
+    ) -> None:
         if rc == ResultCode.CONNECTION_SUCCESSFUL.rc:
             self._connected = True
-            _LOG.info('Connected to broker')
+            _LOG.info("Connected to broker")
             # Subscribing in on_connect() means that if we lose the connection and
             # reconnect then subscriptions will be renewed.
             asyncio.run_coroutine_threadsafe(
-                self.subscribe(topics=self.topics_sub),
-                loop=self._gtw.loop
+                self.subscribe(topics=self.topics_sub), loop=self._gtw.loop
             )
         else:
-            _LOG.warning(f'Failed connection to broker: {ResultCode(rc)}')
+            _LOG.warning(f"Failed connection to broker: {ResultCode(rc)}")
 
     def _on_disconnect_callback(self, client, userdata, rc) -> None:
         self._connected = False
-        _LOG.info(f'Disconnected: {ResultCode(rc)}')
+        _LOG.info(f"Disconnected: {ResultCode(rc)}")
         # self._client.loop_stop()
 
     def _on_subscribe_cb(self, userdata, mid, granted_qos, properties=None) -> None:
         if granted_qos == 128:
-            _LOG.warning('Failed subscription')
+            _LOG.warning("Failed subscription")
         else:
-            _LOG.debug('Subscribed')
+            _LOG.debug("Subscribed")
 
     def _on_message_cb(self, client, userdata, message: mqtt.MQTTMessage) -> None:
-        _LOG.debug('Received message',
-                   extra={'topic': message.topic, 'message': message, })
+        _LOG.debug(
+            "Received message",
+            extra={
+                "topic": message.topic,
+                "message": message,
+            },
+        )
         decoded_msg = self._decode(msg=message)
 
-        if isinstance(decoded_msg, dict) and decoded_msg.get('jsonrpc') == 2.0:
-            rpc_task = self._gtw.async_add_job(
-                self.jsonrpc_over_http, decoded_msg
-            )
-            self._gtw.add_job(
-                self._publish_rpc_response, rpc_task, message.topic
-            )
+        if isinstance(decoded_msg, dict) and decoded_msg.get("jsonrpc") == 2.0:
+            rpc_task = self._gtw.async_add_job(self.jsonrpc_over_http, decoded_msg)
+            self._gtw.add_job(self._publish_rpc_response, rpc_task, message.topic)
 
     async def _publish_rpc_response(self, rpc_task: asyncio.Task, topic: str) -> None:
         rpc_result = await rpc_task
@@ -271,16 +276,29 @@ class VisioMQTTClient:
             RPC Response is successful.
         """
         resp = await self._gtw.http_client.request(
-            method='POST', url='http://127.0.0.1:7070/json-rpc',
-            json=payload, headers='application/json',
+            method="POST",
+            url="http://127.0.0.1:7070/json-rpc",
+            json=payload,
+            headers="application/json",
         )
         if resp.status is HTTPStatus.OK:
             return await resp.text()
         else:
-            _LOG.warning('Failed JSON-RPC 2.0 over HTTP', extra={'http_response': resp, })
-            return dumps({
-                "jsonrpc": "2.0", 'result': {'success': False, 'http_status': resp.status, }
-            })
+            _LOG.warning(
+                "Failed JSON-RPC 2.0 over HTTP",
+                extra={
+                    "http_response": resp,
+                },
+            )
+            return dumps(
+                {
+                    "jsonrpc": "2.0",
+                    "result": {
+                        "success": False,
+                        "http_status": resp.status,
+                    },
+                }
+            )
 
     @staticmethod
     def _decode(msg: mqtt.MQTTMessage) -> Union[dict, str]:

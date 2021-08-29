@@ -3,13 +3,16 @@ from multiprocessing import SimpleQueue
 from threading import Thread
 from time import sleep
 
-from pymodbus.datastore import ModbusSlaveContext, ModbusServerContext
-from pymodbus.datastore import ModbusSparseDataBlock
+from logs import get_file_logger
+from pymodbus.datastore import (
+    ModbusServerContext,
+    ModbusSlaveContext,
+    ModbusSparseDataBlock,
+)
 from pymodbus.device import ModbusDeviceIdentification
 from pymodbus.server.async_io import StartTcpServer
 
-from gateway.models.bacnet import ObjType, ObjProperty
-from logs import get_file_logger
+from gateway.models.bacnet import ObjProperty, ObjType
 
 _log = get_file_logger(logger_name=__name__)
 
@@ -19,7 +22,7 @@ class ModbusSimulationServer(Thread):
 
     def __init__(self, getting_queue: SimpleQueue):
         super().__init__()
-        self.setName(name=f'{self}-Thread')
+        self.setName(name=f"{self}-Thread")
         self.setDaemon(True)
 
         self._getting_queue = getting_queue
@@ -33,7 +36,7 @@ class ModbusSimulationServer(Thread):
         """Received device's values. After that,
         runs an asynchronous server, simulating the operation of this device.
         """
-        _log.debug(f'Starting {self} ...')
+        _log.debug(f"Starting {self} ...")
 
         # fixme: Now gets only one device
         device_address, device_reg_values = self.run_getting_loop()
@@ -41,7 +44,7 @@ class ModbusSimulationServer(Thread):
         # address, port = device_address.split(':', maxsplit=1)
 
         sleep(5)
-        _log.debug(f'Received device data: {device_reg_values}')
+        _log.debug(f"Received device data: {device_reg_values}")
 
         asyncio.run(
             self.run_server(  # address=address,
@@ -70,13 +73,12 @@ class ModbusSimulationServer(Thread):
                     return data, reg_values
 
             except Exception as e:
-                _log.error(f'Received device error: {e}',
-                           exc_info=True
-                           )
+                _log.error(f"Received device error: {e}", exc_info=True)
 
     @staticmethod
-    def parse_registers_values(objs_data: dict[ObjType, list[dict]]
-                               ) -> dict[int, int or float]:
+    def parse_registers_values(
+        objs_data: dict[ObjType, list[dict]]
+    ) -> dict[int, int or float]:
         from json import loads
 
         objs_data.pop(ObjType.DEVICE)
@@ -87,44 +89,50 @@ class ModbusSimulationServer(Thread):
             for obj in obj_data:
                 try:
                     pv = obj[str(ObjProperty.presentValue.id)]
-                    if pv == 'acive':
+                    if pv == "acive":
                         pv = 1
-                    elif pv == 'inactive':
+                    elif pv == "inactive":
                         pv = 0
 
-                    modbus_props = loads(obj[str(ObjProperty.propertyList.id)])['modbus']
-                    address = modbus_props['address']
+                    modbus_props = loads(obj[str(ObjProperty.propertyList.id)])[
+                        "modbus"
+                    ]
+                    address = modbus_props["address"]
                     reg_values[address] = pv
 
                 except Exception as e:
-                    _log.warning(f'Failed extraction for {obj_type} '
-                                 f'{obj[str(ObjProperty.objectIdentifier.id)]}: {e}',
-                                 # exc_info=True
-                                 )
+                    _log.warning(
+                        f"Failed extraction for {obj_type} "
+                        f"{obj[str(ObjProperty.objectIdentifier.id)]}: {e}",
+                        # exc_info=True
+                    )
         return reg_values
         # return {i: i for i in range(666)}
 
     @staticmethod
-    async def run_server(  # address: str, port: int,
-            hr_values: dict[int, int]) -> None:
+    async def run_server(hr_values: dict[int, int]) -> None:  # address: str, port: int,
         """Simulation loop."""
 
         hr_block = ModbusSparseDataBlock(hr_values)
-        store = ModbusSlaveContext(hr=hr_block,
-                                   # hr=ModbusSequentialDataBlock(0, [17] * 100),
-                                   )
+        store = ModbusSlaveContext(
+            hr=hr_block,
+            # hr=ModbusSequentialDataBlock(0, [17] * 100),
+        )
         context = ModbusServerContext(slaves=store, single=True)
         identity = ModbusDeviceIdentification()
-        identity.VendorName = 'VisioBas'
-        identity.ProductCode = ''
-        identity.VendorUrl = 'https://www.visiodesk.ru/'
-        identity.ProductName = 'Modbus Simulation'
-        identity.ModelName = 'Modbus Simulation'
-        identity.MajorMinorRevision = '0.0.1'
+        identity.VendorName = "VisioBas"
+        identity.ProductCode = ""
+        identity.VendorUrl = "https://www.visiodesk.ru/"
+        identity.ProductName = "Modbus Simulation"
+        identity.ModelName = "Modbus Simulation"
+        identity.MajorMinorRevision = "0.0.1"
 
-        _log.info('Simulation server starting ...')
-        await StartTcpServer(context, identity=identity, address=('0.0.0.0', 5020),
-                             # address, port),
-                             allow_reuse_address=True,
-                             defer_start=False
-                             )
+        _log.info("Simulation server starting ...")
+        await StartTcpServer(
+            context,
+            identity=identity,
+            address=("0.0.0.0", 5020),
+            # address, port),
+            allow_reuse_address=True,
+            defer_start=False,
+        )
