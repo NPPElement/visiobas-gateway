@@ -1,15 +1,17 @@
 from typing import Optional, Union
 
-from pydantic import BaseModel, Field, Json, validator
-from pymodbus.constants import Endian
+from pydantic import BaseModel, Field, validator
+from pymodbus.constants import Endian  # type: ignore
 
 from ..bacnet.obj import BACnetObj, BACnetObjPropertyListJsonModel
 from ..bacnet.obj_property import ObjProperty
-from .data_type import DataType
+from .data_type import ModbusDataType
 from .func_code import ModbusReadFunc, ModbusWriteFunc
 
 
 class ModbusObjPropertyListModel(BaseModel):
+    """Represent Modbus PropertyList (371)."""
+
     address: int = Field(ge=0)
     quantity: int = Field(gt=0)
     func_read: ModbusReadFunc = Field(
@@ -25,7 +27,7 @@ class ModbusObjPropertyListModel(BaseModel):
     scale: float = Field(default=1.0, description="Multiplier `A` for recalculate A*X+B")
     offset: float = Field(default=0.0, description="Adding `B` for recalculate A*X+B")
 
-    data_type: Union[DataType, str] = Field(..., alias="dataType")
+    data_type: ModbusDataType = Field(..., alias="dataType")
     data_length: int = Field(
         default=16,
         ge=1,
@@ -43,18 +45,19 @@ class ModbusObjPropertyListModel(BaseModel):
     bit: Optional[int] = Field(default=None, ge=0, le=16)  # TODO: change to 'bitmask'?
 
     @validator("func_write")
-    def validate_consistent(cls, v: ModbusWriteFunc, values) -> Optional[ModbusWriteFunc]:
+    def validate_consistent(
+        self, value: ModbusWriteFunc, values: dict
+    ) -> Optional[ModbusWriteFunc]:
         # TODO: add funcs mapping
-        if v is None:
-            return v
-        elif values["func_read"].for_register and v.for_register:
-            return v
-        elif values["func_read"].for_coil and v.for_coil:
-            return v
-        else:
-            raise ValueError("Make sure func_read and func_write are consistent.")
+        if value is None:
+            return value
+        if values["func_read"].for_register and value.for_register:
+            return value
+        if values["func_read"].for_coil and value.for_coil:
+            return value
+        raise ValueError("Make sure func_read and func_write are consistent.")
 
-    class Config:
+    class Config:  # pylint: disable=missing-class-docstring
         arbitrary_types_allowed = True
 
     def __str__(self) -> str:
@@ -69,21 +72,23 @@ class ModbusObjPropertyListModel(BaseModel):
     #         raise ValueError('If `data_length`==1, `bit` value expected')
 
     @validator("byte_order")
-    def cast_byte_order(cls, v: str) -> Endian:
-        return Endian.Big if v == "big" else Endian.Little
+    def cast_byte_order(self, value: str) -> Endian:
+        return Endian.Big if value == "big" else Endian.Little
 
     @validator("word_order")
-    def cast_word_order(cls, v: str) -> Endian:
-        return Endian.Big if v == "big" else Endian.Little
+    def cast_word_order(self, value: str) -> Endian:
+        return Endian.Big if value == "big" else Endian.Little
 
     @validator("data_type")
-    def cast_data_type(cls, v: Union[DataType, str]) -> DataType:
-        if isinstance(v, str):
-            return DataType(v.lower())
-        return v
+    def cast_data_type(self, value: Union[ModbusDataType, str]) -> ModbusDataType:
+        if isinstance(value, str):
+            return ModbusDataType(value.lower())
+        return value
 
 
 class ModbusPropertyListJsonModel(BACnetObjPropertyListJsonModel):
+    """Property list (371) for Modbus devices."""
+
     modbus: ModbusObjPropertyListModel = Field(...)
 
     def __str__(self) -> str:
@@ -94,8 +99,10 @@ class ModbusPropertyListJsonModel(BACnetObjPropertyListJsonModel):
 
 
 class ModbusObj(BACnetObj):
-    property_list: Json[ModbusPropertyListJsonModel] = Field(
-        alias=ObjProperty.propertyList.id_str
+    """Modbus Object."""
+
+    property_list: ModbusPropertyListJsonModel = Field(
+        alias=str(ObjProperty.propertyList.id)
     )
 
     def __str__(self) -> str:
@@ -109,7 +116,7 @@ class ModbusObj(BACnetObj):
         return self.property_list.modbus.data_length
 
     @property
-    def data_type(self) -> DataType:
+    def data_type(self) -> ModbusDataType:
         return self.property_list.modbus.data_type
 
     @property

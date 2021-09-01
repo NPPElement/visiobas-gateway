@@ -1,6 +1,6 @@
-from pathlib import Path
-
 """VisioBAS Gateway."""
+
+from pathlib import Path
 
 __version__ = "3.3.0-alpha"
 __author__ = "VisioBAS, Matvey Ovtsin"

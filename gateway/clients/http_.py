@@ -1,6 +1,5 @@
 import asyncio
-from http import HTTPStatus
-from typing import Any, Collection, Optional, Union
+from typing import TYPE_CHECKING, Any, Collection, Optional, Union
 
 import aiohttp
 
@@ -11,13 +10,18 @@ from ..models import (
     ObjProperty,
     ObjType,
 )
-from ..utils import get_file_logger
+from ..utils import get_file_logger, log_exceptions
+
+if TYPE_CHECKING:
+    from ..gateway_ import Gateway
+else:
+    Gateway = "Gateway"
 
 _LOG = get_file_logger(name=__name__)
 
 
-class VisioHTTPClient:
-    """Control interactions via HTTP."""
+class HTTPClient:
+    """HTTP client of gateway."""
 
     # TODO: add decorator re-login on 401
     # TODO: add decorator handle exceptions and log them
@@ -31,7 +35,7 @@ class VisioHTTPClient:
         "{base_url}/vbas/arm/saveObjectParam/{property_id}/{replaced_object_name}"
     )
 
-    def __init__(self, gateway, settings: HTTPSettings):
+    def __init__(self, gateway: Gateway, settings: HTTPSettings):
         self._gtw = gateway
         self._settings = settings
         self._timeout = aiohttp.ClientTimeout(total=settings.timeout)
@@ -90,22 +94,16 @@ class VisioHTTPClient:
             for obj_type in obj_types
         ]
         extracted_data = await asyncio.gather(*get_tasks, return_exceptions=True)
-        # for resp in asyncio.as_completed(asyncio.gather(*rq_tasks)):
-        #     await self.async_extract_response_data(resp=await resp)
-        #     ...
 
-        # extracted_objs_by_type = [
-        #     await self.async_extract_response_data(resp=await resp) for resp in
-        #     asyncio.as_completed(asyncio.gather(*get_tasks))
-        # ]
         return extracted_data
 
-    async def logout(self, servers: Optional[Collection[HTTPServerConfig]] = None) -> bool:
+    @log_exceptions
+    async def logout(self, servers: Optional[Collection[HTTPServerConfig]] = None) -> None:
         """Performs log out from servers.
 
         Args:
             servers: Servers to perform logout.
-                    If None - perform logout from all servers.
+                    If None - perform logout from all servers. # fixme
 
         Returns:
             True: Successful logout
@@ -114,38 +112,28 @@ class VisioHTTPClient:
         servers = servers or [self.server_get, *self.servers_post]
 
         _LOG.debug("Logging out", extra={"servers": servers})
-        try:
-            logout_tasks = [
-                self.request(
-                    method="GET",
-                    url=self._URL_LOGOUT.format(base_url=server.current_url),
-                    headers=server.auth_headers,
-                    raise_for_status=True,
-                )
-                for server in servers
-            ]
-            await asyncio.gather(*logout_tasks)
-
-            # Clear auth data.
-            [server.clear_auth_data() for server in servers]
-            self._authorized = False
-
-            _LOG.info(
-                "Logged out",
-                extra={
-                    "servers": servers,
-                },
+        logout_tasks = [
+            self.request(
+                method="GET",
+                url=self._URL_LOGOUT.format(base_url=server.current_url),
+                headers=server.auth_headers,
+                raise_for_status=True,
             )
-            return True
+            for server in servers
+        ]
+        await asyncio.gather(*logout_tasks)
 
-        except (aiohttp.ClientError, Exception) as e:
-            _LOG.warning(
-                "Failure logout",
-                extra={
-                    "exc": e,
-                },
-            )
-            return False
+        # Clear auth data.
+        for server in servers:
+            server.clear_auth_data()
+        self._authorized = False
+
+        _LOG.info(
+            "Logged out",
+            extra={
+                "servers": servers,
+            },
+        )
 
     async def wait_login(self, retry: int = 60) -> None:
         """Ensures the authorization.
@@ -184,7 +172,7 @@ class VisioHTTPClient:
             self._login_server(server=get_server),
             *[self._login_server(server=server) for server in post_servers],
         )
-        is_get_authorized = res[0]  # always one instance of get server -> [0]
+        is_get_authorized = res[0]  # first instance is always GET server -> [0]
         is_post_authorized = any(res[1:])
         successfully_authorized = bool(is_get_authorized and is_post_authorized)
 
@@ -194,8 +182,9 @@ class VisioHTTPClient:
             _LOG.warning("Failed authorizations!")
         return successfully_authorized
 
+    @log_exceptions
     async def _login_server(self, server: HTTPServerConfig) -> bool:
-        """Perform authorization to server (primary server or mirror).
+        """Perform authorization to server (primary server or mirrors).
 
         If authorization is not performed to primary server -
         switches to mirrors while authorization passed or no more mirrors.
@@ -208,44 +197,43 @@ class VisioHTTPClient:
             False: Server is not authorized.
         """
         _LOG.debug("Perform authorization", extra={"server": server})
-        try:
-
-            while not server.is_authorized:
-                try:
-                    auth_data = await self.request(
-                        method="POST",
-                        url=self._URL_LOGIN.format(base_url=server.current_url),
-                        json=server.auth_payload,
-                        extract_data=True,
-                    )
-                    # auth_data = await self.async_extract_response_data(resp=auth_resp)
+        while not server.is_authorized:
+            try:
+                auth_data = await self.request(
+                    method="POST",
+                    url=self._URL_LOGIN.format(base_url=server.current_url),
+                    json=server.auth_payload,
+                    extract_data=True,
+                )
+                # auth_data = await self.async_extract_response_data(resp=auth_resp)
+                if isinstance(auth_data, dict):
                     server.set_auth_data(**auth_data)
 
-                except (aiohttp.ClientError, Exception) as e:
-                    _LOG.warning(
-                        "Failed authorization",
-                        extra={
-                            "url": server.current_url,
-                            "exc": e,
-                        },
-                    )
-
-                if not server.switch_current():
-                    break
-
-            if server.is_authorized:
-                _LOG.info("Successfully authorized", extra={"server": server})
-            else:
-                raise aiohttp.ClientError(
-                    "Authorizations on primary and mirror servers are failed"
+            except (aiohttp.ClientError, OSError) as exc:
+                _LOG.warning(
+                    "Failed authorization",
+                    extra={
+                        "url": server.current_url,
+                        "exc": exc,
+                    },
                 )
+            if not server.switch_current():
+                break
 
-        finally:
-            return server.is_authorized
+        if server.is_authorized:
+            _LOG.info(
+                "Successfully authorized",
+                extra={
+                    "server": server,
+                },
+            )
+            return True
+        return False
 
+    @log_exceptions
     async def post_device(
         self, servers: Collection[HTTPServerConfig], dev_id: int, data: str
-    ) -> bool:
+    ) -> None:
         """Performs POST requests with data to servers.
 
         Args:
@@ -256,105 +244,81 @@ class VisioHTTPClient:
         Returns:
             POST request is successful.
         """
-        try:
-            post_tasks = [
-                self.request(
-                    method="POST",
-                    url=self._URL_POST_LIGHT.format(
-                        base_url=server.current_url, device_id=str(dev_id)
-                    ),
-                    headers=server.auth_headers,
-                    data=data,
-                    extract_data=True,
-                )
-                for server in servers
-            ]
-            await asyncio.gather(*post_tasks)
-            # TODO: What we should do with failed data?
-
-            # failed_data = [
-            #     await self.async_extract_response_data(resp=await resp) for resp in
-            #     asyncio.as_completed(asyncio.gather(*post_tasks))
-            # ]
-
-        except (
-            asyncio.TimeoutError,
-            aiohttp.ClientError,
-            ConnectionError,
-            Exception,
-        ) as e:
-            _LOG.warning(
-                "Failed to send",
-                extra={
-                    "device_id": dev_id,
-                    "exc": e,
-                },
+        post_tasks = [
+            self.request(
+                method="POST",
+                url=self._URL_POST_LIGHT.format(
+                    base_url=server.current_url, device_id=str(dev_id)
+                ),
+                headers=server.auth_headers,
+                data=data,
+                extract_data=True,
             )
-            return False
-        else:
-            _LOG.debug(
-                "Successfully sent data",
-                extra={"device_id": dev_id, "servers": servers},
-            )
-            return True
+            for server in servers
+        ]
+        await asyncio.gather(*post_tasks)
+        _LOG.debug(
+            "Successfully sent data",
+            extra={
+                "device_id": dev_id,
+                "servers": servers,
+            },
+        )
+        # TODO: What we should do with failed data?
+        # failed_data = [
+        #     await self.async_extract_response_data(resp=await resp) for resp in
+        #     asyncio.as_completed(asyncio.gather(*post_tasks))
+        # ]
 
+    @log_exceptions
     async def post_property(
         self,
         value: Any,
         property_: ObjProperty,
         obj: BaseBACnetObjModel,
         servers: Collection[HTTPServerConfig],
-    ) -> bool:
-        """TODO: DO NOT USED NOW."""
-        try:
-            post_tasks = [
-                self.request(
-                    method="POST",
-                    url=self._URL_POST_PROPERTY.format(
-                        base_url=server.current_url,
-                        property_id=property_.id_str,
-                        replaced_object_name=obj.replaced_name,
-                    ),
-                    headers=server.auth_headers,
-                    data=value,
-                )
-                for server in servers
-            ]
-            await asyncio.gather(*post_tasks)
-            # TODO: add check
-
-        except (asyncio.TimeoutError, aiohttp.ClientError, Exception) as e:
-            _LOG.warning(
-                "Failed to send property",
-                extra={
-                    "device_id": obj.device_id,
-                    "property": property_,
-                    "value": value,
-                    "servers": servers,
-                    "exc": e,
-                },
+    ) -> None:
+        """TODO: NOT USED NOW."""
+        post_tasks = [
+            self.request(
+                method="POST",
+                url=self._URL_POST_PROPERTY.format(
+                    base_url=server.current_url,
+                    property_id=str(property_.id),
+                    replaced_object_name=obj.replaced_name,
+                ),
+                headers=server.auth_headers,
+                data=value,
             )
-            return False
-        else:
-            _LOG.debug(
-                "Successfully sent property",
-                extra={
-                    "device_id": obj.device_id,
-                    "property": property_,
-                    "value": value,
-                    "servers": servers,
-                },
-            )
-            return True
+            for server in servers
+        ]
+        await asyncio.gather(*post_tasks)
+        # TODO: add check
+        _LOG.debug(
+            "Successfully sent property",
+            extra={
+                "device_id": obj.device_id,
+                "property": property_,
+                "value": value,
+                "servers": servers,
+            },
+        )
 
     async def request(
-        self, method: str, url: str, *, extract_data: bool = False, **kwargs
-    ) -> Union[aiohttp.ClientResponse, Union[dict, list]]:
+        self,
+        method: str,
+        url: str,
+        *,
+        extract_data: bool = False,
+        extract_text: bool = True,
+        **kwargs: Any,
+    ) -> Union[aiohttp.ClientResponse, dict, list, str]:
         """Performs HTTP request.
         Args:
             Accept same parameters as aiohttp.ClientSession.request()
             +
-            extract_data: If true: returns extracted data
+            extract_data: If True - returns extracted data
+            extract_text: If True - returns extracted text
 
         # TODO: return rest + data
         Returns:
@@ -373,19 +337,21 @@ class VisioHTTPClient:
         ) as resp:
             if extract_data:
                 return await self.async_extract_response_data(resp=resp)
+            if extract_text:
+                return await resp.text()
             return resp
 
     async def async_extract_response_data(
         self, resp: aiohttp.ClientResponse
-    ) -> Optional[Union[list, dict]]:
-        self.__doc__ = self._extract_response_data.__doc__
+    ) -> Union[list, dict]:
+        # self.__doc__ = self._extract_response_data.__doc__
 
         return await self._gtw.async_add_job(self._extract_response_data, resp)
 
     @staticmethod
     async def _extract_response_data(
         resp: aiohttp.ClientResponse,
-    ) -> Optional[Union[list, dict]]:
+    ) -> Union[list, dict]:
         """Checks the correctness of the response.
 
         Args:
@@ -400,17 +366,13 @@ class VisioHTTPClient:
         """
         resp.raise_for_status()
 
-        if resp.status == HTTPStatus.OK:
-            json = await resp.json()
-            if json.get("success"):
-                _LOG.debug(
-                    "Successfully response",
-                    extra={
-                        "url": resp.url,
-                    },
-                )
-                return json.get("data")
-            else:
-                raise aiohttp.ClientPayloadError(
-                    f"Failure server result: {resp.url} {json}"
-                )
+        json = await resp.json()
+        if json.get("success"):
+            _LOG.debug(
+                "Successfully response",
+                extra={
+                    "url": resp.url,
+                },
+            )
+            return json.get("data", {})
+        raise aiohttp.ClientPayloadError(f"Failure server result: {resp.url} {json}")

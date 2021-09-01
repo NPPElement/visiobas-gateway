@@ -18,17 +18,14 @@ services:
     env_file:
       - config/gateway.env
       - config/http.env
+      - config/mqtt.env
       - config/api.env
+      - config/log.env
     environment:
       - TZ=Europe/Moscow
       - PYTHONPATH=/
-
       # Logging
       - PYTHONASYNCIODEBUG=0
-      #- GTW_LOG_FORMAT="%(levelname)-8s [%(asctime)s] [%(threadName)s] %(name)s.%(funcName)s(%(lineno)d): %(message)s"
-      - GTW_LOG_LEVEL=DEBUG
-      - GTW_LOG_FILE_SIZE=50 # in MB
-      - GTW_LOG_FILE_LEVEL=DEBUG
     volumes:
       #- /opt/visiobas-gateway/logs:/usr/share/python3/gtw/gateway/logs
       - /opt/visiobas-gateway/gateway:/usr/share/python3/gtw/lib/python3.9/site-packages/gateway

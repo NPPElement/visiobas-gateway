@@ -15,12 +15,12 @@ class ModbusReadFunc(Enum):
 
     READ_FILE = 0x14, "0x14"  # not implemented to usage
 
-    def __new__(cls, *values):
-        obj = object.__new__(cls)
-        for other_value in values:
-            cls._value2member_map_[other_value] = obj
-        obj._all_values = values
-        return obj
+    # def __new__(cls, *values) -> "ModbusReadFunc":
+    #     obj = object.__new__(cls)
+    #     for other_value in values:
+    #         cls._value2member_map_[other_value] = obj
+    #     obj._all_values = values
+    #     return obj
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}.{self.name}"
@@ -35,27 +35,17 @@ class ModbusReadFunc(Enum):
 
     @property
     def for_register(self) -> bool:
-        return (
-            True
-            if self
-            in {
-                ModbusReadFunc.READ_HOLDING_REGISTERS,
-                ModbusReadFunc.READ_INPUT_REGISTERS,
-            }
-            else False
-        )
+        return self in {
+            ModbusReadFunc.READ_HOLDING_REGISTERS,
+            ModbusReadFunc.READ_INPUT_REGISTERS,
+        }
 
     @property
     def for_coil(self) -> bool:
-        return (
-            True
-            if self
-            in {
-                ModbusReadFunc.READ_COILS,
-                ModbusReadFunc.READ_DISCRETE_INPUTS,
-            }
-            else False
-        )
+        return self in {
+            ModbusReadFunc.READ_COILS,
+            ModbusReadFunc.READ_DISCRETE_INPUTS,
+        }
 
 
 @unique
@@ -70,12 +60,12 @@ class ModbusWriteFunc(Enum):
     WRITE_COILS = 0x15, "0x15"
     WRITE_REGISTERS = 0x16, "0x16"
 
-    def __new__(cls, *values):
-        obj = object.__new__(cls)
-        for other_value in values:
-            cls._value2member_map_[other_value] = obj
-        obj._all_values = values
-        return obj
+    # def __new__(cls, *values) -> "ModbusWriteFunc":
+    #     obj = object.__new__(cls)
+    #     for other_value in values:
+    #         cls._value2member_map_[other_value] = obj
+    #     obj._all_values = values
+    #     return obj
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}.{self.name}"
@@ -90,24 +80,14 @@ class ModbusWriteFunc(Enum):
 
     @property
     def for_register(self) -> bool:
-        return (
-            True
-            if self
-            in {
-                ModbusWriteFunc.WRITE_REGISTER,
-                ModbusWriteFunc.WRITE_REGISTERS,
-            }
-            else False
-        )
+        return self in {
+            ModbusWriteFunc.WRITE_REGISTER,
+            ModbusWriteFunc.WRITE_REGISTERS,
+        }
 
     @property
     def for_coil(self) -> bool:
-        return (
-            True
-            if self
-            in {
-                ModbusWriteFunc.WRITE_COIL,
-                ModbusWriteFunc.WRITE_COILS,
-            }
-            else False
-        )
+        return self in {
+            ModbusWriteFunc.WRITE_COIL,
+            ModbusWriteFunc.WRITE_COILS,
+        }

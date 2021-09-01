@@ -1,18 +1,18 @@
 from abc import abstractmethod
-from typing import Any, Callable, Union
+from typing import TYPE_CHECKING, Callable, Optional, Union
 
-from pymodbus.bit_read_message import (
+from pymodbus.bit_read_message import (  # type: ignore
     ReadBitsResponseBase,
     ReadCoilsResponse,
     ReadDiscreteInputsResponse,
 )
-from pymodbus.client.asynchronous.async_io import (
+from pymodbus.client.asynchronous.async_io import (  # type: ignore
     AsyncioModbusSerialClient,
     AsyncioModbusTcpClient,
 )
-from pymodbus.client.sync import ModbusSerialClient, ModbusTcpClient
-from pymodbus.payload import BinaryPayloadBuilder, BinaryPayloadDecoder
-from pymodbus.register_read_message import (
+from pymodbus.client.sync import ModbusSerialClient, ModbusTcpClient  # type: ignore
+from pymodbus.payload import BinaryPayloadBuilder, BinaryPayloadDecoder  # type: ignore
+from pymodbus.register_read_message import (  # type: ignore
     ReadHoldingRegistersResponse,
     ReadInputRegistersResponse,
     ReadRegistersResponseBase,
@@ -20,46 +20,52 @@ from pymodbus.register_read_message import (
 
 from ..models import (
     BACnetDeviceObj,
-    DataType,
+    ModbusDataType,
     ModbusObj,
     ModbusReadFunc,
     ModbusWriteFunc,
-    Protocol,
 )
 from .base_polling_device import BasePollingDevice
 
-# aliases # TODO
-# BACnetDeviceModel = Any  # ...models
-
-
-VisioBASGateway = Any  # ...gateway_loop
+if TYPE_CHECKING:
+    from ..gateway_ import Gateway
+else:
+    Gateway = "Gateway"
 
 
 # _LOG = get_file_logger(name=__name__, size_mb=500)
 
 
 class BaseModbusDevice(BasePollingDevice):
-    def __init__(self, device_obj: BACnetDeviceObj, gateway: "VisioBASGateway"):
+    """Base class for Modbus devices.
+    Note: Used when sync\async devices supported.
+    """
+
+    def __init__(self, device_obj: BACnetDeviceObj, gateway: Gateway) -> None:
         super().__init__(device_obj, gateway)
 
-        self._client: Union[
-            ModbusSerialClient,
-            ModbusTcpClient,
-            AsyncioModbusTcpClient,
-            AsyncioModbusSerialClient,
+        self._client: Optional[
+            Union[
+                ModbusSerialClient,
+                ModbusTcpClient,
+                AsyncioModbusTcpClient,
+                AsyncioModbusSerialClient,
+            ]
         ] = None
 
     @property
     def unit(self) -> int:
-        if self.protocol in {Protocol.MODBUS_RTU, Protocol.MODBUS_RTUOVERTCP}:
+        if self._dev_obj.property_list.rtu:
             return self._dev_obj.property_list.rtu.unit
         return 0x01
 
     @abstractmethod
+    @property
     def read_funcs(self) -> dict[ModbusReadFunc, Callable]:
         raise NotImplementedError
 
     @abstractmethod
+    @property
     def write_funcs(self) -> dict[ModbusWriteFunc, Callable]:
         raise NotImplementedError
 
@@ -88,10 +94,10 @@ class BaseModbusDevice(BasePollingDevice):
         if isinstance(resp, ReadBitsResponseBase):
             data = resp.bits
             return 1 if data[0] else 0  # TODO: add support several bits?
-        elif isinstance(resp, ReadRegistersResponseBase):
+        if isinstance(resp, ReadRegistersResponseBase):
             data = resp.registers
-
-            if obj.data_type == DataType.BOOL:
+            scaled: Union[float, int]
+            if obj.data_type == ModbusDataType.BOOL:
                 if obj.data_length == 1:
                     scaled = decoded = 1 if data[0] else 0
                 elif obj.bit:
@@ -103,28 +109,28 @@ class BaseModbusDevice(BasePollingDevice):
                     registers=data, byteorder=obj.byte_order, wordorder=obj.word_order
                 )
                 decode_funcs = {
-                    DataType.BITS: decoder.decode_bits,
+                    ModbusDataType.BITS: decoder.decode_bits,
                     # DataType.BOOL: None,
                     # DataType.STR: decoder.decode_string,
                     8: {
-                        DataType.INT: decoder.decode_8bit_int,
-                        DataType.UINT: decoder.decode_8bit_uint,
+                        ModbusDataType.INT: decoder.decode_8bit_int,
+                        ModbusDataType.UINT: decoder.decode_8bit_uint,
                     },
                     16: {
-                        DataType.INT: decoder.decode_16bit_int,
-                        DataType.UINT: decoder.decode_16bit_uint,
-                        DataType.FLOAT: decoder.decode_16bit_float,
+                        ModbusDataType.INT: decoder.decode_16bit_int,
+                        ModbusDataType.UINT: decoder.decode_16bit_uint,
+                        ModbusDataType.FLOAT: decoder.decode_16bit_float,
                         # DataType.BOOL: None,
                     },
                     32: {
-                        DataType.INT: decoder.decode_32bit_int,
-                        DataType.UINT: decoder.decode_32bit_uint,
-                        DataType.FLOAT: decoder.decode_32bit_float,
+                        ModbusDataType.INT: decoder.decode_32bit_int,
+                        ModbusDataType.UINT: decoder.decode_32bit_uint,
+                        ModbusDataType.FLOAT: decoder.decode_32bit_float,
                     },
                     64: {
-                        DataType.INT: decoder.decode_64bit_int,
-                        DataType.UINT: decoder.decode_64bit_uint,
-                        DataType.FLOAT: decoder.decode_64bit_float,
+                        ModbusDataType.INT: decoder.decode_64bit_int,
+                        ModbusDataType.UINT: decoder.decode_64bit_uint,
+                        ModbusDataType.FLOAT: decoder.decode_64bit_float,
                     },
                 }
                 assert decode_funcs[obj.data_length][obj.data_type] is not None
@@ -151,6 +157,7 @@ class BaseModbusDevice(BasePollingDevice):
                 },
             )
             return scaled
+        raise NotImplementedError
 
     def _build_payload(
         self, value: Union[int, float], obj: ModbusObj
@@ -169,7 +176,7 @@ class BaseModbusDevice(BasePollingDevice):
         # In `pymodbus` example INT and UINT values presented by hex values.
         # value = hex(value) if obj.data_type in {DataType.INT, DataType.UINT} else value
 
-        if obj.data_type is DataType.BOOL and obj.data_length in {1, 16}:
+        if obj.data_type is ModbusDataType.BOOL and obj.data_length in {1, 16}:
             # scaled = [scaled] + [0] * 7
             return int(bool(scaled))
 
@@ -177,25 +184,25 @@ class BaseModbusDevice(BasePollingDevice):
         build_funcs = {
             # 1: {DataType.BOOL: builder.add_bits},
             8: {
-                DataType.INT: builder.add_8bit_int,
-                DataType.UINT: builder.add_8bit_uint,
+                ModbusDataType.INT: builder.add_8bit_int,
+                ModbusDataType.UINT: builder.add_8bit_uint,
                 # DataType.BOOL: builder.add_bits,
             },
             16: {
-                DataType.INT: builder.add_16bit_int,
-                DataType.UINT: builder.add_16bit_uint,
-                DataType.FLOAT: builder.add_16bit_float,
+                ModbusDataType.INT: builder.add_16bit_int,
+                ModbusDataType.UINT: builder.add_16bit_uint,
+                ModbusDataType.FLOAT: builder.add_16bit_float,
                 # DataType.BOOL: builder.add_bits,
             },
             32: {
-                DataType.INT: builder.add_32bit_int,
-                DataType.UINT: builder.add_32bit_uint,
-                DataType.FLOAT: builder.add_32bit_float,
+                ModbusDataType.INT: builder.add_32bit_int,
+                ModbusDataType.UINT: builder.add_32bit_uint,
+                ModbusDataType.FLOAT: builder.add_32bit_float,
             },
             64: {
-                DataType.INT: builder.add_64bit_int,
-                DataType.UINT: builder.add_64bit_uint,
-                DataType.FLOAT: builder.add_64bit_float,
+                ModbusDataType.INT: builder.add_64bit_int,
+                ModbusDataType.UINT: builder.add_64bit_uint,
+                ModbusDataType.FLOAT: builder.add_64bit_float,
             },
         }
         assert build_funcs[obj.data_length][obj.data_type] is not None

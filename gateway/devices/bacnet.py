@@ -1,17 +1,9 @@
-from typing import Any, Collection, Union
+from typing import Any, Collection, Optional, Union
 
-from BAC0.core.io.IOExceptions import (
-    InitializationError,
-    NetworkInterfaceException,
-    NoResponseFromController,
-    ReadPropertyException,
-    UnknownObjectError,
-    UnknownPropertyError,
-)
-from BAC0.scripts.Lite import Lite
-from bacpypes.basetypes import PriorityArray
+from BAC0.scripts.Lite import Lite  # type: ignore
 
-from ..models import BACnetDeviceObj, BACnetObj, ObjProperty, StatusFlags
+from ..models import BACnetDeviceObj, BACnetObj, ObjProperty
+from ..utils import log_exceptions
 from .base_polling_device import BasePollingDevice
 
 # Aliases
@@ -19,7 +11,9 @@ VisioBASGateway = Any  # ...gateway_loop
 
 
 class BACnetDevice(BasePollingDevice):
-    _client: Lite = None  # todo
+    """Implementation of BACnet device client."""
+
+    client: Lite = None  # todo
 
     def __init__(self, device_obj: BACnetDeviceObj, gateway: VisioBASGateway):
         super().__init__(device_obj, gateway)
@@ -37,24 +31,17 @@ class BACnetDevice(BasePollingDevice):
 
     @property
     def is_client_connected(self) -> bool:
-        return self.__class__._client is not None
+        return self.__class__.client is not None
 
+    @log_exceptions
     def create_client(self) -> None:
         """Initializes BAC0 client."""
-        try:
-            if not self.is_client_connected:
-                self._LOG.debug("Creating BAC0 client", extra={"device_id": self.id})
-                self.__class__._client = Lite()  # todo params
-            else:
-                self._LOG.debug("BAC0 client already created", extra={"device_id": self.id})
-
-        except (InitializationError, NetworkInterfaceException, Exception) as e:
+        if not self.is_client_connected:
+            self._LOG.debug("Creating BAC0 client", extra={"device_id": self.device_id})
+            self.__class__.client = Lite()  # todo params
+        else:
             self._LOG.debug(
-                "Cannot create client",
-                extra={
-                    "device_id": self.id,
-                    "exc": e,
-                },
+                "BAC0 client already created", extra={"device_id": self.device_id}
             )
 
     def close_client(self) -> None:
@@ -118,18 +105,18 @@ class BACnetDevice(BasePollingDevice):
         self,
         value: Union[int, float],
         obj: BACnetObj,
+        wait: bool = False,
         # prop: ObjProperty, priority: Optional[int]
-        **kwargs,
-    ) -> bool:
+        **kwargs: dict,
+    ) -> None:
         prop = kwargs.get("prop")
         priority = kwargs.get("priority")
-        return await self._gtw.async_add_job(
-            self.write_property, value, obj, prop, priority
-        )
+        await self._gtw.async_add_job(self.write_property, value, obj, prop, priority)
+        return None
 
     def write_property(
         self, value: Union[int, float], obj: BACnetObj, prop: ObjProperty, priority: int
-    ) -> bool:
+    ) -> Optional[bool]:
         """Writes value to property value in object.
 
         Args:
@@ -142,107 +129,51 @@ class BACnetDevice(BasePollingDevice):
             Write is successful.
         """
         # priority = priority or self._gateway.api.priority
-        try:
-            args = "{0} {1} {2} {3} {4} - {5}".format(
-                self.address_port, obj.type.name, obj.id, prop.name, value, priority
-            )
-            is_successful = self.__class__._client.write(args=args)
-            self._LOG.debug(
-                "Write",
-                extra={
-                    "device_id": self.id,
-                    "object_id": obj.id,
-                    "object_type": obj.type,
-                    "value": value,
-                    "success": is_successful,
-                },
-            )
-            return is_successful
-        except (ValueError, Exception) as e:
-            self._LOG.exception(
-                "Unhandled WriteProperty error",
-                extra={
-                    "device_id": self.id,
-                    "object_id": obj.id,
-                    "object_type": obj.type,
-                    "exc": e,
-                    "value": value,
-                },
-            )
+        args = "{0} {1} {2} {3} {4} - {5}".format(
+            self.address_port, obj.type.name_, obj.id, prop.name, value, priority
+        )
+        is_successful = self.__class__.client.write(args=args)
+        self._LOG.debug(
+            "Write",
+            extra={
+                "device_id": self.device_id,
+                "object_id": obj.id,
+                "object_type": obj.type,
+                "value": value,
+                "success": is_successful,
+            },
+        )
+        return is_successful
 
     async def read(
         self,
         obj: BACnetObj,
+        wait: bool = False,
         # prop: ObjProperty
-        **kwargs,
+        **kwargs: Any,
     ) -> Any:
         prop = kwargs.get("prop")
 
-        if kwargs.get("wait", True):
+        if wait:
             await self._polling.wait()
         return await self._gtw.async_add_job(self.read_property, obj, prop)
 
-    def read_property(self, obj: BACnetObj, prop: ObjProperty) -> Any:
+    def read_property(self, obj: BACnetObj, prop: ObjProperty) -> None:
+        request = " ".join([self.address_port, obj.type.name_, str(obj.id), prop.name])
+        response = self.__class__.client.read(request)
+        self._LOG.debug(
+            "Read",
+            extra={
+                "device_id": self.device_id,
+                "object_id": obj.id,
+                "object_type": obj.type,
+                "response": response,
+            },
+        )
         try:
-            request = " ".join([self.address_port, obj.type.name, str(obj.id), prop.name])
-            response = self.__class__._client.read(request)
-            self._LOG.debug(
-                "Read",
-                extra={
-                    "device_id": self.id,
-                    "object_id": obj.id,
-                    "object_type": obj.type,
-                    "response": response,
-                },
-            )
-            # TODO: refactor set_property()
-            if prop is ObjProperty.presentValue:
-                obj.set_pv(value=response)
-            elif prop is ObjProperty.statusFlags:
-                obj.sf = StatusFlags(flags=response)
-            elif prop is ObjProperty.reliability:
-                obj.reliability = response
-            elif prop is ObjProperty.priorityArray:
-                obj.pa = self._pa_to_tuple(pa=response)
-                self._LOG.debug(
-                    "Priority array extracted",
-                    extra={
-                        "priority_array": obj.pa,
-                        "object_id": obj.id,
-                        "object_type": obj.type,
-                        "device_id": self.id,
-                    },
-                )
-            else:
-                NotImplementedError("Other properties not support now.")
-
-        except (
-            UnknownPropertyError,
-            UnknownObjectError,
-            NoResponseFromController,
-            ReadPropertyException,
-            Exception,
-        ) as e:
-            if prop is ObjProperty.presentValue:
-                obj.set_exc(exc=e)
-            self._LOG.warning(
-                "ReadProperty error",
-                extra={
-                    "device_id": self.id,
-                    "object_id": obj.id,
-                    "object_type": obj.type,
-                    "exc": e,
-                    "property": prop,
-                    "unreachable_in_row": obj.unreachable_in_row,
-                },
-            )
-        # except Exception as e:
-        #     obj.exception = e
-        #     self._LOG.exception(f'Unexpected read error: {e}',
-        #                         extra={'device_id': self.id, 'object_id': obj.id,
-        #                                'object_type': obj.type, 'exc': e, })
-        else:
-            return response
+            obj.set_property_value(value=response, prop=prop)
+        except AttributeError as exc:
+            raise NotImplementedError(f"Property {prop} not found") from exc
 
     # def read_property_multiple(self, obj: BACnetObj,
     #                            properties: tuple[ObjProperty]) -> dict:
@@ -274,15 +205,3 @@ class BACnetDevice(BasePollingDevice):
     async def simulate_rpm(self, obj: BACnetObj) -> None:
         for prop in obj.type.properties:
             await self.read(obj=obj, prop=prop)
-
-    @staticmethod
-    def _pa_to_tuple(pa: PriorityArray) -> tuple:
-        """Represent `bacpypes` object `PriorityArray` as tuple."""
-        priorities = [
-            v[0] if k[0] != "null" else None
-            for k, v in [
-                zip(*pa.value[i].dict_contents().items()) for i in range(1, pa.value[0] + 1)
-            ]
-        ]
-
-        return tuple(priorities)

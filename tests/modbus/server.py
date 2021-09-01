@@ -3,7 +3,7 @@ from multiprocessing import SimpleQueue
 from threading import Thread
 from time import sleep
 
-from logs import get_file_logger
+from utils import get_file_logger
 from pymodbus.datastore import (
     ModbusServerContext,
     ModbusSlaveContext,
@@ -14,7 +14,7 @@ from pymodbus.server.async_io import StartTcpServer
 
 from gateway.models.bacnet import ObjProperty, ObjType
 
-_log = get_file_logger(logger_name=__name__)
+_log = get_file_logger(name=__name__)
 
 
 class ModbusSimulationServer(Thread):

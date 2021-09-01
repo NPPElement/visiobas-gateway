@@ -5,6 +5,8 @@ from enum import Enum, unique
 class ObjProperty(Enum):
     """Represent properties of BACnet object."""
 
+    # pylint: disable=invalid-name
+
     ackedTransitions = 0
     ackRequired = 1
     action = 2
@@ -362,7 +364,3 @@ class ObjProperty(Enum):
     @property
     def id(self) -> int:
         return self.value
-
-    @property
-    def id_str(self) -> str:
-        return str(self.value)

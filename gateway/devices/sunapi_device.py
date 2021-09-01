@@ -1,14 +1,20 @@
-from ..models import BACnetDeviceObj
+from typing import TYPE_CHECKING, Any
+
 from .base_device import BaseDevice
+
+if TYPE_CHECKING:
+    from ..gateway_ import Gateway
+else:
+    Gateway = "Gateway"
 
 
 class SUNAPIDevice(BaseDevice):
     """Now used for XNP-6550-RH."""
 
-    def __init__(self, device_obj: BACnetDeviceObj, gateway):
-        super().__init__(device_obj, gateway)
+    # def __init__(self, device_obj: BACnetDeviceObj, gateway: Gateway) -> None:
+    #     super().__init__(device_obj, gateway)
 
-    def ptz(self, cgi: str, submenu: str, action: str, **kwargs) -> None:
+    def ptz(self, cgi: str, submenu: str, action: str, **kwargs: Any) -> None:
         """The absolute submenu of `ptzcontrol.cgi` controls absolute a PTZ operation
         that moves the camera to the specified position.
 
@@ -62,12 +68,11 @@ class SUNAPIDevice(BaseDevice):
         url_path = "http://{device_ip}/stw‐cgi/{cgi}".format(
             device_ip=self.address, cgi=cgi
         )
-
         # ex = 'http://<Device IP>/stw‐cgi/ptzcontrol.cgi?
         # msubmenu=absolute&action=control&Pan=90&Zoom=30&Tilt=25'
-
-        self._gtw.http_client.request(
-            method="POST",
-            url=url_path,
-            params={"msubmenu": submenu, "action": action, **kwargs},
-        )
+        if self._gtw.http_client is not None:
+            self._gtw.http_client.request(
+                method="POST",
+                url=url_path,
+                params={"msubmenu": submenu, "action": action, **kwargs},
+            )

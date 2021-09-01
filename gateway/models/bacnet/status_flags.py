@@ -6,32 +6,34 @@ from pydantic import BaseModel, Field, validator
 
 
 @unique
-class StatusFlag(Enum):
+class StatusFlag(int, Enum):
     """StatusFlag representation by int."""
 
-    OUT_OF_SERVICE = 0b1000  # принимается ли значения сервером
+    OUT_OF_SERVICE = 0b1000  # does server receive data?
     OVERRIDEN = 0b0100
     FAULT = 0b0010
     IN_ALARM = 0b0001
 
 
 class StatusFlags(BaseModel):
-    flags: Union["StatusFlags", int, list[int], tuple[int]] = Field(default=0b0000)
+    """Represent Combinations of 4 `StatusFlag`."""
 
-    @validator("flags")
-    def cast_flags(cls, v: Union[int, Collection[StatusFlag]]) -> int:
-        if isinstance(v, int):
-            return v
-        elif isinstance(v, StatusFlags):
-            return v.flags
-        elif isinstance(v, (list, tuple)):
+    flags: int = Field(default=0b0000)
+
+    @validator("flags", pre=True)
+    def cast_flags(self, value: Union[int, Collection[StatusFlag]]) -> int:
+        if isinstance(value, int):
+            return value
+        if isinstance(value, StatusFlags):
+            return value.flags
+        if hasattr(value, "__iter__"):
             sf_int = 0b0000
-            v = list(v)
-
-            for i in range(len(v)):
-                if v[i]:
-                    sf_int |= 1 << len(v) - 1 - i
+            value = list(value)
+            for i, flag in enumerate(value):
+                if flag:
+                    sf_int |= 1 << len(value) - 1 - i
             return sf_int
+        raise ValueError("Expected StatusFlags")
 
     def enable(self, flag: StatusFlag) -> None:
         """Enables flag.
@@ -39,8 +41,8 @@ class StatusFlags(BaseModel):
         Args:
             flag: Status flag to enable.
         """
-        assert isinstance(flag, StatusFlag)
-        self.flags |= flag.value
+        if isinstance(flag, StatusFlag):
+            self.flags |= flag.value
 
     def disable(self, flag: StatusFlag) -> None:
         """Disables flag.
@@ -48,8 +50,8 @@ class StatusFlags(BaseModel):
         Args:
             flag: Status flag to disable.
         """
-        assert isinstance(flag, StatusFlag)
-        self.flags &= ~flag.value
+        if isinstance(flag, StatusFlag):
+            self.flags &= ~flag.value
 
     def check(self, flag: StatusFlag) -> bool:
         """Checks the flag is enabled.
@@ -58,10 +60,8 @@ class StatusFlags(BaseModel):
             flag: Status flag to check.
 
         Returns:
-            True: If flag enabled
-            False: If flag disabled.
+            Is flag enabled.
         """
-        assert isinstance(flag, StatusFlag)
         return bool(self.flags & flag.value)
 
     @property

@@ -14,6 +14,8 @@ ObjAlias = Any  # Union['..models.BACnetObj',]
 
 
 class BaseView(View):
+    """Base class for all endpoints related with devices and their objects."""
+
     @property
     def gtw(self) -> VisioBASGatewayAlias:
         """

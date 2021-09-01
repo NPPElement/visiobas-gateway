@@ -2,21 +2,25 @@ import asyncio
 from abc import ABC, abstractmethod
 from datetime import datetime
 from functools import lru_cache
-from typing import Any, Collection, Optional, Union
+from typing import TYPE_CHECKING, Any, Collection, Optional, Union
 
-import aiojobs
-from pymodbus.client.asynchronous.async_io import AsyncioModbusSerialClient
-from pymodbus.client.sync import ModbusSerialClient
+import aiojobs  # type: ignore
+from pymodbus.client.asynchronous.async_io import AsyncioModbusSerialClient  # type: ignore
+from pymodbus.client.sync import ModbusSerialClient  # type: ignore
 
-from ..models import BACnetDeviceObj, BACnetObj, ModbusObj, ObjType, Protocol
+from ..models import BACnetDeviceObj, BACnetObj, ObjType
 from .base_device import BaseDevice
 
-# Aliases
-VisioBASGateway = Any  # ...gateway_
+if TYPE_CHECKING:
+    from ..gateway_ import Gateway
+else:
+    Gateway = "Gateway"
 
 
 class BasePollingDevice(BaseDevice, ABC):
-    _client_creation_lock: asyncio.Lock = None
+    """Base class for devices, that can be periodically polled for update sensors data."""
+
+    _client_creation_lock: asyncio.Lock = None  # type: ignore
 
     # Key is serial port name.
     _serial_clients: dict[str, Union[ModbusSerialClient, AsyncioModbusSerialClient]] = {}
@@ -24,15 +28,15 @@ class BasePollingDevice(BaseDevice, ABC):
     _serial_polling: dict[str, asyncio.Event] = {}
     _serial_connected: dict[str, bool] = {}
 
-    def __init__(self, device_obj: BACnetDeviceObj, gateway: "VisioBASGateway"):
+    def __init__(self, device_obj: BACnetDeviceObj, gateway: Gateway):
         super().__init__(device_obj, gateway)
 
-        self._scheduler: aiojobs.Scheduler = None
+        self._scheduler: aiojobs.Scheduler = None  # type: ignore
 
         # Key: period
-        self._objects: dict[int, set[Union[BACnetObj, ModbusObj]]] = {}
-        self._unreachable_objects: set[Union[BACnetObj, ModbusObj]] = set()
-        # self._nonexistent_objects: set[Union[BACnetObj, ModbusObj]] = set()
+        self._objects: dict[float, set[BACnetObj]] = {}
+        self._unreachable_objects: set[BACnetObj] = set()
+        # self._nonexistent_objects: set[BACnetObj] = set()
 
         self._connected = False
 
@@ -42,26 +46,26 @@ class BasePollingDevice(BaseDevice, ABC):
 
     @property
     def is_client_connected(self) -> bool:
-        return (
-            bool(self._serial_connected.get(self.serial_port))
-            if self.protocol is Protocol.MODBUS_RTU
-            else self._connected
-        )
+        if self.serial_port:
+            return bool(self._serial_connected.get(self.serial_port))
+        return self._connected
 
     @classmethod
-    async def create(cls, device_obj: BACnetDeviceObj, gateway) -> "BasePollingDevice":
-        loop = gateway.loop
-        if cls._client_creation_lock is None:
-            cls._client_creation_lock = asyncio.Lock(loop=loop)
-
+    async def create(
+        cls, device_obj: BACnetDeviceObj, gateway: Gateway
+    ) -> "BasePollingDevice":
         dev = cls(device_obj=device_obj, gateway=gateway)
         dev._scheduler = await aiojobs.create_scheduler(close_timeout=60, limit=100)
-        async with cls._client_creation_lock:
+
+        if not isinstance(cls._client_creation_lock, asyncio.Lock):
+            cls._client_creation_lock = asyncio.Lock(loop=gateway.loop)
+
+        async with cls._client_creation_lock:  # pylint: disable=not-async-context-manager
             await dev._gtw.async_add_job(dev.create_client)
         dev._LOG.debug(
             "Device created",
             extra={
-                "device_id": dev.id,
+                "device_id": dev.device_id,
                 "protocol": dev.protocol,
                 "serial_clients_dict": cls._serial_clients,
             },
@@ -74,16 +78,16 @@ class BasePollingDevice(BaseDevice, ABC):
         Returns:
             Serial port name if exists. Else None.
         """
-        if self.protocol is Protocol.MODBUS_RTU:
+        if self._dev_obj.property_list.rtu:
             return self._dev_obj.property_list.rtu.port
+        return None
 
     @property
     def _polling_event(self) -> asyncio.Event:
-        return (
-            self._serial_polling[self.serial_port]
-            if self.protocol is Protocol.MODBUS_RTU
-            else self._polling
-        )
+        port = self.serial_port
+        if port:
+            return self._serial_polling[port]
+        return self._polling
 
     @property
     def types_to_rq(self) -> tuple[ObjType, ...]:
@@ -98,7 +102,7 @@ class BasePollingDevice(BaseDevice, ABC):
         return self._dev_obj.retries
 
     @property
-    def all_objects(self) -> set[Union[BACnetObj, ModbusObj]]:
+    def all_objects(self) -> set[BACnetObj]:
         return {obj for objs_set in self._objects.values() for obj in objs_set}
 
     # @abstractmethod
@@ -114,19 +118,23 @@ class BasePollingDevice(BaseDevice, ABC):
         raise NotImplementedError
 
     @abstractmethod
-    async def _poll_objects(self, objs: Collection[Union[BACnetObj, ModbusObj]]) -> None:
+    async def _poll_objects(self, objs: Collection[BACnetObj]) -> None:
         raise NotImplementedError
 
     @abstractmethod
-    async def read(self, obj: BACnetObj, **kwargs) -> Optional[Union[int, float, str]]:
+    async def read(
+        self, obj: BACnetObj, wait: bool = False, **kwargs: Any
+    ) -> Optional[Union[int, float, str]]:
         raise NotImplementedError("You should implement async read method for your device")
 
     @abstractmethod
-    async def write(self, value: Union[int, float], obj: BACnetObj, **kwargs) -> None:
+    async def write(
+        self, value: Union[int, float], obj: BACnetObj, wait: bool = False, **kwargs: Any
+    ) -> None:
         raise NotImplementedError("You should implement async write method for your device")
 
     async def write_with_check(
-        self, value: Union[int, float], obj: BACnetObj, **kwargs
+        self, value: Union[int, float], obj: BACnetObj, **kwargs: Any
     ) -> bool:
         """Writes value to object at controller and check it by read.
 
@@ -159,44 +167,37 @@ class BasePollingDevice(BaseDevice, ABC):
         return is_consistent
 
     @lru_cache(maxsize=10)
-    def get_object(
-        self, obj_id: int, obj_type_id: int
-    ) -> Optional[Union[BACnetObj, ModbusObj]]:
+    def get_object(self, obj_id: int, obj_type_id: int) -> Optional[BACnetObj]:
         """Cache last 10 object instances.
         Args:
             obj_id: Object identifier.
             obj_type_id: Object type identifier.
 
+        # todo: Implement binary search?
+
         Returns:
             Object instance.
         """
         for obj in self.all_objects:
-            if obj.type.id == obj_type_id and obj.id == obj_id:
+            if obj.type.type_id == obj_type_id and obj.id == obj_id:
                 return obj
+        return None
 
-    def insert_objects(self, objs: Collection[Union[BACnetObj, ModbusObj]]) -> None:
+    def insert_objects(self, objs: Collection[BACnetObj]) -> None:
         """Groups objects by poll period and insert them into device for polling."""
-        if not len(objs):
+        if len(objs):
+            self._polling_event.clear()
+            for obj in objs:
+                poll_period = obj.property_list.poll_period
+                try:
+                    self._objects[poll_period].add(obj)
+                except KeyError:
+                    self._objects[poll_period] = {obj}
+            self._polling_event.set()
             self._LOG.debug(
-                "No objects to insert",
-                extra={
-                    "device_id": self.id,
-                },
+                "Objects are grouped by period and inserted to device",
+                extra={"device_id": self.device_id, "objects_number": len(objs)},
             )
-            return None
-
-        self._polling_event.clear()
-        for obj in objs:
-            poll_period = obj.property_list.poll_period
-            try:
-                self._objects[poll_period].add(obj)
-            except KeyError:
-                self._objects[poll_period] = {obj}
-        self._polling_event.set()
-        self._LOG.debug(
-            "Objects are grouped by period and inserted to device",
-            extra={"device_id": self.id, "objects_number": len(objs)},
-        )
 
     async def start_periodic_polls(self) -> None:
         """Starts periodic polls for all periods."""
@@ -212,7 +213,7 @@ class BasePollingDevice(BaseDevice, ABC):
             self._LOG.info(
                 "Client is not connected. Sleeping to next try",
                 extra={
-                    "device_id": self.id,
+                    "device_id": self.device_id,
                     "seconds_to_next_try": self.reconnect_period,
                 },
             )
@@ -230,7 +231,7 @@ class BasePollingDevice(BaseDevice, ABC):
         self._LOG.info(
             "Device stopped",
             extra={
-                "device_id": self.id,
+                "device_id": self.device_id,
             },
         )
 
@@ -240,7 +241,7 @@ class BasePollingDevice(BaseDevice, ABC):
         self._LOG.debug(
             "Reset unreachable objects",
             extra={
-                "device_id": self.id,
+                "device_id": self.device_id,
                 "unreachable_objects_number": len(self._unreachable_objects),
             },
         )
@@ -251,14 +252,18 @@ class BasePollingDevice(BaseDevice, ABC):
 
     async def periodic_poll(
         self,
-        objs: set[Union[BACnetObj, ModbusObj]],
-        period: int,
+        objs: set[BACnetObj],
+        period: float,
         *,
         first_iter: bool = False,
     ) -> None:
         self._LOG.debug(
             "Polling started",
-            extra={"device_id": self.id, "period": period, "objects_number": len(objs)},
+            extra={
+                "device_id": self.device_id,
+                "period": period,
+                "objects_number": len(objs),
+            },
         )
         _t0 = datetime.now()
         await self._poll_objects(objs=objs)
@@ -269,7 +274,7 @@ class BasePollingDevice(BaseDevice, ABC):
             self._LOG.info(
                 "Removed non-existent objects",
                 extra={
-                    "device_id": self.id,
+                    "device_id": self.device_id,
                     "nonexistent_objects": nonexistent_objs,
                     "nonexistent_objects_number": len(nonexistent_objs),
                 },
@@ -279,7 +284,7 @@ class BasePollingDevice(BaseDevice, ABC):
         self._LOG.info(
             "Objects polled",
             extra={
-                "device_id": self.id,
+                "device_id": self.device_id,
                 "seconds_took": _t_delta.seconds,
                 "objects_number": len(objs),
                 "period": period,
@@ -288,7 +293,9 @@ class BasePollingDevice(BaseDevice, ABC):
 
         if _t_delta.seconds > period:
             # period *= 1.5
-            self._LOG.warning("Polling period is too short!", extra={"device_id": self.id})
+            self._LOG.warning(
+                "Polling period is too short!", extra={"device_id": self.device_id}
+            )
         await self._scheduler.spawn(self._process_polled(objs=objs))
         await asyncio.sleep(delay=period - _t_delta.seconds)
 
@@ -299,13 +306,11 @@ class BasePollingDevice(BaseDevice, ABC):
 
         await self._scheduler.spawn(self.periodic_poll(objs=objs, period=period))
 
-    async def _process_polled(self, objs: set[Union[BACnetObj, ModbusObj]]) -> None:
+    async def _process_polled(self, objs: set[BACnetObj]) -> None:
         await self._gtw.verify_objects(objs=objs)
         await self._gtw.send_objects(objs=objs)
 
-    def _check_unreachable(
-        self, objs: set[Union[BACnetObj, ModbusObj]], period: int
-    ) -> None:
+    def _check_unreachable(self, objs: set[BACnetObj], period: float) -> None:
         for obj in objs.copy():
             if obj.unreachable_in_row >= self._gtw.unreachable_threshold:
                 self._LOG.debug(

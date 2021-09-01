@@ -5,8 +5,8 @@ from gateway.models.bacnet import BACnetObj
 
 class MyTestCase(unittest.TestCase):
     def test_something(self):
-        self.AI_obj.set_pv(value=12345.67890)
-        self.assertEqual(self.AI_obj.pv, 12345.7)
+        self.AI_obj.set_property_value(value=12345.67890)
+        self.assertEqual(self.AI_obj.present_value, 12345.7)
 
     def setUp(self) -> None:
         raw_AI_obj_data = {

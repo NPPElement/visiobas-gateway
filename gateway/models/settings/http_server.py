@@ -1,30 +1,34 @@
 from hashlib import md5
-from typing import Optional
+from typing import Any, Optional
 
 from pydantic import AnyHttpUrl, BaseModel, Field, validator
 
 
 class AuthData(BaseModel):
+    """Auth settings of `HTTPServerConfig`."""
+
     bearer_token: str = Field(..., alias="token")
     user_id: int = Field(...)
     auth_user_id: int = Field(...)
 
 
 class HTTPServerConfig(BaseModel):
+    """Config of HTTP Server for GET or POST data."""
+
     urls: list[AnyHttpUrl] = Field(...)
-    current = 0
+    current: int = 0
     auth_data: Optional[AuthData] = None
 
     @validator("urls")
-    def hash_passwords(cls, v: list[AnyHttpUrl]) -> list[AnyHttpUrl]:
-        for url in v:
+    def hash_passwords(self, value: list[AnyHttpUrl]) -> list[AnyHttpUrl]:
+        for url in value:
             if not url.password:
                 raise ValueError("Password expected")
             if not url.user:
                 raise ValueError("User expected")
             if not url.port:
                 raise ValueError("Port expected")
-        return v
+        return value
 
     @property
     def urls_len(self) -> int:
@@ -32,12 +36,13 @@ class HTTPServerConfig(BaseModel):
 
     @property
     def _current_url(self) -> AnyHttpUrl:
-        return self.urls[self.current]  # current url
+        return self.urls[self.current]
 
     @property
     def current_url(self) -> str:
         url_ = self._current_url
-        return url_.scheme + "://" + url_.host + ":" + url_.port
+        port = ":" + url_.port if url_.port else ""
+        return url_.scheme + "://" + url_.host + port
 
     @property
     def is_authorized(self) -> bool:
@@ -46,14 +51,15 @@ class HTTPServerConfig(BaseModel):
     @property
     def auth_payload(self) -> dict[str, str]:
         return {
-            "login": self._current_url.user,
-            "password": self._get_hash(self._current_url.password),
+            "login": self._current_url.user or "",
+            "password": self._get_hash(self._current_url.password or ""),
         }
 
     @property
     def auth_headers(self) -> Optional[dict[str, str]]:
         if self.auth_data:
             return {"Authorization": f"Bearer {self.auth_data.bearer_token}"}
+        return None
 
     def __str__(self) -> str:
         return str(self._current_url.host)
@@ -61,7 +67,7 @@ class HTTPServerConfig(BaseModel):
     def __repr__(self) -> str:
         return str(self)
 
-    def set_auth_data(self, **kwargs) -> None:
+    def set_auth_data(self, **kwargs: dict[str, Any]) -> None:
         self.auth_data = AuthData(**kwargs)
 
     def clear_auth_data(self) -> None:
@@ -77,7 +83,7 @@ class HTTPServerConfig(BaseModel):
             False: If url switched to already used.
         """
         self.current = self.current + 1 if self.current < self.urls_len - 1 else 0
-        return True if self.current else False
+        return bool(self.current)
 
     @staticmethod
     def _get_hash(password: str) -> str:

@@ -7,7 +7,7 @@ from .bacnet import (
     StatusFlag,
     StatusFlags,
 )
-from .modbus import DataType, ModbusObj, ModbusReadFunc, ModbusWriteFunc
+from .modbus import ModbusDataType, ModbusObj, ModbusReadFunc, ModbusWriteFunc
 from .mqtt import Qos, ResultCode
 from .protocol import Protocol
 from .settings import (
@@ -15,6 +15,7 @@ from .settings import (
     GatewaySettings,
     HTTPServerConfig,
     HTTPSettings,
+    LogSettings,
     MQTTSettings,
 )
 
@@ -29,7 +30,7 @@ __all__ = [
     "ModbusReadFunc",
     "ModbusWriteFunc",
     "ModbusObj",
-    "DataType",
+    "ModbusDataType",
     "ResultCode",
     "Qos",
     "Protocol",
@@ -38,4 +39,5 @@ __all__ = [
     "GatewaySettings",
     "MQTTSettings",
     "ApiSettings",
+    "LogSettings",
 ]

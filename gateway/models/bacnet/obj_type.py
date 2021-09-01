@@ -44,22 +44,22 @@ class ObjType(Enum):
     # TRUNK = "trunk", -1
     # GRAPHIC = "graphic", -1
 
-    def __new__(cls, *values):
-        obj = object.__new__(cls)
-        for other_value in values:
-            cls._value2member_map_[other_value] = obj
-        obj._all_values = values
-        return obj
+    # def __new__(cls, *values) -> "ObjType":
+    #     obj = object.__new__(cls)
+    #     for other_value in values:
+    #         cls._value2member_map_[other_value] = obj
+    #     obj._all_values = values
+    #     return obj
 
-    def __repr__(self):
-        return f"{self.__class__.__name__}.{self.name}"
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}.{self.name_}"
 
     @property
-    def id(self) -> int:
+    def type_id(self) -> int:
         return self.value[1]
 
     @property
-    def name(self) -> str:
+    def name_(self) -> str:
         return self.value[2]
 
     @property
@@ -68,16 +68,11 @@ class ObjType(Enum):
 
     @property
     def is_analog(self) -> bool:
-        return (
-            True
-            if self
-            in {
-                ObjType.ANALOG_INPUT,
-                ObjType.ANALOG_OUTPUT,
-                ObjType.ANALOG_VALUE,
-            }
-            else False
-        )
+        return self in {
+            ObjType.ANALOG_INPUT,
+            ObjType.ANALOG_OUTPUT,
+            ObjType.ANALOG_VALUE,
+        }
 
     @property
     def is_discrete(self) -> bool:
@@ -91,7 +86,7 @@ class ObjType(Enum):
             ObjType.MULTI_STATE_INPUT,
         }:
             return ObjProperty.presentValue, ObjProperty.statusFlags
-        elif self in {
+        if self in {
             ObjType.BINARY_OUTPUT,
             ObjType.BINARY_VALUE,
             ObjType.ANALOG_OUTPUT,
@@ -104,5 +99,4 @@ class ObjType(Enum):
                 ObjProperty.statusFlags,
                 ObjProperty.priorityArray,
             )
-        else:
-            raise NotImplementedError(f"Properties for {self} not defined yet")
+        raise NotImplementedError(f"Properties for {self} not defined yet")

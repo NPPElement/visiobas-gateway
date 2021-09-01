@@ -1,19 +1,26 @@
 from abc import ABC
 from ipaddress import IPv4Address
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
 from ..models import BACnetDeviceObj, Protocol
 from ..utils import get_file_logger
 
+if TYPE_CHECKING:
+    from ..gateway_ import Gateway
+else:
+    Gateway = "Gateway"
+
 
 class BaseDevice(ABC):
-    def __init__(self, device_obj: BACnetDeviceObj, gateway):
+    """Base class for all devices."""
+
+    def __init__(self, device_obj: BACnetDeviceObj, gateway: Gateway):
         self._gtw = gateway
         self._dev_obj = device_obj
-        self._LOG = get_file_logger(name=__name__ + str(self.id))
+        self._LOG = get_file_logger(name=__name__ + str(self.device_id))
 
     @property
-    def id(self) -> int:
+    def device_id(self) -> int:
         """Device id."""
         return self._dev_obj.id
 

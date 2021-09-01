@@ -2,6 +2,8 @@ from pydantic import AnyHttpUrl, BaseSettings, Field
 
 
 class GatewaySettings(BaseSettings):
+    """Main settings of gateway."""
+
     # todo: solve problem with 'polling by'
     # address: IPv4Address = Field(
     #     ..., description="Gateway's address. "
@@ -42,7 +44,7 @@ class GatewaySettings(BaseSettings):
         description="Priority that sets when writing through the gateway API.",
     )
 
-    class Config:
+    class Config:  # pylint: disable=missing-class-docstring
         env_prefix = "GTW_"
         env_file = ".env"
         env_file_encoding = "utf-8"

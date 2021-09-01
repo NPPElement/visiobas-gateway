@@ -2,7 +2,9 @@ from enum import Enum, unique
 
 
 @unique
-class ResultCode(Enum):
+class ResultCode(int, Enum):
+    """Represent MQTT result codes."""
+
     CONNECTION_SUCCESSFUL = 0
     INCORRECT_PROTOCOL_VERSION = 1
     INVALID_CLIENT_IDENTIFIER = 2
@@ -13,5 +15,5 @@ class ResultCode(Enum):
     # other currently unused in paho
 
     @property
-    def rc(self) -> int:
+    def result_code(self) -> int:
         return self.value

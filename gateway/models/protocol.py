@@ -2,26 +2,28 @@ from enum import Enum, unique
 
 
 @unique
-class Protocol(Enum):
+class Protocol(str, Enum):
+    """Possible protocols."""
+
     BACNET = "BACnet"
     MODBUS_TCP = "ModbusTCP"
     MODBUS_RTU = "ModbusRTU"
     MODBUS_RTUOVERTCP = "ModbusRTUoverTCP"
     SUNAPI = "SUNAPI"
 
-    def __new__(cls, *values):
-        obj = object.__new__(cls)
-        for other_value in values:
-            cls._value2member_map_[other_value] = obj
-        obj._all_values = values
-        return obj
+    # def __new__(cls, *values) -> "Protocol":
+    #     obj = object.__new__(cls)
+    #     for other_value in values:
+    #         cls._value2member_map_[other_value] = obj
+    #     obj._all_values = values
+    #     return obj
 
     def __repr__(self) -> str:
         return self.value
 
     @property
     def is_camera(self) -> bool:
-        return True if self is Protocol.SUNAPI else False
+        return self is Protocol.SUNAPI
 
     @property
     def is_polling_device(self) -> bool:
@@ -31,7 +33,7 @@ class Protocol(Enum):
             Protocol.MODBUS_RTU,
             Protocol.MODBUS_RTUOVERTCP,
         }
-        return True if self in polling_protocols else False
+        return self in polling_protocols
 
     # @property
     # def name(self) -> str:

@@ -1,3 +1,4 @@
+import logging
 from logging import Formatter
 
 
@@ -35,7 +36,7 @@ class ExtraFormatter(Formatter):
         "asctime",
     }
 
-    def format(self, record):
+    def format(self, record: logging.LogRecord) -> str:
         string = super().format(record)
         extra = {k: v for k, v in record.__dict__.items() if k not in self.reserved_keys}
         if len(extra) > 0:

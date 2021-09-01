@@ -1,7 +1,7 @@
 import asyncio
-from typing import Any, Union
+from typing import TYPE_CHECKING, Optional
 
-import aiohttp_cors
+import aiohttp_cors  # type: ignore
 from aiohttp.web import Application
 from aiohttp.web_runner import AppRunner, TCPSite
 
@@ -9,12 +9,12 @@ from ..models import ApiSettings
 from ..utils import get_file_logger
 from .jsonrpc import JSON_RPC_HANDLERS
 
-# from aiohttp_apispec import setup_aiohttp_apispec
+if TYPE_CHECKING:
+    from ..gateway_ import Gateway
+else:
+    Gateway = "Gateway"
 
 _LOG = get_file_logger(name=__name__)
-
-# Aliases
-JsonRPCViewAlias = Any  # '.jsonrpc.JsonRPCView'
 
 
 class VisioGtwApi:
@@ -22,10 +22,10 @@ class VisioGtwApi:
 
     # TODO: add run_in_thread() method
 
-    def __init__(self, gateway, settings: ApiSettings):
+    def __init__(self, gateway: Gateway, settings: ApiSettings):
         self._gateway = gateway
         self._settings = settings
-        self._app: Application = None
+        self._app: Optional[Application] = None
         self._stopped = asyncio.Event()
 
     def __repr__(self) -> str:
@@ -37,16 +37,19 @@ class VisioGtwApi:
 
     @property
     def port(self) -> int:
-        return int(self._settings.port)
+        port = self._settings.port
+        if port is not None:
+            return int(port)
+        return 7070
 
     @property
     def handlers(
         self,
-    ) -> tuple[Union[JsonRPCViewAlias], ...]:
-        return JSON_RPC_HANDLERS  # todo add rest handlers
+    ) -> tuple:
+        return JSON_RPC_HANDLERS
 
     @classmethod
-    def create(cls, gateway, settings: ApiSettings) -> "VisioGtwApi":
+    def create(cls, gateway: Gateway, settings: ApiSettings) -> "VisioGtwApi":
         api = cls(gateway=gateway, settings=settings)
         api._app = api.create_app()
         return api
@@ -134,10 +137,10 @@ class VisioGtwApi:
         await runner.cleanup()
 
 
-if __name__ == "__main__":
-
-    async def main():
-        api = VisioGtwApi.create(gateway=None, settings=ApiSettings())
-        await api.start()
-
-    asyncio.run(main())
+# if __name__ == "__main__":
+#
+#     async def main():
+#         api = VisioGtwApi.create(gateway=None, settings=ApiSettings())
+#         await api.start()
+#
+#     asyncio.run(main())

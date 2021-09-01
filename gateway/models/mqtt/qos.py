@@ -2,7 +2,7 @@ from enum import Enum, unique
 
 
 @unique
-class Qos(Enum):
+class Qos(int, Enum):
     """Quality of Service levels"""
 
     AT_MOST_ONCE_DELIVERY = 0

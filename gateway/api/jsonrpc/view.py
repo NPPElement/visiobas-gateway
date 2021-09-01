@@ -1,5 +1,7 @@
-from aiohttp_cors import CorsViewMixin, ResourceOptions
-from aiohttp_jsonrpc import handler
+from typing import Any
+
+from aiohttp_cors import CorsViewMixin, ResourceOptions  # type: ignore
+from aiohttp_jsonrpc import handler  # type: ignore
 
 from ...models import ObjProperty
 from ...utils import get_file_logger
@@ -9,6 +11,8 @@ _LOG = get_file_logger(__name__)
 
 
 class JsonRPCView(handler.JSONRPCView, BaseView, CorsViewMixin):
+    """JSON-RPC Endpoint."""
+
     URL_PATH = r"/json-rpc"
 
     cors_config = {
@@ -22,7 +26,7 @@ class JsonRPCView(handler.JSONRPCView, BaseView, CorsViewMixin):
         )
     }
 
-    async def rpc_writeSetPoint(self, *args, **kwargs):
+    async def rpc_writeSetPoint(self, *args: str, **kwargs: str) -> dict:
         _LOG.debug(
             "Call params",
             extra={
@@ -30,12 +34,11 @@ class JsonRPCView(handler.JSONRPCView, BaseView, CorsViewMixin):
                 "kwargs_": kwargs,
             },
         )
-
-        dev_id = int(kwargs.get("device_id"))
-        obj_type_id = int(kwargs.get("object_type"))
-        obj_id = int(kwargs.get("object_id"))
-        priority = int(kwargs.get("priority"))
-        value = float(kwargs.get("value"))
+        dev_id = int(kwargs["device_id"])
+        obj_type_id = int(kwargs["object_type"])
+        obj_id = int(kwargs["object_id"])
+        priority = int(kwargs["priority"])
+        value = float(kwargs["value"])
         # value = float(value_str) if '.' in value_str else int(value_str)
 
         dev = self.get_device(dev_id=dev_id)
@@ -53,10 +56,9 @@ class JsonRPCView(handler.JSONRPCView, BaseView, CorsViewMixin):
             obj=obj,
             device=dev,
         )
-
         return {"success": is_consistent}
 
-    async def rpc_ptz(self, *args, **kwargs):
+    async def rpc_ptz(self, *args: Any, **kwargs: Any) -> dict:
         _LOG.debug(
             "Call params",
             extra={
@@ -65,7 +67,7 @@ class JsonRPCView(handler.JSONRPCView, BaseView, CorsViewMixin):
             },
         )
 
-        dev_id = int(kwargs.get("device_id"))
+        dev_id = int(kwargs["device_id"])
         dev = self.get_device(dev_id=dev_id)
 
         if dev is None or not dev.is_camera:

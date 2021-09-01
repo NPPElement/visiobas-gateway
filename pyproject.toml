@@ -58,6 +58,29 @@ skip = [".venv", "tests"]
 [tool.pylint.format]
 max-line-length = 92
 
+[tool.pylint.messages_control]
+disable = [
+    # Sometimes necessary to prevent cycles
+    "import-outside-toplevel",
+    # Some imports duplicates
+    "duplicate-code",
+    # Modules are mostly used for organization here, there is no lib API
+    "missing-module-docstring",
+    # Organization is important, even when just separating classes
+    "too-few-public-methods",
+    # Disable any type-checking, that's what mypy is for
+    "no-member",
+    "no-name-in-module",
+    "import-error",
+    # False positives
+    "cyclic-import",
+    # Temporary disable for join
+    "fixme",
+    "missing-function-docstring",
+    "no-self-use",
+    "invalid-name",
+]
+
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"

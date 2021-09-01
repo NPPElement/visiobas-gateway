@@ -2,7 +2,9 @@ from enum import Enum, unique
 
 
 @unique
-class DataType(Enum):
+class ModbusDataType(Enum):
+    """Possible types for Modbus objects."""
+
     BITS = "bits"
     BOOL = "bool"
     # STR = 'str'  # not support yet
