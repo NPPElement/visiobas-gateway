@@ -43,8 +43,8 @@ class BACnetVerifier:
 
         try:
             from BAC0.core.io.IOExceptions import UnknownObjectError  # type: ignore
-        except ImportError as exc:
-            raise NotImplementedError from exc
+        except ImportError as import_exc:
+            raise NotImplementedError from import_exc
 
         obj.unreachable_in_row += 1
         obj.present_value = "null"

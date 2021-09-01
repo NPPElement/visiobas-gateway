@@ -74,10 +74,12 @@ disable = [
     "import-error",
     # False positives
     "cyclic-import",
-    # Temporary disable for join
+    # Fixme-s may have low demand
     "fixme",
+    # Mostly function described by name
     "missing-function-docstring",
     "no-self-use",
+    # Used in classname aliases
     "invalid-name",
 ]
 
