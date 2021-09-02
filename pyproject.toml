@@ -5,6 +5,13 @@ description = "Polling devices using various protocols and transmitting data to 
 repository = "https://github.com/NPPElement/visiobas-gateway"
 keywords = ["VisioBAS", "Gateway", "BACnet", "Modbus"]
 authors = ["Matvey Ovtsin <mtovtsin@gmail.com>"]
+classifiers = [
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Telecommunications Industry",
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+]
 license = "GPL-3.0"
 readme = "README.md"
 
@@ -26,12 +33,14 @@ black = "*"
 pylint = "^2.9.6"
 flake8 = "*"
 taskipy = "*"
+safety = "*"
 
 [tool.taskipy.tasks]
 check = """
 isort .\
  && black .\
  && flake8 gateway\
+ && poetry export -f requirements.txt | poetry run safety check --bare --stdin\
  && mypy gateway\
  && pylint gateway\
 """
