@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Any, Optional, Union
 
-from pydantic import BaseModel, Field, PrivateAttr, validator
+from pydantic import BaseModel, Field, validator
 
 from ...utils import snake_case
 from .base_obj import BaseBACnetObjModel
@@ -107,24 +107,27 @@ class BACnetObj(BaseBACnetObjModel):
     changed: datetime = Field(default=None)
 
     # exception: Optional[Exception] = None
-    unreachable_in_row: int = PrivateAttr(default=0)
-
-    # False if object not exists (incorrect object data on server).
-    existing: bool = PrivateAttr(default=True)
+    unreachable_in_row: int = Field(default=0)
+    existing: bool = Field(
+        default=True,
+        description="False if object not exists (incorrect object data on server).",
+    )
 
     class Config:  # pylint: disable=missing-class-docstring
         arbitrary_types_allowed = True
 
     # FIXME: hotfix
     @validator("default_poll_period")
-    def set_default_poll_period(self, value: float, values: dict) -> None:
+    def set_default_poll_period(cls, value: float, values: dict) -> None:
+        # pylint: disable=no-self-argument
         """Set default value to nested model."""
         if values["property_list"].poll_period is None:
             values["property_list"].poll_period = value
 
     # FIXME: hotfix
     @validator("default_send_period")
-    def set_default_send_period(self, value: int, values: dict) -> None:
+    def set_default_send_period(cls, value: int, values: dict) -> None:
+        # pylint: disable=no-self-argument
         """Set default value to nested model."""
         if values["property_list"].send_period is None:
             values["property_list"].send_period = value

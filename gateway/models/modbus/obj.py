@@ -46,8 +46,9 @@ class ModbusObjPropertyListModel(BaseModel):
 
     @validator("func_write")
     def validate_consistent(
-        self, value: ModbusWriteFunc, values: dict
+        cls, value: ModbusWriteFunc, values: dict
     ) -> Optional[ModbusWriteFunc]:
+        # pylint: disable=no-self-argument
         # TODO: add funcs mapping
         if value is None:
             return value
@@ -72,15 +73,18 @@ class ModbusObjPropertyListModel(BaseModel):
     #         raise ValueError('If `data_length`==1, `bit` value expected')
 
     @validator("byte_order")
-    def cast_byte_order(self, value: str) -> Endian:
+    def cast_byte_order(cls, value: str) -> Endian:
+        # pylint: disable=no-self-argument
         return Endian.Big if value == "big" else Endian.Little
 
     @validator("word_order")
-    def cast_word_order(self, value: str) -> Endian:
+    def cast_word_order(cls, value: str) -> Endian:
+        # pylint: disable=no-self-argument
         return Endian.Big if value == "big" else Endian.Little
 
     @validator("data_type")
-    def cast_data_type(self, value: Union[ModbusDataType, str]) -> ModbusDataType:
+    def cast_data_type(cls, value: Union[ModbusDataType, str]) -> ModbusDataType:
+        # pylint: disable=no-self-argument
         if isinstance(value, str):
             return ModbusDataType(value.lower())
         return value

@@ -3,7 +3,7 @@ import logging
 import sys
 
 from gateway.gateway_ import Gateway
-from gateway.models import GatewaySettings, LogSettings
+from gateway.models.settings import GatewaySettings, LogSettings
 from gateway.utils import ExtraFormatter
 
 

@@ -20,7 +20,8 @@ class HTTPServerConfig(BaseModel):
     auth_data: Optional[AuthData] = None
 
     @validator("urls")
-    def hash_passwords(self, value: list[AnyHttpUrl]) -> list[AnyHttpUrl]:
+    def hash_passwords(cls, value: list[AnyHttpUrl]) -> list[AnyHttpUrl]:
+        # pylint: disable=no-self-argument
         for url in value:
             if not url.password:
                 raise ValueError("Password expected")

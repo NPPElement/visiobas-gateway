@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from pydantic import BaseSettings, Field, validator
+from pydantic import BaseSettings, Field
 
 
 class LogSettings(BaseSettings):
@@ -13,12 +13,13 @@ class LogSettings(BaseSettings):
         default="%(levelname)-8s [%(asctime)s] "
         "%(name)s.%(funcName)s(%(lineno)d): %(message)s"
     )  # [%(threadName)s]
-    disable_loggers: list[str] = Field(default=None)
-    logs_path: Path = Field(default=None)
+    disable_loggers: list[str] = Field(default_factory=list)
+    log_dir: Path = Field(default=Path(".gateway_logs"))  # todo
 
-    @validator("disable_loggers", pre=True)
-    def spit_names(self, value: str) -> list[str]:
-        return value.split()
+    # @validator("disable_loggers", pre=True)
+    # def spit_names(cls, value: list[str]) -> list[str]:
+    #     # pylint: disable=no-self-argument
+    #     return value.split()
 
     class Config:  # pylint: disable=missing-class-docstring
         env_prefix = "GTW_LOG_"

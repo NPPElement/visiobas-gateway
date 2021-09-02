@@ -1,13 +1,18 @@
 from logging import Logger, getLogger
 from logging.handlers import RotatingFileHandler
+from typing import TYPE_CHECKING
 
-from ..models import LogSettings
 from .log_extra_formatter import ExtraFormatter
+
+if TYPE_CHECKING:
+    from ..models.settings.log_settings import LogSettings
+else:
+    LogSettings = "LogSettings"
 
 _MEGABYTE = 10 ** 6
 
 
-def get_file_logger(name: str, settings: LogSettings = LogSettings()) -> Logger:  # fixme
+def get_file_logger(name: str, settings: LogSettings) -> Logger:
     """Gets Logger with RotatingFileHandler.
 
     Args:
@@ -21,7 +26,12 @@ def get_file_logger(name: str, settings: LogSettings = LogSettings()) -> Logger:
     logger.setLevel(level=settings.file_level)
     logger.handlers = []  # Remove all handlers
 
-    filename = settings.logs_path / f"{name}.log"
+    try:
+        settings.log_dir.mkdir()
+    except FileExistsError:
+        pass
+
+    filename = settings.log_dir / f"{name}.log"
     size = settings.file_size + _MEGABYTE
 
     file_handler = RotatingFileHandler(

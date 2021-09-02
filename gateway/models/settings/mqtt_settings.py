@@ -20,7 +20,8 @@ class MQTTSettings(BaseSettings):
     # todo: add certificate
 
     @validator("client_id")
-    def create_client_id(self, value: Optional[str]) -> str:
+    def create_client_id(cls, value: Optional[str]) -> str:
+        # pylint: disable=no-self-argument
         return value or mqtt.base62(uuid.uuid4().int, padding=22)
 
     class Config:  # pylint: disable=missing-class-docstring

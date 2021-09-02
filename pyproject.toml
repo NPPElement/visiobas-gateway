@@ -3,7 +3,7 @@ name = "visiobas-gateway"
 version = "3.3.0"
 description = "Polling devices using various protocols and transmitting data to the VisioBAS system"
 repository = "https://github.com/NPPElement/visiobas-gateway"
-keywords = ["VisioBAS", "Gateway", "BACnet", "Modbus"]
+keywords = ["VisioBAS", "Gateway", "IoT", "BACnet", "Modbus"]
 authors = ["Matvey Ovtsin <mtovtsin@gmail.com>"]
 classifiers = [
     "Programming Language :: Python :: 3.9",
@@ -27,6 +27,8 @@ pymodbus = "^2.5.2"
 BAC0 = "^21.2.25"
 
 [tool.poetry.dev-dependencies]
+pytest = "*"
+pytest-mock = "*"
 mypy = "*"
 isort = "^5.0.5"
 black = "*"

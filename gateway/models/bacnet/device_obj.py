@@ -78,8 +78,9 @@ class DevicePropertyListJsonModel(BaseModel):
 
     @validator("rtu")
     def port_in_rtu_required(
-        self, value: DeviceRTUPropertyListModel, values: dict
+        cls, value: DeviceRTUPropertyListModel, values: dict
     ) -> DeviceRTUPropertyListModel:
+        # pylint: disable=no-self-argument
         if values["protocol"] is Protocol.MODBUS_RTU and not value.port:
             raise ValueError("ModbusRTU required port")
         return value

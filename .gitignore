@@ -19,4 +19,6 @@ dmypy.json
 # JetBrains
 .idea/
 
+# Gateway propuction
+.gateway_logs
 config/prod/*

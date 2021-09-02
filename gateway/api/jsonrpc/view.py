@@ -4,10 +4,11 @@ from aiohttp_cors import CorsViewMixin, ResourceOptions  # type: ignore
 from aiohttp_jsonrpc import handler  # type: ignore
 
 from ...models import ObjProperty
+from ...models.settings.log_settings import LogSettings
 from ...utils import get_file_logger
 from ..base_view import BaseView
 
-_LOG = get_file_logger(__name__)
+_LOG = get_file_logger(name=__name__, settings=LogSettings())
 
 
 class JsonRPCView(handler.JSONRPCView, BaseView, CorsViewMixin):

@@ -5,7 +5,7 @@ import aiohttp_cors  # type: ignore
 from aiohttp.web import Application
 from aiohttp.web_runner import AppRunner, TCPSite
 
-from ..models import ApiSettings
+from ..models.settings import ApiSettings, LogSettings
 from ..utils import get_file_logger
 from .jsonrpc import JSON_RPC_HANDLERS
 
@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 else:
     Gateway = "Gateway"
 
-_LOG = get_file_logger(name=__name__)
+_LOG = get_file_logger(name=__name__, settings=LogSettings())
 
 
 class VisioGtwApi:

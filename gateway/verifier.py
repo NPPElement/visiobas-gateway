@@ -1,9 +1,10 @@
 from typing import Collection, Iterator, Union
 
-from ..models import BACnetObj, StatusFlag, StatusFlags
-from ..utils import get_file_logger
+from .models import BACnetObj, StatusFlag, StatusFlags
+from .models.settings import LogSettings
+from .utils import get_file_logger
 
-_LOG = get_file_logger(name=__name__)
+_LOG = get_file_logger(name=__name__, settings=LogSettings())
 
 
 class BACnetVerifier:
@@ -85,6 +86,7 @@ class BACnetVerifier:
     def verify_present_value(
         obj: BACnetObj, value: Union[str, int, float, bool]
     ) -> BACnetObj:
+        # pylint: disable=too-many-return-statements
         # FIXME: detect changes
         if value in {True, "active"}:
             obj.verified_present_value = 1
@@ -98,14 +100,16 @@ class BACnetVerifier:
             obj.verified_present_value = value
             return obj
         if isinstance(value, (int, float)):
-            if obj.type.is_analog:
-                obj.verified_present_value = _round(value=value, resolution=obj.resolution)
             if value == float("inf"):
                 obj.verified_present_value = "null"
                 obj.reliability = 2
-            elif value == float("-inf"):
+                return obj
+            if value == float("-inf"):
                 obj.verified_present_value = "null"
                 obj.reliability = 3
+                return obj
+            if obj.type.is_analog:
+                obj.verified_present_value = _round(value=value, resolution=obj.resolution)
             if isinstance(value, float) and value.is_integer():
                 obj.verified_present_value = int(value)
             return obj
@@ -129,12 +133,14 @@ class BACnetVerifier:
 
 
 def _round(value: Union[float, int], resolution: Union[int, float]) -> float:
-    rounded = round(value / resolution) * resolution
+    if not isinstance(resolution, (int, float)) or resolution <= 0:
+        raise ValueError("`resolution` must be number greater than 0")
+    if not isinstance(value, (int, float)) or value in {float("-inf"), float("inf")}:
+        raise ValueError("`value` must be number")
 
+    rounded = round(float(value) / resolution) * resolution
     if isinstance(resolution, int):
         return rounded
-    if isinstance(resolution, float):
-        _, fractional_part = str(resolution).split(".", maxsplit=1)
-        digits = len(fractional_part)
-        return round(rounded, ndigits=digits)
-    raise ValueError("Expected int | float")
+    _, fractional_part = str(resolution).split(".", maxsplit=1)
+    digits = len(fractional_part)
+    return round(rounded, ndigits=digits)

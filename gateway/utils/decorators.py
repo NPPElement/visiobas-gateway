@@ -1,9 +1,10 @@
 from functools import wraps
 from typing import Any, Callable
 
+from ..models.settings.log_settings import LogSettings
 from .log_file import get_file_logger
 
-_LOG = get_file_logger(__name__)
+_LOG = get_file_logger(name=__name__, settings=LogSettings())
 
 
 def log_exceptions(func: Callable) -> Any:

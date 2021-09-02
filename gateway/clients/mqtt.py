@@ -4,10 +4,11 @@ from typing import TYPE_CHECKING, Any, Optional, Sequence, Union
 
 import paho.mqtt.client as mqtt  # type: ignore
 
-from ..models import MQTTSettings, Qos, ResultCode
+from ..models import Qos, ResultCode
+from ..models.settings import LogSettings, MQTTSettings
 from ..utils import get_file_logger
 
-_LOG = get_file_logger(__name__)
+_LOG = get_file_logger(name=__name__, settings=LogSettings())
 
 if TYPE_CHECKING:
     from ..gateway_ import Gateway

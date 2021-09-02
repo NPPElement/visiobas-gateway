@@ -17,16 +17,13 @@ from gateway.api import VisioGtwApi
 from gateway.clients import HTTPClient, MQTTClient
 from gateway.devices import BACnetDevice, ModbusDevice, SUNAPIDevice
 from gateway.devices.base_polling_device import BasePollingDevice
-from gateway.models import (
+from gateway.models import BACnetDeviceObj, BACnetObj, ModbusObj, ObjType, Protocol
+from gateway.models.settings import (
     ApiSettings,
-    BACnetDeviceObj,
-    BACnetObj,
     GatewaySettings,
     HTTPSettings,
-    ModbusObj,
+    LogSettings,
     MQTTSettings,
-    ObjType,
-    Protocol,
 )
 from gateway.utils import get_file_logger, log_exceptions
 from gateway.verifier import BACnetVerifier
@@ -37,7 +34,7 @@ if TYPE_CHECKING:
 else:
     BaseDevice = "BaseDevice"
 
-_LOG = get_file_logger(__name__)
+_LOG = get_file_logger(name=__name__, settings=LogSettings())
 
 Object = Union[BACnetObj, ModbusObj]
 

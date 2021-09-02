@@ -21,7 +21,8 @@ class StatusFlags(BaseModel):
     flags: int = Field(default=0b0000)
 
     @validator("flags", pre=True)
-    def cast_flags(self, value: Union[int, Collection[StatusFlag]]) -> int:
+    def cast_flags(cls, value: Union[int, Collection[StatusFlag]]) -> int:
+        # pylint: disable=no-self-argument
         if isinstance(value, int):
             return value
         if isinstance(value, StatusFlags):
