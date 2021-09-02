@@ -1,7 +1,12 @@
+[![Run Checks](https://github.com/NPPElement/visiobas-gateway/actions/workflows/checks.yml/badge.svg)](/actions/workflows/checks.yml)
+[![Checked with mypy](http://www.mypy-lang.org/static/mypy_badge.svg)](http://mypy-lang.org/)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/ambv/black)
+[![License](https://img.shields.io/github/license/NPPElement/visiobas-gateway)](/LICENSE)
 # VisioBAS-Gateway
 
+---
 
-Service for polling devices using various protocols and transmitting data to
+Polling controllers on various protocols for
 the [VisioBAS system](https://github.com/NPPElement/visiobas-broker).
 
 ### Contents
@@ -17,7 +22,7 @@ the [VisioBAS system](https://github.com/NPPElement/visiobas-broker).
     - [Setting configuration](#Setting-configuration)
 5. [Launch/Update](#LaunchUpdate)
 6. [Remove](#Remove)
-7. [License Information](#License-Information)
+7. [License](#License)
 
 ## Features
 
@@ -26,7 +31,8 @@ the [VisioBAS system](https://github.com/NPPElement/visiobas-broker).
 - Supported protocols: `BACnet`, `ModbusTCP`, `ModbusRTU`, `ModbusRTUoverTCP`
   , `SUNAPI (not tested yet)`.
 - Clients: `HTTP`, `MQTT (not tested yet)`.
-- `JSON-RPC 2.0 API` (over `HTTP` and `MQTT`) to control devices and request info about device.
+- `JSON-RPC 2.0 API` (over `HTTP` and `MQTT`) to control devices and request info about
+  device.
 - For processing events related to object's properties you can use verifier class.
 - Devices and clients periodically updates.
 
@@ -67,7 +73,6 @@ cd /opt/visiobas-gateway
 Application configures via environment variables. Environment variables are provided
 via `.env` files. Paths to `.env` files are specified in `docker-compose.yaml`.
 
-
 Configuration can be changed in files:
 
 - `config/gateway.env` [template](/config/templates/gateway.env)
@@ -77,8 +82,8 @@ Configuration can be changed in files:
 
 ### Logging level
 
-- You can change the logging level in the `docker-compose.yaml` file. You can
-  choose one of the following levels: `DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL`
+- You can change the logging level in the `docker-compose.yaml` file. You can choose one of
+  the following levels: `DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL`
 
 ### Objects configuration
 
@@ -148,6 +153,6 @@ sudo systemctl daemon-reload
 sudo systemctl restart docker
 ```
 
-### [License Information](/LICENSE)
+### [License](/LICENSE)
 
 `GPL-3.0 License`
