@@ -3,7 +3,7 @@ from typing import Any, Collection, Optional, Union
 from BAC0.scripts.Lite import Lite  # type: ignore
 
 from ..models import BACnetDeviceObj, BACnetObj, ObjProperty
-from ..utils import log_exceptions
+from ..utils import camel_case, log_exceptions
 from .base_polling_device import BasePollingDevice
 
 # Aliases
@@ -130,7 +130,7 @@ class BACnetDevice(BasePollingDevice):
         """
         # priority = priority or self._gateway.api.priority
         args = "{0} {1} {2} {3} {4} - {5}".format(
-            self.address_port, obj.type.name_, obj.id, prop.name, value, priority
+            self.address_port, camel_case(obj.type.name), obj.id, prop.name, value, priority
         )
         is_successful = self.__class__.client.write(args=args)
         self._LOG.debug(
@@ -159,7 +159,9 @@ class BACnetDevice(BasePollingDevice):
         return await self._gtw.async_add_job(self.read_property, obj, prop)
 
     def read_property(self, obj: BACnetObj, prop: ObjProperty) -> None:
-        request = " ".join([self.address_port, obj.type.name_, str(obj.id), prop.name])
+        request = " ".join(
+            (self.address_port, camel_case(obj.type.name), str(obj.id), prop.name)
+        )
         response = self.__class__.client.read(request)
         self._LOG.debug(
             "Read",

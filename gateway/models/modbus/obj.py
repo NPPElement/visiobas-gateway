@@ -106,7 +106,7 @@ class ModbusObj(BACnetObj):
     """Modbus Object."""
 
     property_list: ModbusPropertyListJsonModel = Field(
-        alias=str(ObjProperty.propertyList.id)
+        alias=str(ObjProperty.propertyList.prop_id)
     )
 
     def __str__(self) -> str:

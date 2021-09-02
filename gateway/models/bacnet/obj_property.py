@@ -4,7 +4,7 @@ from enum import Enum, unique
 @unique
 class ObjProperty(Enum):
     """Represent properties of BACnet object."""
-
+    # fixme: rename
     # pylint: disable=invalid-name
 
     ackedTransitions = 0
@@ -25,6 +25,7 @@ class ObjProperty(Enum):
     changeOfStateCount = 15
     changeOfStateTime = 16
     notificationClass = 17
+    FIXME_MISSED_18 = 18  # fixme
     controlledVariableReference = 19
     controlledVariableUnits = 20
     controlledVariableValue = 21
@@ -57,9 +58,11 @@ class ObjProperty(Enum):
     instanceOf = 48
     integralConstant = 49
     integralConstantUnits = 50
+    FIXME_MISSED_51 = 51  # fixme
     limitEnable = 52
     listOfGroupMembers = 53
     listOfObjectPropertyReferences = 54
+    FIXME_MISSED_55 = 55  # fixme
     localDate = 56
     localTime = 57
     location = 58
@@ -99,11 +102,13 @@ class ObjProperty(Enum):
     programState = 92
     proportionalConstant = 93
     proportionalConstantUnits = 94
+    FIXME_MISSED_95 = 95  # fixme
     protocolObjectTypesSupported = 96
     protocolServicesSupported = 97
     protocolVersion = 98
     readOnly = 99
     reasonForHalt = 100
+    FIXME_MISSED_101 = 101  # fixme
     recipientList = 102
     reliability = 103
     relinquishDefault = 104
@@ -131,6 +136,7 @@ class ObjProperty(Enum):
     bufferSize = 126
     clientCovIncrement = 127
     covResubscriptionInterval = 128
+    FIXME_MISSED_129 = 129  # fixme
     eventTimeStamps = 130
     logBuffer = 131
     logDeviceObjectProperty = 132
@@ -139,6 +145,7 @@ class ObjProperty(Enum):
     maximumValue = 135
     minimumValue = 136
     notificationThreshold = 137
+    FIXME_MISSED_138 = 138  # fixme
     protocolRevision = 139
     recordsSinceNotification = 140
     recordCount = 141
@@ -194,9 +201,14 @@ class ObjProperty(Enum):
     valueSet = 191
     valueChangeTime = 192
     alignIntervals = 193
+    FIXME_MISSED_194 = 194  # fixme
     intervalOffset = 195
     lastRestartReason = 196
     loggingType = 197
+    FIXME_MISSED_198 = 198  # fixme
+    FIXME_MISSED_199 = 199  # fixme
+    FIXME_MISSED_200 = 200  # fixme
+    FIXME_MISSED_201 = 201  # fixme
     restartNotificationRecipients = 202
     timeOfDeviceRestart = 203
     timeSynchronizationInterval = 204
@@ -211,11 +223,16 @@ class ObjProperty(Enum):
     dutyWindow = 213
     expectedShedLevel = 214
     fullDutyBaseline = 215
+    FIXME_MISSED_216 = 216  # fixme
+    FIXME_MISSED_217 = 217  # fixme
     requestedShedLevel = 218
     shedDuration = 219
     shedLevelDescriptions = 220
     shedLevels = 221
     stateDescription = 222
+    FIXME_MISSED_223 = 223  # fixme
+    FIXME_MISSED_224 = 224  # fixme
+    FIXME_MISSED_225 = 225  # fixme
     doorAlarmState = 226
     doorExtendedPulseTime = 227
     doorMembers = 228
@@ -226,6 +243,14 @@ class ObjProperty(Enum):
     lockStatus = 233
     maskedAlarmValues = 234
     securedStatus = 235
+    FIXME_MISSED_236 = 236  # fixme
+    FIXME_MISSED_237 = 237  # fixme
+    FIXME_MISSED_238 = 238  # fixme
+    FIXME_MISSED_239 = 239  # fixme
+    FIXME_MISSED_240 = 240  # fixme
+    FIXME_MISSED_241 = 241  # fixme
+    FIXME_MISSED_242 = 242  # fixme
+    FIXME_MISSED_243 = 243  # fixme
     absenteeLimit = 244
     accessAlarmEvents = 245
     accessDoors = 246
@@ -266,6 +291,7 @@ class ObjProperty(Enum):
     lastUseTime = 281
     lockout = 282
     lockoutRelinquishTime = 283
+    FIXME_MISSED_284 = 284  # fixme
     maxFailedAttempts = 285
     members = 286
     musterPoint = 287
@@ -274,11 +300,13 @@ class ObjProperty(Enum):
     occupancyCount = 290
     occupancyCountAdjust = 291
     occupancyCountEnable = 292
+    FIXME_MISSED_293 = 293  # fixme
     occupancyLowerLimit = 294
     occupancyLowerLimitEnforced = 295
     occupancyState = 296
     occupancyUpperLimit = 297
     occupancyUpperLimitEnforced = 298
+    FIXME_MISSED_299 = 299  # fixme
     passbackMode = 300
     passbackTimeout = 301
     positiveAccessRules = 302
@@ -291,6 +319,11 @@ class ObjProperty(Enum):
     transactionNotificationClass = 309
     userExternalIdentifier = 310
     userInformationReference = 311
+    FIXME_MISSED_312 = 312  # fixme
+    FIXME_MISSED_313 = 313  # fixme
+    FIXME_MISSED_314 = 314  # fixme
+    FIXME_MISSED_315 = 315  # fixme
+    FIXME_MISSED_316 = 316  # fixme
     userName = 317
     userType = 318
     usesRemaining = 319
@@ -298,6 +331,8 @@ class ObjProperty(Enum):
     zoneTo = 321
     accessEventTag = 322
     globalIdentifier = 323
+    FIXME_MISSED_324 = 324
+    FIXME_MISSED_325 = 325
     verificationTime = 326
     baseDeviceSecurityPolicy = 327
     distributionKeyRevision = 328
@@ -361,6 +396,9 @@ class ObjProperty(Enum):
     egressActive = 386
     deviceId = 846
 
+    def __repr__(self) -> str:
+        return self.name
+
     @property
-    def id(self) -> int:
+    def prop_id(self) -> int:
         return self.value

@@ -13,23 +13,22 @@ class BaseBACnetObjModel(BaseModel):
     # # type: Union[int, str] = Field(..., alias=ObjProperty.objectType.id_str)
     type: ObjType = Field(
         ...,
-        alias=str(ObjProperty.objectType.id),
-        description="""
-    Indicates membership in a particular object type class.""",
+        alias=str(ObjProperty.objectType.prop_id),
+        description="""Indicates membership in a particular object type class.""",
     )
 
-    device_id: int = Field(..., gt=0, alias=str(ObjProperty.deviceId.id))
+    device_id: int = Field(..., gt=0, alias=str(ObjProperty.deviceId.prop_id))
     id: int = Field(
         ...,
         ge=0,
-        alias=str(ObjProperty.objectIdentifier.id),
+        alias=str(ObjProperty.objectIdentifier.prop_id),
         description="""Is a numeric code that is used to identify the object.
         It shall be unique within the BACnet Device that maintains it.""",
     )
 
     name: str = Field(
         ...,
-        alias=str(ObjProperty.objectName.id),
+        alias=str(ObjProperty.objectName.prop_id),
         min_length=1,
         description="""Represent a name for the object that is unique within the
         BACnet Device that maintains it. The minimum length of the string shall be one
@@ -37,7 +36,7 @@ class BaseBACnetObjModel(BaseModel):
         printable characters.""",
     )
 
-    property_list: Any = Field(alias=str(ObjProperty.propertyList.id))
+    property_list: Any = Field(alias=str(ObjProperty.propertyList.prop_id))
 
     @property
     def replaced_name(self) -> str:

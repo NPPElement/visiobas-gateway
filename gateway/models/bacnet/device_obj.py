@@ -96,7 +96,7 @@ class BACnetDeviceObj(BaseBACnetObjModel):
     # internal_sync_delay =
 
     property_list: DevicePropertyListJsonModel = Field(
-        ..., alias=str(ObjProperty.propertyList.id)
+        ..., alias=str(ObjProperty.propertyList.prop_id)
     )
 
     def __str__(self) -> str:

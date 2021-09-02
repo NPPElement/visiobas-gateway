@@ -43,7 +43,7 @@ class BACnetObj(BaseBACnetObjModel):
 
     resolution: float = Field(
         default=0.1,
-        alias=str(ObjProperty.resolution.id),
+        alias=str(ObjProperty.resolution.prop_id),
         gt=0,
         description="""Indicates the smallest recognizable change in `Present_Value` in
         engineering units (read-only).""",
@@ -59,22 +59,22 @@ class BACnetObj(BaseBACnetObjModel):
         not defined by the protocol.""",
     )
     priority_array: tuple[int] = Field(
-        alias=str(ObjProperty.priorityArray.id),
+        alias=str(ObjProperty.priorityArray.prop_id),
         description="""Priority array. This property is a read-only array that contains
         prioritized commands that are in effect for this object.""",
     )
     reliability: Union[int, str] = Field(
         default="",
-        alias=str(ObjProperty.reliability.id),
+        alias=str(ObjProperty.reliability.prop_id),
         description="""Provides an indication of whether the `Present_Value` is
         "reliable" as far as the BACnet Device can determine and, if not, why.""",
     )
     segmentation_supported: bool = Field(
-        default=False, alias=str(ObjProperty.segmentationSupported.id)
+        default=False, alias=str(ObjProperty.segmentationSupported.prop_id)
     )
     property_list: BACnetObjPropertyListJsonModel = Field(
         ...,
-        alias=str(ObjProperty.propertyList.id),
+        alias=str(ObjProperty.propertyList.prop_id),
         description="""This read-only property is a JSON of property identifiers, one
         property identifier  for each property that exists within the object. The standard
         properties are not included in the JSON.""",

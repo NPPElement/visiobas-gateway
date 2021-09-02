@@ -3,7 +3,7 @@
 
 import pytest
 from gateway.utils.identifier import sanitize, split_words, snake_case, kebab_case, \
-    pascal_case
+    pascal_case, camel_case
 
 
 def test__sanitize():
@@ -68,5 +68,20 @@ def test_kebab_case():
         ("__LeadingUnderscore", "LeadingUnderscore"),
     ],
 )
-def test_pascalcase(before, after):
+def test_pascal_case(before, after):
     assert pascal_case(before) == after
+
+
+@pytest.mark.parametrize(
+    "before, after",
+    [
+        ("PascalCase", "pascalCase"),
+        ("snake_case", "snakeCase"),
+        ("TLAClass", "tlaClass"),
+        ("Title Case", "titleCase"),
+        ("s3_config", "s3Config"),
+        ("__LeadingUnderscore", "leadingUnderscore"),
+    ],
+)
+def test_camel_case(before, after):
+    assert camel_case(before) == after

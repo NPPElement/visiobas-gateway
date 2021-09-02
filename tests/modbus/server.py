@@ -88,13 +88,13 @@ class ModbusSimulationServer(Thread):
         for obj_type, obj_data in objs_data.items():
             for obj in obj_data:
                 try:
-                    pv = obj[str(ObjProperty.presentValue.id)]
+                    pv = obj[str(ObjProperty.presentValue.prop_id)]
                     if pv == "acive":
                         pv = 1
                     elif pv == "inactive":
                         pv = 0
 
-                    modbus_props = loads(obj[str(ObjProperty.propertyList.id)])[
+                    modbus_props = loads(obj[str(ObjProperty.propertyList.prop_id)])[
                         "modbus"
                     ]
                     address = modbus_props["address"]
@@ -103,7 +103,7 @@ class ModbusSimulationServer(Thread):
                 except Exception as e:
                     _log.warning(
                         f"Failed extraction for {obj_type} "
-                        f"{obj[str(ObjProperty.objectIdentifier.id)]}: {e}",
+                        f"{obj[str(ObjProperty.objectIdentifier.prop_id)]}: {e}",
                         # exc_info=True
                     )
         return reg_values

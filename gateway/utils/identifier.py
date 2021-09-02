@@ -3,6 +3,7 @@
 # blob/main/openapi_python_client/test_utils.py>
 
 import re
+from typing import Callable
 
 DELIMITERS = " _-"
 
@@ -35,7 +36,25 @@ def pascal_case(value: str) -> str:
     return "".join(capitalized_words)
 
 
+def camel_case(value: str) -> str:
+    """Converts to camelCase"""
+    words = split_words(sanitize(value))
+    lower_word = words[0].lower()
+    capitalized_words = (
+        word.capitalize() if not word.isupper() else word for word in words[1:]
+    )
+    return "".join((lower_word, *capitalized_words))
+
+
 def kebab_case(value: str) -> str:
     """Converts to kebab-case"""
     words = split_words(sanitize(value))
     return "-".join(words).lower()
+
+
+SUPPORTED_CASES: tuple[Callable, ...] = (
+    camel_case,
+    pascal_case,
+    kebab_case,
+    snake_case,
+)

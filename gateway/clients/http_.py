@@ -5,7 +5,7 @@ import aiohttp
 
 from ..models import BaseBACnetObjModel, ObjProperty, ObjType
 from ..models.settings import HTTPServerConfig, HTTPSettings, LogSettings
-from ..utils import get_file_logger, log_exceptions
+from ..utils import get_file_logger, kebab_case, log_exceptions
 
 if TYPE_CHECKING:
     from ..gateway_ import Gateway
@@ -24,7 +24,7 @@ class HTTPClient:
 
     _URL_LOGIN = "{base_url}/auth/rest/login"
     _URL_LOGOUT = "{base_url}/auth/secure/logout"
-    _URL_GET = "{base_url}/vbas/gate/get/{device_id}/{object_type_dashed}"
+    _URL_GET = "{base_url}/vbas/gate/get/{device_id}/{object_type_kebab}"
     _URL_POST_LIGHT = "{base_url}/vbas/gate/light/{device_id}"
     _URL_POST_PROPERTY = (
         "{base_url}/vbas/arm/saveObjectParam/{property_id}/{replaced_object_name}"
@@ -81,7 +81,7 @@ class HTTPClient:
                 url=self._URL_GET.format(
                     base_url=self.server_get.current_url,
                     device_id=str(dev_id),
-                    object_type_dashed=obj_type.name_dashed,
+                    object_type_kebab=kebab_case(obj_type.name),
                 ),
                 headers=self.server_get.auth_headers,
                 extract_data=True,
@@ -279,7 +279,7 @@ class HTTPClient:
                 method="POST",
                 url=self._URL_POST_PROPERTY.format(
                     base_url=server.current_url,
-                    property_id=str(property_.id),
+                    property_id=str(property_.prop_id),
                     replaced_object_name=obj.replaced_name,
                 ),
                 headers=server.auth_headers,
