@@ -19,6 +19,11 @@ dmypy.json
 # JetBrains
 .idea/
 
+# Coverage
+/coverage.xml
+/.coverage
+htmlcov/
+
 # Gateway propuction
 .gateway_logs
 config/prod/*

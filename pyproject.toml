@@ -36,6 +36,7 @@ pylint = "^2.9.6"
 flake8 = "*"
 taskipy = "*"
 safety = "*"
+pytest-cov = "*"
 
 [tool.taskipy.tasks]
 check = """
@@ -45,6 +46,7 @@ isort .\
  && poetry export -f requirements.txt | poetry run safety check --bare --stdin\
  && mypy gateway\
  && pylint gateway\
+ && pytest --cov gateway tests --cov-report=term-missing\
 """
 
 [tool.black]
@@ -56,6 +58,8 @@ exclude = '''
     | \.git
     | \.venv
     | \.mypy_cache
+    | \.pytest_cache
+    | \.gateway_logs
     | tests
   )/
 )
