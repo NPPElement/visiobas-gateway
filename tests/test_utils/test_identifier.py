@@ -2,13 +2,21 @@
 # blob/main/tests/test_utils.py>
 
 import pytest
-from gateway.utils.identifier import sanitize, split_words, snake_case, kebab_case, \
-    pascal_case, camel_case
+from gateway.utils.identifier import (
+    sanitize,
+    split_words,
+    snake_case,
+    kebab_case,
+    pascal_case,
+    camel_case,
+)
 
 
 def test__sanitize():
-    assert sanitize(
-        "something*~with lots_- of weird things}=") == "somethingwith lots_- of weird things"
+    assert (
+        sanitize("something*~with lots_- of weird things}=")
+        == "somethingwith lots_- of weird things"
+    )
 
 
 @pytest.mark.parametrize(

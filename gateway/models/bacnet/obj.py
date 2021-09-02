@@ -204,7 +204,7 @@ class BACnetObj(BaseBACnetObjModel):
 
     @staticmethod
     def convert_priority_array(priority_array: PriorityArray) -> tuple:
-        """Represent `bacpypes` object `PriorityArray` as tuple."""
+        """Converts `bacpypes.PriorityArray` as tuple."""
         priorities = [
             v[0] if k[0] != "null" else None
             for k, v in [

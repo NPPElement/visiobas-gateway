@@ -1,8 +1,7 @@
 from copy import copy
 from enum import Enum, unique
-from typing import Collection, Union
 
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field
 
 
 @unique
@@ -16,27 +15,28 @@ class StatusFlag(int, Enum):
 
 
 class StatusFlags(BaseModel):
-    """Represent Combinations of 4 `StatusFlag`."""
+    """Represent Combination of 4 `StatusFlag`."""
 
-    flags: int = Field(default=0b0000)
+    flags: int = Field(default=0b0000, ge=0, le=15)
 
-    @validator("flags", pre=True)
-    def cast_flags(cls, value: Union[int, Collection[StatusFlag]]) -> int:
-        # pylint: disable=no-self-argument
-        if isinstance(value, int):
-            return value
-        if isinstance(value, StatusFlags):
-            return value.flags
-        if hasattr(value, "__iter__"):
-            sf_int = 0b0000
-            value = list(value)
-            for i, flag in enumerate(value):
-                if flag:
-                    sf_int |= 1 << len(value) - 1 - i
-            return sf_int
-        raise ValueError("Expected StatusFlags")
+    # fixme: move to bacnet
+    # @validator("flags")
+    # def validate_flags(cls, value: Union[int, list[StatusFlag]]) -> int:
+    #     # pylint: disable=no-self-argument
+    #     if isinstance(value, int):
+    #         return value
+    #     if isinstance(value, (list, tuple)):
+    #         sf_int = 0b0000
+    #         for i, flag in enumerate(value):
+    #             if flag == 1:
+    #                 sf_int |= 1 << len(value) - 1 - i
+    #             elif flag == 0:
+    #                 continue
+    #             raise ValueError('flags must be 0 | 1')
+    #         return sf_int
+    #     raise ValueError("Expected StatusFlags")
 
-    def enable(self, flag: StatusFlag) -> None:
+    def enable(self, flag: StatusFlag) -> "StatusFlags":
         """Enables flag.
 
         Args:
@@ -44,8 +44,10 @@ class StatusFlags(BaseModel):
         """
         if isinstance(flag, StatusFlag):
             self.flags |= flag.value
+            return self
+        raise ValueError("StatusFlag expected")
 
-    def disable(self, flag: StatusFlag) -> None:
+    def disable(self, flag: StatusFlag) -> "StatusFlags":
         """Disables flag.
 
         Args:
@@ -53,6 +55,8 @@ class StatusFlags(BaseModel):
         """
         if isinstance(flag, StatusFlag):
             self.flags &= ~flag.value
+            return self
+        raise ValueError("StatusFlag expected")
 
     def check(self, flag: StatusFlag) -> bool:
         """Checks the flag is enabled.

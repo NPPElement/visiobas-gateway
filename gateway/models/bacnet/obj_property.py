@@ -4,6 +4,7 @@ from enum import Enum, unique
 @unique
 class ObjProperty(Enum):
     """Represent properties of BACnet object."""
+
     # fixme: rename
     # pylint: disable=invalid-name
 
@@ -396,8 +397,8 @@ class ObjProperty(Enum):
     egressActive = 386
     deviceId = 846
 
-    def __repr__(self) -> str:
-        return self.name
+    # def __repr__(self) -> str:
+    #     return self.name
 
     @property
     def prop_id(self) -> int:

@@ -60,7 +60,6 @@ exclude = '''
     | \.mypy_cache
     | \.pytest_cache
     | \.gateway_logs
-    | tests
   )/
 )
 '''

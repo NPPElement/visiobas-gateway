@@ -80,8 +80,8 @@ class ObjType(int, Enum):
     #     obj._all_values = value
     #     return obj
 
-    def __repr__(self) -> str:
-        return self.name
+    # def __repr__(self) -> str:
+    #     return self.name
 
     @property
     def type_id(self) -> int:
@@ -107,21 +107,29 @@ class ObjType(int, Enum):
         }
 
     @property
-    def properties(self) -> tuple[ObjProperty, ...]:
-        if self in {
+    def is_input(self) -> bool:
+        return self in {
             ObjType.BINARY_INPUT,
             ObjType.ANALOG_INPUT,
             ObjType.MULTI_STATE_INPUT,
-        }:
-            return ObjProperty.presentValue, ObjProperty.statusFlags
-        if self in {
+        }
+
+    @property
+    def is_output(self) -> bool:
+        return self in {
             ObjType.BINARY_OUTPUT,
             ObjType.BINARY_VALUE,
             ObjType.ANALOG_OUTPUT,
             ObjType.ANALOG_VALUE,
             ObjType.MULTI_STATE_VALUE,
             ObjType.MULTI_STATE_OUTPUT,
-        }:
+        }
+
+    @property
+    def properties(self) -> tuple[ObjProperty, ...]:
+        if self.is_input:
+            return ObjProperty.presentValue, ObjProperty.statusFlags
+        if self.is_output:
             return (
                 ObjProperty.presentValue,
                 ObjProperty.statusFlags,
