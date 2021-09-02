@@ -41,13 +41,13 @@ jobs:
       run: poetry run isort . --check
 
     - name: Run flake8
-      run: poetry run flake8 openapi_python_client
+      run: poetry run flake8 gateway
 
     - name: Run safety
       run: poetry export -f requirements.txt | poetry run safety check --bare --stdin
 
     - name: Run mypy
-      run: poetry run mypy --show-error-codes openapi_python_client
+      run: poetry run mypy --show-error-codes gateway
 
     - name: Run pylint
-      run: poetry run pylint openapi_python_client
+      run: poetry run pylint gateway
