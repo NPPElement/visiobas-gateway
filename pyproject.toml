@@ -87,8 +87,6 @@ disable = [
     "no-member",
     "no-name-in-module",
     "import-error",
-    # False positives
-    "cyclic-import",
     # Fixme-s may have low demand
     "fixme",
     # Mostly function described by name

@@ -2,6 +2,7 @@
 [![Checked with mypy](http://www.mypy-lang.org/static/mypy_badge.svg)](http://mypy-lang.org/)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/ambv/black)
 [![License](https://img.shields.io/github/license/NPPElement/visiobas-gateway)](/LICENSE)
+
 # VisioBAS-Gateway
 
 ---
@@ -21,16 +22,16 @@ the [VisioBAS system](https://github.com/NPPElement/visiobas-broker).
     - [Setting COM ports](#Setting-Serial-ports)
     - [Setting configuration](#Setting-configuration)
 5. [Launch/Update](#LaunchUpdate)
-6. [Remove](#Remove)
-7. [License](#License)
+6. [Develop](#Develop)
+7. [Remove](#Remove)
 
 ## Features
 
 - Gateway provides the opportunity to poll devices from various vendors, using various
   protocols. Standardization based on `BACnet` protocol.
 - Supported protocols: `BACnet`, `ModbusTCP`, `ModbusRTU`, `ModbusRTUoverTCP`
-  , `SUNAPI (not tested yet)`.
-- Clients: `HTTP`, `MQTT (not tested yet)`.
+  , `SUNAPI`.
+- Clients: `HTTP`, `MQTT`.
 - `JSON-RPC 2.0 API` (over `HTTP` and `MQTT`) to control devices and request info about
   device.
 - For processing events related to object's properties you can use verifier class.
@@ -39,8 +40,6 @@ the [VisioBAS system](https://github.com/NPPElement/visiobas-broker).
 ## API
 
 ### `JSON-RPC 2.0 API` Available on `http://host:port/json-rpc`. Also you may use it by MQTT (provide topics for subscribe to use).
-
-TODO: update Swagger
 
 ```shell
 curl --header "Content-Type: application/json" \
@@ -128,6 +127,26 @@ Scripts for common actions available:
 . run/update.sh  # Git pull + build + launch
 ```
 
+## Develop
+
+### Setting up a Dev Environment
+
+1. Make sure you have [Poetry](https://python-poetry.org/) installed and up to date.
+2. Make sure you have a supported Python version (e.g. 3.9) installed and accessible to
+   Poetry (e.g. with [pyenv](https://github.com/pyenv/pyenv).
+3. Use `poetry install` in the project directory to create a virtual environment with the
+   relevant dependencies.
+4. Enter a `poetry shell` to make running commands easier.
+
+### Writing Code
+
+1. Write some code and make sure it's covered by unit tests. All unit tests are in
+   the `tests` directory and the file structure should mirror the structure of the source
+   code in the `gateway` directory.
+2. When in a Poetry shell (`poetry shell`) run `task check` in order to run most of the same
+   checks CI runs. This will auto-reformat the code, check type annotations, run unit tests,
+   check code coverage, and lint the code.
+
 ## Remove
 
 To clean docker:
@@ -152,7 +171,3 @@ sudo docker image prune -a -f
 sudo systemctl daemon-reload
 sudo systemctl restart docker
 ```
-
-### [License](/LICENSE)
-
-`GPL-3.0 License`

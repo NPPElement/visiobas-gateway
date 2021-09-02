@@ -2,7 +2,7 @@ from typing import Collection, Iterator, Union
 
 from .models import BACnetObj, StatusFlag, StatusFlags
 from .models.settings import LogSettings
-from .utils import get_file_logger
+from .utils import get_file_logger, round_with_resolution
 
 _LOG = get_file_logger(name=__name__, settings=LogSettings())
 
@@ -109,7 +109,9 @@ class BACnetVerifier:
                 obj.reliability = 3
                 return obj
             if obj.type.is_analog:
-                obj.verified_present_value = _round(value=value, resolution=obj.resolution)
+                obj.verified_present_value = round_with_resolution(
+                    value=value, resolution=obj.resolution
+                )
             if isinstance(value, float) and value.is_integer():
                 obj.verified_present_value = int(value)
             return obj
@@ -130,17 +132,3 @@ class BACnetVerifier:
             if priority is not None and i >= self.override_threshold:
                 obj.status_flags.enable(flag=StatusFlag.OVERRIDEN)
         return obj
-
-
-def _round(value: Union[float, int], resolution: Union[int, float]) -> float:
-    if not isinstance(resolution, (int, float)) or resolution <= 0:
-        raise ValueError("`resolution` must be number greater than 0")
-    if not isinstance(value, (int, float)) or value in {float("-inf"), float("inf")}:
-        raise ValueError("`value` must be number")
-
-    rounded = round(float(value) / resolution) * resolution
-    if isinstance(resolution, int):
-        return rounded
-    _, fractional_part = str(resolution).split(".", maxsplit=1)
-    digits = len(fractional_part)
-    return round(rounded, ndigits=digits)

@@ -1,6 +1,6 @@
 # Adopted from:
 # <https://github.com/openapi-generators/openapi-python-client/
-# blob/main/openapi_python_client/utils.py>
+# blob/main/openapi_python_client/test_utils.py>
 
 import re
 
