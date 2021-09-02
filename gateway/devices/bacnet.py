@@ -107,7 +107,7 @@ class BACnetDevice(BasePollingDevice):
         obj: BACnetObj,
         wait: bool = False,
         # prop: ObjProperty, priority: Optional[int]
-        **kwargs: dict,
+        **kwargs: Any,
     ) -> None:
         prop = kwargs.get("prop")
         priority = kwargs.get("priority")

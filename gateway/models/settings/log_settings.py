@@ -17,7 +17,7 @@ class LogSettings(BaseSettings):
     logs_path: Path = Field(default=None)
 
     @validator("disable_loggers", pre=True)
-    def spit_names(self, value: str) -> list:
+    def spit_names(self, value: str) -> list[str]:
         return value.split()
 
     class Config:  # pylint: disable=missing-class-docstring

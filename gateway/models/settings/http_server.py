@@ -67,7 +67,7 @@ class HTTPServerConfig(BaseModel):
     def __repr__(self) -> str:
         return str(self)
 
-    def set_auth_data(self, **kwargs: dict[str, Any]) -> None:
+    def set_auth_data(self, **kwargs: Any) -> None:
         self.auth_data = AuthData(**kwargs)
 
     def clear_auth_data(self) -> None:

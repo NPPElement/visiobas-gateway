@@ -58,7 +58,7 @@ class BACnetObj(BaseBACnetObjModel):
         that are linked to these flags. The relationship between individual flags is
         not defined by the protocol.""",
     )
-    priority_array: tuple = Field(
+    priority_array: tuple[int] = Field(
         alias=str(ObjProperty.priorityArray.id),
         description="""Priority array. This property is a read-only array that contains
         prioritized commands that are in effect for this object.""",
