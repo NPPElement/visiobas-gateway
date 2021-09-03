@@ -2,7 +2,7 @@ from enum import Enum, unique
 
 
 @unique
-class ObjProperty(Enum):
+class ObjProperty(int, Enum):
     """Represent properties of BACnet object."""
 
     # fixme: rename

@@ -1,5 +1,5 @@
 import pytest
-from gateway.models import ObjType
+from gateway.models import ObjType, ObjProperty
 
 
 class TestObjType:
@@ -66,5 +66,27 @@ class TestObjType:
         with pytest.raises(ValueError):
             ObjType(id_)
 
-    def test_properties(self):
-        """fixme"""
+    @pytest.mark.parametrize(
+        "obj_type, properties",
+        [
+            (ObjType.ANALOG_INPUT, (ObjProperty.presentValue, ObjProperty.statusFlags)),
+            (
+                ObjType.BINARY_OUTPUT,
+                (
+                    ObjProperty.presentValue,
+                    ObjProperty.statusFlags,
+                    ObjProperty.priorityArray,
+                ),
+            ),
+        ],
+    )
+    def test_properties_happy(self, obj_type, properties):
+        assert obj_type.properties == properties
+
+    @pytest.mark.parametrize(
+        "obj_type",
+        [ObjType.DEVICE, ObjType.ACCUMULATOR],
+    )
+    def test_properties_not_defined(self, obj_type):
+        with pytest.raises(NotImplementedError):
+            obj_type.properties
