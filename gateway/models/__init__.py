@@ -1,7 +1,7 @@
 from .bacnet import (
     BACnetDeviceObj,
     BACnetObj,
-    BaseBACnetObjModel,
+    BaseBACnetObj,
     ObjProperty,
     ObjType,
     StatusFlag,
@@ -18,7 +18,7 @@ __all__ = [
     "StatusFlags",
     "BACnetObj",
     "BACnetDeviceObj",
-    "BaseBACnetObjModel",
+    "BaseBACnetObj",
     "ModbusReadFunc",
     "ModbusWriteFunc",
     "ModbusObj",

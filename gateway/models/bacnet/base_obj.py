@@ -1,12 +1,13 @@
-from typing import Any
+from typing import Any, Union
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, validator
 
+from ...utils import snake_case
 from .obj_property import ObjProperty
 from .obj_type import ObjType
 
 
-class BaseBACnetObjModel(BaseModel):
+class BaseBACnetObj(BaseModel):
     """Base class for all BACnet objects."""
 
     # for evident exception use code below + validation
@@ -16,7 +17,6 @@ class BaseBACnetObjModel(BaseModel):
         alias=str(ObjProperty.objectType.prop_id),
         description="""Indicates membership in a particular object type class.""",
     )
-
     device_id: int = Field(..., gt=0, alias=str(ObjProperty.deviceId.prop_id))
     id: int = Field(
         ...,
@@ -25,7 +25,6 @@ class BaseBACnetObjModel(BaseModel):
         description="""Is a numeric code that is used to identify the object.
         It shall be unique within the BACnet Device that maintains it.""",
     )
-
     name: str = Field(
         ...,
         alias=str(ObjProperty.objectName.prop_id),
@@ -35,16 +34,24 @@ class BaseBACnetObjModel(BaseModel):
         character. The set of characters used in the Object_Name shall be restricted to
         printable characters.""",
     )
-
     property_list: Any = Field(alias=str(ObjProperty.propertyList.prop_id))
 
-    @property
-    def replaced_name(self) -> str:
-        return self.name.replace(":", "/").replace(".", "/")
+    @validator("type", pre=True)
+    def validate_type(cls, value: Union[int, str]) -> ObjType:
+        # pylint: disable=no-self-argument
+        if isinstance(value, int):
+            return ObjType(value)
+        if isinstance(value, str):
+            try:
+                return ObjType[snake_case(value).upper()]
+            except KeyError:
+                pass
+        raise ValueError("Invalid type")
 
     @property
     def mqtt_topic(self) -> str:
-        return self.replaced_name
+        """Replaces `:.` by `/` (MQTT topic)."""
+        return self.name.replace(":", "/").replace(".", "/")
 
     def __hash__(self) -> int:
         return hash((self.type, self.id, self.device_id))

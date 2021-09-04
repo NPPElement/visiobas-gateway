@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field, validator
 from pymodbus.constants import Defaults  # type: ignore
 
 from ..protocol import Protocol
-from .base_obj import BaseBACnetObjModel
+from .base_obj import BaseBACnetObj
 from .obj_property import ObjProperty
 from .obj_type import ObjType
 
@@ -86,7 +86,7 @@ class DevicePropertyListJsonModel(BaseModel):
         return value
 
 
-class BACnetDeviceObj(BaseBACnetObjModel):
+class BACnetDeviceObj(BaseBACnetObj):
     """Represent device object."""
 
     # 11 and 73 (timeout and retries) moved to property list.

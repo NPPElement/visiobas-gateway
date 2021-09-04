@@ -4,7 +4,7 @@ from typing import Any, Optional, Union
 from pydantic import BaseModel, Field, validator
 
 from ...utils import snake_case
-from .base_obj import BaseBACnetObjModel
+from .base_obj import BaseBACnetObj
 from .obj_property import ObjProperty
 from .status_flags import StatusFlags
 
@@ -38,7 +38,7 @@ class BACnetObjPropertyListJsonModel(BaseModel):
         return str(self)
 
 
-class BACnetObj(BaseBACnetObjModel):
+class BACnetObj(BaseBACnetObj):
     """Represent BACnet objects."""
 
     resolution: float = Field(

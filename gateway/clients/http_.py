@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, Any, Collection, Optional, Union
 
 import aiohttp
 
-from ..models import BaseBACnetObjModel, ObjProperty, ObjType
+from ..models import BaseBACnetObj, ObjProperty, ObjType
 from ..models.settings import HTTPServerConfig, HTTPSettings, LogSettings
 from ..utils import get_file_logger, kebab_case, log_exceptions
 
@@ -270,7 +270,7 @@ class HTTPClient:
         self,
         value: Any,
         property_: ObjProperty,
-        obj: BaseBACnetObjModel,
+        obj: BaseBACnetObj,
         servers: Collection[HTTPServerConfig],
     ) -> None:
         """TODO: NOT USED NOW."""
@@ -280,7 +280,7 @@ class HTTPClient:
                 url=self._URL_POST_PROPERTY.format(
                     base_url=server.current_url,
                     property_id=str(property_.prop_id),
-                    replaced_object_name=obj.replaced_name,
+                    replaced_object_name=obj.mqtt_topic,
                 ),
                 headers=server.auth_headers,
                 data=value,
