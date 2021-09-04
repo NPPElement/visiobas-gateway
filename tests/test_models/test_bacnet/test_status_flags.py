@@ -8,7 +8,7 @@ class TestStatusFlag:
         "flag",
         [1, 2, 4, 8],
     )
-    def test_status_flag_happy(self, flag):
+    def test_construct_happy(self, flag):
         assert StatusFlag(flag) == flag
 
     @pytest.mark.parametrize(
@@ -31,14 +31,14 @@ class TestStatusFlags:
             (3.9, 3),  # duck typing
         ],
     )
-    def test_status_flags_happy(self, before, after):
+    def test_construct_happy(self, before, after):
         assert StatusFlags(flags=before).flags == after
 
     @pytest.mark.parametrize(
         "flags",
         [-1, None, "bad", [1, 1, 1, 1]],
     )
-    def test_status_flags_invalid_flags(self, flags):
+    def test_construct_bad_flags(self, flags):
         with pytest.raises(pydantic.ValidationError):
             StatusFlags(flags=flags)
 
@@ -54,6 +54,10 @@ class TestStatusFlags:
     def test_disable_happy(self, enable_flag, after):
         assert StatusFlags(flags=0b1111).disable(flag=enable_flag).flags == after
 
+    def test_disable_bad_flag(self):
+        with pytest.raises(ValueError):
+            StatusFlags(flags=0b1111).disable(flag=3)
+
     @pytest.mark.parametrize(
         "enable_flag, after",
         [
@@ -65,6 +69,10 @@ class TestStatusFlags:
     )
     def test_enable_happy(self, enable_flag, after):
         assert StatusFlags(flags=0b0000).enable(flag=enable_flag).flags == after
+
+    def test_enable_bad_flag(self):
+        with pytest.raises(ValueError):
+            StatusFlags(flags=0b0000).enable(flag=3)
 
     @pytest.mark.parametrize(
         "flag_check, expected",
@@ -78,5 +86,13 @@ class TestStatusFlags:
     def test_check(self, flag_check, expected):
         assert StatusFlags(flags=0b1010).check(flag=flag_check) == expected
 
-    def test_for_http(self):
-        """fixme"""
+    def test_check_bad_flag(self):
+        with pytest.raises(ValueError):
+            StatusFlags(flags=0b1111).check(flag=3)
+
+    @pytest.mark.parametrize(
+        "before, after",
+        [(0b1111, 0b0010), (0b0101, 0b0000)],
+    )
+    def test_for_http(self, before, after):
+        assert StatusFlags(flags=before).for_http.flags == after

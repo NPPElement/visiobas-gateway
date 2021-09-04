@@ -67,13 +67,15 @@ class StatusFlags(BaseModel):
         Returns:
             Is flag enabled.
         """
-        return bool(self.flags & flag.value)
+        if isinstance(flag, StatusFlag):
+            return bool(self.flags & flag.value)
+        raise ValueError("StatusFlag expected")
 
     @property
     def for_http(self) -> "StatusFlags":
         """
         Returns:
-            Copy of StatusFlags, with except: disabled flags:
+            Copy of StatusFlags, with disabled flags:
                 - OUT_OF_SERVICE
                 - OVERRIDEN
                 - IN_ALARM

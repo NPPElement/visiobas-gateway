@@ -1,7 +1,6 @@
 import pydantic
 import pytest
-from gateway.models.bacnet.base_obj import BaseBACnetObj
-from gateway.models.bacnet import ObjType, ObjProperty
+from gateway.models.bacnet import ObjType
 
 
 class TestBaseBACnetObj:
