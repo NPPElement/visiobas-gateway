@@ -5,7 +5,7 @@
 # from aiohttp.web_response import json_response
 # from aiohttp_apispec import docs, response_schema
 #
-# from api.base import BaseView
+# from api.bacnet import BaseView
 # from api.mixins import ReadWriteMixin
 # from api.schema import JsonRPCPostResponseSchema, ReadResultSchema
 # from models import ObjProperty

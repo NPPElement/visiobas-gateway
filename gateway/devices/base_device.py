@@ -2,7 +2,8 @@ from abc import ABC
 from ipaddress import IPv4Address
 from typing import TYPE_CHECKING, Optional
 
-from ..models import BACnetDeviceObj, Protocol
+from ..models import DeviceObj
+from ..models.protocol import CAMERA_PROTOCOLS, POLLING_PROTOCOLS, Protocol
 from ..models.settings.log_settings import LogSettings
 from ..utils import get_file_logger
 
@@ -15,7 +16,7 @@ else:
 class BaseDevice(ABC):
     """Base class for all devices."""
 
-    def __init__(self, device_obj: BACnetDeviceObj, gateway: Gateway):
+    def __init__(self, device_obj: DeviceObj, gateway: Gateway):
         self._gtw = gateway
         self._dev_obj = device_obj
         self._LOG = get_file_logger(
@@ -29,11 +30,15 @@ class BaseDevice(ABC):
 
     @property
     def address(self) -> Optional[IPv4Address]:
-        return self._dev_obj.property_list.address
+        if hasattr(self._dev_obj.property_list, "address"):
+            return self._dev_obj.property_list.address  # type: ignore
+        return None
 
     @property
     def port(self) -> Optional[int]:
-        return self._dev_obj.property_list.port
+        if hasattr(self._dev_obj.property_list, "port"):
+            return self._dev_obj.property_list.port  # type: ignore
+        return None
 
     @property
     def protocol(self) -> Protocol:
@@ -45,8 +50,8 @@ class BaseDevice(ABC):
 
     @property
     def is_camera(self) -> bool:
-        return self.protocol.is_camera
+        return self.protocol in CAMERA_PROTOCOLS
 
     @property
     def is_polling_device(self) -> bool:
-        return self.protocol.is_polling_device
+        return self.protocol in POLLING_PROTOCOLS

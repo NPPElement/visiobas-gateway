@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, Any, Collection, Optional, Union
 
 import aiohttp
 
-from ..models import BaseBACnetObj, ObjProperty, ObjType
+from ..models.bacnet import BaseBACnetObj, ObjProperty, ObjType
 from ..models.settings import HTTPServerConfig, HTTPSettings, LogSettings
 from ..utils import get_file_logger, kebab_case, log_exceptions
 

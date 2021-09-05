@@ -1,6 +1,6 @@
 from typing import Collection, Iterator, Union
 
-from .models import BACnetObj, StatusFlag, StatusFlags
+from .models.bacnet import ANALOG_TYPES, BACnetObj, StatusFlag, StatusFlags
 from .models.settings import LogSettings
 from .utils import get_file_logger, round_with_resolution
 
@@ -108,7 +108,7 @@ class BACnetVerifier:
                 obj.verified_present_value = "null"
                 obj.reliability = 3
                 return obj
-            if obj.type.is_analog:
+            if obj.type in ANALOG_TYPES:
                 obj.verified_present_value = round_with_resolution(
                     value=value, resolution=obj.resolution
                 )

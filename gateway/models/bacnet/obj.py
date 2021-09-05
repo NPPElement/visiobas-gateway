@@ -1,41 +1,19 @@
 from datetime import datetime
 from typing import Any, Optional, Union
 
-from pydantic import BaseModel, Field, validator
+from pydantic import Field, validator
 
 from ...utils import snake_case
 from .base_obj import BaseBACnetObj
 from .obj_property import ObjProperty
+from .obj_property_list import BACnetObjPropertyListJsonModel
+from .obj_type import INPUT_PROPERTIES, INPUT_TYPES, OUTPUT_PROPERTIES, OUTPUT_TYPES
 from .status_flags import StatusFlags
 
 try:
     from bacpypes.basetypes import PriorityArray  # type: ignore
 except ImportError as exc:
     raise NotImplementedError from exc
-
-
-class BACnetObjPropertyListJsonModel(BaseModel):
-    """Represent PropertyList (371) for BACnet objects."""
-
-    # property_list: BACnetObjPropertyListModel = Field(default=None)
-    poll_period: float = Field(
-        default=None, alias="pollPeriod", description="Period to send data to server."
-    )
-
-    # TODO: add usage
-    send_period: float = Field(
-        default=None, alias="sendPeriod", description="Period to send object to server."
-    )
-
-    # @validator('poll_period')
-    # def set_default_poll_period_from_device(cls, v: Optional[float], values) -> float:
-    #     return v or values['dev_property_list'].poll_period
-
-    def __str__(self) -> str:
-        return str(self.__dict__)
-
-    def __repr__(self) -> str:
-        return str(self)
 
 
 class BACnetObj(BaseBACnetObj):
@@ -132,6 +110,14 @@ class BACnetObj(BaseBACnetObj):
         if values["property_list"].send_period is None:
             values["property_list"].send_period = value
 
+    @property
+    def polling_properties(self) -> tuple[ObjProperty, ...]:
+        if self.type in INPUT_TYPES:
+            return INPUT_PROPERTIES
+        if self.type in OUTPUT_TYPES:
+            return OUTPUT_PROPERTIES
+        raise NotImplementedError("Properties for other types not defined")
+
     def set_property_value(
         self, value: Union[Any, Exception], prop: ObjProperty = ObjProperty.presentValue
     ) -> None:
@@ -159,12 +145,6 @@ class BACnetObj(BaseBACnetObj):
             value = StatusFlags(flags=value)
         property_name = snake_case(prop.name)
         setattr(self, property_name, value)
-
-    def __str__(self) -> str:
-        return self.__class__.__name__ + str(self.__dict__)
-
-    def __repr__(self) -> str:
-        return str(self)
 
     def to_mqtt_str(self) -> str:
         return "{0} {1} {2} {3} {4}".format(

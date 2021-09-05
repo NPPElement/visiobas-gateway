@@ -71,68 +71,41 @@ class ObjType(int, Enum):
     # TRUNK = "trunk", -1
     # GRAPHIC = "graphic", -1
 
-    # def __new__(cls, value) -> "ObjType":
-    #     """Allows create objects by other values."""
-    #     obj = object.__new__(cls)
-    #     other_values = (case(value) for case in SUPPORTED_CASES)
-    #     for other_value in other_values:
-    #         cls._value2member_map_[other_value] = obj
-    #     obj._all_values = value
-    #     return obj
-
-    # def __repr__(self) -> str:
-    #     return self.name
-
     @property
     def type_id(self) -> int:
         return self.value
 
-    @property
-    def is_analog(self) -> bool:
-        return self in {
-            ObjType.ANALOG_INPUT,
-            ObjType.ANALOG_OUTPUT,
-            ObjType.ANALOG_VALUE,
-        }
 
-    @property
-    def is_discrete(self) -> bool:
-        return self in {
-            ObjType.BINARY_INPUT,
-            ObjType.BINARY_VALUE,
-            ObjType.BINARY_OUTPUT,
-            ObjType.MULTI_STATE_INPUT,
-            ObjType.MULTI_STATE_OUTPUT,
-            ObjType.MULTI_STATE_VALUE,
-        }
+ANALOG_TYPES = {
+    ObjType.ANALOG_INPUT,
+    ObjType.ANALOG_OUTPUT,
+    ObjType.ANALOG_VALUE,
+}
+DISCRETE_TYPES = {
+    ObjType.BINARY_INPUT,
+    ObjType.BINARY_VALUE,
+    ObjType.BINARY_OUTPUT,
+    ObjType.MULTI_STATE_INPUT,
+    ObjType.MULTI_STATE_OUTPUT,
+    ObjType.MULTI_STATE_VALUE,
+}
 
-    @property
-    def is_input(self) -> bool:
-        return self in {
-            ObjType.BINARY_INPUT,
-            ObjType.ANALOG_INPUT,
-            ObjType.MULTI_STATE_INPUT,
-        }
-
-    @property
-    def is_output(self) -> bool:
-        return self in {
-            ObjType.BINARY_OUTPUT,
-            ObjType.BINARY_VALUE,
-            ObjType.ANALOG_OUTPUT,
-            ObjType.ANALOG_VALUE,
-            ObjType.MULTI_STATE_VALUE,
-            ObjType.MULTI_STATE_OUTPUT,
-        }
-
-    @property
-    def properties(self) -> tuple[ObjProperty, ...]:
-        if self.is_input:
-            return ObjProperty.presentValue, ObjProperty.statusFlags
-        if self.is_output:
-            return (
-                ObjProperty.presentValue,
-                ObjProperty.statusFlags,
-                ObjProperty.priorityArray,
-            )
-        raise NotImplementedError(f"Properties for {self} not defined yet")
+INPUT_TYPES = {
+    ObjType.BINARY_INPUT,
+    ObjType.ANALOG_INPUT,
+    ObjType.MULTI_STATE_INPUT,
+}
+OUTPUT_TYPES = {
+    ObjType.BINARY_OUTPUT,
+    ObjType.BINARY_VALUE,
+    ObjType.ANALOG_OUTPUT,
+    ObjType.ANALOG_VALUE,
+    ObjType.MULTI_STATE_VALUE,
+    ObjType.MULTI_STATE_OUTPUT,
+}
+INPUT_PROPERTIES = (ObjProperty.presentValue, ObjProperty.statusFlags)
+OUTPUT_PROPERTIES = (
+    ObjProperty.presentValue,
+    ObjProperty.statusFlags,
+    ObjProperty.priorityArray,
+)

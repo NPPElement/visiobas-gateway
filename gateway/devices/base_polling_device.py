@@ -8,7 +8,7 @@ import aiojobs  # type: ignore
 from pymodbus.client.asynchronous.async_io import AsyncioModbusSerialClient  # type: ignore
 from pymodbus.client.sync import ModbusSerialClient  # type: ignore
 
-from ..models import BACnetDeviceObj, BACnetObj, ObjType
+from ..models import BACnetObj, DeviceObj, ObjType
 from .base_device import BaseDevice
 
 if TYPE_CHECKING:
@@ -28,7 +28,7 @@ class BasePollingDevice(BaseDevice, ABC):
     _serial_polling: dict[str, asyncio.Event] = {}
     _serial_connected: dict[str, bool] = {}
 
-    def __init__(self, device_obj: BACnetDeviceObj, gateway: Gateway):
+    def __init__(self, device_obj: DeviceObj, gateway: Gateway):
         super().__init__(device_obj, gateway)
 
         self._scheduler: aiojobs.Scheduler = None  # type: ignore
@@ -51,9 +51,7 @@ class BasePollingDevice(BaseDevice, ABC):
         return self._connected
 
     @classmethod
-    async def create(
-        cls, device_obj: BACnetDeviceObj, gateway: Gateway
-    ) -> "BasePollingDevice":
+    async def create(cls, device_obj: DeviceObj, gateway: Gateway) -> "BasePollingDevice":
         dev = cls(device_obj=device_obj, gateway=gateway)
         dev._scheduler = await aiojobs.create_scheduler(close_timeout=60, limit=100)
 
@@ -74,12 +72,8 @@ class BasePollingDevice(BaseDevice, ABC):
 
     @property
     def serial_port(self) -> Optional[str]:
-        """
-        Returns:
-            Serial port name if exists. Else None.
-        """
-        if self._dev_obj.property_list.rtu:
-            return self._dev_obj.property_list.rtu.port
+        if hasattr(self._dev_obj.property_list, "rtu"):
+            return self._dev_obj.property_list.rtu.port  # type: ignore
         return None
 
     @property

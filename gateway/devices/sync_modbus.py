@@ -7,8 +7,8 @@ from pymodbus.framer.rtu_framer import ModbusRtuFramer  # type: ignore
 from pymodbus.framer.socket_framer import ModbusSocketFramer  # type: ignore
 
 from ..models import (
-    BACnetDeviceObj,
     BACnetObj,
+    DeviceObj,
     ModbusObj,
     ModbusReadFunc,
     ModbusWriteFunc,
@@ -30,7 +30,7 @@ class ModbusDevice(BaseModbusDevice):
         client.
     """
 
-    def __init__(self, device_obj: BACnetDeviceObj, gateway: Gateway):
+    def __init__(self, device_obj: DeviceObj, gateway: Gateway):
         super().__init__(device_obj, gateway)
         self._client: Union[ModbusSerialClient, ModbusTcpClient] = None  # type: ignore
 
@@ -39,10 +39,10 @@ class ModbusDevice(BaseModbusDevice):
         """Initializes synchronous modbus client."""
 
         self._LOG.debug("Creating pymodbus client", extra={"device_id": self.device_id})
-        if self.protocol in {Protocol.MODBUS_TCP, Protocol.MODBUS_RTUOVERTCP}:
+        if self.protocol in {Protocol.MODBUS_TCP, Protocol.MODBUS_RTU_OVER_TCP}:
             framer = (
                 ModbusRtuFramer
-                if self.protocol is Protocol.MODBUS_RTUOVERTCP
+                if self.protocol is Protocol.MODBUS_RTU_OVER_TCP
                 else ModbusSocketFramer
             )
             self._client = ModbusTcpClient(

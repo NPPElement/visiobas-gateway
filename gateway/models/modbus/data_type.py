@@ -2,7 +2,7 @@ from enum import Enum, unique
 
 
 @unique
-class ModbusDataType(Enum):
+class ModbusDataType(str, Enum):
     """Possible types for Modbus objects."""
 
     BITS = "bits"
@@ -11,6 +11,3 @@ class ModbusDataType(Enum):
     INT = "int"
     UINT = "uint"
     FLOAT = "float"
-
-    def __repr__(self) -> str:
-        return f"{self.__class__.__name__}.{self.name}"

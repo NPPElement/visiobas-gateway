@@ -1,12 +1,24 @@
 from typing import Optional, Union
 
 from pydantic import BaseModel, Field, validator
-from pymodbus.constants import Endian  # type: ignore
 
-from ..bacnet.obj import BACnetObj, BACnetObjPropertyListJsonModel
+from ..bacnet.obj import BACnetObj
 from ..bacnet.obj_property import ObjProperty
+from ..bacnet.obj_property_list import BACnetObjPropertyListJsonModel
 from .data_type import ModbusDataType
-from .func_code import ModbusReadFunc, ModbusWriteFunc
+from .func_code import (
+    READ_COIL_FUNCS,
+    READ_REGISTER_FUNCS,
+    WRITE_COIL_FUNCS,
+    WRITE_REGISTER_FUNCS,
+    ModbusReadFunc,
+    ModbusWriteFunc,
+)
+
+try:
+    from pymodbus.constants import Endian  # type: ignore
+except ImportError as exc:
+    raise NotImplementedError from exc
 
 
 class ModbusObjPropertyListModel(BaseModel):
@@ -52,20 +64,14 @@ class ModbusObjPropertyListModel(BaseModel):
         # TODO: add funcs mapping
         if value is None:
             return value
-        if values["func_read"].for_register and value.for_register:
+        if values["func_read"] in READ_REGISTER_FUNCS and value in WRITE_REGISTER_FUNCS:
             return value
-        if values["func_read"].for_coil and value.for_coil:
+        if values["func_read"] in READ_COIL_FUNCS and value in WRITE_COIL_FUNCS:
             return value
         raise ValueError("Make sure func_read and func_write are consistent.")
 
     class Config:  # pylint: disable=missing-class-docstring
         arbitrary_types_allowed = True
-
-    def __str__(self) -> str:
-        return str(self.__dict__)
-
-    def __repr__(self) -> str:
-        return str(self)
 
     # @validator('bit')
     # def check_bit(cls, v, values):
@@ -95,12 +101,6 @@ class ModbusPropertyListJsonModel(BACnetObjPropertyListJsonModel):
 
     modbus: ModbusObjPropertyListModel = Field(...)
 
-    def __str__(self) -> str:
-        return str(self.__dict__)
-
-    def __repr__(self) -> str:
-        return str(self)
-
 
 class ModbusObj(BACnetObj):
     """Modbus Object."""
@@ -108,12 +108,6 @@ class ModbusObj(BACnetObj):
     property_list: ModbusPropertyListJsonModel = Field(
         alias=str(ObjProperty.propertyList.prop_id)
     )
-
-    def __str__(self) -> str:
-        return str(self.__dict__)
-
-    def __repr__(self) -> str:
-        return str(self)
 
     @property
     def data_length(self) -> int:
@@ -153,11 +147,11 @@ class ModbusObj(BACnetObj):
 
     @property
     def is_register(self) -> bool:
-        return self.func_read.for_register
+        return self.func_read in READ_REGISTER_FUNCS
 
     @property
     def is_coil(self) -> bool:
-        return self.func_read.for_coil
+        return self.func_read in READ_COIL_FUNCS
 
     @property
     def func_read(self) -> ModbusReadFunc:

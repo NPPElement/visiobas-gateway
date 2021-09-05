@@ -2,7 +2,7 @@ from typing import Any, Collection, Optional, Union
 
 from BAC0.scripts.Lite import Lite  # type: ignore
 
-from ..models import BACnetDeviceObj, BACnetObj, ObjProperty
+from ..models import BACnetObj, DeviceObj, ObjProperty
 from ..utils import camel_case, log_exceptions
 from .base_polling_device import BasePollingDevice
 
@@ -15,7 +15,7 @@ class BACnetDevice(BasePollingDevice):
 
     client: Lite = None  # todo
 
-    def __init__(self, device_obj: BACnetDeviceObj, gateway: VisioBASGateway):
+    def __init__(self, device_obj: DeviceObj, gateway: VisioBASGateway):
         super().__init__(device_obj, gateway)
 
         self.support_rpm: set[BACnetObj] = set()
@@ -205,5 +205,5 @@ class BACnetDevice(BasePollingDevice):
     #     #         raise ReadPropertyMultipleException('Response is None')
 
     async def simulate_rpm(self, obj: BACnetObj) -> None:
-        for prop in obj.type.properties:
+        for prop in obj.polling_properties:
             await self.read(obj=obj, prop=prop)

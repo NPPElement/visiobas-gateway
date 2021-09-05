@@ -18,13 +18,7 @@ from pymodbus.register_read_message import (  # type: ignore
     ReadRegistersResponseBase,
 )
 
-from ..models import (
-    BACnetDeviceObj,
-    ModbusDataType,
-    ModbusObj,
-    ModbusReadFunc,
-    ModbusWriteFunc,
-)
+from ..models import DeviceObj, ModbusDataType, ModbusObj, ModbusReadFunc, ModbusWriteFunc
 from .base_polling_device import BasePollingDevice
 
 if TYPE_CHECKING:
@@ -41,7 +35,7 @@ class BaseModbusDevice(BasePollingDevice):
     Note: Used when sync\async devices supported.
     """
 
-    def __init__(self, device_obj: BACnetDeviceObj, gateway: Gateway) -> None:
+    def __init__(self, device_obj: DeviceObj, gateway: Gateway) -> None:
         super().__init__(device_obj, gateway)
 
         self._client: Optional[
@@ -55,8 +49,8 @@ class BaseModbusDevice(BasePollingDevice):
 
     @property
     def unit(self) -> int:
-        if self._dev_obj.property_list.rtu:
-            return self._dev_obj.property_list.rtu.unit
+        if hasattr(self._dev_obj.property_list, "rtu"):
+            return self._dev_obj.property_list.rtu.unit  # type: ignore
         return 0x01
 
     @abstractmethod

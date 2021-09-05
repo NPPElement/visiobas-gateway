@@ -17,7 +17,9 @@ from gateway.api import VisioGtwApi
 from gateway.clients import HTTPClient, MQTTClient
 from gateway.devices import BACnetDevice, ModbusDevice, SUNAPIDevice
 from gateway.devices.base_polling_device import BasePollingDevice
-from gateway.models import BACnetDeviceObj, BACnetObj, ModbusObj, ObjType, Protocol
+from gateway.models import Protocol
+from gateway.models.bacnet import BACnetObj, DeviceObj, ObjType
+from gateway.models.modbus import ModbusObj
 from gateway.models.settings import (
     ApiSettings,
     GatewaySettings,
@@ -304,18 +306,18 @@ class Gateway:
     #         _LOG.warning('Is not a polling device', extra={'device_id': dev_id})
 
     @staticmethod
-    def _parse_device_obj(dev_data: dict) -> Optional[BACnetDeviceObj]:
+    def _parse_device_obj(dev_data: dict) -> Optional[DeviceObj]:
         """Parses and validate device object data from JSON.
 
         Returns:
             Parsed and validated device object, if no errors throw.
         """
-        dev_obj = BACnetDeviceObj(**dev_data)
+        dev_obj = DeviceObj(**dev_data)
         _LOG.debug("Device object parsed", extra={"device_object": dev_obj})
         return dev_obj
 
     def _extract_objects(
-        self, objs_data: tuple, dev_obj: BACnetDeviceObj
+        self, objs_data: tuple, dev_obj: DeviceObj
     ) -> list[Union[BACnetObj, ModbusObj]]:
         """Parses and validate objects data from JSON.
 
@@ -348,7 +350,7 @@ class Gateway:
         # if self._is_mqtt_enabled:  # todo
 
     @log_exceptions
-    async def device_factory(self, dev_obj: BACnetDeviceObj) -> BaseDevice:
+    async def device_factory(self, dev_obj: DeviceObj) -> BaseDevice:
         """Creates device for provided protocol.
 
         Returns:
@@ -358,7 +360,7 @@ class Gateway:
         device: BaseDevice
         if protocol in {
             Protocol.MODBUS_TCP,
-            Protocol.MODBUS_RTUOVERTCP,
+            Protocol.MODBUS_RTU_OVER_TCP,
             Protocol.MODBUS_RTU,
         }:
             cls = ModbusDevice  # type: ignore
@@ -366,7 +368,7 @@ class Gateway:
         elif protocol is Protocol.BACNET:
             cls = BACnetDevice  # type: ignore
             device = await cls.create(device_obj=dev_obj, gateway=self)
-        elif protocol is Protocol.SUNAPI:
+        elif protocol is Protocol.SUN_API:
             device = SUNAPIDevice(device_obj=dev_obj, gateway=self)
         else:
             raise NotImplementedError("Device factory not implemented")
@@ -377,7 +379,7 @@ class Gateway:
     @staticmethod
     @log_exceptions
     def object_factory(
-        dev_obj: BACnetDeviceObj, obj_data: dict[str, Any]
+        dev_obj: DeviceObj, obj_data: dict[str, Any]
     ) -> Union[ModbusObj, BACnetObj]:
         """Creates object for provided protocol data.
 
@@ -395,7 +397,7 @@ class Gateway:
         if protocol in {
             Protocol.MODBUS_TCP,
             Protocol.MODBUS_RTU,
-            Protocol.MODBUS_RTUOVERTCP,
+            Protocol.MODBUS_RTU_OVER_TCP,
         }:
             cls = ModbusObj
         elif protocol == Protocol.BACNET:

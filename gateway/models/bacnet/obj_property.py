@@ -397,9 +397,6 @@ class ObjProperty(int, Enum):
     egressActive = 386
     deviceId = 846
 
-    # def __repr__(self) -> str:
-    #     return self.name
-
     @property
     def prop_id(self) -> int:
         return self.value

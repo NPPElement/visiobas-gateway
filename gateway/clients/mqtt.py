@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Any, Optional, Sequence, Union
 
 import paho.mqtt.client as mqtt  # type: ignore
 
-from ..models import Qos, ResultCode
+from ..models.mqtt import Qos, ResultCode
 from ..models.settings import LogSettings, MQTTSettings
 from ..utils import get_file_logger
 
