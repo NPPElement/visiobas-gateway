@@ -4,7 +4,7 @@ from gateway.models.bacnet import ObjType
 
 
 class TestBaseBACnetObj:
-    def test_creation_happy(self, base_bacnet_obj_factory):
+    def test_construct_happy(self, base_bacnet_obj_factory):
         obj1 = base_bacnet_obj_factory()
         assert obj1.id == 75
         assert obj1.name == "Name:Name/Name.Name"
@@ -36,7 +36,7 @@ class TestBaseBACnetObj:
             {"79": -1},
         ],
     )
-    def test_creation_bad_type(self, base_bacnet_obj_factory, data):
+    def test_construct_bad_type(self, base_bacnet_obj_factory, data):
         with pytest.raises(pydantic.ValidationError):
             base_bacnet_obj_factory(**data)
 

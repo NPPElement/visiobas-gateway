@@ -2,7 +2,7 @@ from ipaddress import IPv4Address
 
 from pydantic import BaseModel, Field
 
-from ..modbus import RtuProperties
+from ..modbus import DeviceRtuProperties
 from ..protocol import Protocol
 
 
@@ -52,4 +52,4 @@ class TcpIpDevicePropertyList(BaseDevicePropertyList):
 class SerialDevicePropertyList(BaseDevicePropertyList):
     """PropertyList for Serial devices."""
 
-    rtu: RtuProperties = Field(default=None)
+    rtu: DeviceRtuProperties = Field(default=None)

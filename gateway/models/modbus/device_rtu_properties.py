@@ -6,7 +6,7 @@ from .parity import Parity
 from .stopbits import StopBits
 
 
-class RtuProperties(BaseModel):
+class DeviceRtuProperties(BaseModel):
     """Represent RTU properties for ModbusRTU devices."""
 
     unit: int = Field(..., ge=0, description="Address of serial device")

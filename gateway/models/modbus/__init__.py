@@ -1,6 +1,7 @@
 from .baudrate import BaudRate
 from .bytesize import Bytesize
 from .data_type import ModbusDataType
+from .device_rtu_properties import DeviceRtuProperties
 from .func_code import (
     READ_COIL_FUNCS,
     READ_REGISTER_FUNCS,
@@ -11,7 +12,6 @@ from .func_code import (
 )
 from .obj import ModbusObj
 from .parity import Parity
-from .rtu_properties import RtuProperties
 from .stopbits import StopBits
 
 __all__ = [
@@ -26,6 +26,6 @@ __all__ = [
     "Parity",
     "StopBits",
     "BaudRate",
-    "RtuProperties",
+    "DeviceRtuProperties",
     "Bytesize",
 ]

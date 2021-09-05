@@ -21,12 +21,12 @@ from .modbus import (
     WRITE_REGISTER_FUNCS,
     BaudRate,
     Bytesize,
+    DeviceRtuProperties,
     ModbusDataType,
     ModbusObj,
     ModbusReadFunc,
     ModbusWriteFunc,
     Parity,
-    RtuProperties,
     StopBits,
 )
 from .protocol import Protocol
@@ -60,6 +60,6 @@ __all__ = [
     "Parity",
     "StopBits",
     "BaudRate",
-    "RtuProperties",
+    "DeviceRtuProperties",
     "Bytesize",
 ]
