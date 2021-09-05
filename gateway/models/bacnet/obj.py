@@ -1,12 +1,12 @@
 from datetime import datetime
-from typing import Any, Optional, Union
+from typing import Any, Union
 
-from pydantic import Field, validator
+from pydantic import Field
 
 from ...utils import snake_case
 from .base_obj import BaseBACnetObj
 from .obj_property import ObjProperty
-from .obj_property_list import BACnetObjPropertyListJsonModel
+from .obj_property_list import BACnetObjPropertyList
 from .obj_type import INPUT_PROPERTIES, INPUT_TYPES, OUTPUT_PROPERTIES, OUTPUT_TYPES
 from .status_flags import StatusFlags
 
@@ -50,7 +50,7 @@ class BACnetObj(BaseBACnetObj):
     segmentation_supported: bool = Field(
         default=False, alias=str(ObjProperty.segmentationSupported.prop_id)
     )
-    property_list: BACnetObjPropertyListJsonModel = Field(
+    property_list: BACnetObjPropertyList = Field(
         ...,
         alias=str(ObjProperty.propertyList.prop_id),
         description="""This read-only property is a JSON of property identifiers, one
@@ -58,17 +58,17 @@ class BACnetObj(BaseBACnetObj):
         properties are not included in the JSON.""",
     )
 
-    # FIXME: hotfix
-    default_poll_period: Optional[float] = Field(
-        default=None,
-        description="Internal variable to set default value into propertyList",
-    )
-
-    # TODO: add usage
-    default_send_period: Optional[int] = Field(
-        default=None,
-        description="Internal variable to set default value into propertyList",
-    )
+    # # FIXME: hotfix
+    # default_poll_period: Optional[float] = Field(
+    #     default=None,
+    #     description="Internal variable to set default value into propertyList",
+    # )
+    #
+    # # TODO: add usage
+    # default_send_period: Optional[int] = Field(
+    #     default=None,
+    #     description="Internal variable to set default value into propertyList",
+    # )
 
     present_value: Union[Any, Exception] = Field(
         default=None,
@@ -94,21 +94,21 @@ class BACnetObj(BaseBACnetObj):
     class Config:  # pylint: disable=missing-class-docstring
         arbitrary_types_allowed = True
 
-    # FIXME: hotfix
-    @validator("default_poll_period")
-    def set_default_poll_period(cls, value: float, values: dict) -> None:
-        # pylint: disable=no-self-argument
-        """Set default value to nested model."""
-        if values["property_list"].poll_period is None:
-            values["property_list"].poll_period = value
-
-    # FIXME: hotfix
-    @validator("default_send_period")
-    def set_default_send_period(cls, value: int, values: dict) -> None:
-        # pylint: disable=no-self-argument
-        """Set default value to nested model."""
-        if values["property_list"].send_period is None:
-            values["property_list"].send_period = value
+    # # FIXME: hotfix
+    # @validator("default_poll_period")
+    # def set_default_poll_period(cls, value: float, values: dict) -> None:
+    #     # pylint: disable=no-self-argument
+    #     """Set default value to nested model."""
+    #     if values["property_list"].poll_period is None:
+    #         values["property_list"].poll_period = value
+    #
+    # # FIXME: hotfix
+    # @validator("default_send_period")
+    # def set_default_send_period(cls, value: int, values: dict) -> None:
+    #     # pylint: disable=no-self-argument
+    #     """Set default value to nested model."""
+    #     if values["property_list"].send_period is None:
+    #         values["property_list"].send_period = value
 
     @property
     def polling_properties(self) -> tuple[ObjProperty, ...]:

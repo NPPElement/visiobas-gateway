@@ -2,6 +2,7 @@ from .baudrate import BaudRate
 from .bytesize import Bytesize
 from .data_type import ModbusDataType
 from .device_rtu_properties import DeviceRtuProperties
+from .endian import Endian
 from .func_code import (
     READ_COIL_FUNCS,
     READ_REGISTER_FUNCS,
@@ -28,4 +29,5 @@ __all__ = [
     "BaudRate",
     "DeviceRtuProperties",
     "Bytesize",
+    "Endian",
 ]

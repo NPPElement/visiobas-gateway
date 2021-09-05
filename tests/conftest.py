@@ -212,6 +212,11 @@ def _serial_device_obj_kwargs(kwargs: dict[str, Any]) -> dict[str, Any]:
     return kwargs
 
 
+# def _bacnet_obj_kwargs(kwargs: dict[str, Any]) -> dict[str, Any]:
+#     kwargs = {**_base_bacnet_obj_kwargs(**{}), **kwargs}
+#     return kwargs
+
+
 # kwargs = {
 #          '371': '{"template":"","alias":"","replace":{},"address":"10.21.80.209","port":502,"protocol":"ModbusTCP","apduTimeout":500,"numberOfApduRetries":3}',
 #
