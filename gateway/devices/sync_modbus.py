@@ -145,7 +145,7 @@ class ModbusDevice(BaseModbusDevice):
 
         value = self._decode_response(resp=resp, obj=obj)
 
-        obj.set_property_value(value=value)
+        obj.set_property(value=value)
         return value  # fixme return not used now. Updates object
 
     async def write(

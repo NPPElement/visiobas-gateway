@@ -2,6 +2,8 @@ import asyncio
 import logging
 import sys
 
+import uvloop  # type: ignore
+
 from gateway.gateway_ import Gateway
 from gateway.models.settings import GatewaySettings, LogSettings
 from gateway.utils import ExtraFormatter
@@ -29,6 +31,7 @@ def main() -> None:
     log_settings = LogSettings()
     setup_logging(settings=log_settings)
 
+    uvloop.install()
     asyncio.run(load_and_run())
 
 

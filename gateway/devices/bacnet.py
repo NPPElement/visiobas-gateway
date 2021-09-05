@@ -173,7 +173,7 @@ class BACnetDevice(BasePollingDevice):
             },
         )
         try:
-            obj.set_property_value(value=response, prop=prop)
+            obj.set_property(value=response, prop=prop)
         except AttributeError as exc:
             raise NotImplementedError(f"Property {prop} not found") from exc
 

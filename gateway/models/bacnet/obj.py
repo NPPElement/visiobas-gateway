@@ -36,7 +36,7 @@ class BACnetObj(BaseBACnetObj):
         that are linked to these flags. The relationship between individual flags is
         not defined by the protocol.""",
     )
-    priority_array: Optional[tuple[int]] = Field(
+    priority_array: Optional[list[Optional[float]]] = Field(
         alias=str(ObjProperty.priorityArray.prop_id),
         description="""Priority array. This property is a read-only array that contains
         prioritized commands that are in effect for this object.""",
@@ -125,6 +125,13 @@ class BACnetObj(BaseBACnetObj):
             return value
         raise ValueError("Invalid resolution")
 
+    # @validator("status_flags", pre=True)
+    # def cast_list(cls, value: list[bool]) -> StatusFlags:
+    #     """Status flag stored as list of 4 booleans. Converts it to one integer."""
+    #     # pylint: disable=no-self-argument
+    #     if isinstance(value, list):
+    #
+
     @property
     def polling_properties(self) -> tuple[ObjProperty, ...]:
         if self.type in INPUT_TYPES:
@@ -133,7 +140,7 @@ class BACnetObj(BaseBACnetObj):
             return OUTPUT_PROPERTIES
         raise NotImplementedError("Properties for other types not defined")
 
-    def set_property_value(
+    def set_property(
         self, value: Union[Any, Exception], prop: ObjProperty = ObjProperty.presentValue
     ) -> None:
         """Sets `presentValue` with round by `resolution`.
@@ -152,6 +159,9 @@ class BACnetObj(BaseBACnetObj):
         Raises:
             AttributeError: if property doesn't exist.
         """
+        if not isinstance(prop, ObjProperty):
+            raise ValueError("Invalid property")
+
         self.updated = datetime.now()
 
         if prop is ObjProperty.priorityArray:
@@ -188,7 +198,7 @@ class BACnetObj(BaseBACnetObj):
         return str_
 
     @staticmethod
-    def _convert_pa_to_str(priority_array: tuple) -> str:
+    def _convert_pa_to_str(priority_array: list[Optional[float]]) -> str:
         """Convert priority array tuple to str.
 
         Result example: ,,,,,,,,40.5,,,,,,49.2,
@@ -198,7 +208,7 @@ class BACnetObj(BaseBACnetObj):
         )
 
     @staticmethod
-    def convert_priority_array(priority_array: PriorityArray) -> tuple:
+    def convert_priority_array(priority_array: PriorityArray) -> list[Optional[float]]:
         """Converts `bacpypes.PriorityArray` as tuple."""
         priorities = [
             v[0] if k[0] != "null" else None
@@ -207,4 +217,4 @@ class BACnetObj(BaseBACnetObj):
                 for i in range(1, priority_array.value[0] + 1)
             ]
         ]
-        return tuple(priorities)
+        return priorities
