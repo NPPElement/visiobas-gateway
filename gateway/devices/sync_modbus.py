@@ -137,8 +137,6 @@ class ModbusDevice(BaseModbusDevice):
 
         Updates object and return value.
         """
-        if obj.func_read is ModbusReadFunc.READ_FILE:
-            raise ModbusException("func-not-support")  # todo: implement 0x14 func
         resp = self.read_funcs[obj.func_read](
             address=obj.address, count=obj.quantity, unit=self.unit
         )

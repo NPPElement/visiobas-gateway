@@ -20,7 +20,7 @@ def validate_endian(value: str) -> Endian:
         return Endian(value)
     if isinstance(value, str):
         try:
-            return Endian(value.upper())
+            return Endian[value.upper()]
         except KeyError:
             pass
     raise ValueError("Invalid Endian")

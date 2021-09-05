@@ -1,7 +1,7 @@
 from datetime import datetime
-from typing import Any, Union
+from typing import Any, Optional, Union
 
-from pydantic import Field
+from pydantic import Field, validator
 
 from ...utils import snake_case
 from .base_obj import BaseBACnetObj
@@ -36,7 +36,7 @@ class BACnetObj(BaseBACnetObj):
         that are linked to these flags. The relationship between individual flags is
         not defined by the protocol.""",
     )
-    priority_array: tuple[int] = Field(
+    priority_array: Optional[tuple[int]] = Field(
         alias=str(ObjProperty.priorityArray.prop_id),
         description="""Priority array. This property is a read-only array that contains
         prioritized commands that are in effect for this object.""",
@@ -72,6 +72,7 @@ class BACnetObj(BaseBACnetObj):
 
     present_value: Union[Any, Exception] = Field(
         default=None,
+        alias=str(ObjProperty.presentValue.prop_id),
         description="""Indicates the current value, in engineering units, of the `TYPE`.
         `Present_Value` shall be optionally commandable. If `Present_Value` is commandable
         for a given object instance, then the `Priority_Array` and `Relinquish_Default`
@@ -81,7 +82,7 @@ class BACnetObj(BaseBACnetObj):
         """,
     )
     verified_present_value: Union[float, str] = Field(default="null")
-    updated: datetime = Field(default=None)
+    updated: datetime = Field(default=None, alias="timestamp")
     changed: datetime = Field(default=None)
 
     # exception: Optional[Exception] = None
@@ -109,6 +110,20 @@ class BACnetObj(BaseBACnetObj):
     #     """Set default value to nested model."""
     #     if values["property_list"].send_period is None:
     #         values["property_list"].send_period = value
+
+    @validator("resolution", pre=True)
+    def set_default_if_none(cls, value: Optional[float]) -> float:
+        """None should be interpreted as default value 0.1 -- `pydantic` does not
+        handle it.
+        """
+        # pylint: disable=no-self-argument
+        default_resolution = 0.1
+
+        if value is None:
+            return default_resolution
+        if isinstance(value, float):
+            return value
+        raise ValueError("Invalid resolution")
 
     @property
     def polling_properties(self) -> tuple[ObjProperty, ...]:

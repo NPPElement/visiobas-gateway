@@ -7,8 +7,10 @@ from gateway.models.bacnet.device_property_list import (
     SerialDevicePropertyList,
 )
 from gateway.models.modbus.device_rtu_properties import DeviceRtuProperties
+from gateway.models.modbus.modbus_properties import ModbusProperties
 
 from gateway.models.bacnet.device_obj import DeviceObj
+from gateway.models.bacnet.obj import BACnetObj
 
 import pytest
 
@@ -125,6 +127,38 @@ def serial_device_factory() -> Callable[..., DeviceObj]:
     return _factory
 
 
+@pytest.fixture
+def modbus_properties_factory() -> Callable[..., ModbusProperties]:
+    """
+    Produces `ModbusProperties` for tests.
+
+    You can pass the same params into this as the `ModbusProperties` constructor to
+    override defaults.
+    """
+
+    def _factory(**kwargs):
+        kwargs = _modbus_properties_kwargs(kwargs)
+        return ModbusProperties(**kwargs)
+
+    return _factory
+
+
+@pytest.fixture
+def bacnet_obj_factory() -> Callable[..., BACnetObj]:
+    """
+    Produces `BACnetObj` for tests.
+
+    You can pass the same params into this as the `BACnetObj` constructor to
+    override defaults.
+    """
+
+    def _factory(**kwargs):
+        kwargs = _bacnet_obj_kwargs(kwargs)
+        return BACnetObj(**kwargs)
+
+    return _factory
+
+
 def _base_bacnet_obj_kwargs(kwargs: dict[str, Any]) -> dict[str, Any]:
     kwargs = {
         "75": 75,
@@ -212,9 +246,32 @@ def _serial_device_obj_kwargs(kwargs: dict[str, Any]) -> dict[str, Any]:
     return kwargs
 
 
-# def _bacnet_obj_kwargs(kwargs: dict[str, Any]) -> dict[str, Any]:
-#     kwargs = {**_base_bacnet_obj_kwargs(**{}), **kwargs}
-#     return kwargs
+def _modbus_properties_kwargs(kwargs: dict[str, Any]) -> dict[str, Any]:
+    kwargs = {
+        "address": 11,
+        "quantity": 2,
+        "functionRead": "0x04",
+        "dataType": "float",
+        "dataLength": 32,
+        "scale": 10,
+        "functionWrite": "0x06",
+        "wordOrder": "little",
+        **kwargs,
+    }
+    return kwargs
+
+
+def _bacnet_obj_kwargs(kwargs: dict[str, Any]) -> dict[str, Any]:
+    kwargs = {
+        **_base_bacnet_obj_kwargs({}),
+        "103": "no-fault-detected",
+        "106": None,
+        "111": [False, False, False, False],
+        "85": 85.8585,
+        "timestamp": "2011-11-11 11:11:11",
+        **kwargs,
+    }
+    return kwargs
 
 
 # kwargs = {

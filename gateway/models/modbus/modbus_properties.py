@@ -4,18 +4,13 @@ from pydantic import BaseModel, Field, validator
 
 from .data_type import ModbusDataType
 from .endian import Endian, validate_endian
-from .func_code import (
-    READ_COIL_FUNCS,
-    READ_REGISTER_FUNCS,
-    WRITE_COIL_FUNCS,
-    WRITE_REGISTER_FUNCS,
-    ModbusReadFunc,
-    ModbusWriteFunc,
-)
+from .func_code import ModbusReadFunc, ModbusWriteFunc
 
 
 class ModbusProperties(BaseModel):
     """Represent Modbus PropertyList (371)."""
+
+    # todo: add subclassing if coils will be supported
 
     address: int = Field(ge=0)
     quantity: int = Field(gt=0)
@@ -49,19 +44,23 @@ class ModbusProperties(BaseModel):
     class Config:  # pylint: disable=missing-class-docstring
         arbitrary_types_allowed = True
 
-    @validator("func_write")
-    def validate_func_consistent(
-        cls, value: ModbusWriteFunc, values: dict
-    ) -> Optional[ModbusWriteFunc]:
-        # pylint: disable=no-self-argument
-        if value is None:
-            return value
-        if values["func_read"] in READ_REGISTER_FUNCS and value in WRITE_REGISTER_FUNCS:
-            return value
-        if values["func_read"] in READ_COIL_FUNCS and value in WRITE_COIL_FUNCS:
-            return value
-        raise ValueError("Make sure func_read and func_write are consistent.")
+    # @validator("func_write")
+    # def validate_func_consistent(
+    #     cls, value: ModbusWriteFunc, values: dict
+    # ) -> Optional[ModbusWriteFunc]:
+    #     # pylint: disable=no-self-argument
+    #     if value is None:
+    #         return value
+    #     if values["func_read"] in READ_REGISTER_FUNCS and value in WRITE_REGISTER_FUNCS:
+    #         return value
+    #     if values["func_read"] in READ_COIL_FUNCS and value in WRITE_COIL_FUNCS:
+    #         return value
+    #     raise ValueError("Make sure func_read and func_write are consistent.")
 
     # Validators
-    validate_byte_order = validator("byte_order", allow_reuse=True)(validate_endian)
-    validate_word_order = validator("word_order", allow_reuse=True)(validate_endian)
+    _validate_byte_order = validator("byte_order", allow_reuse=True, pre=True)(
+        validate_endian
+    )
+    _validate_word_order = validator("word_order", allow_reuse=True, pre=True)(
+        validate_endian
+    )

@@ -2,22 +2,18 @@ from enum import Enum, unique
 
 
 @unique
-class ModbusReadFunc(int, Enum):
+class ModbusReadFunc(str, Enum):
     """Represent codes of Modbus available functions to read.
 
     Separate str value needed for parsing.
     """
 
-    READ_COILS = 0x01
-    READ_DISCRETE_INPUTS = 0x02
-    READ_HOLDING_REGISTERS = 0x03
-    READ_INPUT_REGISTERS = 0x04
+    READ_COILS = "0x01"
+    READ_DISCRETE_INPUTS = "0x02"
+    READ_HOLDING_REGISTERS = "0x03"
+    READ_INPUT_REGISTERS = "0x04"
 
-    READ_FILE = 0x14  # not implemented
-
-    @property
-    def code(self) -> int:
-        return self.value
+    # READ_FILE = 0x14  # not implemented
 
 
 READ_REGISTER_FUNCS = {
@@ -31,20 +27,16 @@ READ_COIL_FUNCS = {
 
 
 @unique
-class ModbusWriteFunc(int, Enum):
+class ModbusWriteFunc(str, Enum):
     """Represent codes of Modbus available functions to write.
 
     Separate str value needed for parsing.
     """
 
-    WRITE_COIL = 0x05
-    WRITE_REGISTER = 0x06
-    WRITE_COILS = 0x15
-    WRITE_REGISTERS = 0x16
-
-    @property
-    def code(self) -> int:
-        return self.value
+    WRITE_COIL = "0x05"
+    WRITE_REGISTER = "0x06"
+    WRITE_COILS = "0x15"
+    WRITE_REGISTERS = "0x16"
 
 
 WRITE_REGISTER_FUNCS = {

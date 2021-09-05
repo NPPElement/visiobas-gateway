@@ -128,7 +128,8 @@ class BACnetVerifier:
         # AUTOMATIC_LIFE_SAFETY = 10 - 1
         # OVERRIDE_PRIORITIES = {MANUAL_LIFE_SAFETY,
         #                        AUTOMATIC_LIFE_SAFETY, }
-        for i, priority in enumerate(obj.priority_array):
-            if priority is not None and i >= self.override_threshold:
-                obj.status_flags.enable(flag=StatusFlag.OVERRIDEN)
+        if obj.priority_array:
+            for i, priority in enumerate(obj.priority_array):
+                if priority is not None and i >= self.override_threshold:
+                    obj.status_flags.enable(flag=StatusFlag.OVERRIDEN)
         return obj
