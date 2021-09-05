@@ -1,3 +1,6 @@
+import pydantic
+import pytest
+
 from gateway.models import Protocol
 
 
@@ -27,6 +30,10 @@ class TestTcpIpDevicePropertyList:
         assert str(tcp_ip_device_property_list.address) == "10.21.10.21"
         assert tcp_ip_device_property_list.port == 502
 
+    def test_construct_bad_protocol(self, tcp_ip_device_property_list_factory):
+        with pytest.raises(pydantic.ValidationError):
+            tcp_ip_device_property_list_factory(protocol="ModbusRTU")
+
 
 class TestSerialDevicePropertyList:
     def test_construct_happy(self, serial_device_property_list_factory):
@@ -39,3 +46,7 @@ class TestSerialDevicePropertyList:
 
         assert isinstance(serial_device_property_list.rtu, DeviceRtuProperties)
         assert serial_device_property_list.rtu.baudrate == 9_600
+
+    def test_construct_bad_protocol(self, serial_device_property_list_factory):
+        with pytest.raises(pydantic.ValidationError):
+            serial_device_property_list_factory(protocol="ModbusTCP")

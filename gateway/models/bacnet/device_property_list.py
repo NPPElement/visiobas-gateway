@@ -1,9 +1,9 @@
 from ipaddress import IPv4Address
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, validator
 
 from ..modbus import DeviceRtuProperties
-from ..protocol import Protocol
+from ..protocol import SERIAL_PROTOCOLS, TCP_IP_PROTOCOLS, Protocol
 
 
 class BaseDevicePropertyList(BaseModel):
@@ -48,8 +48,22 @@ class TcpIpDevicePropertyList(BaseDevicePropertyList):
     address: IPv4Address = Field(default=None)
     port: int = Field(default=None)
 
+    @validator("protocol")
+    def validate_protocol(cls, value: Protocol) -> Protocol:
+        # pylint: disable=no-self-argument
+        if value in TCP_IP_PROTOCOLS:
+            return value
+        raise ValueError("Protocol is not TCP/IP")
+
 
 class SerialDevicePropertyList(BaseDevicePropertyList):
     """PropertyList for Serial devices."""
 
     rtu: DeviceRtuProperties = Field(default=None)
+
+    @validator("protocol")
+    def validate_protocol(cls, value: Protocol) -> Protocol:
+        # pylint: disable=no-self-argument
+        if value in SERIAL_PROTOCOLS:
+            return value
+        raise ValueError("Protocol is not Serial")
