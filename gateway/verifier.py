@@ -1,4 +1,4 @@
-from typing import Collection, Iterator, Union
+from typing import Collection, Iterator, Optional, Union
 
 from .models.bacnet import ANALOG_TYPES, BACnetObj, StatusFlag, StatusFlags
 from .models.settings import LogSettings
@@ -85,20 +85,26 @@ class BACnetVerifier:
 
     @staticmethod
     def verify_present_value(
-        obj: BACnetObj, value: Union[str, int, float, bool]
+        obj: BACnetObj, value: Optional[Union[str, int, float, bool]]
     ) -> BACnetObj:
         # pylint: disable=too-many-return-statements
         # FIXME: detect changes
-        if value in {True, "active"}:
-            obj.verified_present_value = 1
+        if value is None:
+            obj.verified_present_value = "null"
             return obj
-        if value in {False, "inactive"}:
-            obj.verified_present_value = 0
-            return obj
-        if isinstance(value, str):
-            if value == "null" or not value.strip():
+
+        if isinstance(value, (str, bool)):
+            if value in {True, "active"}:
+                obj.verified_present_value = 1
+                return obj
+            if value in {False, "inactive"}:
+                obj.verified_present_value = 0
+                return obj
+            # `bool` can be only True | False. It checked above
+            if value == "null" or not value.strip():  # type: ignore
                 obj.verified_present_value = "null"
-            obj.verified_present_value = value
+            else:
+                obj.verified_present_value = value
             return obj
         if isinstance(value, (int, float)):
             if value == float("inf"):
@@ -117,7 +123,7 @@ class BACnetVerifier:
                 obj.verified_present_value = int(value)
             return obj
 
-        obj.reliability = "unexpected-value-type"
+        obj.reliability = "invalid-value-type"
         obj.verified_present_value = "null"
         return obj
 

@@ -1,7 +1,6 @@
 import asyncio
 from gateway.verifier import BACnetVerifier
 from gateway.models.bacnet.obj_property import ObjProperty
-from gateway.models.bacnet.status_flags import StatusFlags
 
 import pytest
 
@@ -102,7 +101,46 @@ class TestBACnetVerifier:
         )
         assert bacnet_obj.status_flags.flags == 0b1010
         assert bacnet_obj.reliability == "reliability"
-        
-    def test_verify_present_value(self, bacnet_obj_factory):
+
+    @pytest.mark.parametrize(
+        "present_value, verified_present_value",
+        [
+            (True, 1),
+            ("active", 1),
+            (False, 0),
+            ("inactive", 0),
+            ("null", "null"),
+            ("   ", "null"),
+            (None, "null"),
+        ],
+    )
+    def test_verify_present_value_affect_only_verified_present_value(
+        self, bacnet_obj_factory, present_value, verified_present_value
+    ):
         verifier = BACnetVerifier(override_threshold=8)
-        bacnet_obj = bacnet_obj_factory()
+
+        bacnet_obj = bacnet_obj_factory(**{"85": present_value})
+        bacnet_obj = verifier.verify_present_value(
+            obj=bacnet_obj, value=bacnet_obj.present_value
+        )
+        assert bacnet_obj.verified_present_value == verified_present_value
+
+    @pytest.mark.parametrize(
+        "present_value, verified_present_value, reliability",
+        [
+            (float("inf"), "null", 2),
+            (float("-inf"), "null", 3),
+            (["bad_value_type"], "null", "invalid-value-type"),
+        ],
+    )
+    def test_verify_present_value_affect_reliability(
+        self, bacnet_obj_factory, present_value, verified_present_value, reliability
+    ):
+        verifier = BACnetVerifier(override_threshold=8)
+
+        bacnet_obj = bacnet_obj_factory(**{"85": present_value})
+        bacnet_obj = verifier.verify_present_value(
+            obj=bacnet_obj, value=bacnet_obj.present_value
+        )
+        assert bacnet_obj.verified_present_value == verified_present_value
+        assert bacnet_obj.reliability == reliability
