@@ -27,10 +27,9 @@ class BACnetVerifier:
         obj = self.verify_present_value(obj=obj, value=obj.present_value)
         if previous_value != obj.verified_present_value:
             obj.changed = obj.updated
+        obj.present_value = obj.verified_present_value
 
-        obj = self.verify_status_flags(
-            obj=obj, status_flags=StatusFlags(flags=obj.status_flags)
-        )
+        obj = self.verify_status_flags(obj=obj, status_flags=obj.status_flags)
         if obj.priority_array:
             obj = self.verify_priority_array(obj=obj, priority_array=obj.priority_array)
         return obj

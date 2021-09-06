@@ -1,4 +1,6 @@
 import asyncio
+import datetime
+
 from gateway.verifier import BACnetVerifier
 from gateway.models.bacnet.obj_property import ObjProperty
 
@@ -118,7 +120,7 @@ class TestBACnetVerifier:
         ],
     )
     def test_verify_present_value_affect_only_verified_present_value(
-            self, bacnet_obj_factory, present_value, verified_present_value
+        self, bacnet_obj_factory, present_value, verified_present_value
     ):
         verifier = BACnetVerifier(override_threshold=8)
 
@@ -137,7 +139,7 @@ class TestBACnetVerifier:
         ],
     )
     def test_verify_present_value_also_affect_reliability(
-            self, bacnet_obj_factory, present_value, verified_present_value, reliability
+        self, bacnet_obj_factory, present_value, verified_present_value, reliability
     ):
         verifier = BACnetVerifier(override_threshold=8)
 
@@ -152,31 +154,31 @@ class TestBACnetVerifier:
         "priority_array, status_flags",
         [
             (
-                    [
-                        None,
-                        None,
-                        None,
-                        None,
-                        None,
-                        None,
-                        None,
-                        None,
-                        3.3,
-                        None,
-                        None,
-                        None,
-                        None,
-                        None,
-                        None,
-                        None,
-                    ],
-                    0b0100,
+                [
+                    None,
+                    None,
+                    None,
+                    None,
+                    None,
+                    None,
+                    None,
+                    None,
+                    3.3,
+                    None,
+                    None,
+                    None,
+                    None,
+                    None,
+                    None,
+                    None,
+                ],
+                0b0100,
             ),
             ([None] * 16, 0b0000),
         ],
     )
     def test_verify_priority_array_happy(
-            self, bacnet_obj_factory, priority_array, status_flags
+        self, bacnet_obj_factory, priority_array, status_flags
     ):
         verifier = BACnetVerifier(override_threshold=8)
 
@@ -187,5 +189,43 @@ class TestBACnetVerifier:
         )
         assert bacnet_obj.status_flags.flags == status_flags
 
+    def test_verify_exception(self, bacnet_obj_factory):
+        verifier = BACnetVerifier(override_threshold=8)
+        bacnet_obj = bacnet_obj_factory(**{"85": ValueError()})
 
-    def test_verify(self):
+        bacnet_obj = verifier.verify(obj=bacnet_obj)
+        assert bacnet_obj.status_flags.flags == 0b0010
+
+    def test_verify_happy(self, bacnet_obj_factory):
+        verifier = BACnetVerifier(override_threshold=8)
+        bacnet_obj = bacnet_obj_factory(
+            **{
+                "85": 66.666,
+                "87": [None] * 16,
+            }
+        )
+        assert bacnet_obj.changed is None
+        bacnet_obj = verifier.verify(obj=bacnet_obj)
+        assert bacnet_obj.present_value == 66.7
+        assert isinstance(bacnet_obj.changed, datetime.datetime)
+        assert str(bacnet_obj.changed) == "2011-11-11 11:11:11"
+
+        bacnet_obj.set_property(value=33.333, prop=ObjProperty.presentValue)
+        bacnet_obj = verifier.verify(obj=bacnet_obj)
+        assert str(bacnet_obj.updated) > "2011-11-11 22:22:22"
+
+        bacnet_obj = verifier.verify(obj=bacnet_obj)
+        assert str(bacnet_obj.changed) > "2011-11-11 22:22:22"
+
+    def test_verify_objects(self, bacnet_obj_factory):
+        verifier = BACnetVerifier(override_threshold=8)
+        bacnet_obj = bacnet_obj_factory()
+
+        bacnet_obj.set_property(value=66.666, prop=ObjProperty.presentValue)
+        bacnet_objects = [bacnet_obj] * 3
+
+        bacnet_objects = verifier.verify_objects(objs=bacnet_objects)
+        for obj in bacnet_objects:
+            assert obj.present_value == 66.7
+            assert str(obj.updated) > "2011-11-11 11:11:11"
+            assert str(obj.changed) > "2011-11-11 11:11:11"
