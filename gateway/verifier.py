@@ -13,9 +13,6 @@ class BACnetVerifier:
     def __init__(self, override_threshold: int = 8):
         self.override_threshold = override_threshold
 
-    def __repr__(self) -> str:
-        return self.__class__.__name__
-
     def verify_objects(self, objs: Collection[BACnetObj]) -> Iterator[BACnetObj]:
         return (self.verify(obj=obj) for obj in objs)
 
@@ -47,6 +44,10 @@ class BACnetVerifier:
         except ImportError as import_exc:
             raise NotImplementedError from import_exc
 
+        if not isinstance(exc, Exception):
+            raise ValueError("Exception expected")
+
+        obj.status_flags.enable(StatusFlag.FAULT)
         obj.unreachable_in_row += 1
         obj.present_value = "null"
 
@@ -59,6 +60,7 @@ class BACnetVerifier:
             return obj
         if isinstance(exc, (TypeError, ValueError)):
             obj.reliability = "decode-error"
+            return obj
         obj.reliability = (
             exc.__class__.__name__.strip()
             .replace(" ", "-")
@@ -75,8 +77,7 @@ class BACnetVerifier:
     def verify_status_flags(obj: BACnetObj, status_flags: StatusFlags) -> BACnetObj:
         if obj.verified_present_value == "null":
             status_flags.enable(flag=StatusFlag.FAULT)
-
-        if status_flags == 0:
+        if status_flags.flags == 0b0000:
             obj.reliability = ""
 
         obj.status_flags = status_flags

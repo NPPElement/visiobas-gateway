@@ -10,17 +10,19 @@ from .obj_property_list import BACnetObjPropertyList
 from .obj_type import INPUT_PROPERTIES, INPUT_TYPES, OUTPUT_PROPERTIES, OUTPUT_TYPES
 from .status_flags import StatusFlags
 
-try:
-    from bacpypes.basetypes import PriorityArray  # type: ignore
-except ImportError as exc:
-    raise NotImplementedError from exc
+# try:
+#     from bacpypes.basetypes import PriorityArray  # type: ignore
+# except ImportError as exc:
+#     raise NotImplementedError from exc
+
+DEFAULT_RESOLUTION = 0.1
 
 
 class BACnetObj(BaseBACnetObj):
     """Represent BACnet objects."""
 
     resolution: float = Field(
-        default=0.1,
+        default=DEFAULT_RESOLUTION,
         alias=str(ObjProperty.resolution.prop_id),
         gt=0,
         description="""Indicates the smallest recognizable change in `Present_Value` in
@@ -28,7 +30,7 @@ class BACnetObj(BaseBACnetObj):
     )
     status_flags: StatusFlags = Field(
         default=StatusFlags(flags=0b0000),
-        # alias=ObjProperty.statusFlags.id_str, # todo read from server?
+        alias=str(ObjProperty.statusFlags.prop_id),
         description="""
         Status flags. represents four Boolean flags that indicate the general "health" of
         an value. Three of the flags are associated with the values of other properties of
@@ -85,7 +87,6 @@ class BACnetObj(BaseBACnetObj):
     updated: datetime = Field(default=None, alias="timestamp")
     changed: datetime = Field(default=None)
 
-    # exception: Optional[Exception] = None
     unreachable_in_row: int = Field(default=0)
     existing: bool = Field(
         default=True,
@@ -117,20 +118,27 @@ class BACnetObj(BaseBACnetObj):
         handle it.
         """
         # pylint: disable=no-self-argument
-        default_resolution = 0.1
-
         if value is None:
-            return default_resolution
+            return DEFAULT_RESOLUTION
         if isinstance(value, float):
             return value
         raise ValueError("Invalid resolution")
 
-    # @validator("status_flags", pre=True)
-    # def cast_list(cls, value: list[bool]) -> StatusFlags:
-    #     """Status flag stored as list of 4 booleans. Converts it to one integer."""
-    #     # pylint: disable=no-self-argument
-    #     if isinstance(value, list):
-    #
+    @validator("status_flags", pre=True)
+    def cast_list(cls, value: list[bool]) -> StatusFlags:
+        """Status flag stored as list of 4 booleans. Converts it to one integer."""
+        # pylint: disable=no-self-argument
+        if isinstance(value, list) and len(value) == 4:
+            int_value = 0b0000
+            for i, flag in enumerate(value):
+                if not isinstance(flag, bool):
+                    raise ValueError("Invalid flag")
+                if flag:
+                    int_value |= 1 << len(value) - 1 - i
+            return StatusFlags(flags=int_value)
+        if isinstance(value, int) and 0 <= value <= 15:
+            return StatusFlags(flags=value)
+        raise ValueError("Invalid StatusFlags")
 
     @property
     def polling_properties(self) -> tuple[ObjProperty, ...]:
@@ -164,9 +172,9 @@ class BACnetObj(BaseBACnetObj):
 
         self.updated = datetime.now()
 
-        if prop is ObjProperty.priorityArray:
-            value = self.convert_priority_array(priority_array=value)
-        elif prop is ObjProperty.statusFlags:
+        # if prop is ObjProperty.priorityArray:
+        #     value = self.convert_priority_array(priority_array=value)
+        if prop is ObjProperty.statusFlags:
             value = StatusFlags(flags=value)
         property_name = snake_case(prop.name)
         setattr(self, property_name, value)
@@ -207,14 +215,14 @@ class BACnetObj(BaseBACnetObj):
             ["" if priority is None else str(priority) for priority in priority_array]
         )
 
-    @staticmethod
-    def convert_priority_array(priority_array: PriorityArray) -> list[Optional[float]]:
-        """Converts `bacpypes.PriorityArray` as tuple."""
-        priorities = [
-            v[0] if k[0] != "null" else None
-            for k, v in [
-                zip(*priority_array.value[i].dict_contents().items())
-                for i in range(1, priority_array.value[0] + 1)
-            ]
-        ]
-        return priorities
+    # @staticmethod
+    # def convert_priority_array(priority_array: PriorityArray) -> list[Optional[float]]:
+    #     """Converts `bacpypes.PriorityArray` as tuple."""
+    #     priorities = [
+    #         v[0] if k[0] != "null" else None
+    #         for k, v in [
+    #             zip(*priority_array.value[i].dict_contents().items())
+    #             for i in range(1, priority_array.value[0] + 1)
+    #         ]
+    #     ]
+    #     return priorities
