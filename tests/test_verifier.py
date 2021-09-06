@@ -112,10 +112,13 @@ class TestBACnetVerifier:
             ("null", "null"),
             ("   ", "null"),
             (None, "null"),
+            (3.3333, 3.3),
+            (3.0, 3),
+            ("value", "value"),
         ],
     )
     def test_verify_present_value_affect_only_verified_present_value(
-        self, bacnet_obj_factory, present_value, verified_present_value
+            self, bacnet_obj_factory, present_value, verified_present_value
     ):
         verifier = BACnetVerifier(override_threshold=8)
 
@@ -133,8 +136,8 @@ class TestBACnetVerifier:
             (["bad_value_type"], "null", "invalid-value-type"),
         ],
     )
-    def test_verify_present_value_affect_reliability(
-        self, bacnet_obj_factory, present_value, verified_present_value, reliability
+    def test_verify_present_value_also_affect_reliability(
+            self, bacnet_obj_factory, present_value, verified_present_value, reliability
     ):
         verifier = BACnetVerifier(override_threshold=8)
 
@@ -144,3 +147,45 @@ class TestBACnetVerifier:
         )
         assert bacnet_obj.verified_present_value == verified_present_value
         assert bacnet_obj.reliability == reliability
+
+    @pytest.mark.parametrize(
+        "priority_array, status_flags",
+        [
+            (
+                    [
+                        None,
+                        None,
+                        None,
+                        None,
+                        None,
+                        None,
+                        None,
+                        None,
+                        3.3,
+                        None,
+                        None,
+                        None,
+                        None,
+                        None,
+                        None,
+                        None,
+                    ],
+                    0b0100,
+            ),
+            ([None] * 16, 0b0000),
+        ],
+    )
+    def test_verify_priority_array_happy(
+            self, bacnet_obj_factory, priority_array, status_flags
+    ):
+        verifier = BACnetVerifier(override_threshold=8)
+
+        bacnet_obj = bacnet_obj_factory(**{"87": priority_array})
+
+        bacnet_obj = verifier.verify_priority_array(
+            obj=bacnet_obj, priority_array=bacnet_obj.priority_array
+        )
+        assert bacnet_obj.status_flags.flags == status_flags
+
+
+    def test_verify(self):

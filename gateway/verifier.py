@@ -32,7 +32,7 @@ class BACnetVerifier:
             obj=obj, status_flags=StatusFlags(flags=obj.status_flags)
         )
         if obj.priority_array:
-            obj = self.verify_pa(obj=obj)
+            obj = self.verify_priority_array(obj=obj, priority_array=obj.priority_array)
         return obj
 
     @staticmethod
@@ -127,7 +127,9 @@ class BACnetVerifier:
         obj.verified_present_value = "null"
         return obj
 
-    def verify_pa(self, obj: BACnetObj) -> BACnetObj:
+    def verify_priority_array(
+        self, obj: BACnetObj, priority_array: list[Optional[float]]
+    ) -> BACnetObj:
         """Sets OVERRIDE status flag if priority array contains override priority."""
 
         # todo: move priorities into Enum
@@ -135,8 +137,11 @@ class BACnetVerifier:
         # AUTOMATIC_LIFE_SAFETY = 10 - 1
         # OVERRIDE_PRIORITIES = {MANUAL_LIFE_SAFETY,
         #                        AUTOMATIC_LIFE_SAFETY, }
-        if obj.priority_array:
-            for i, priority in enumerate(obj.priority_array):
-                if priority is not None and i >= self.override_threshold:
-                    obj.status_flags.enable(flag=StatusFlag.OVERRIDEN)
+        for i, priority in enumerate(priority_array):
+            if priority is None:
+                continue
+            if i >= self.override_threshold:
+                obj.status_flags.enable(flag=StatusFlag.OVERRIDEN)
+
+        obj.priority_array = priority_array
         return obj

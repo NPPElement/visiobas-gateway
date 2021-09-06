@@ -40,6 +40,8 @@ class BACnetObj(BaseBACnetObj):
     )
     priority_array: Optional[list[Optional[float]]] = Field(
         alias=str(ObjProperty.priorityArray.prop_id),
+        max_items=16,
+        min_items=16,
         description="""Priority array. This property is a read-only array that contains
         prioritized commands that are in effect for this object.""",
     )
