@@ -74,6 +74,7 @@ via `.env` files. Paths to `.env` files are specified in `docker-compose.yaml`.
 
 Configuration can be changed in files:
 
+- `config/log.env` [template](/config/templates/log.env)
 - `config/gateway.env` [template](/config/templates/gateway.env)
 - `config/http.env` [template](/config/templates/http.env)
 - `config/mqtt.env` [template](/config/templates/mqtt.env)
@@ -112,11 +113,16 @@ To launch on the same machine
 with [VisioBAS system](https://github.com/NPPElement/visiobas-broker) - add
 in `docker-compose.yaml` the following network settings (commented now):
 
-```yaml
+```yml
+    networks:
+      - backend
+```
+and 
+
+```yml
 networks:
-  default:
-    external: true
-    name: services_backend  # or your network name
+  backend:  # your network name
+    driver: bridge
 ```
 
 Scripts for common actions available:

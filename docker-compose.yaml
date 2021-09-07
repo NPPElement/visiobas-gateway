@@ -6,7 +6,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: visiobas-gateway:3.3.0-alpha
+    image: visiobas-gateway:3.3.0-beta
     logging:
       #driver: none
       driver: "json-file"
@@ -16,7 +16,7 @@ services:
     restart: always
     privileged: true # [1]
     env_file:
-      - config/visiobas_gateway.env
+      - config/gateway.env
       - config/http.env
       - config/mqtt.env
       - config/api.env
@@ -30,17 +30,17 @@ services:
       #- /opt/visiobas-visiobas_gateway/logs:/usr/share/python3/gtw/visiobas_gateway/logs
       - /opt/visiobas-visiobas_gateway/visiobas_gateway:/usr/share/python3/gtw/lib/python3.9/site-packages/visiobas_gateway
       - /dev:/dev # [1]
-    network_mode: host
-    #ports:
-    #  - 7070:7070
+#    networks:
+#      - backend
+    ports:
+      - "7070:7070"
 
     devices: # To detect Modbus RTU devices
       - "/dev/ttyS0:/dev/ttyS0"
       - "/dev/ttyUSB0:/dev/ttyUSB0"
 
 #networks:
-#  default:
-#    external: true
-#    name: services_backend
+#  backend:
+#    driver: bridge
 
 # [1]: https://www.losant.com/blog/how-to-access-serial-devices-in-docker
