@@ -20,8 +20,7 @@ RUN python3.9 -m venv /usr/share/python3/gtw \
 # Install dependencies separately for caching
 # On a subsequent build, `Docker` will skip this step if dependencies does not change
  #COPY ./requirements.txt /mnt/
-COPY ./poetry.lock ./pyproject.toml  /mnt/
-COPY ./visiobas_gateway /mnt/visiobas_gateway
+COPY ./visiobas_gateway ./poetry.lock ./pyproject.toml  /usr/share/python3/gtw/
 RUN /usr/share/python3/gtw/bin/poetry install
 
 # Copy the source distribution to the container and install it
