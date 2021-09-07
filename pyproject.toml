@@ -28,7 +28,7 @@ pymodbus = "^2.5.2"
 BAC0 = "^21.2.25"
 
 [tool.poetry.scripts]
-gateway = "visiobas_gateway.__main__:main"
+visiobas_gateway = "visiobas_gateway.__main__:main"
 
 [tool.poetry.dev-dependencies]
 pytest = "*"

@@ -4,12 +4,20 @@
 # Base - "heavy" image (~ 1 GB, compressed ~ 500 GB)
 FROM python:3.9 as builder
 
-# Create a virtual environment and update pip
+# Create a virtual environment and update `pip`
 RUN python3.9 -m venv /usr/share/python3/gtw \
-    && /usr/share/python3/gtw/bin/pip install --upgrade pip
+    && /usr/share/python3/gtw/bin/pip install -U pip \
+
+## Install `poetry` package manager
+#RUN curl -sSL 'https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py' | python \
+#    && poetry --version
+#COPY ./poetry.lock ./pyproject.toml  /mnt/
+#RUN poetry install --no-dev --no-interaction --no-ansi \
+#    # Upgrading pip
+#    && poetry run pip install -U pip
 
 # Install dependencies separately for caching
-# On a subsequent build, Docker will skip this step if requirements.txt does not change
+# On a subsequent build, `Docker` will skip this step if dependencies does not change
 COPY requirements.txt /mnt/
 RUN /usr/share/python3/gtw/bin/pip install -Ur /mnt/requirements.txt
 
@@ -36,6 +44,6 @@ COPY --from=builder /usr/share/python3/gtw /usr/share/python3/gtw
 RUN ln -snf /usr/share/python3/gtw/bin/visiobas_gateway  /usr/local/bin/
 
 # Set the default command to run when the container starts
-CMD ["visiobas_gateway.__main__:main"]
+CMD ["poetry run visiobas_gateway"]
 
 EXPOSE 7070
