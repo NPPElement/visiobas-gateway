@@ -36,6 +36,6 @@ COPY --from=builder /usr/share/python3/gtw /usr/share/python3/gtw
 RUN ln -snf /usr/share/python3/gtw/bin/visiobas_gateway  /usr/local/bin/
 
 # Set the default command to run when the container starts
-CMD ["gateway"]
+CMD ["visiobas_gateway.__main__:main"]
 
 EXPOSE 7070
