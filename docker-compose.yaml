@@ -34,8 +34,7 @@ services:
 #      - backend
     ports:
       - "7070:7070"
-
-    devices: # To detect Modbus RTU devices
+    devices: # To detect devices connected via Serial port
       - "/dev/ttyS0:/dev/ttyS0"
       - "/dev/ttyUSB0:/dev/ttyUSB0"
 
