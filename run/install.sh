@@ -19,9 +19,13 @@ sudo curl -L https://289122.selcdn.ru/Visiodesk-Cloud/containers/docker-compose-
 sudo chmod 755 $DESTINATION
 docker-compose --version
 
+# Install Poetry
+sudo curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python -
+
 # Install gateway
 cd /opt/visiobas-gateway
-sudo python3 setup.py sdist  # create a source distribution
+#sudo python3 setup.py sdist  # create a source distribution
+sudo poetry build  # create a source distribution
 
 # Copy configuration templates into /opt/visiobas-gateway/config
 sudo cp /opt/visiobas-gateway/config/templates/gateway.env /opt/visiobas-gateway/config/gateway.env

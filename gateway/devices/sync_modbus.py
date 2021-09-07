@@ -132,7 +132,7 @@ class ModbusDevice(BaseModbusDevice):
         return await self._gtw.async_add_job(self.sync_read, obj)
 
     @log_exceptions
-    def sync_read(self, obj: ModbusObj) -> Union[float, str]:
+    def sync_read(self, obj: ModbusObj) -> ModbusObj:
         """Read data from Modbus object.
 
         Updates object and return value.
@@ -141,12 +141,11 @@ class ModbusDevice(BaseModbusDevice):
             address=obj.address, count=obj.quantity, unit=self.unit
         )
         if resp.isError():
-            raise ModbusIOException(str(resp))
-
-        value = self._decode_response(resp=resp, obj=obj)
-
-        obj.set_property(value=value)
-        return value  # fixme return not used now. Updates object
+            obj.set_property(value=ModbusIOException(str(resp)))
+        else:
+            value = self._decode_response(resp=resp, obj=obj)
+            obj.set_property(value=value)
+        return obj
 
     async def write(
         self, value: Union[int, float], obj: BACnetObj, wait: bool = False, **kwargs: Any
@@ -184,29 +183,8 @@ class ModbusDevice(BaseModbusDevice):
                 "value": value,
             },
         )
-        # except (ModbusException, struct.error, Exception) as e:
-        #     self._LOG.warning(
-        #         "Failed write",
-        #         extra={
-        #             "device_id": self.id,
-        #             "object_id": obj.id,
-        #             "object_type": obj.type,
-        #             "register": obj.address,
-        #             "quantity": obj.quantity,
-        #             "exc": e,
-        #         },
-        #     )
-        # except Exception as e:
-        #     self._LOG.exception('Unhandled error',
-        #                         extra={'device_id': self.id, 'object_id': obj.id,
-        #                                'object_type': obj.type, 'register': obj.address,
-        #                                'quantity': obj.quantity, 'exc': e, })
 
     async def _poll_objects(self, objs: Collection[BACnetObj]) -> None:
-        # def _sync_poll_objects(objs_: Collection[BACnetObj]) -> None:
-        #     for obj in objs_:
-        #         self.sync_read(obj=obj)
-        #
-        # await self._gateway.async_add_job(_sync_poll_objects, objs)
+
         for obj in objs:
             await self.read(obj=obj)

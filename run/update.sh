@@ -7,7 +7,8 @@ sudo docker-compose down
 sudo git pull
 
 sudo rm -r dist/  # remove previous source distribution if exists
-sudo python3 setup.py sdist  # create a source distribution
+# sudo python3 setup.py sdist  # create a source distribution
+sudo poetry build  # create a source distribution
 
 sudo docker-compose up --build # -d
 

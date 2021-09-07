@@ -1,4 +1,4 @@
-from typing import Any, Collection, Optional, Union
+from typing import TYPE_CHECKING, Any, Collection, Optional, Union
 
 from BAC0.scripts.Lite import Lite  # type: ignore
 
@@ -6,8 +6,10 @@ from ..models import BACnetObj, DeviceObj, ObjProperty
 from ..utils import camel_case, log_exceptions
 from .base_polling_device import BasePollingDevice
 
-# Aliases
-VisioBASGateway = Any  # ...gateway_loop
+if TYPE_CHECKING:
+    from gateway.gateway_ import Gateway
+else:
+    Gateway = "Gateway"
 
 
 class BACnetDevice(BasePollingDevice):
@@ -15,7 +17,7 @@ class BACnetDevice(BasePollingDevice):
 
     client: Lite = None  # todo
 
-    def __init__(self, device_obj: DeviceObj, gateway: VisioBASGateway):
+    def __init__(self, device_obj: DeviceObj, gateway: Gateway):
         super().__init__(device_obj, gateway)
 
         self.support_rpm: set[BACnetObj] = set()
@@ -49,11 +51,6 @@ class BACnetDevice(BasePollingDevice):
         # self._client.disconnect() # todo: add check for client usage by other devices
 
     async def _poll_objects(self, objs: Collection[BACnetObj]) -> None:
-        # def _sync_poll_objects(objs_: Collection[BACnetObj]) -> None:
-        #     for obj in objs_:
-        #         await self.simulate_rpm(obj=obj)
-        #
-        # await self._gateway.async_add_job(_sync_poll_objects, objs)
         for obj in objs:
             await self.simulate_rpm(obj=obj)
 
@@ -158,7 +155,7 @@ class BACnetDevice(BasePollingDevice):
             await self._polling.wait()
         return await self._gtw.async_add_job(self.read_property, obj, prop)
 
-    def read_property(self, obj: BACnetObj, prop: ObjProperty) -> None:
+    def read_property(self, obj: BACnetObj, prop: ObjProperty) -> BACnetObj:
         request = " ".join(
             (self.address_port, camel_case(obj.type.name), str(obj.id), prop.name)
         )
@@ -172,10 +169,8 @@ class BACnetDevice(BasePollingDevice):
                 "response": response,
             },
         )
-        try:
-            obj.set_property(value=response, prop=prop)
-        except AttributeError as exc:
-            raise NotImplementedError(f"Property {prop} not found") from exc
+        obj.set_property(value=response, prop=prop)
+        return obj
 
     # def read_property_multiple(self, obj: BACnetObj,
     #                            properties: tuple[ObjProperty]) -> dict:
