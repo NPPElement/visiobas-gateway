@@ -15,7 +15,7 @@ RUN /usr/share/python3/gtw/bin/pip install -Ur /mnt/requirements.txt  --use-feat
 
 # Copy the source distribution to the container and install it
 COPY /dist/ /mnt/dist/
-RUN /usr/share/python3/gtw/bin/pip install /mnt/dist/* \
+RUN /usr/share/python3/gtw/bin/pip install /mnt/dist/*.whl \
     && /usr/share/python3/gtw/bin/pip check
 
 

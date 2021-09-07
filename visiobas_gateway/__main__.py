@@ -6,7 +6,7 @@ from visiobas_gateway.gateway_ import Gateway
 from visiobas_gateway.models.settings import GatewaySettings, LogSettings
 from visiobas_gateway.utils import ExtraFormatter
 
-# import uvloop  # type: ignore
+import uvloop  # type: ignore
 
 
 def setup_logging(settings: LogSettings) -> None:
@@ -31,7 +31,7 @@ def main() -> None:
     log_settings = LogSettings()
     setup_logging(settings=log_settings)
 
-    # uvloop.install()
+    uvloop.install()
     asyncio.run(load_and_run())
 
 
