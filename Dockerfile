@@ -42,7 +42,7 @@ LABEL maintainer="VisioBAS <info.visiobas.com>" description="VisioBAS Gateway"
 COPY --from=builder /usr/share/python3/gtw /usr/share/python3/gtw
 
 # Install links to use visiobas_gateway commands
-RUN ln -snf /usr/share/python3/gtw/bin/visiobas_gateway  /usr/local/bin/
+RUN ln -snf /usr/share/python3/gtw/bin/gateway  /usr/local/bin/
 
 # Set the default command to run when the container starts
 CMD ["gateway"]
