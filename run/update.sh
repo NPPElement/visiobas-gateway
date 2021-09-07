@@ -13,7 +13,8 @@ sudo rm -r dist/
 sudo ~/.poetry/bin/poetry build  # create a source distribution
 
 # Export dependencies from Poetry to requirements.txt
-sudo sudo ~/.poetry/bin/poetry export -f requirements.txt --output requirements.txt --without-hashes
+sudo sudo ~/.poetry/bin/poetry export -f requirements.txt --output requirements.txt
+ #  --without-hashes
 
 sudo docker-compose up --build # -d
 

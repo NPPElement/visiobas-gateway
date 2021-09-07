@@ -6,7 +6,8 @@ FROM python:3.9 as builder
 
 # Create a virtual environment and update `pip`
 RUN python3.9 -m venv /usr/share/python3/gtw \
-    && /usr/share/python3/gtw/bin/pip install -U pip \
+    && /usr/share/python3/gtw/bin/pip install -U pip
+#    && /usr/share/python3/gtw/bin/pip install poetry
 
 ## Install `poetry` package manager
 #RUN curl -sSL 'https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py' | python \
@@ -18,8 +19,9 @@ RUN python3.9 -m venv /usr/share/python3/gtw \
 
 # Install dependencies separately for caching
 # On a subsequent build, `Docker` will skip this step if dependencies does not change
-COPY requirements.txt /mnt/
-RUN /usr/share/python3/gtw/bin/pip install -Ur /mnt/requirements.txt
+COPY ./requirements.txt /mnt/
+COPY ./poetry.lock ./pyproject.toml  /mnt/
+RUN /usr/share/python3/gtw/bin/poetry install -Ur /mnt/requirements.txt
 
 # Copy the source distribution to the container and install it
 COPY /dist/ /mnt/dist/
