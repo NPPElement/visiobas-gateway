@@ -11,7 +11,7 @@ RUN python3.9 -m venv /usr/share/python3/gtw \
 # Install dependencies separately for caching
 # On a subsequent build, Docker will skip this step if requirements.txt does not change
 COPY requirements.txt /mnt/
-RUN /usr/share/python3/gtw/bin/pip install -Ur /mnt/requirements.txt
+RUN /usr/share/python3/gtw/bin/pip install -Ur /mnt/requirements.txt  --use-feature=2020-resolver
 
 # Copy the source distribution to the container and install it
 COPY /dist/ /mnt/dist/
