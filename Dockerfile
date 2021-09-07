@@ -6,8 +6,8 @@ FROM python:3.9 as builder
 
 # Create a virtual environment and update `pip`
 RUN python3.9 -m venv /usr/share/python3/gtw \
-    && /usr/share/python3/gtw/bin/pip install -U pip
-#    && /usr/share/python3/gtw/bin/pip install poetry
+    && /usr/share/python3/gtw/bin/pip install --upgrade pip
+    && /usr/share/python3/gtw/bin/pip install poetry
 
 ## Install `poetry` package manager
 #RUN curl -sSL 'https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py' | python \
