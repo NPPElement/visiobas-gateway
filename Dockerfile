@@ -21,7 +21,7 @@ RUN python3.9 -m venv /usr/share/python3/gtw \
 # On a subsequent build, `Docker` will skip this step if dependencies does not change
 COPY ./requirements.txt /mnt/
 COPY ./poetry.lock ./pyproject.toml  /mnt/
-RUN /usr/share/python3/gtw/bin/poetry install -Ur /mnt/requirements.txt
+RUN /usr/share/python3/gtw/bin/pip install -Ur /mnt/pyproject.toml
 
 # Copy the source distribution to the container and install it
 COPY /dist/ /mnt/dist/
