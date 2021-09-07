@@ -1,4 +1,4 @@
-from gateway.utils import round_with_resolution
+from visiobas_gateway.utils import round_with_resolution
 import pytest
 
 

@@ -1,6 +1,6 @@
 import pydantic
 import pytest
-from gateway.models.bacnet import ObjType
+from visiobas_gateway.models.bacnet import ObjType
 
 
 class TestBaseBACnetObj:

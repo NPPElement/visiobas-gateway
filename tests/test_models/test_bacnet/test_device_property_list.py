@@ -1,7 +1,7 @@
 import pydantic
 import pytest
 
-from gateway.models import Protocol
+from visiobas_gateway.models import Protocol
 
 
 class TestBaseDevicePropertyList:
@@ -37,7 +37,7 @@ class TestTcpIpDevicePropertyList:
 
 class TestSerialDevicePropertyList:
     def test_construct_happy(self, serial_device_property_list_factory):
-        from gateway.models.modbus.device_rtu_properties import DeviceRtuProperties
+        from visiobas_gateway.models.modbus.device_rtu_properties import DeviceRtuProperties
 
         serial_device_property_list = serial_device_property_list_factory()
         assert serial_device_property_list.protocol == Protocol.MODBUS_RTU

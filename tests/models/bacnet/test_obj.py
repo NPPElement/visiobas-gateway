@@ -1,6 +1,6 @@
 # import unittest
 #
-# from gateway.models.bacnet import BACnetObj
+# from visiobas_gateway.models.bacnet import BACnetObj
 #
 #
 # class MyTestCase(unittest.TestCase):

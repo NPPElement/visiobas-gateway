@@ -23,19 +23,19 @@ docker-compose --version
 sudo curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry
 .py | python3 -
 
-# Install gateway
-cd /opt/visiobas-gateway
+# Install visiobas_gateway
+cd /opt/visiobas-visiobas_gateway
 #sudo python3 setup.py sdist  # create a source distribution
 sudo ~/.poetry/bin/poetry build  # create a source distribution
 
 # Export dependencies from Poetry to requirements.txt
 RUN poetry export -f requirements.txt --output requirements.txt
 
-# Copy configuration templates into /opt/visiobas-gateway/config
-sudo cp /opt/visiobas-gateway/config/templates/gateway.env /opt/visiobas-gateway/config/gateway.env
-sudo cp /opt/visiobas-gateway/config/templates/http.env /opt/visiobas-gateway/config/http.env
-sudo cp /opt/visiobas-gateway/config/templates/mqtt.env /opt/visiobas-gateway/config/mqtt.env
-sudo cp /opt/visiobas-gateway/config/templates/api.env /opt/visiobas-gateway/config/api.env
+# Copy configuration templates into /opt/visiobas-visiobas_gateway/config
+sudo cp /opt/visiobas-visiobas_gateway/config/templates/visiobas_gateway.env /opt/visiobas-visiobas_gateway/config/visiobas_gateway.env
+sudo cp /opt/visiobas-visiobas_gateway/config/templates/http.env /opt/visiobas-visiobas_gateway/config/http.env
+sudo cp /opt/visiobas-visiobas_gateway/config/templates/mqtt.env /opt/visiobas-visiobas_gateway/config/mqtt.env
+sudo cp /opt/visiobas-visiobas_gateway/config/templates/api.env /opt/visiobas-visiobas_gateway/config/api.env
 
 # Run container
 sudo docker-compose up --build -d

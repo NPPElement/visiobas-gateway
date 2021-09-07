@@ -13,22 +13,22 @@ from typing import (
 import aiohttp
 import aiojobs  # type: ignore
 
-from gateway.api import VisioGtwApi
-from gateway.clients import HTTPClient, MQTTClient
-from gateway.devices import BACnetDevice, ModbusDevice, SUNAPIDevice
-from gateway.devices.base_polling_device import BasePollingDevice
-from gateway.models import Protocol
-from gateway.models.bacnet import BACnetObj, DeviceObj, ObjType
-from gateway.models.modbus import ModbusObj
-from gateway.models.settings import (
+from visiobas_gateway.api import VisioGtwApi
+from visiobas_gateway.clients import HTTPClient, MQTTClient
+from visiobas_gateway.devices import BACnetDevice, ModbusDevice, SUNAPIDevice
+from visiobas_gateway.devices.base_polling_device import BasePollingDevice
+from visiobas_gateway.models import Protocol
+from visiobas_gateway.models.bacnet import BACnetObj, DeviceObj, ObjType
+from visiobas_gateway.models.modbus import ModbusObj
+from visiobas_gateway.models.settings import (
     ApiSettings,
     GatewaySettings,
     HTTPSettings,
     LogSettings,
     MQTTSettings,
 )
-from gateway.utils import get_file_logger, log_exceptions
-from gateway.verifier import BACnetVerifier
+from visiobas_gateway.utils import get_file_logger, log_exceptions
+from visiobas_gateway.verifier import BACnetVerifier
 
 if TYPE_CHECKING:
     from .devices.base_device import BaseDevice
@@ -185,7 +185,7 @@ class Gateway:
     async def _perform_start_tasks(self) -> None:
         """Performs starting tasks.
 
-        Setup gateway steps:
+        Setup visiobas_gateway steps:
             - Log in to HTTP
             - Load devices
             - Start devices poll
@@ -216,7 +216,7 @@ class Gateway:
     async def _perform_stop_tasks(self) -> None:
         """Performs stopping tasks.
 
-        Stop gateway steps:
+        Stop visiobas_gateway steps:
             - Unsubscribe to MQTT
             - Stop devices poll
             - Log out to HTTP
@@ -240,7 +240,7 @@ class Gateway:
         """Tries to download an object of device from server.
         Then gets polling objects and load them into device.
 
-        When device loaded, it may be accessed by `gateway.devices[identifier]`.
+        When device loaded, it may be accessed by `visiobas_gateway.devices[identifier]`.
 
         # TODO: If fails get objects from server - loads it from local.
         """

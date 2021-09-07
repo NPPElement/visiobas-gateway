@@ -1,16 +1,16 @@
 from typing import Callable, Any
 
-from gateway.models.bacnet.base_obj import BaseBACnetObj
-from gateway.models.bacnet.device_property_list import (
+from visiobas_gateway.models.bacnet.base_obj import BaseBACnetObj
+from visiobas_gateway.models.bacnet.device_property_list import (
     BaseDevicePropertyList,
     TcpIpDevicePropertyList,
     SerialDevicePropertyList,
 )
-from gateway.models.modbus.device_rtu_properties import DeviceRtuProperties
-from gateway.models.modbus.modbus_properties import ModbusProperties
+from visiobas_gateway.models.modbus.device_rtu_properties import DeviceRtuProperties
+from visiobas_gateway.models.modbus.modbus_properties import ModbusProperties
 
-from gateway.models.bacnet.device_obj import DeviceObj
-from gateway.models.bacnet.obj import BACnetObj
+from visiobas_gateway.models.bacnet.device_obj import DeviceObj
+from visiobas_gateway.models.bacnet.obj import BACnetObj
 
 import pytest
 

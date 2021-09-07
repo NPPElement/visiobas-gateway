@@ -7,7 +7,7 @@ from ..utils import camel_case, log_exceptions
 from .base_polling_device import BasePollingDevice
 
 if TYPE_CHECKING:
-    from gateway.gateway_ import Gateway
+    from visiobas_gateway.gateway_ import Gateway
 else:
     Gateway = "Gateway"
 
@@ -22,7 +22,7 @@ class BACnetDevice(BasePollingDevice):
 
         self.support_rpm: set[BACnetObj] = set()
         self.not_support_rpm: set[BACnetObj] = set()
-        # self._client: BAC0.scripts.Lite = gateway.bacnet
+        # self._client: BAC0.scripts.Lite = visiobas_gateway.bacnet
 
         # self.__objects_per_rpm = 25
         # todo: Should we use one RPM for several objects?

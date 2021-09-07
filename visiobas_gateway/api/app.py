@@ -72,7 +72,7 @@ class VisioGtwApi:
         """
         _LOG.debug("Creating app")
         app = Application()
-        app["gateway"] = self._gateway
+        app["visiobas_gateway"] = self._gateway
 
         # Configure default CORS settings.
         cors = aiohttp_cors.setup(
@@ -140,7 +140,7 @@ class VisioGtwApi:
 # if __name__ == "__main__":
 #
 #     async def main():
-#         api = VisioGtwApi.create(gateway=None, settings=ApiSettings())
+#         api = VisioGtwApi.create(visiobas_gateway=None, settings=ApiSettings())
 #         await api.start()
 #
 #     asyncio.run(main())

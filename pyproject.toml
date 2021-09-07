@@ -43,11 +43,11 @@ pytest-cov = "*"
 check = """
 isort .\
  && black .\
- && flake8 gateway\
+ && flake8 visiobas_gateway\
  && poetry export -f requirements.txt | poetry run safety check --bare --stdin\
- && mypy gateway\
- && pylint gateway\
- && pytest --cov gateway tests --cov-report=term-missing\
+ && mypy visiobas_gateway\
+ && pylint visiobas_gateway\
+ && pytest --cov visiobas_gateway tests --cov-report=term-missing\
 """
 
 [tool.black]

@@ -4,9 +4,9 @@ import sys
 
 import uvloop  # type: ignore
 
-from gateway.gateway_ import Gateway
-from gateway.models.settings import GatewaySettings, LogSettings
-from gateway.utils import ExtraFormatter
+from visiobas_gateway.gateway_ import Gateway
+from visiobas_gateway.models.settings import GatewaySettings, LogSettings
+from visiobas_gateway.utils import ExtraFormatter
 
 
 def setup_logging(settings: LogSettings) -> None:

@@ -7,7 +7,9 @@ class ApiSettings(BaseSettings):
     """Settings of API application."""
 
     url: AnyHttpUrl = Field(default="http://0.0.0.0:7070", description="Url to run API.")
-    priority: int = Field(default=11, description="Priority to write through gateway API.")
+    priority: int = Field(
+        default=11, description="Priority to write through visiobas_gateway API."
+    )
 
     class Config:  # pylint: disable=missing-class-docstring
         env_prefix = "GTW_API_"

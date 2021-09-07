@@ -16,7 +16,7 @@ _LOG = get_file_logger(name=__name__, settings=LogSettings())
 
 
 class HTTPClient:
-    """HTTP client of gateway."""
+    """HTTP client of visiobas_gateway."""
 
     # TODO: add decorator re-login on 401
     # TODO: add decorator handle exceptions and log them

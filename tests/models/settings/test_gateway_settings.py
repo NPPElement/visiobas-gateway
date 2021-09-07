@@ -11,7 +11,7 @@
 #     def setUp(self) -> None:
 #         self.gateway_env_path = (
 #             Path(__file__).resolve().parent.parent.parent.parent
-#             / "gateway/config/gateway.env"
+#             / "visiobas_gateway/config/visiobas_gateway.env"
 #         )
 #         self.gtw_settings = GatewaySettings(_env_file=self.gateway_env_path)
 #

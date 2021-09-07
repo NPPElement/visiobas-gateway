@@ -34,8 +34,8 @@
 #
 #
 # class AsyncModbusDevice(BaseModbusDevice):
-#     def __init__(self, device_obj: BACnetDeviceObj, gateway: "VisioBASGateway"):
-#         super().__init__(device_obj, gateway)
+#     def __init__(self, device_obj: BACnetDeviceObj, visiobas_gateway: "VisioBASGateway"):
+#         super().__init__(device_obj, visiobas_gateway)
 #         self._loop: asyncio.AbstractEventLoop = None
 #         self._client: Union[AsyncioModbusTcpClient, AsyncioModbusSerialClient] = None
 #

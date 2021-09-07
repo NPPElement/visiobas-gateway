@@ -2,7 +2,7 @@ version: "3.7"
 
 services:
   vb_gateway:
-    container_name: gateway
+    container_name: visiobas_gateway
     build:
       context: .
       dockerfile: Dockerfile
@@ -16,7 +16,7 @@ services:
     restart: always
     privileged: true # [1]
     env_file:
-      - config/gateway.env
+      - config/visiobas_gateway.env
       - config/http.env
       - config/mqtt.env
       - config/api.env
@@ -27,8 +27,8 @@ services:
       # Logging
       - PYTHONASYNCIODEBUG=0
     volumes:
-      #- /opt/visiobas-gateway/logs:/usr/share/python3/gtw/gateway/logs
-      - /opt/visiobas-gateway/gateway:/usr/share/python3/gtw/lib/python3.9/site-packages/gateway
+      #- /opt/visiobas-visiobas_gateway/logs:/usr/share/python3/gtw/visiobas_gateway/logs
+      - /opt/visiobas-visiobas_gateway/visiobas_gateway:/usr/share/python3/gtw/lib/python3.9/site-packages/visiobas_gateway
       - /dev:/dev # [1]
     network_mode: host
     #ports:

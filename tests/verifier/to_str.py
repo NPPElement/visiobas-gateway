@@ -1,7 +1,7 @@
 # import unittest
 #
-# from gateway.models.bacnet import StatusFlag, ObjProperty, ObjType
-# from gateway.verifier import BACnetVerifier
+# from visiobas_gateway.models.bacnet import StatusFlag, ObjProperty, ObjType
+# from visiobas_gateway.verifier import BACnetVerifier
 #
 #
 # class TestToStr(unittest.TestCase):

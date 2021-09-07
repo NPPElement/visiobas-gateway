@@ -11,7 +11,7 @@
 #     def setUp(self) -> None:
 #         self.http_env_path = (
 #             Path(__file__).resolve().parent.parent.parent.parent
-#             / "gateway/config/http.env"
+#             / "visiobas_gateway/config/http.env"
 #         )
 #
 #         self.http_settings = HTTPSettings(_env_file=self.http_env_path)

@@ -59,9 +59,9 @@ curl --header "Content-Type: application/json" \
 ```shell
 cd /opt
 sudo git clone https://github.com/NPPElement/visiobas-gateway
-cd /opt/visiobas-gateway
+cd /opt/visiobas-visiobas_gateway
 
-# Configure gateway now. Then:
+# Configure visiobas_gateway now. Then:
 . run/install.sh
 ```
 
@@ -101,7 +101,7 @@ sudo nano /etc/udev/rules.d/99-serial.rules
 
 # Explanations: https://www.losant.com/blog/how-to-access-serial-devices-in-docker
 
-# Before launch gateway, ensure user in the `dialout` group
+# Before launch visiobas_gateway, ensure user in the `dialout` group
 sudo usermod -a -G dialout username # add to `dialout` group
 id username # check user\group info
 ```

@@ -11,8 +11,8 @@ else:
 class SUNAPIDevice(BaseDevice):
     """Now used for XNP-6550-RH."""
 
-    # def __init__(self, device_obj: BACnetDeviceObj, gateway: Gateway) -> None:
-    #     super().__init__(device_obj, gateway)
+    # def __init__(self, device_obj: BACnetDeviceObj, visiobas_gateway: Gateway) -> None:
+    #     super().__init__(device_obj, visiobas_gateway)
 
     def ptz(self, cgi: str, submenu: str, action: str, **kwargs: Any) -> None:
         """The absolute submenu of `ptzcontrol.cgi` controls absolute a PTZ operation

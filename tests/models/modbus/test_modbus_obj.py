@@ -1,6 +1,6 @@
 # import unittest
 #
-# from gateway.models.modbus import ModbusObj
+# from visiobas_gateway.models.modbus import ModbusObj
 #
 #
 # class TestToStr(unittest.TestCase):

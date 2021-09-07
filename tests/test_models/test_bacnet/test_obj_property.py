@@ -1,5 +1,5 @@
 import pytest
-from gateway.models import ObjProperty
+from visiobas_gateway.models import ObjProperty
 
 
 class TestObjProperty:

@@ -1,8 +1,8 @@
 import pytest
 
-from gateway.models.bacnet.obj_property import ObjProperty
+from visiobas_gateway.models.bacnet.obj_property import ObjProperty
 
-MODULE_NAME = "gateway.models.bacnet.obj"
+MODULE_NAME = "visiobas_gateway.models.bacnet.obj"
 
 
 class TestBACnetObj:

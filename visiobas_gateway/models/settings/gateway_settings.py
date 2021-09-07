@@ -2,7 +2,7 @@ from pydantic import AnyHttpUrl, BaseSettings, Field
 
 
 class GatewaySettings(BaseSettings):
-    """Main settings of gateway."""
+    """Main settings of visiobas_gateway."""
 
     # todo: solve problem with 'polling by'
     # address: IPv4Address = Field(
@@ -41,7 +41,7 @@ class GatewaySettings(BaseSettings):
         default=11,
         ge=0,
         le=16,
-        description="Priority that sets when writing through the gateway API.",
+        description="Priority that sets when writing through the visiobas_gateway API.",
     )
 
     class Config:  # pylint: disable=missing-class-docstring

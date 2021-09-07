@@ -1,4 +1,4 @@
-from gateway.models.bacnet.device_property_list import (
+from visiobas_gateway.models.bacnet.device_property_list import (
     TcpIpDevicePropertyList,
     SerialDevicePropertyList,
 )

@@ -3,7 +3,7 @@
 # from bacpypes.basetypes import PriorityArray, PriorityValue
 # from bacpypes.primitivedata import Null
 #
-# from gateway.connectors.bacnet.device import BACnetDevice
+# from visiobas_gateway.connectors.bacnet.device import BACnetDevice
 #
 #
 # class TestPriorityArrayCast(unittest.TestCase):

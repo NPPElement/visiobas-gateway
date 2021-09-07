@@ -1,7 +1,7 @@
 # import unittest
 #
-# from gateway.models.bacnet import ObjType, ObjProperty, StatusFlag
-# from gateway.verifier import BACnetVerifier
+# from visiobas_gateway.models.bacnet import ObjType, ObjProperty, StatusFlag
+# from visiobas_gateway.verifier import BACnetVerifier
 #
 #
 # class TestVerify(unittest.TestCase):

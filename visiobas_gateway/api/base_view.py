@@ -22,7 +22,7 @@ class BaseView(View):
         Returns:
             Gateway instance.
         """
-        return self.request.app["gateway"]
+        return self.request.app["visiobas_gateway"]
 
     def get_device(self, dev_id: int) -> Optional[DeviceAlias]:
         """

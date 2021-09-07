@@ -18,7 +18,7 @@ else:
 
 
 class MQTTClient:
-    """MQTT client of gateway."""
+    """MQTT client of visiobas_gateway."""
 
     def __init__(self, gateway: Gateway, settings: MQTTSettings) -> None:
         self._gtw = gateway
@@ -134,7 +134,7 @@ class MQTTClient:
     #     """Listen queue from verifier.
     #     When receive data from verifier - publish it to MQTT.
     #
-    #     Designed as an endless loop. Can be stopped from gateway thread.
+    #     Designed as an endless loop. Can be stopped from visiobas_gateway thread.
     #     """
     #     # self.subscribe(topics=self.topics)
     #     while not self._stopped:

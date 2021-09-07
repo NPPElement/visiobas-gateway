@@ -2,7 +2,7 @@
 # blob/main/tests/test_utils.py>
 
 import pytest
-from gateway.utils.identifier import (
+from visiobas_gateway.utils.identifier import (
     sanitize,
     split_words,
     snake_case,

@@ -41,19 +41,19 @@ jobs:
         run: poetry run isort . --check
 
       - name: Run flake8
-        run: poetry run flake8 gateway
+        run: poetry run flake8 visiobas_gateway
 
       - name: Run safety
         run: poetry export -f requirements.txt | poetry run safety check --bare --stdin
 
       - name: Run mypy
-        run: poetry run mypy --show-error-codes gateway
+        run: poetry run mypy --show-error-codes visiobas_gateway
 
       - name: Run pylint
-        run: poetry run pylint gateway
+        run: poetry run pylint visiobas_gateway
 
       - name: Run pytest
-        run: poetry run pytest --cov=gateway --cov-report=term-missing
+        run: poetry run pytest --cov=visiobas_gateway --cov-report=term-missing
 
       - name: Generate coverage report
         shell: bash

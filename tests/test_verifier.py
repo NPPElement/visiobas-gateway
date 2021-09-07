@@ -1,8 +1,8 @@
 import asyncio
 import datetime
 
-from gateway.verifier import BACnetVerifier
-from gateway.models.bacnet.obj_property import ObjProperty
+from visiobas_gateway.verifier import BACnetVerifier
+from visiobas_gateway.models.bacnet.obj_property import ObjProperty
 
 import pytest
 
