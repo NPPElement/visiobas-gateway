@@ -6,22 +6,22 @@ FROM python:3.9 as builder
 
 # Create a virtual environment and update `pip`
 RUN python3.9 -m venv /usr/share/python3/gtw \
-    && /usr/share/python3/gtw/bin/pip install --upgrade pip \
-    && /usr/share/python3/gtw/bin/pip install poetry
+    && /usr/share/python3/gtw/bin/pip install --upgrade pip # \
+#    && /usr/share/python3/gtw/bin/pip install poetry
 
-## Install `poetry` package manager
-#RUN curl -sSL 'https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py' | python \
-#    && poetry --version
-#COPY ./poetry.lock ./pyproject.toml  /mnt/
+# Install `poetry` package manager
+RUN curl -sSL 'https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py' | python \
+    && poetry --version
+#COPY ./visiobas_gateway ./poetry.lock ./pyproject.toml  /mnt/
 #RUN poetry install --no-dev --no-interaction --no-ansi \
 #    # Upgrading pip
-#    && poetry run pip install -U pip
+#    && poetry run pip install --upgrade pip
 
 # Install dependencies separately for caching
 # On a subsequent build, `Docker` will skip this step if dependencies does not change
- #COPY ./requirements.txt /mnt/
-COPY ./visiobas_gateway ./poetry.lock ./pyproject.toml  /usr/share/python3/gtw/
-RUN /usr/share/python3/gtw/bin/poetry install
+COPY ./requirements.txt /mnt/
+# COPY ./visiobas_gateway ./poetry.lock ./pyproject.toml  /usr/share/python3/gtw/
+RUN /usr/share/python3/gtw/bin/pip install -Ur /mnt/requirements.txt
 
 # Copy the source distribution to the container and install it
 COPY /dist/ /mnt/dist/
