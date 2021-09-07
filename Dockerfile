@@ -6,7 +6,7 @@ FROM python:3.9 as builder
 
 # Create a virtual environment and update `pip`
 RUN python3.9 -m venv /usr/share/python3/gtw \
-    && /usr/share/python3/gtw/bin/pip install --upgrade pip
+    && /usr/share/python3/gtw/bin/pip install --upgrade pip \
     && /usr/share/python3/gtw/bin/pip install poetry
 
 ## Install `poetry` package manager
@@ -19,9 +19,10 @@ RUN python3.9 -m venv /usr/share/python3/gtw \
 
 # Install dependencies separately for caching
 # On a subsequent build, `Docker` will skip this step if dependencies does not change
-COPY ./requirements.txt /mnt/
+ #COPY ./requirements.txt /mnt/
 COPY ./poetry.lock ./pyproject.toml  /mnt/
-RUN /usr/share/python3/gtw/bin/pip install -Ur /mnt/pyproject.toml
+COPY ./visiobas_gateway /mnt/visiobas_gateway
+RUN /usr/share/python3/gtw/bin/poetry install
 
 # Copy the source distribution to the container and install it
 COPY /dist/ /mnt/dist/
