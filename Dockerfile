@@ -4,9 +4,12 @@
 # Base - "heavy" image (~ 1 GB, compressed ~ 500 GB)
 FROM python:3.9 as builder
 
-# Create a virtual environment and update pip
-RUN python3.9 -m venv /usr/share/python3/gtw \
-    && /usr/share/python3/gtw/bin/pip install -U pip
+# Install Poetry and virtual environment
+RUN pip install poetry \
+    && poetry install
+## Create a virtual environment and update pip
+#RUN python3.9 -m venv /usr/share/python3/gtw \
+#    && /usr/share/python3/gtw/bin/pip install -U pip
 
 # Install dependencies separately for caching
 # On a subsequent build, Docker will skip this step if requirements.txt does not change
