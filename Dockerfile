@@ -8,9 +8,6 @@ FROM python:3.9 as builder
 RUN python3.9 -m venv /usr/share/python3/gtw \
     && /usr/share/python3/gtw/bin/pip install -U pip
 
-# Export dependencies from Poetry to requirements.txt
-RUN poetry export -f requirements.txt --output requirements.txt \
-
 # Install dependencies separately for caching
 # On a subsequent build, Docker will skip this step if requirements.txt does not change
 COPY requirements.txt /mnt/

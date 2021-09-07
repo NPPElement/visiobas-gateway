@@ -6,9 +6,14 @@ sudo docker-compose down
 
 sudo git pull
 
-sudo rm -r dist/  # remove previous source distribution if exists
+# Remove previous source distribution if exists
+sudo rm -r dist/
+
 # sudo python3 setup.py sdist  # create a source distribution
 sudo ~/.poetry/bin/poetry build  # create a source distribution
+
+# Export dependencies from Poetry to requirements.txt
+RUN poetry export -f requirements.txt --output requirements.txt
 
 sudo docker-compose up --build # -d
 

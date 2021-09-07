@@ -28,6 +28,9 @@ cd /opt/visiobas-gateway
 #sudo python3 setup.py sdist  # create a source distribution
 sudo ~/.poetry/bin/poetry build  # create a source distribution
 
+# Export dependencies from Poetry to requirements.txt
+RUN poetry export -f requirements.txt --output requirements.txt
+
 # Copy configuration templates into /opt/visiobas-gateway/config
 sudo cp /opt/visiobas-gateway/config/templates/gateway.env /opt/visiobas-gateway/config/gateway.env
 sudo cp /opt/visiobas-gateway/config/templates/http.env /opt/visiobas-gateway/config/http.env
