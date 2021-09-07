@@ -6,7 +6,7 @@ FROM python:3.9 as builder
 
 # Create a virtual environment and update pip
 RUN python3.9 -m venv /usr/share/python3/gtw \
-    && /usr/share/python3/gtw/bin/pip install -U pip
+    && /usr/share/python3/gtw/bin/pip install --upgrade pip \
 
 # Install dependencies separately for caching
 # On a subsequent build, Docker will skip this step if requirements.txt does not change
@@ -36,6 +36,6 @@ COPY --from=builder /usr/share/python3/gtw /usr/share/python3/gtw
 RUN ln -snf /usr/share/python3/gtw/bin/visiobas_gateway  /usr/local/bin/
 
 # Set the default command to run when the container starts
-CMD ["gateway"]
+CMD ["visiobas_gateway"]
 
 EXPOSE 7070
