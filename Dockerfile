@@ -10,7 +10,7 @@ RUN python3.9 -m venv /usr/share/python3/gtw \
 
 # Install dependencies separately for caching
 # On a subsequent build, Docker will skip this step if requirements.txt does not change
-COPY ../../../PYTHON/pythonProject4/requirements.txt /mnt/
+COPY requirements.txt /mnt/
 RUN /usr/share/python3/gtw/bin/pip install -Ur /mnt/requirements.txt
 
 # Copy the source distribution to the container and install it
