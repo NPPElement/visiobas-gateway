@@ -2,7 +2,7 @@ import asyncio
 import logging
 import sys
 
-import uvloop  # type: ignore
+# import uvloop  # type: ignore
 
 from visiobas_gateway.gateway_ import Gateway
 from visiobas_gateway.models.settings import GatewaySettings, LogSettings
@@ -31,7 +31,7 @@ def main() -> None:
     log_settings = LogSettings()
     setup_logging(settings=log_settings)
 
-    uvloop.install()
+    # uvloop.install()
     asyncio.run(load_and_run())
 
 

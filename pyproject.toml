@@ -17,7 +17,7 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.9"
-uvloop = "*"
+# uvloop = "*"
 aiohttp = "^3.7.4.post0"
 aiojobs = "^0.3.0"
 aiohttp-jsonrpc = "^0.3.0"
