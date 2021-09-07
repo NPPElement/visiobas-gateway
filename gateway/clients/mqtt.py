@@ -3,6 +3,7 @@ from json import JSONDecodeError, dumps, loads
 from typing import TYPE_CHECKING, Any, Optional, Sequence, Union
 
 import paho.mqtt.client as mqtt  # type: ignore
+import pydantic
 
 from ..models.mqtt import Qos, ResultCode
 from ..models.settings import LogSettings, MQTTSettings
@@ -84,7 +85,7 @@ class MQTTClient:
         return [(topic, self._qos) for topic in self._settings.topics_sub]
 
     @property
-    def _client_id(self) -> Optional[str]:
+    def _client_id(self) -> pydantic.UUID4:
         return self._settings.client_id
 
     # @property

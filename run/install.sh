@@ -20,12 +20,13 @@ sudo chmod 755 $DESTINATION
 docker-compose --version
 
 # Install Poetry
-sudo curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python -
+sudo curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry
+.py | python3 -
 
 # Install gateway
 cd /opt/visiobas-gateway
 #sudo python3 setup.py sdist  # create a source distribution
-sudo poetry build  # create a source distribution
+sudo ~/.poetry/bin/poetry build  # create a source distribution
 
 # Copy configuration templates into /opt/visiobas-gateway/config
 sudo cp /opt/visiobas-gateway/config/templates/gateway.env /opt/visiobas-gateway/config/gateway.env

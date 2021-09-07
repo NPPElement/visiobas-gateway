@@ -2,7 +2,7 @@ import uuid
 from typing import Optional
 
 import paho.mqtt.client as mqtt  # type: ignore
-from pydantic import AnyUrl, BaseSettings, Field, validator, UUID4
+from pydantic import UUID4, AnyUrl, BaseSettings, Field, validator
 
 
 class MQTTSettings(BaseSettings):
