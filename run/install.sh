@@ -29,7 +29,7 @@ cd /opt/visiobas-visiobas_gateway
 sudo ~/.poetry/bin/poetry build  # create a source distribution
 
 # Export dependencies from Poetry to requirements.txt
-sudo sudo ~/.poetry/bin/poetry export -f requirements.txt --output requirements.txt
+sudo sudo ~/.poetry/bin/poetry export -f requirements.txt --output requirements.txt --without-hashes
 
 # Copy configuration templates into /opt/visiobas-visiobas_gateway/config
 sudo cp /opt/visiobas-visiobas_gateway/config/templates/visiobas_gateway.env /opt/visiobas-visiobas_gateway/config/visiobas_gateway.env
