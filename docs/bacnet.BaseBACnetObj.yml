@@ -1,0 +1,94 @@
+definitions:
+  ObjType:
+    description: Represent types of BACnet objects.
+    enum:
+    - 0
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+    - 11
+    - 12
+    - 13
+    - 14
+    - 15
+    - 16
+    - 17
+    - 18
+    - 19
+    - 20
+    - 21
+    - 22
+    - 23
+    - 24
+    - 25
+    - 26
+    - 27
+    - 28
+    - 29
+    - 30
+    - 31
+    - 32
+    - 33
+    - 34
+    - 35
+    - 36
+    - 37
+    - 38
+    - 39
+    - 40
+    - 41
+    - 42
+    - 43
+    - 44
+    - 45
+    - 46
+    - 47
+    - 48
+    - 49
+    - 50
+    - 51
+    - 52
+    - 53
+    - 54
+    title: ObjType
+    type: integer
+description: Base class for all BACnet objects.
+properties:
+  '371':
+    title: '371'
+  '75':
+    description: "Is a numeric code that is used to identify the object.\n       \
+      \ It shall be unique within the BACnet Device that maintains it."
+    minimum: 0
+    title: '75'
+    type: integer
+  '77':
+    description: "Represent a name for the object that is unique within the\n    \
+      \    BACnet Device that maintains it. The minimum length of the string shall\
+      \ be one\n        character. The set of characters used in the Object_Name shall\
+      \ be restricted to\n        printable characters."
+    minLength: 1
+    title: '77'
+    type: string
+  '79':
+    allOf:
+    - $ref: '#/definitions/ObjType'
+    description: Indicates membership in a particular object type class.
+  '846':
+    exclusiveMinimum: 0
+    title: '846'
+    type: integer
+required:
+- '79'
+- '846'
+- '75'
+- '77'
+title: BaseBACnetObj
+type: object
