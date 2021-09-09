@@ -1,0 +1,281 @@
+definitions:
+  BaudRate:
+    description: Baudrate for The baud rate to use for the serial device.
+    enum:
+    - 2400
+    - 4800
+    - 9600
+    - 19200
+    - 38400
+    - 57600
+    - 115200
+    title: BaudRate
+    type: integer
+  Bytesize:
+    description: The number of bits in a byte of serial data. This can be one of 5,
+      6, 7, or 8.
+    enum:
+    - 5
+    - 6
+    - 7
+    - 8
+    title: Bytesize
+    type: integer
+  DeviceRtuProperties:
+    description: Represent RTU properties for ModbusRTU devices.
+    properties:
+      baudrate:
+        allOf:
+        - $ref: '#/definitions/BaudRate'
+        default: 9600
+      bytesize:
+        allOf:
+        - $ref: '#/definitions/Bytesize'
+        default: 8
+      parity:
+        allOf:
+        - $ref: '#/definitions/Parity'
+        default: N
+      port:
+        description: Interface for serial devices
+        title: Port
+        type: string
+      stopbits:
+        allOf:
+        - $ref: '#/definitions/StopBits'
+        default: 1
+      unit:
+        description: Address of serial device
+        minimum: 0
+        title: Unit
+        type: integer
+    required:
+    - unit
+    - port
+    title: DeviceRtuProperties
+    type: object
+  ObjType:
+    description: Represent types of BACnet objects.
+    enum:
+    - 0
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+    - 11
+    - 12
+    - 13
+    - 14
+    - 15
+    - 16
+    - 17
+    - 18
+    - 19
+    - 20
+    - 21
+    - 22
+    - 23
+    - 24
+    - 25
+    - 26
+    - 27
+    - 28
+    - 29
+    - 30
+    - 31
+    - 32
+    - 33
+    - 34
+    - 35
+    - 36
+    - 37
+    - 38
+    - 39
+    - 40
+    - 41
+    - 42
+    - 43
+    - 44
+    - 45
+    - 46
+    - 47
+    - 48
+    - 49
+    - 50
+    - 51
+    - 52
+    - 53
+    - 54
+    title: ObjType
+    type: integer
+  Parity:
+    description: The type of checksum to use to verify data integrity.
+    enum:
+    - N
+    - E
+    - O
+    title: Parity
+    type: string
+  Protocol:
+    description: Supported devices protocols.
+    enum:
+    - BACnet
+    - ModbusTCP
+    - ModbusRTU
+    - ModbusRTUoverTCP
+    - SUNAPI
+    title: Protocol
+    type: string
+  SerialDevicePropertyList:
+    description: PropertyList for Serial devices.
+    properties:
+      apduTimeout:
+        default: 6000
+        description: "The amount of time in milliseconds between retransmissions of\
+          \ an\n        APDU requiring acknowledgment for which no acknowledgment\
+          \ has been received.\n        A suggested default value for this property\
+          \ is 6,000 milliseconds for devices that\n        permit modification of\
+          \ this parameter. Otherwise, the default value shall be\n        10,000\
+          \ milliseconds. This value shall be non-zero if the Device object property\n\
+          \        named Number_Of_APDU_Retries is non-zero."
+        exclusiveMinimum: 0
+        title: Apdutimeout
+        type: integer
+      numberOfApduRetries:
+        default: 3
+        description: "Indicates the maximum number of times that an APDU shall be\n\
+          \        retransmitted. A suggested default value for this property is 3.\
+          \ If this device\n        does not perform retries, then this property shall\
+          \ be set to zero. If the value of\n        this property is greater than\
+          \ zero, a non-zero value shall be placed in the Device\n        object APDU_Timeout\
+          \ property."
+        minimum: 0
+        title: Numberofapduretries
+        type: integer
+      pollPeriod:
+        default: 90
+        description: Period to send data to server.
+        title: Pollperiod
+        type: number
+      protocol:
+        $ref: '#/definitions/Protocol'
+      reconnectPeriod:
+        default: 300
+        title: Reconnectperiod
+        type: integer
+      rtu:
+        $ref: '#/definitions/DeviceRtuProperties'
+      sendPeriod:
+        default: 300
+        description: Period to internal object poll.
+        title: Sendperiod
+        type: number
+    required:
+    - protocol
+    title: SerialDevicePropertyList
+    type: object
+  StopBits:
+    description: 'The number of bits sent after each character in a
+
+      message to indicate the end of the byte.'
+    enum:
+    - 1
+    - 2
+    title: StopBits
+    type: integer
+  TcpIpDevicePropertyList:
+    description: PropertyList for TCP/IP devices.
+    properties:
+      address:
+        format: ipv4
+        title: Address
+        type: string
+      apduTimeout:
+        default: 6000
+        description: "The amount of time in milliseconds between retransmissions of\
+          \ an\n        APDU requiring acknowledgment for which no acknowledgment\
+          \ has been received.\n        A suggested default value for this property\
+          \ is 6,000 milliseconds for devices that\n        permit modification of\
+          \ this parameter. Otherwise, the default value shall be\n        10,000\
+          \ milliseconds. This value shall be non-zero if the Device object property\n\
+          \        named Number_Of_APDU_Retries is non-zero."
+        exclusiveMinimum: 0
+        title: Apdutimeout
+        type: integer
+      numberOfApduRetries:
+        default: 3
+        description: "Indicates the maximum number of times that an APDU shall be\n\
+          \        retransmitted. A suggested default value for this property is 3.\
+          \ If this device\n        does not perform retries, then this property shall\
+          \ be set to zero. If the value of\n        this property is greater than\
+          \ zero, a non-zero value shall be placed in the Device\n        object APDU_Timeout\
+          \ property."
+        minimum: 0
+        title: Numberofapduretries
+        type: integer
+      pollPeriod:
+        default: 90
+        description: Period to send data to server.
+        title: Pollperiod
+        type: number
+      port:
+        title: Port
+        type: integer
+      protocol:
+        $ref: '#/definitions/Protocol'
+      reconnectPeriod:
+        default: 300
+        title: Reconnectperiod
+        type: integer
+      sendPeriod:
+        default: 300
+        description: Period to internal object poll.
+        title: Sendperiod
+        type: number
+    required:
+    - protocol
+    title: TcpIpDevicePropertyList
+    type: object
+description: Represent device object.
+properties:
+  '371':
+    anyOf:
+    - $ref: '#/definitions/TcpIpDevicePropertyList'
+    - $ref: '#/definitions/SerialDevicePropertyList'
+    title: '371'
+  '75':
+    description: "Is a numeric code that is used to identify the object.\n       \
+      \ It shall be unique within the BACnet Device that maintains it."
+    minimum: 0
+    title: '75'
+    type: integer
+  '77':
+    description: "Represent a name for the object that is unique within the\n    \
+      \    BACnet Device that maintains it. The minimum length of the string shall\
+      \ be one\n        character. The set of characters used in the Object_Name shall\
+      \ be restricted to\n        printable characters."
+    minLength: 1
+    title: '77'
+    type: string
+  '79':
+    allOf:
+    - $ref: '#/definitions/ObjType'
+    description: Indicates membership in a particular object type class.
+  '846':
+    exclusiveMinimum: 0
+    title: '846'
+    type: integer
+required:
+- '79'
+- '846'
+- '75'
+- '77'
+- '371'
+title: DeviceObj
+type: object

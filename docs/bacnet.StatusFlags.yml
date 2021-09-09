@@ -1,0 +1,10 @@
+description: Represent Combination of 4 `StatusFlag`.
+properties:
+  flags:
+    default: 0
+    maximum: 15
+    minimum: 0
+    title: Flags
+    type: integer
+title: StatusFlags
+type: object

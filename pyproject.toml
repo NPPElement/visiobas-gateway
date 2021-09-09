@@ -39,6 +39,8 @@ black = "*"
 pylint = "^2.9.6"
 flake8 = "*"
 taskipy = "*"
+pyyaml = "^5.4.1"
+types-PyYAML = "^5.4.10"
 safety = "*"
 pytest-cov = "*"
 
@@ -51,6 +53,8 @@ isort .\
  && mypy visiobas_gateway\
  && pylint visiobas_gateway\
  && pytest --cov visiobas_gateway tests --cov-report=term-missing\
+"""
+docs = """python -m docs --package visiobas_gateway.models --output_dir ./docs
 """
 
 [tool.black]

@@ -1,0 +1,62 @@
+definitions:
+  Protocol:
+    description: Supported devices protocols.
+    enum:
+    - BACnet
+    - ModbusTCP
+    - ModbusRTU
+    - ModbusRTUoverTCP
+    - SUNAPI
+    title: Protocol
+    type: string
+description: PropertyList for TCP/IP devices.
+properties:
+  address:
+    format: ipv4
+    title: Address
+    type: string
+  apduTimeout:
+    default: 6000
+    description: "The amount of time in milliseconds between retransmissions of an\n\
+      \        APDU requiring acknowledgment for which no acknowledgment has been\
+      \ received.\n        A suggested default value for this property is 6,000 milliseconds\
+      \ for devices that\n        permit modification of this parameter. Otherwise,\
+      \ the default value shall be\n        10,000 milliseconds. This value shall\
+      \ be non-zero if the Device object property\n        named Number_Of_APDU_Retries\
+      \ is non-zero."
+    exclusiveMinimum: 0
+    title: Apdutimeout
+    type: integer
+  numberOfApduRetries:
+    default: 3
+    description: "Indicates the maximum number of times that an APDU shall be\n  \
+      \      retransmitted. A suggested default value for this property is 3. If this\
+      \ device\n        does not perform retries, then this property shall be set\
+      \ to zero. If the value of\n        this property is greater than zero, a non-zero\
+      \ value shall be placed in the Device\n        object APDU_Timeout property."
+    minimum: 0
+    title: Numberofapduretries
+    type: integer
+  pollPeriod:
+    default: 90
+    description: Period to send data to server.
+    title: Pollperiod
+    type: number
+  port:
+    title: Port
+    type: integer
+  protocol:
+    $ref: '#/definitions/Protocol'
+  reconnectPeriod:
+    default: 300
+    title: Reconnectperiod
+    type: integer
+  sendPeriod:
+    default: 300
+    description: Period to internal object poll.
+    title: Sendperiod
+    type: number
+required:
+- protocol
+title: TcpIpDevicePropertyList
+type: object

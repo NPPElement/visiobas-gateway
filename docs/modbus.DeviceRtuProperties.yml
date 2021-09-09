@@ -1,0 +1,72 @@
+definitions:
+  BaudRate:
+    description: Baudrate for The baud rate to use for the serial device.
+    enum:
+    - 2400
+    - 4800
+    - 9600
+    - 19200
+    - 38400
+    - 57600
+    - 115200
+    title: BaudRate
+    type: integer
+  Bytesize:
+    description: The number of bits in a byte of serial data. This can be one of 5,
+      6, 7, or 8.
+    enum:
+    - 5
+    - 6
+    - 7
+    - 8
+    title: Bytesize
+    type: integer
+  Parity:
+    description: The type of checksum to use to verify data integrity.
+    enum:
+    - N
+    - E
+    - O
+    title: Parity
+    type: string
+  StopBits:
+    description: 'The number of bits sent after each character in a
+
+      message to indicate the end of the byte.'
+    enum:
+    - 1
+    - 2
+    title: StopBits
+    type: integer
+description: Represent RTU properties for ModbusRTU devices.
+properties:
+  baudrate:
+    allOf:
+    - $ref: '#/definitions/BaudRate'
+    default: 9600
+  bytesize:
+    allOf:
+    - $ref: '#/definitions/Bytesize'
+    default: 8
+  parity:
+    allOf:
+    - $ref: '#/definitions/Parity'
+    default: N
+  port:
+    description: Interface for serial devices
+    title: Port
+    type: string
+  stopbits:
+    allOf:
+    - $ref: '#/definitions/StopBits'
+    default: 1
+  unit:
+    description: Address of serial device
+    minimum: 0
+    title: Unit
+    type: integer
+required:
+- unit
+- port
+title: DeviceRtuProperties
+type: object

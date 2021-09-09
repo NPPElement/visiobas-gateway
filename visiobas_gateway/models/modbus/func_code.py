@@ -3,10 +3,7 @@ from enum import Enum, unique
 
 @unique
 class ModbusReadFunc(str, Enum):
-    """Represent codes of Modbus available functions to read.
-
-    Separate str value needed for parsing.
-    """
+    """Represent codes of Modbus available functions to read."""
 
     READ_COILS = "0x01"
     READ_DISCRETE_INPUTS = "0x02"
@@ -28,10 +25,7 @@ READ_COIL_FUNCS = {
 
 @unique
 class ModbusWriteFunc(str, Enum):
-    """Represent codes of Modbus available functions to write.
-
-    Separate str value needed for parsing.
-    """
+    """Represent codes of Modbus available functions to write."""
 
     WRITE_COIL = "0x05"
     WRITE_REGISTER = "0x06"
