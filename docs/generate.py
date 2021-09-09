@@ -1,16 +1,15 @@
 import json
 from pathlib import Path
 from typing import Iterable
+import argparse
 
 import yaml
 from pydantic.main import ModelMetaclass
 
-from visiobas_gateway import DOCS_DIR
-
-PACKAGE_NAME = "visiobas_gateway.models"
+DOCS_DIR = Path(__file__).resolve().parent
 
 
-def get_pydantic_classes(package_name: str) -> Iterable[ModelMetaclass]:
+def _get_pydantic_classes(package_name: str) -> Iterable[ModelMetaclass]:
     """
     Args:
         package_name:
@@ -42,28 +41,31 @@ def get_pydantic_classes(package_name: str) -> Iterable[ModelMetaclass]:
     return pydantic_classes
 
 
-def generate_schema_definition(
-    output_dir: Path, classes: Iterable[ModelMetaclass], package_name: str
-):
+def _write_json_schemas(
+        output_dir: Path, classes: Iterable[ModelMetaclass], package_name: str
+) -> None:
+    """Writes JSON-schemas for classes in YAML."""
     try:
         output_dir.mkdir()
     except FileExistsError:
         pass
 
     for cls in classes:
-        # if hasattr(cls, "schema_json"):
-        data = json.loads(cls.schema_json())
-        path_in_package = (
-            cls.__module__.replace(package_name + ".", "") + "." + cls.__name__ + ".yml"
-        )
-        print("PATH_IN_PACKAGE", path_in_package)
-        with open(path_in_package, "w") as file:
-            yaml.dump(data, file)
-        # print(cls.__name__, cls.__module__, cls.schema_json())
+        if hasattr(cls, "schema_json"):
+            filename = cls.__module__.replace(package_name + '.', '').rsplit(sep='.',
+                                                                             maxsplit=1)[
+                           0]+"."+cls.__name__+".yml"
+            data = json.loads(cls.schema_json())
+            with open(filename, "w") as file:
+                yaml.dump(data, file)
 
 
 if __name__ == "__main__":
-    pydantic_models = get_pydantic_classes(package_name=PACKAGE_NAME)
-    generate_schema_definition(
-        output_dir=DOCS_DIR, classes=pydantic_models, package_name=PACKAGE_NAME
-    )
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-p", "--package", help="Package containing models for which "
+                                                "json-schema will be generated",
+                        default="visiobas_gateway.models")
+    args = parser.parse_args()
+
+    pydantic_models = _get_pydantic_classes(package_name=args.package)
+    _write_json_schemas(output_dir=DOCS_DIR, classes=pydantic_models, package_name=args.package)

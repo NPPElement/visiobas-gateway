@@ -54,6 +54,8 @@ isort .\
  && pylint visiobas_gateway\
  && pytest --cov visiobas_gateway tests --cov-report=term-missing\
 """
+gen-docs = """python -m docs/generate --package 'visiobas_gateway.models'
+"""
 
 [tool.black]
 line-length = 92
