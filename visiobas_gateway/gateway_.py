@@ -200,7 +200,7 @@ class Gateway:
 
         for dev in asyncio.as_completed(load_device_tasks):
             dev = await dev
-            if isinstance(dev, BasePollingDevice):
+            if dev and isinstance(dev, BasePollingDevice):
                 await dev.start_periodic_polls()
 
         # if self._is_mqtt_enabled:
@@ -236,7 +236,7 @@ class Gateway:
         _LOG.info("Stop tasks performed")
 
     @log_exceptions
-    async def load_device(self, dev_id: int) -> BaseDevice:
+    async def load_device(self, dev_id: int) -> Optional[BaseDevice]:
         """Tries to download an object of device from server.
         Then gets polling objects and load them into device.
 
@@ -249,8 +249,12 @@ class Gateway:
         )
         _LOG.debug("Device object downloaded", extra={"device_id": dev_id})
 
-        if not dev_obj_data or isinstance(dev_obj_data[0], Exception):
-            raise ValueError("No device data")
+        if (not isinstance(dev_obj_data, list)
+                or not isinstance(dev_obj_data[0], list)
+                or not dev_obj_data[0]):
+            _LOG.warning('Empty device object or exception',
+                         extra={'device_id': dev_id, 'data': dev_obj_data, })
+            return None
 
         # objs in the list, so get [0] element in `dev_obj_data[0]` below
         # request one type - 'device', so [0] element of tuple below
