@@ -5,8 +5,6 @@
 
 # VisioBAS-Gateway
 
----
-
 Polling controllers on various protocols for
 the [VisioBAS system](https://github.com/NPPElement/visiobas-broker).
 
@@ -19,7 +17,7 @@ the [VisioBAS system](https://github.com/NPPElement/visiobas-broker).
     - [Install Docker Compose](#b-Install-Docker-Compose)
     - [Install VisioBAS gateway](#c-Install-VisioBAS-Gateway)
 4. [Setting](#Setting)
-    - [Setting COM ports](#Setting-Serial-ports)
+    - [Setting Serial ports](#Setting-Serial-ports)
     - [Setting configuration](#Setting-configuration)
 5. [Launch/Update](#LaunchUpdate)
 6. [Develop](#Develop)
@@ -59,7 +57,7 @@ curl --header "Content-Type: application/json" \
 ```shell
 cd /opt
 sudo git clone https://github.com/NPPElement/visiobas-gateway
-cd /opt/visiobas-visiobas_gateway
+cd /opt/visiobas-gateway
 
 # Configure visiobas_gateway now. Then:
 . run/install.sh
@@ -80,14 +78,11 @@ Configuration can be changed in files:
 - `config/mqtt.env` [template](/config/templates/mqtt.env)
 - `config/api.env` [template](/config/templates/api.env)
 
-### Logging level
-
-- You can change the logging level in the `docker-compose.yaml` file. You can choose one of
-  the following levels: `DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL`
-
 ### Objects configuration
 
-To configure objects properties read [/docs/properties.md](/docs/properties.md).
+[/docs](/docs) contains JSON-schema definitions for used `pydantic` models. 
+
+Outdated: [~~/docs/properties.md~~](/docs/properties.md) (will be removed soon).
 
 ### Setting Serial ports
 
@@ -117,11 +112,12 @@ in `docker-compose.yaml` the following network settings (commented now):
     networks:
       - backend
 ```
-and 
+
+and
 
 ```yml
 networks:
-  backend:  # your network name
+  backend: # your network name
     driver: bridge
 ```
 
@@ -148,10 +144,12 @@ Scripts for common actions available:
 
 1. Write some code and make sure it's covered by unit tests. All unit tests are in
    the `tests` directory and the file structure should mirror the structure of the source
-   code in the `gateway` directory.
+   code in the `visiobas_gateway` directory.
 2. When in a Poetry shell (`poetry shell`) run `task check` in order to run most of the same
    checks CI runs. This will auto-reformat the code, check type annotations, run unit tests,
    check code coverage, and lint the code.
+3. If writing support for a new protocol, regenerate the [/docs](/docs) with `task docs`. It
+   will update JSON-schema definition for used `pydantic` models.
 
 ## Remove
 
