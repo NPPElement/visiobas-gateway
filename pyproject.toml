@@ -39,6 +39,8 @@ black = "*"
 pylint = "^2.9.6"
 flake8 = "*"
 taskipy = "*"
+pyyaml = "^5.4.1"
+types-PyYAML = "^5.4.10"
 safety = "*"
 pytest-cov = "*"
 
