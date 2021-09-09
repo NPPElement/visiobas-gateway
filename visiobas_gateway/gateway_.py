@@ -249,11 +249,18 @@ class Gateway:
         )
         _LOG.debug("Device object downloaded", extra={"device_id": dev_id})
 
-        if (not isinstance(dev_obj_data, list)
-                or not isinstance(dev_obj_data[0], list)
-                or not dev_obj_data[0]):
-            _LOG.warning('Empty device object or exception',
-                         extra={'device_id': dev_id, 'data': dev_obj_data, })
+        if (
+            not isinstance(dev_obj_data, list)
+            or not isinstance(dev_obj_data[0], list)
+            or not dev_obj_data[0]
+        ):
+            _LOG.warning(
+                "Empty device object or exception",
+                extra={
+                    "device_id": dev_id,
+                    "data": dev_obj_data,
+                },
+            )
             return None
 
         # objs in the list, so get [0] element in `dev_obj_data[0]` below
