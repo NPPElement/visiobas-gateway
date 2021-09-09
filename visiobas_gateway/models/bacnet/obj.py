@@ -74,7 +74,7 @@ class BACnetObj(BaseBACnetObj):
     #     description="Internal variable to set default value into propertyList",
     # )
 
-    present_value: Union[Any, Exception] = Field(
+    present_value: Any = Field(
         default=None,
         alias=str(ObjProperty.presentValue.prop_id),
         description="""Indicates the current value, in engineering units, of the `TYPE`.
