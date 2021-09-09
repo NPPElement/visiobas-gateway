@@ -6,8 +6,6 @@ from typing import Iterable
 import yaml
 from pydantic.main import ModelMetaclass
 
-DOCS_DIR = Path(__file__).resolve()
-
 
 def _get_pydantic_classes(package_name: str) -> Iterable[ModelMetaclass]:
     """
@@ -42,7 +40,7 @@ def _get_pydantic_classes(package_name: str) -> Iterable[ModelMetaclass]:
 
 
 def _write_json_schemas(
-    output_dir: Path, classes: Iterable[ModelMetaclass], package_name: str
+        output_dir: Path, classes: Iterable[ModelMetaclass], package_name: str
 ) -> None:
     """Writes JSON-schemas for classes in YAML."""
     try:
@@ -52,16 +50,15 @@ def _write_json_schemas(
 
     for cls in classes:
         if hasattr(cls, "schema_json"):
-            filename = (
-                cls.__module__.replace(package_name + ".", "").rsplit(sep=".", maxsplit=1)[
-                    0
-                ]
-                + "."
-                + cls.__name__
-                + ".yml"
+            file_path = (
+                    output_dir /
+                    (cls.__module__.replace(package_name + ".", "").rsplit(sep=".",
+                                                                           maxsplit=1)[0]
+                     + "."+cls.__name__ + ".yml")
             )
+
             data = json.loads(cls.schema_json())
-            with open(filename, "w") as file:
+            with open(file_path, "w") as file:
                 yaml.dump(data, file)
 
 
@@ -73,15 +70,16 @@ if __name__ == "__main__":
         help="Package containing models for which json-schema will be generated.",
         required=True,
     )
-    # parser.add_argument(
-    #     "-o",
-    #     "--output_dir",
-    #     help="Directory to write json-schemas",
-    #     required=True,
-    # )
+    parser.add_argument(
+        "-o",
+        "--output_dir",
+        help="Directory to write json-schemas",
+        required=True,
+    )
     args = parser.parse_args()
 
     pydantic_models = _get_pydantic_classes(package_name=args.package)
     _write_json_schemas(
-        output_dir=DOCS_DIR, classes=pydantic_models, package_name=args.package
+        output_dir=Path(args.output_dir), classes=pydantic_models,
+        package_name=args.package
     )

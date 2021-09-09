@@ -54,7 +54,7 @@ isort .\
  && pylint visiobas_gateway\
  && pytest --cov visiobas_gateway tests --cov-report=term-missing\
 """
-docs = """python -m docs --package visiobas_gateway.models
+docs = """python -m docs --package visiobas_gateway.models --output_dir ./docs
 """
 
 [tool.black]
