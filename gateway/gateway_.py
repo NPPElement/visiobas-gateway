@@ -179,7 +179,7 @@ class VisioBASGateway:
 
         for dev in asyncio.as_completed(load_device_tasks):
             dev = await dev
-            if dev.is_polling_device:
+            if dev and dev.is_polling_device:
                 await dev.start_periodic_polls()
 
         # # Run polling tasks.
