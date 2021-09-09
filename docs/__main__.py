@@ -6,7 +6,7 @@ from typing import Iterable
 import yaml
 from pydantic.main import ModelMetaclass
 
-DOCS_DIR = Path(__file__).resolve().parent
+DOCS_DIR = Path(__file__).resolve()
 
 
 def _get_pydantic_classes(package_name: str) -> Iterable[ModelMetaclass]:
@@ -70,9 +70,15 @@ if __name__ == "__main__":
     parser.add_argument(
         "-p",
         "--package",
-        help="Package containing models for which " "json-schema will be generated",
-        default="visiobas_gateway.models",
+        help="Package containing models for which json-schema will be generated.",
+        required=True,
     )
+    # parser.add_argument(
+    #     "-o",
+    #     "--output_dir",
+    #     help="Directory to write json-schemas",
+    #     required=True,
+    # )
     args = parser.parse_args()
 
     pydantic_models = _get_pydantic_classes(package_name=args.package)
