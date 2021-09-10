@@ -1,6 +1,6 @@
 from typing import Collection, Iterator, Optional, Union
 
-from .models.bacnet import ANALOG_TYPES, BACnetObj, StatusFlag, StatusFlags
+from .models.bacnet import ANALOG_TYPES, BACnetObj, StatusFlag, StatusFlags, Reliability
 from .models.settings import LogSettings
 from .utils import get_file_logger, round_with_resolution
 
@@ -21,7 +21,7 @@ class BACnetVerifier:
             obj = self.process_exception(obj=obj, exc=obj.present_value)
             return obj
         obj.unreachable_in_row = 0
-        obj.reliability = ""
+        obj.reliability = Reliability.NO_FAULT_DETECTED
 
         previous_value = obj.verified_present_value
         obj = self.verify_present_value(obj=obj, value=obj.present_value)
@@ -55,7 +55,7 @@ class BACnetVerifier:
             return obj
         if isinstance(exc, UnknownObjectError):
             obj.existing = False
-            obj.reliability = "non-existent-object"
+            obj.reliability = Reliability.NO_SENSOR
             return obj
         if isinstance(exc, (TypeError, ValueError)):
             obj.reliability = "decode-error"
@@ -88,10 +88,6 @@ class BACnetVerifier:
     ) -> BACnetObj:
         # pylint: disable=too-many-return-statements
         # FIXME: detect changes
-        if value is None:
-            obj.verified_present_value = "null"
-            return obj
-
         if isinstance(value, (str, bool)):
             if value in {True, "active"}:
                 obj.verified_present_value = 1
@@ -99,30 +95,33 @@ class BACnetVerifier:
             if value in {False, "inactive"}:
                 obj.verified_present_value = 0
                 return obj
+
             # `bool` can be only True | False. It checked above
-            if value == "null" or not value.strip():  # type: ignore
+            if value in {None, 'null'} or value.isspace():
                 obj.verified_present_value = "null"
-            else:
-                obj.verified_present_value = value
+                obj.reliability = Reliability.NO_OUTPUT
+                return obj
+            obj.verified_present_value = value
+            return obj
+        if value == float("inf"):
+            obj.verified_present_value = "null"
+            obj.reliability = Reliability.OVER_RANGE
+            return obj
+        if value == float("-inf"):
+            obj.verified_present_value = "null"
+            obj.reliability = Reliability.UNDER_RANGE
             return obj
         if isinstance(value, (int, float)):
-            if value == float("inf"):
-                obj.verified_present_value = "null"
-                obj.reliability = 2
-                return obj
-            if value == float("-inf"):
-                obj.verified_present_value = "null"
-                obj.reliability = 3
-                return obj
             if obj.type in ANALOG_TYPES:
                 obj.verified_present_value = round_with_resolution(
                     value=value, resolution=obj.resolution
                 )
             if isinstance(value, float) and value.is_integer():
-                obj.verified_present_value = int(value)
+                value = int(value)
+            obj.verified_present_value = value
             return obj
 
-        obj.reliability = "invalid-value-type"
+        obj.reliability = Reliability.PROCESS_ERROR
         obj.verified_present_value = "null"
         return obj
 

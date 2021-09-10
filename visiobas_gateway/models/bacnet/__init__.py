@@ -6,6 +6,8 @@ from .obj_property import ObjProperty
 from .obj_property_list import BACnetObjPropertyList
 from .obj_type import ANALOG_TYPES, DISCRETE_TYPES, INPUT_TYPES, OUTPUT_TYPES, ObjType
 from .status_flags import StatusFlag, StatusFlags
+from .reliability import Reliability
+from .priority import Priority
 
 __all__ = [
     "DeviceObj",
@@ -22,4 +24,6 @@ __all__ = [
     "StatusFlag",
     "StatusFlags",
     "BaseBACnetObj",
+    "Reliability",
+    "Priority",
 ]

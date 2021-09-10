@@ -13,6 +13,7 @@ from .bacnet import (
     StatusFlag,
     StatusFlags,
     TcpIpDevicePropertyList,
+    Reliability, Priority,
 )
 from .modbus import (
     READ_COIL_FUNCS,
@@ -49,6 +50,8 @@ __all__ = [
     "StatusFlag",
     "StatusFlags",
     "BaseBACnetObj",
+    "Reliability",
+    "Priority",
     # Modbus
     "ModbusReadFunc",
     "ModbusWriteFunc",

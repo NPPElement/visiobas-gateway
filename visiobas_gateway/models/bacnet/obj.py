@@ -9,6 +9,7 @@ from .obj_property import ObjProperty
 from .obj_property_list import BACnetObjPropertyList
 from .obj_type import INPUT_PROPERTIES, INPUT_TYPES, OUTPUT_PROPERTIES, OUTPUT_TYPES
 from .status_flags import StatusFlags
+from .reliability import Reliability
 
 # try:
 #     from bacpypes.basetypes import PriorityArray  # type: ignore
@@ -45,7 +46,7 @@ class BACnetObj(BaseBACnetObj):
         description="""Priority array. This property is a read-only array that contains
         prioritized commands that are in effect for this object.""",
     )
-    reliability: Union[int, str] = Field(
+    reliability: Union[Reliability, str] = Field(
         default="",
         alias=str(ObjProperty.reliability.prop_id),
         description="""Provides an indication of whether the `Present_Value` is
