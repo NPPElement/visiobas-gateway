@@ -1,6 +1,7 @@
 from pathlib import Path
 
 from pydantic import BaseSettings, Field
+
 from visiobas_gateway import BASE_DIR
 
 
@@ -12,7 +13,7 @@ class LogSettings(BaseSettings):
     file_size = Field(default=50, description="Number of MB for log files.")
     format: str = Field(
         default="%(levelname)-8s [%(asctime)s] "
-                "%(name)s.%(funcName)s(%(lineno)d): %(message)s"
+        "%(name)s.%(funcName)s(%(lineno)d): %(message)s"
     )  # [%(threadName)s]
     disable_loggers: list[str] = Field(default_factory=list)
     log_dir: Path = Field(default=BASE_DIR.parent / ".gtw_logs")
