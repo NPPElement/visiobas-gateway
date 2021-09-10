@@ -25,5 +25,5 @@ dmypy.json
 htmlcov/
 
 # Gateway propuction
-.gateway_logs
+.gtw_logs
 config/prod/*

@@ -53,13 +53,13 @@ class BaseModbusDevice(BasePollingDevice):
             return self._dev_obj.property_list.rtu.unit  # type: ignore
         return 0x01
 
-    @abstractmethod
     @property
+    @abstractmethod
     def read_funcs(self) -> dict[ModbusReadFunc, Callable]:
         raise NotImplementedError
 
-    @abstractmethod
     @property
+    @abstractmethod
     def write_funcs(self) -> dict[ModbusWriteFunc, Callable]:
         raise NotImplementedError
 
