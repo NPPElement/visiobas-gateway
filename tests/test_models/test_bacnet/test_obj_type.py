@@ -5,7 +5,7 @@ from visiobas_gateway.models import ObjType, ObjProperty
 class TestObjType:
     @pytest.mark.parametrize(
         "id_",
-        [i for i in range(55)],
+        [*{i for i in range(55)} - {31}],
     )
     def test_type_id(self, id_):
         assert ObjType(id_).type_id == id_

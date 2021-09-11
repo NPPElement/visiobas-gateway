@@ -8,8 +8,8 @@ from .base_obj import BaseBACnetObj
 from .obj_property import ObjProperty
 from .obj_property_list import BACnetObjPropertyList
 from .obj_type import INPUT_PROPERTIES, INPUT_TYPES, OUTPUT_PROPERTIES, OUTPUT_TYPES
-from .status_flags import StatusFlags
 from .reliability import Reliability
+from .status_flags import StatusFlags
 
 # try:
 #     from bacpypes.basetypes import PriorityArray  # type: ignore
@@ -47,7 +47,7 @@ class BACnetObj(BaseBACnetObj):
         prioritized commands that are in effect for this object.""",
     )
     reliability: Union[Reliability, str] = Field(
-        default="",
+        default=Reliability.NO_FAULT_DETECTED,
         alias=str(ObjProperty.reliability.prop_id),
         description="""Provides an indication of whether the `Present_Value` is
         "reliable" as far as the BACnet Device can determine and, if not, why.""",
@@ -127,6 +127,17 @@ class BACnetObj(BaseBACnetObj):
             return value
         raise ValueError("Invalid resolution")
 
+    @validator("reliability")
+    def try_cast_reliability(
+        cls, value: Union[Reliability, str]
+    ) -> Union[Reliability, str]:
+        # pylint: disable=no-self-argument
+        try:
+            # Receive `Reliability` | `str`, but trying detect known `Reliability`.
+            return Reliability[snake_case(value).upper()]  # type: ignore
+        except KeyError:
+            return value
+
     @validator("status_flags", pre=True)
     def cast_list(cls, value: list[bool]) -> StatusFlags:
         """Status flag stored as list of 4 booleans. Converts it to one integer."""
@@ -203,9 +214,12 @@ class BACnetObj(BaseBACnetObj):
 
         str_ += " " + str(self.status_flags.for_http.flags)  # SF with disabled flags!
 
-        if self.reliability and self.reliability != "no-fault-detected":
-            str_ += " " + str(self.reliability)
+        reliability = self.reliability
+        if isinstance(reliability, Reliability):
+            # `Reliability` is subclass of `Enum`, which has `value` attribute.
+            reliability = self.reliability.value  # type: ignore
 
+        str_ += " " + str(reliability)
         return str_
 
     @staticmethod

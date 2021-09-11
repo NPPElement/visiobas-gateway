@@ -3,6 +3,8 @@ from enum import Enum, unique
 
 @unique
 class Priority(int, Enum):
+    """Priority enumeration."""
+
     MANUAL_LIFE_SAFETY = 1
     AUTOMATIC_LIFE_SAFETY = 2
     PRIORITY_3 = 3

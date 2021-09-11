@@ -3,6 +3,11 @@ from enum import Enum, unique
 
 @unique
 class Reliability(int, Enum):
+    """Enumerated values 0-63 are reserved for definition by ASHRAE.
+    Enumerated values 64-65535 may be used by others subject to the procedures and
+    constraints.
+    """
+
     NO_FAULT_DETECTED = 0
     NO_SENSOR = 1
     OVER_RANGE = 2
@@ -19,4 +24,3 @@ class Reliability(int, Enum):
     MEMBER_FAULT = 13
     MONITORED_OBJECT_FAULT = 14
     TRIPPED = 15
-

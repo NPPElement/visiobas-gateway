@@ -9,11 +9,12 @@ from .bacnet import (
     DeviceObj,
     ObjProperty,
     ObjType,
+    Priority,
+    Reliability,
     SerialDevicePropertyList,
     StatusFlag,
     StatusFlags,
     TcpIpDevicePropertyList,
-    Reliability, Priority,
 )
 from .modbus import (
     READ_COIL_FUNCS,

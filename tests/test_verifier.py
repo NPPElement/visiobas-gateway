@@ -3,6 +3,7 @@ import datetime
 
 from visiobas_gateway.verifier import BACnetVerifier
 from visiobas_gateway.models.bacnet.obj_property import ObjProperty
+from visiobas_gateway.models.bacnet.reliability import Reliability
 
 import pytest
 
@@ -32,7 +33,7 @@ class TestBACnetVerifier:
         )
         assert bacnet_obj.present_value == "null"
         assert bacnet_obj.status_flags.flags == 0b0010
-        assert bacnet_obj.reliability == "non-existent-object"
+        assert bacnet_obj.reliability == Reliability.NO_SENSOR
         assert bacnet_obj.unreachable_in_row == 2
         assert bacnet_obj.existing is False
 
@@ -111,15 +112,13 @@ class TestBACnetVerifier:
             ("active", 1),
             (False, 0),
             ("inactive", 0),
-            ("null", "null"),
-            ("   ", "null"),
-            (None, "null"),
             (3.3333, 3.3),
             (3.0, 3),
-            ("value", "value"),
+            ("1234", 1234),
+            ("12.001", 12),
         ],
     )
-    def test_verify_present_value_affect_only_verified_present_value(
+    def test_verify_present_value_happy(
         self, bacnet_obj_factory, present_value, verified_present_value
     ):
         verifier = BACnetVerifier(override_threshold=8)
@@ -129,16 +128,22 @@ class TestBACnetVerifier:
             obj=bacnet_obj, value=bacnet_obj.present_value
         )
         assert bacnet_obj.verified_present_value == verified_present_value
+        assert bacnet_obj.reliability == Reliability.NO_FAULT_DETECTED
 
     @pytest.mark.parametrize(
         "present_value, verified_present_value, reliability",
         [
-            (float("inf"), "null", 2),
-            (float("-inf"), "null", 3),
-            (["bad_value_type"], "null", "invalid-value-type"),
+            (float("inf"), "null", Reliability.OVER_RANGE),
+            (float("-inf"), "null", Reliability.UNDER_RANGE),
+            (["bad_value_type"], "null", Reliability.NO_OUTPUT),
+            ("null", "null", Reliability.NO_OUTPUT),
+            (None, "null", Reliability.NO_OUTPUT),
+            ("   ", "null", "unexpected-value"),
+            ("bad_value", "null", "unexpected-value"),
+            (..., "null", "unexpected-type"),
         ],
     )
-    def test_verify_present_value_also_affect_reliability(
+    def test_verify_present_value_reliability_affected(
         self, bacnet_obj_factory, present_value, verified_present_value, reliability
     ):
         verifier = BACnetVerifier(override_threshold=8)

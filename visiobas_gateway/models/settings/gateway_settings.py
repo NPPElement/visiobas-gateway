@@ -48,4 +48,5 @@ class GatewaySettings(BaseSettings):
 
     @validator("poll_device_ids")
     def remove_duplicate_device_ids(cls, value: list[PositiveInt]) -> list[PositiveInt]:
+        # pylint: disable=no-self-argument
         return list(set(value))
