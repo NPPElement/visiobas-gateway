@@ -51,6 +51,16 @@ class BasePollingDevice(BaseDevice, ABC):
 
     @classmethod
     async def create(cls, device_obj: BACnetDeviceObj, gateway) -> 'BasePollingDevice':
+        """Creates polling device with client with lock.
+        To add new device you need to define `create_client` method with client init.
+
+        Args:
+            device_obj:
+            gateway:
+
+        Returns:
+            Created device.
+        """
         loop = gateway.loop
         if cls._client_creation_lock is None:
             cls._client_creation_lock = asyncio.Lock(loop=loop)
@@ -100,6 +110,7 @@ class BasePollingDevice(BaseDevice, ABC):
 
     @abstractmethod
     def create_client(self) -> None:
+        """Calls with lock."""
         raise NotImplementedError
 
     @abstractmethod
