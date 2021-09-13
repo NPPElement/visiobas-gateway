@@ -8,13 +8,15 @@ from bacpypes.basetypes import PriorityArray
 
 from .base_polling_device import BasePollingDevice
 from ..models import (ObjProperty, BACnetDeviceObj, BACnetObj, StatusFlags)
+from ipaddress import IPv4Interface
+from ..utils.network import get_subnet_interface
 
 # Aliases
 VisioBASGateway = Any  # ...gateway_loop
 
 
 class BACnetDevice(BasePollingDevice):
-    _client: Lite = None  # todo
+    _clients: dict[IPv4Interface, Lite] = {}
 
     def __init__(self, device_obj: BACnetDeviceObj, gateway: VisioBASGateway):
         super().__init__(device_obj, gateway)
@@ -30,19 +32,24 @@ class BACnetDevice(BasePollingDevice):
     def address_port(self) -> str:
         return ':'.join((str(self.address), str(self.port)))
 
-    @property
-    def is_client_connected(self) -> bool:
-        return self.__class__._client is not None
-
     def create_client(self) -> None:
         """Initializes BAC0 client."""
         try:
-            if not self.is_client_connected:
+            device_ip_address = self._dev_obj.property_list.address
+            self.interface = get_subnet_interface(ip=device_ip_address)
+            if not isinstance(self.interface, IPv4Interface):
+                raise ValueError(f'No interface to interact with {device_ip_address} found')
+            client_ip_address = self.interface.ip
+            mask = self.interface.netmask
+
+            if self.interface not in self.__class__._clients:
                 self._LOG.debug('Creating BAC0 client', extra={'device_id': self.id})
-                self.__class__._client = Lite()  # todo params
-            else:
-                self._LOG.debug('BAC0 client already created',
-                                extra={'device_id': self.id})
+                client = Lite(ip=client_ip_address, mask=mask)
+                self.__class__._clients[self.interface] = client
+                return None
+
+            self._LOG.debug(f'BAC0 client for interface {self.interface} already exists',
+                            extra={'device_id': self.id})
 
         except (InitializationError, NetworkInterfaceException,
                 Exception) as e:
@@ -132,7 +139,7 @@ class BACnetDevice(BasePollingDevice):
             args = '{0} {1} {2} {3} {4} - {5}'.format(self.address_port,
                                                       obj.type.name, obj.id,
                                                       prop.name, value, priority)
-            is_successful = self.__class__._client.write(args=args)
+            is_successful = self.__class__._clients[self.interface].write(args=args)
             self._LOG.debug('Write', extra={'device_id': self.id, 'object_id': obj.id,
                                             'object_type': obj.type, 'value': value,
                                             'success': is_successful, })
@@ -156,7 +163,7 @@ class BACnetDevice(BasePollingDevice):
             request = ' '.join([
                 self.address_port, obj.type.name, str(obj.id), prop.name
             ])
-            response = self.__class__._client.read(request)
+            response = self.__class__._clients[self.interface].read(request)
             self._LOG.debug('Read',
                             extra={'device_id': self.id, 'object_id': obj.id,
                                    'object_type': obj.type, 'response': response, })
