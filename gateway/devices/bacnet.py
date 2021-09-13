@@ -23,6 +23,7 @@ class BACnetDevice(BasePollingDevice):
 
         self.support_rpm: set[BACnetObj] = set()
         self.not_support_rpm: set[BACnetObj] = set()
+        self.interface: IPv4Interface = None
         # self._client: BAC0.scripts.Lite = gateway.bacnet
 
         # self.__objects_per_rpm = 25
@@ -32,6 +33,10 @@ class BACnetDevice(BasePollingDevice):
     def address_port(self) -> str:
         return ':'.join((str(self.address), str(self.port)))
 
+    @property
+    def is_client_connected(self) -> bool:
+        return self.__class__._clients[self.interface] is not None
+
     def create_client(self) -> None:
         """Initializes BAC0 client."""
         try:
@@ -39,12 +44,10 @@ class BACnetDevice(BasePollingDevice):
             self.interface = get_subnet_interface(ip=device_ip_address)
             if not isinstance(self.interface, IPv4Interface):
                 raise ValueError(f'No interface to interact with {device_ip_address} found')
-            client_ip_address = self.interface.ip
-            mask = self.interface.netmask
 
             if self.interface not in self.__class__._clients:
                 self._LOG.debug('Creating BAC0 client', extra={'device_id': self.id})
-                client = Lite(ip=client_ip_address, mask=mask)
+                client = Lite(ip=self.interface.with_prefixlen)
                 self.__class__._clients[self.interface] = client
                 return None
 
@@ -55,6 +58,8 @@ class BACnetDevice(BasePollingDevice):
                 Exception) as e:
             self._LOG.debug('Cannot create client',
                             extra={'device_id': self.id, 'exc': e, })
+
+
 
     def close_client(self) -> None:
         pass
