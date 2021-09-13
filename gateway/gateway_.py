@@ -255,7 +255,7 @@ class VisioBASGateway:
                         for obj in lst if obj]  # Flat list of lists.
 
                 if not len(objs):
-                    _LOG.warning("There aren't polling objects",
+                    _LOG.warning("There no polling objects",
                                  extra={'device_id': dev_id})
                     return None
 

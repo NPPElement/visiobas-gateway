@@ -1,3 +1,4 @@
+import asyncio
 from typing import Any, Collection, Union
 
 from BAC0.core.io.IOExceptions import (ReadPropertyException, NoResponseFromController,
@@ -17,6 +18,7 @@ VisioBASGateway = Any  # ...gateway_loop
 
 class BACnetDevice(BasePollingDevice):
     _clients: dict[IPv4Interface, Lite] = {}
+    _locks: dict[IPv4Interface, asyncio.Lock] = {}
 
     def __init__(self, device_obj: BACnetDeviceObj, gateway: VisioBASGateway):
         super().__init__(device_obj, gateway)
@@ -35,7 +37,13 @@ class BACnetDevice(BasePollingDevice):
 
     @property
     def is_client_connected(self) -> bool:
-        return self.__class__._clients[self.interface] is not None
+        return isinstance(self.__class__._clients.get(self.interface), Lite)
+
+    @property
+    def _lock(self) -> asyncio.Lock:
+        interface_lock = self.__class__._locks.get(self.interface, asyncio.Lock())
+        self.__class__._locks[self.interface] = interface_lock
+        return interface_lock
 
     def create_client(self) -> None:
         """Initializes BAC0 client."""
@@ -44,6 +52,8 @@ class BACnetDevice(BasePollingDevice):
             self.interface = get_subnet_interface(ip=device_ip_address)
             if not isinstance(self.interface, IPv4Interface):
                 raise ValueError(f'No interface to interact with {device_ip_address} found')
+
+            self._lock  # Init lock.
 
             if self.interface not in self.__class__._clients:
                 self._LOG.debug('Creating BAC0 client', extra={'device_id': self.id})
@@ -57,9 +67,7 @@ class BACnetDevice(BasePollingDevice):
         except (InitializationError, NetworkInterfaceException,
                 Exception) as e:
             self._LOG.debug('Cannot create client',
-                            extra={'device_id': self.id, 'exc': e, })
-
-
+                            extra={'device_id': self.id, 'exc': e, }, exc_info=True)
 
     def close_client(self) -> None:
         pass
@@ -73,6 +81,7 @@ class BACnetDevice(BasePollingDevice):
         # await self._gateway.async_add_job(_sync_poll_objects, objs)
         for obj in objs:
             await self.simulate_rpm(obj=obj)
+        self._LOG.debug('_poll_objects completed')
 
     # def poll(self) -> None:
     #     """ Poll all object from device.
@@ -123,8 +132,9 @@ class BACnetDevice(BasePollingDevice):
                     **kwargs) -> bool:
         prop = kwargs.get('prop')
         priority = kwargs.get('priority')
-        return await self._gtw.async_add_job(
-            self.write_property, value, obj, prop, priority)
+        async with self._lock:
+            return await self._gtw.async_add_job(
+                self.write_property, value, obj, prop, priority)
 
     def write_property(self, value: Union[int, float], obj: BACnetObj,
                        prop: ObjProperty, priority: int) -> bool:
@@ -161,7 +171,8 @@ class BACnetDevice(BasePollingDevice):
 
         if kwargs.get('wait', True):
             await self._polling.wait()
-        return await self._gtw.async_add_job(self.read_property, obj, prop)
+        async with self._lock:
+            return await self._gtw.async_add_job(self.read_property, obj, prop)
 
     def read_property(self, obj: BACnetObj, prop: ObjProperty) -> Any:
         try:
