@@ -56,14 +56,15 @@ class BACnetDevice(BasePollingDevice):
 
             self._lock  # Init lock.
 
-            if self.interface not in self.__class__._clients:
-                self._LOG.debug('Creating BAC0 client', extra={'device_id': self.id})
-                client = Lite(ip=self.interface.with_prefixlen)
-                self.__class__._clients[self.interface] = client
+            if self.interface in self.__class__._clients:
+                self._LOG.debug(
+                    f'BAC0 client for interface {self.interface} already exists',
+                    extra={'device_id': self.id})
                 return None
 
-            self._LOG.debug(f'BAC0 client for interface {self.interface} already exists',
-                            extra={'device_id': self.id})
+            self._LOG.debug('Creating BAC0 client', extra={'device_id': self.id})
+            client = Lite(ip=self.interface.with_prefixlen)
+            self.__class__._clients[self.interface] = client
 
         except (InitializationError, NetworkInterfaceException,
                 Exception) as e:
