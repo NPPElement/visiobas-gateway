@@ -20,6 +20,7 @@ class BACnetDevice(BasePollingDevice):
     _clients: dict[IPv4Interface, Lite] = {}
     _locks: dict[IPv4Interface, asyncio.Lock] = {}
 
+
     def __init__(self, device_obj: BACnetDeviceObj, gateway: VisioBASGateway):
         super().__init__(device_obj, gateway)
 
@@ -45,7 +46,7 @@ class BACnetDevice(BasePollingDevice):
         self.__class__._locks[self.interface] = interface_lock
         return interface_lock
 
-    def create_client(self) -> None:
+    async def create_client(self) -> None:
         """Initializes BAC0 client."""
         try:
             device_ip_address = self._dev_obj.property_list.address
@@ -67,7 +68,8 @@ class BACnetDevice(BasePollingDevice):
         except (InitializationError, NetworkInterfaceException,
                 Exception) as e:
             self._LOG.debug('Cannot create client',
-                            extra={'device_id': self.id, 'exc': e, }, exc_info=True)
+                            extra={'device_id': self.id, 'exc': e, })
+
 
     def close_client(self) -> None:
         pass

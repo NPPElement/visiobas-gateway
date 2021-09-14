@@ -16,8 +16,6 @@ VisioBASGateway = Any  # ...gateway_
 
 
 class BasePollingDevice(BaseDevice, ABC):
-    # TODO: implement Singleton by device_id
-
     _client_creation_lock: asyncio.Lock = None
 
     # Key is serial port name.
@@ -68,6 +66,7 @@ class BasePollingDevice(BaseDevice, ABC):
         dev = cls(device_obj=device_obj, gateway=gateway)
         dev._scheduler = await aiojobs.create_scheduler(close_timeout=60, limit=100)
         async with cls._client_creation_lock:
+            client = await dev.create_client(dev_obj)
             await dev._gtw.async_add_job(dev.create_client)
         dev._LOG.debug('Device created',
                        extra={'device_id': dev.id, 'protocol': dev.protocol,
@@ -109,7 +108,7 @@ class BasePollingDevice(BaseDevice, ABC):
     #     raise NotImplementedError
 
     @abstractmethod
-    def create_client(self) -> None:
+    async def create_client(self) -> None:
         """Calls with lock."""
         raise NotImplementedError
 
