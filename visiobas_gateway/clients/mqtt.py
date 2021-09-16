@@ -12,7 +12,7 @@ from ..utils import get_file_logger
 _LOG = get_file_logger(name=__name__)
 
 if TYPE_CHECKING:
-    from ..gateway_ import Gateway
+    from ..gateway import Gateway
 else:
     Gateway = "Gateway"
 

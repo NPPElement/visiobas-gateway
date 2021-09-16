@@ -4,7 +4,7 @@ import sys
 
 import uvloop  # type: ignore
 
-from visiobas_gateway.gateway_ import Gateway
+from visiobas_gateway.gateway import Gateway
 from visiobas_gateway.schemas.settings import GatewaySettings, LogSettings
 from visiobas_gateway.utils import ExtraFormatter
 

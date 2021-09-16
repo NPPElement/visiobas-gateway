@@ -7,7 +7,7 @@ from ..schemas.protocol import CAMERA_PROTOCOLS, POLLING_PROTOCOLS, Protocol
 from ..utils import get_file_logger
 
 if TYPE_CHECKING:
-    from ..gateway_ import Gateway
+    from ..gateway import Gateway
 else:
     Gateway = "Gateway"
 

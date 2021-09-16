@@ -12,7 +12,7 @@ from ..schemas import BACnetObj, DeviceObj, ObjType
 from .base_device import BaseDevice
 
 if TYPE_CHECKING:
-    from ..gateway_ import Gateway
+    from ..gateway import Gateway
 else:
     Gateway = "Gateway"
 

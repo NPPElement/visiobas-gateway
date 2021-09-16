@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, Any
 from .base_device import BaseDevice
 
 if TYPE_CHECKING:
-    from ..gateway_ import Gateway
+    from ..gateway import Gateway
 else:
     Gateway = "Gateway"
 

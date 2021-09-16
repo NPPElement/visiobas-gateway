@@ -10,7 +10,7 @@ from ..utils import get_file_logger
 from .jsonrpc import JSON_RPC_HANDLERS
 
 if TYPE_CHECKING:
-    from ..gateway_ import Gateway
+    from ..gateway import Gateway
 else:
     Gateway = "Gateway"
 

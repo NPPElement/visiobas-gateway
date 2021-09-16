@@ -8,7 +8,7 @@ from ..schemas.settings import HTTPServerConfig, HTTPSettings
 from ..utils import get_file_logger, kebab_case, log_exceptions
 
 if TYPE_CHECKING:
-    from ..gateway_ import Gateway
+    from ..gateway import Gateway
 else:
     Gateway = "Gateway"
 

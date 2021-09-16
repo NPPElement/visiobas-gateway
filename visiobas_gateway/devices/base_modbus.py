@@ -22,7 +22,7 @@ from ..schemas import DeviceObj, ModbusDataType, ModbusObj, ModbusReadFunc, Modb
 from .base_polling_device import BasePollingDevice
 
 if TYPE_CHECKING:
-    from ..gateway_ import Gateway
+    from ..gateway import Gateway
 else:
     Gateway = "Gateway"
 

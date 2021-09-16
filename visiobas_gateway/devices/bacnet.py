@@ -7,7 +7,7 @@ from ..utils import camel_case, log_exceptions
 from .base_polling_device import BasePollingDevice
 
 if TYPE_CHECKING:
-    from visiobas_gateway.gateway_ import Gateway
+    from visiobas_gateway.gateway import Gateway
 else:
     Gateway = "Gateway"
 

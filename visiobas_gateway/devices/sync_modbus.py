@@ -18,7 +18,7 @@ from ..utils import log_exceptions
 from .base_modbus import BaseModbusDevice
 
 if TYPE_CHECKING:
-    from ..gateway_ import Gateway
+    from ..gateway import Gateway
 else:
     Gateway = "Gateway"
 
