@@ -52,7 +52,7 @@ class JsonRPCView(handler.JSONRPCView, BaseView, CorsViewMixin):
 
         is_consistent = await dev.write_with_check(
             value=value,
-            prop=ObjProperty.presentValue,
+            prop=ObjProperty.PRESENT_VALUE,
             priority=priority,
             obj=obj,
             device=dev,

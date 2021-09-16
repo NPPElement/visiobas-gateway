@@ -279,7 +279,7 @@ class HTTPClient:
                 method="POST",
                 url=self._URL_POST_PROPERTY.format(
                     base_url=server.current_url,
-                    property_id=str(property_.prop_id),
+                    property_id=str(property_.id),
                     replaced_object_name=obj.mqtt_topic,
                 ),
                 headers=server.auth_headers,

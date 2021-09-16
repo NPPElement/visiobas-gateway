@@ -14,7 +14,7 @@ class DeviceObj(BaseBACnetObj):
     """Represent device object."""
 
     property_list: Union[TcpIpDevicePropertyList, SerialDevicePropertyList] = Field(
-        ..., alias=str(ObjProperty.propertyList.prop_id)
+        ..., alias=str(ObjProperty.PROPERTY_LIST.id)
     )
 
     @property

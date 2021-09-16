@@ -3,6 +3,7 @@ import datetime
 
 from visiobas_gateway.verifier import BACnetVerifier
 from visiobas_gateway.models.bacnet.obj_property import ObjProperty
+from visiobas_gateway.models.bacnet.reliability import Reliability
 
 import pytest
 
@@ -26,17 +27,17 @@ class TestBACnetVerifier:
         assert bacnet_obj.unreachable_in_row == 1
         assert bacnet_obj.existing is True
 
-        bacnet_obj.set_property(value=UnknownObjectError(), prop=ObjProperty.presentValue)
+        bacnet_obj.set_property(value=UnknownObjectError(), prop=ObjProperty.PRESENT_VALUE)
         bacnet_obj = verifier.process_exception(
             obj=bacnet_obj, exc=bacnet_obj.present_value
         )
         assert bacnet_obj.present_value == "null"
         assert bacnet_obj.status_flags.flags == 0b0010
-        assert bacnet_obj.reliability == "non-existent-object"
+        assert bacnet_obj.reliability == Reliability.NO_SENSOR
         assert bacnet_obj.unreachable_in_row == 2
         assert bacnet_obj.existing is False
 
-        bacnet_obj.set_property(value=TypeError(), prop=ObjProperty.presentValue)
+        bacnet_obj.set_property(value=TypeError(), prop=ObjProperty.PRESENT_VALUE)
         bacnet_obj = verifier.process_exception(
             obj=bacnet_obj, exc=bacnet_obj.present_value
         )
@@ -45,7 +46,7 @@ class TestBACnetVerifier:
         assert bacnet_obj.reliability == "decode-error"
         assert bacnet_obj.unreachable_in_row == 3
 
-        bacnet_obj.set_property(value=AttributeError(), prop=ObjProperty.presentValue)
+        bacnet_obj.set_property(value=AttributeError(), prop=ObjProperty.PRESENT_VALUE)
         bacnet_obj = verifier.process_exception(
             obj=bacnet_obj, exc=bacnet_obj.present_value
         )
@@ -111,15 +112,13 @@ class TestBACnetVerifier:
             ("active", 1),
             (False, 0),
             ("inactive", 0),
-            ("null", "null"),
-            ("   ", "null"),
-            (None, "null"),
             (3.3333, 3.3),
             (3.0, 3),
-            ("value", "value"),
+            ("1234", 1234),
+            ("12.001", 12),
         ],
     )
-    def test_verify_present_value_affect_only_verified_present_value(
+    def test_verify_present_value_happy(
         self, bacnet_obj_factory, present_value, verified_present_value
     ):
         verifier = BACnetVerifier(override_threshold=8)
@@ -129,16 +128,22 @@ class TestBACnetVerifier:
             obj=bacnet_obj, value=bacnet_obj.present_value
         )
         assert bacnet_obj.verified_present_value == verified_present_value
+        assert bacnet_obj.reliability == Reliability.NO_FAULT_DETECTED
 
     @pytest.mark.parametrize(
         "present_value, verified_present_value, reliability",
         [
-            (float("inf"), "null", 2),
-            (float("-inf"), "null", 3),
-            (["bad_value_type"], "null", "invalid-value-type"),
+            (float("inf"), "null", Reliability.OVER_RANGE),
+            (float("-inf"), "null", Reliability.UNDER_RANGE),
+            (["bad_value_type"], "null", Reliability.NO_OUTPUT),
+            ("null", "null", Reliability.NO_OUTPUT),
+            (None, "null", Reliability.NO_OUTPUT),
+            ("   ", "null", "unexpected-value"),
+            ("bad_value", "null", "unexpected-value"),
+            (..., "null", "unexpected-type"),
         ],
     )
-    def test_verify_present_value_also_affect_reliability(
+    def test_verify_present_value_reliability_affected(
         self, bacnet_obj_factory, present_value, verified_present_value, reliability
     ):
         verifier = BACnetVerifier(override_threshold=8)
@@ -210,7 +215,7 @@ class TestBACnetVerifier:
         assert isinstance(bacnet_obj.changed, datetime.datetime)
         assert str(bacnet_obj.changed) == "2011-11-11 11:11:11"
 
-        bacnet_obj.set_property(value=33.333, prop=ObjProperty.presentValue)
+        bacnet_obj.set_property(value=33.333, prop=ObjProperty.PRESENT_VALUE)
         bacnet_obj = verifier.verify(obj=bacnet_obj)
         assert str(bacnet_obj.updated) > "2011-11-11 22:22:22"
 
@@ -221,7 +226,7 @@ class TestBACnetVerifier:
         verifier = BACnetVerifier(override_threshold=8)
         bacnet_obj = bacnet_obj_factory()
 
-        bacnet_obj.set_property(value=66.666, prop=ObjProperty.presentValue)
+        bacnet_obj.set_property(value=66.666, prop=ObjProperty.PRESENT_VALUE)
         bacnet_objects = [bacnet_obj] * 3
 
         bacnet_objects = verifier.verify_objects(objs=bacnet_objects)

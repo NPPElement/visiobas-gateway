@@ -13,7 +13,7 @@ from .obj_property_list import ModbusPropertyList
 class ModbusObj(BACnetObj):
     """Modbus Object."""
 
-    property_list: ModbusPropertyList = Field(alias=str(ObjProperty.propertyList.prop_id))
+    property_list: ModbusPropertyList = Field(alias=str(ObjProperty.PROPERTY_LIST.id))
 
     @property
     def data_length(self) -> int:
