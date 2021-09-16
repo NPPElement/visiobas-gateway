@@ -1,10 +1,9 @@
 from typing import Collection, Iterator, Optional, Union
 
-from .models.bacnet import ANALOG_TYPES, BACnetObj, Reliability, StatusFlag, StatusFlags
-from .models.settings import LogSettings
+from .schemas.bacnet import ANALOG_TYPES, BACnetObj, Reliability, StatusFlag, StatusFlags
 from .utils import get_file_logger, round_with_resolution
 
-_LOG = get_file_logger(name=__name__, settings=LogSettings())
+_LOG = get_file_logger(name=__name__)
 
 
 class BACnetVerifier:

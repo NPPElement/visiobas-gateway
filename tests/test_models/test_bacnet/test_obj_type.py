@@ -1,5 +1,5 @@
 import pytest
-from visiobas_gateway.models import ObjType, ObjProperty
+from visiobas_gateway.schemas import ObjType, ObjProperty
 
 
 class TestObjType:

@@ -1,7 +1,7 @@
 # import unittest
 # from pathlib import Path
 #
-# from models import HTTPSettings
+# from schemas import HTTPSettings
 #
 #
 # class MyTestCase(unittest.TestCase):

@@ -3,7 +3,7 @@ from functools import wraps
 from logging.handlers import RotatingFileHandler
 from typing import Any, Callable
 
-from ..models.settings.log_settings import LogSettings
+from ..schemas.settings.log_settings import log_settings
 
 _MEGABYTE = 10 ** 6
 
@@ -50,27 +50,26 @@ class ExtraFormatter(logging.Formatter):
         return string
 
 
-def get_file_logger(name: str, settings: LogSettings) -> logging.Logger:
+def get_file_logger(name: str) -> logging.Logger:
     """Gets Logger with RotatingFileHandler.
 
     Args:
         name: name of logger (module). Should provide `__name__`.
-        settings:
 
     Returns:
         Logger with RotatingFileHandler.
     """
     logger = logging.getLogger(name)
-    logger.setLevel(level=settings.file_level)
+    logger.setLevel(level=log_settings.file_level)
     logger.handlers = []  # Remove all handlers
 
     try:
-        settings.log_dir.mkdir()
+        log_settings.log_dir.mkdir()
     except FileExistsError:
         pass
 
-    filename = settings.log_dir / f"{name}.log"
-    size = settings.file_size + _MEGABYTE
+    filename = log_settings.log_dir / f"{name}.log"
+    size = log_settings.file_size + _MEGABYTE
 
     file_handler = RotatingFileHandler(
         filename=filename,
@@ -79,14 +78,14 @@ def get_file_logger(name: str, settings: LogSettings) -> logging.Logger:
         backupCount=1,
         encoding="utf-8",
     )
-    formatter = ExtraFormatter(fmt=settings.format)
+    formatter = ExtraFormatter(fmt=log_settings.format)
     file_handler.setFormatter(fmt=formatter)
     logger.addHandler(file_handler)
 
     return logger
 
 
-_LOG = get_file_logger(name=__name__, settings=LogSettings())
+_LOG = get_file_logger(name=__name__)
 
 
 def log_exceptions(func: Callable) -> Any:

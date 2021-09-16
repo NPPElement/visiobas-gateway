@@ -18,7 +18,7 @@
 # )
 # from pymodbus.transaction import ModbusRtuFramer
 #
-# from ..models import (
+# from ..schemas import (
 #     BACnetDeviceObj,
 #     ModbusObj,
 #     ModbusReadFunc,
@@ -29,7 +29,7 @@
 # from .base_modbus import BaseModbusDevice
 #
 # # aliases # TODO
-# # BACnetDeviceModel = Any  # ...models
+# # BACnetDeviceModel = Any  # ...schemas
 # VisioBASGateway = Any  # ...gateway_loop
 #
 #

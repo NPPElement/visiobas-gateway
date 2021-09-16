@@ -5,11 +5,11 @@ from typing import TYPE_CHECKING, Any, Optional, Sequence, Union
 import paho.mqtt.client as mqtt  # type: ignore
 import pydantic
 
-from ..models.mqtt import Qos, ResultCode
-from ..models.settings import LogSettings, MQTTSettings
+from ..schemas.mqtt import Qos, ResultCode
+from ..schemas.settings import MQTTSettings
 from ..utils import get_file_logger
 
-_LOG = get_file_logger(name=__name__, settings=LogSettings())
+_LOG = get_file_logger(name=__name__)
 
 if TYPE_CHECKING:
     from ..gateway_ import Gateway

@@ -1,6 +1,6 @@
 # import unittest
 #
-# from models.settings.http_server import HTTPServerConfig
+# from schemas.settings.http_server import HTTPServerConfig
 #
 #
 # class MyTestCase(unittest.TestCase):

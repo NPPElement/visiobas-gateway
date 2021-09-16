@@ -1,6 +1,6 @@
 # import unittest
 #
-# from visiobas_gateway.models.bacnet import StatusFlag, ObjProperty, ObjType
+# from visiobas_gateway.schemas.bacnet import StatusFlag, ObjProperty, ObjType
 # from visiobas_gateway.verifier import BACnetVerifier
 #
 #

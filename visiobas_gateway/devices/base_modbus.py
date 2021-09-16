@@ -18,7 +18,7 @@ from pymodbus.register_read_message import (  # type: ignore
     ReadRegistersResponseBase,
 )
 
-from ..models import DeviceObj, ModbusDataType, ModbusObj, ModbusReadFunc, ModbusWriteFunc
+from ..schemas import DeviceObj, ModbusDataType, ModbusObj, ModbusReadFunc, ModbusWriteFunc
 from .base_polling_device import BasePollingDevice
 
 if TYPE_CHECKING:

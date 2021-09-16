@@ -8,7 +8,7 @@ import aiojobs  # type: ignore
 from pymodbus.client.asynchronous.async_io import AsyncioModbusSerialClient  # type: ignore
 from pymodbus.client.sync import ModbusSerialClient  # type: ignore
 
-from ..models import BACnetObj, DeviceObj, ObjType
+from ..schemas import BACnetObj, DeviceObj, ObjType
 from .base_device import BaseDevice
 
 if TYPE_CHECKING:

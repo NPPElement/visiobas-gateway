@@ -2,15 +2,14 @@ from typing import Any, Optional
 
 from aiohttp.web_urldispatcher import View
 
-from ..models.settings.log_settings import LogSettings
 from ..utils import get_file_logger
 
-_LOG = get_file_logger(name=__name__, settings=LogSettings())
+_LOG = get_file_logger(name=__name__)
 
 # Aliases # fixme
 VisioBASGatewayAlias = Any  # '..gateway_.VisioBASGateway'
 DeviceAlias = Any  # Union['..devices.AsyncModbusDevice',]
-ObjAlias = Any  # Union['..models.BACnetObj',]
+ObjAlias = Any  # Union['..schemas.BACnetObj',]
 
 
 class BaseView(View):

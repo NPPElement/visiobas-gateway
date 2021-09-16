@@ -5,7 +5,7 @@ import aiohttp_cors  # type: ignore
 from aiohttp.web import Application
 from aiohttp.web_runner import AppRunner, TCPSite
 
-from ..models.settings import ApiSettings, LogSettings
+from ..schemas.settings import ApiSettings
 from ..utils import get_file_logger
 from .jsonrpc import JSON_RPC_HANDLERS
 
@@ -14,10 +14,10 @@ if TYPE_CHECKING:
 else:
     Gateway = "Gateway"
 
-_LOG = get_file_logger(name=__name__, settings=LogSettings())
+_LOG = get_file_logger(name=__name__)
 
 
-class VisioGtwApi:
+class ApiServer:
     """VisioBAS Gateway API."""
 
     # TODO: add run_in_thread() method
@@ -31,16 +31,16 @@ class VisioGtwApi:
     def __repr__(self) -> str:
         return self.__class__.__name__
 
-    @property
-    def host(self) -> str:
-        return self._settings.host
-
-    @property
-    def port(self) -> int:
-        port = self._settings.port
-        if port is not None:
-            return int(port)
-        return 7070
+    # @property
+    # def host(self) -> str:
+    #     return self._settings.host
+    #
+    # @property
+    # def port(self) -> int:
+    #     port = self._settings.port
+    #     if port is not None:
+    #         return int(port)
+    #     return 7070
 
     @property
     def handlers(
@@ -49,7 +49,7 @@ class VisioGtwApi:
         return JSON_RPC_HANDLERS
 
     @classmethod
-    def create(cls, gateway: Gateway, settings: ApiSettings) -> "VisioGtwApi":
+    def create(cls, gateway: Gateway, settings: ApiSettings) -> "ApiServer":
         api = cls(gateway=gateway, settings=settings)
         api._app = api.create_app()
         return api
@@ -62,7 +62,9 @@ class VisioGtwApi:
         """Starts Gateway API until stopped."""
         if self._app is None:
             self._app = self.create_app()
-        await self.run_app(app=self._app, host=self.host, port=self.port)
+        await self.run_app(
+            app=self._app, host=str(self._settings.HOST), port=self._settings.PORT
+        )
 
     def create_app(self) -> Application:
         """Creates an instance of the application.

@@ -1,7 +1,7 @@
 # import unittest
 # from pathlib import Path
 #
-# from models.settings.gateway_settings import GatewaySettings
+# from schemas.settings.gateway_settings import GatewaySettings
 #
 #
 # class MyTestCase(unittest.TestCase):

@@ -13,18 +13,17 @@ from typing import (
 import aiohttp
 import aiojobs  # type: ignore
 
-from visiobas_gateway.api import VisioGtwApi
+from visiobas_gateway.api import ApiServer
 from visiobas_gateway.clients import HTTPClient, MQTTClient
 from visiobas_gateway.devices import BACnetDevice, ModbusDevice, SUNAPIDevice
 from visiobas_gateway.devices.base_polling_device import BasePollingDevice
-from visiobas_gateway.models import Protocol
-from visiobas_gateway.models.bacnet import BACnetObj, DeviceObj, ObjType
-from visiobas_gateway.models.modbus import ModbusObj
-from visiobas_gateway.models.settings import (
+from visiobas_gateway.schemas import Protocol
+from visiobas_gateway.schemas.bacnet import BACnetObj, DeviceObj, ObjType
+from visiobas_gateway.schemas.modbus import ModbusObj
+from visiobas_gateway.schemas.settings import (
     ApiSettings,
     GatewaySettings,
     HTTPSettings,
-    LogSettings,
     MQTTSettings,
 )
 from visiobas_gateway.utils import get_file_logger, log_exceptions
@@ -36,7 +35,7 @@ if TYPE_CHECKING:
 else:
     BaseDevice = "BaseDevice"
 
-_LOG = get_file_logger(name=__name__, settings=LogSettings())
+_LOG = get_file_logger(name=__name__)
 
 Object = Union[BACnetObj, ModbusObj]
 
@@ -59,7 +58,7 @@ class Gateway:
         self.http_client: HTTPClient = None  # type: ignore
 
         self.mqtt_client: Optional[MQTTClient] = None
-        self.api: Optional[VisioGtwApi] = None
+        self.api: Optional[ApiServer] = None
         self.verifier = BACnetVerifier(override_threshold=settings.override_threshold)
 
         self._devices: dict[int, BasePollingDevice] = {}
@@ -128,7 +127,7 @@ class Gateway:
         if self._is_mqtt_enabled:
             self.mqtt_client = MQTTClient.create(gateway=self, settings=MQTTSettings())
 
-        self.api = VisioGtwApi.create(gateway=self, settings=ApiSettings())
+        self.api = ApiServer.create(gateway=self, settings=ApiSettings())
         await self._scheduler.spawn(self.api.start())
 
         await self._scheduler.spawn(coro=self.periodic_update())

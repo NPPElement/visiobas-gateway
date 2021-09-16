@@ -3,8 +3,8 @@ from typing import TYPE_CHECKING, Any, Collection, Optional, Union
 
 import aiohttp
 
-from ..models.bacnet import BaseBACnetObj, ObjProperty, ObjType
-from ..models.settings import HTTPServerConfig, HTTPSettings, LogSettings
+from ..schemas.bacnet import BaseBACnetObj, ObjProperty, ObjType
+from ..schemas.settings import HTTPServerConfig, HTTPSettings
 from ..utils import get_file_logger, kebab_case, log_exceptions
 
 if TYPE_CHECKING:
@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 else:
     Gateway = "Gateway"
 
-_LOG = get_file_logger(name=__name__, settings=LogSettings())
+_LOG = get_file_logger(name=__name__)
 
 
 class HTTPClient:

@@ -2,9 +2,8 @@ from abc import ABC
 from ipaddress import IPv4Address
 from typing import TYPE_CHECKING, Optional
 
-from ..models import DeviceObj
-from ..models.protocol import CAMERA_PROTOCOLS, POLLING_PROTOCOLS, Protocol
-from ..models.settings.log_settings import LogSettings
+from ..schemas import DeviceObj
+from ..schemas.protocol import CAMERA_PROTOCOLS, POLLING_PROTOCOLS, Protocol
 from ..utils import get_file_logger
 
 if TYPE_CHECKING:
@@ -19,9 +18,7 @@ class BaseDevice(ABC):
     def __init__(self, device_obj: DeviceObj, gateway: Gateway):
         self._gtw = gateway
         self._dev_obj = device_obj
-        self._LOG = get_file_logger(
-            name=__name__ + str(self.device_id), settings=LogSettings()
-        )
+        self._LOG = get_file_logger(name="_".join((__name__, str(self.device_id))))
 
     @property
     def device_id(self) -> int:

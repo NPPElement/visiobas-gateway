@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING, Any, Collection, Optional, Union
 
 from BAC0.scripts.Lite import Lite  # type: ignore
 
-from ..models import BACnetObj, DeviceObj, ObjProperty
+from ..schemas import BACnetObj, DeviceObj, ObjProperty
 from ..utils import camel_case, log_exceptions
 from .base_polling_device import BasePollingDevice
 

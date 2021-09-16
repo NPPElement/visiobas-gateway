@@ -1,5 +1,5 @@
-from .app import VisioGtwApi
+from .app import ApiServer
 
 __all__ = [
-    "VisioGtwApi",
+    "ApiServer",
 ]

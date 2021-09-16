@@ -1,6 +1,6 @@
 import pytest
 import pydantic
-from visiobas_gateway.models.bacnet.status_flags import StatusFlags, StatusFlag
+from visiobas_gateway.schemas.bacnet.status_flags import StatusFlags, StatusFlag
 
 
 class TestStatusFlag:

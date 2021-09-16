@@ -1,6 +1,6 @@
-from visiobas_gateway.models.modbus.func_code import ModbusReadFunc, ModbusWriteFunc
-from visiobas_gateway.models.modbus.data_type import ModbusDataType
-from visiobas_gateway.models.modbus.endian import Endian
+from visiobas_gateway.schemas.modbus.func_code import ModbusReadFunc, ModbusWriteFunc
+from visiobas_gateway.schemas.modbus.data_type import ModbusDataType
+from visiobas_gateway.schemas.modbus.endian import Endian
 
 
 class TestModbusProperties:

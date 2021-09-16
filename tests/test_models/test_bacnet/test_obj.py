@@ -1,7 +1,7 @@
 import pytest
 
-from visiobas_gateway.models.bacnet.obj_property import ObjProperty
-from visiobas_gateway.models.bacnet.reliability import Reliability
+from visiobas_gateway.schemas.bacnet.obj_property import ObjProperty
+from visiobas_gateway.schemas.bacnet.reliability import Reliability
 
 
 class TestBACnetObj:

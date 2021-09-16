@@ -6,7 +6,7 @@ from pymodbus.exceptions import ModbusException, ModbusIOException  # type: igno
 from pymodbus.framer.rtu_framer import ModbusRtuFramer  # type: ignore
 from pymodbus.framer.socket_framer import ModbusSocketFramer  # type: ignore
 
-from ..models import (
+from ..schemas import (
     BACnetObj,
     DeviceObj,
     ModbusObj,

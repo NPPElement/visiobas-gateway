@@ -10,12 +10,14 @@ class LogSettings(BaseSettings):
 
     level: str = Field(default="DEBUG")
     file_level = Field(default="DEBUG")
-    file_size = Field(default=50, description="Number of MB for log files.")
+    file_size: int = Field(default=50, description="Number of MB for log files.")
     format: str = Field(
         default="%(levelname)-8s [%(asctime)s] "
         "%(name)s.%(funcName)s(%(lineno)d): %(message)s"
     )  # [%(threadName)s]
-    disable_loggers: list[str] = Field(default_factory=list)
+    disable_loggers: list[str] = Field(
+        default_factory=list, description="List of logger " "names to " "disable."
+    )
     log_dir: Path = Field(default=BASE_DIR.parent / ".gtw_logs")
 
     # @validator("disable_loggers", pre=True)
@@ -27,3 +29,6 @@ class LogSettings(BaseSettings):
         env_prefix = "GTW_LOG_"
         env_file = ".env"
         env_file_encoding = "utf-8"
+
+
+log_settings = LogSettings()

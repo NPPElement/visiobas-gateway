@@ -13,7 +13,7 @@ def _get_pydantic_classes(package_name: str) -> Iterable[ModelMetaclass]:
         package_name:
 
     Returns:
-        List `pydantic` models specified in __all__ of giving package.
+        List `pydantic` schemas specified in __all__ of giving package.
     Raises:
         ValueError: In case if __all__ for giving package is not defined.
     """
@@ -67,7 +67,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "-p",
         "--package",
-        help="Package containing models for which json-schema will be generated.",
+        help="Package containing schemas for which json-schema will be generated.",
         required=True,
     )
     parser.add_argument(
