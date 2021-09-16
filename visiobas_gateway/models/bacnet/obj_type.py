@@ -103,9 +103,9 @@ OUTPUT_TYPES = {
     ObjType.MULTI_STATE_VALUE,
     ObjType.MULTI_STATE_OUTPUT,
 }
-INPUT_PROPERTIES = (ObjProperty.presentValue, ObjProperty.statusFlags)
+INPUT_PROPERTIES = (ObjProperty.PRESENT_VALUE, ObjProperty.STATUS_FLAGS)
 OUTPUT_PROPERTIES = (
-    ObjProperty.presentValue,
-    ObjProperty.statusFlags,
-    ObjProperty.priorityArray,
+    ObjProperty.PRESENT_VALUE,
+    ObjProperty.STATUS_FLAGS,
+    ObjProperty.PRIORITY_ARRAY,
 )

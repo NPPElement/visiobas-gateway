@@ -24,14 +24,14 @@ class BACnetObj(BaseBACnetObj):
 
     resolution: float = Field(
         default=DEFAULT_RESOLUTION,
-        alias=str(ObjProperty.resolution.prop_id),
+        alias=str(ObjProperty.RESOLUTION.id),
         gt=0,
         description="""Indicates the smallest recognizable change in `Present_Value` in
         engineering units (read-only).""",
     )
     status_flags: StatusFlags = Field(
         default=StatusFlags(flags=0b0000),
-        alias=str(ObjProperty.statusFlags.prop_id),
+        alias=str(ObjProperty.STATUS_FLAGS.id),
         description="""
         Status flags. represents four Boolean flags that indicate the general "health" of
         an value. Three of the flags are associated with the values of other properties of
@@ -40,7 +40,7 @@ class BACnetObj(BaseBACnetObj):
         not defined by the protocol.""",
     )
     priority_array: Optional[list[Optional[float]]] = Field(
-        alias=str(ObjProperty.priorityArray.prop_id),
+        alias=str(ObjProperty.PRIORITY_ARRAY.id),
         max_items=16,
         min_items=16,
         description="""Priority array. This property is a read-only array that contains
@@ -48,16 +48,16 @@ class BACnetObj(BaseBACnetObj):
     )
     reliability: Union[Reliability, str] = Field(
         default=Reliability.NO_FAULT_DETECTED,
-        alias=str(ObjProperty.reliability.prop_id),
+        alias=str(ObjProperty.RELIABILITY.id),
         description="""Provides an indication of whether the `Present_Value` is
         "reliable" as far as the BACnet Device can determine and, if not, why.""",
     )
     segmentation_supported: bool = Field(
-        default=False, alias=str(ObjProperty.segmentationSupported.prop_id)
+        default=False, alias=str(ObjProperty.SEGMENTATION_SUPPORTED.id)
     )
     property_list: BACnetObjPropertyList = Field(
         ...,
-        alias=str(ObjProperty.propertyList.prop_id),
+        alias=str(ObjProperty.PROPERTY_LIST.id),
         description="""This read-only property is a JSON of property identifiers, one
         property identifier  for each property that exists within the object. The standard
         properties are not included in the JSON.""",
@@ -77,7 +77,7 @@ class BACnetObj(BaseBACnetObj):
 
     present_value: Any = Field(
         default=None,
-        alias=str(ObjProperty.presentValue.prop_id),
+        alias=str(ObjProperty.PRESENT_VALUE.id),
         description="""Indicates the current value, in engineering units, of the `TYPE`.
         `Present_Value` shall be optionally commandable. If `Present_Value` is commandable
         for a given object instance, then the `Priority_Array` and `Relinquish_Default`
@@ -163,7 +163,7 @@ class BACnetObj(BaseBACnetObj):
         raise NotImplementedError("Properties for other types not defined")
 
     def set_property(
-        self, value: Union[Any, Exception], prop: ObjProperty = ObjProperty.presentValue
+        self, value: Union[Any, Exception], prop: ObjProperty = ObjProperty.PRESENT_VALUE
     ) -> None:
         """Sets `presentValue` with round by `resolution`.
         Use it to set new `presentValue` by read from controller.
@@ -188,7 +188,7 @@ class BACnetObj(BaseBACnetObj):
 
         # if prop is ObjProperty.priorityArray:
         #     value = self.convert_priority_array(priority_array=value)
-        if prop is ObjProperty.statusFlags:
+        if prop is ObjProperty.STATUS_FLAGS:
             value = StatusFlags(flags=value)
         property_name = snake_case(prop.name)
         setattr(self, property_name, value)

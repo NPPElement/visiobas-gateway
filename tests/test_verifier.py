@@ -27,7 +27,7 @@ class TestBACnetVerifier:
         assert bacnet_obj.unreachable_in_row == 1
         assert bacnet_obj.existing is True
 
-        bacnet_obj.set_property(value=UnknownObjectError(), prop=ObjProperty.presentValue)
+        bacnet_obj.set_property(value=UnknownObjectError(), prop=ObjProperty.PRESENT_VALUE)
         bacnet_obj = verifier.process_exception(
             obj=bacnet_obj, exc=bacnet_obj.present_value
         )
@@ -37,7 +37,7 @@ class TestBACnetVerifier:
         assert bacnet_obj.unreachable_in_row == 2
         assert bacnet_obj.existing is False
 
-        bacnet_obj.set_property(value=TypeError(), prop=ObjProperty.presentValue)
+        bacnet_obj.set_property(value=TypeError(), prop=ObjProperty.PRESENT_VALUE)
         bacnet_obj = verifier.process_exception(
             obj=bacnet_obj, exc=bacnet_obj.present_value
         )
@@ -46,7 +46,7 @@ class TestBACnetVerifier:
         assert bacnet_obj.reliability == "decode-error"
         assert bacnet_obj.unreachable_in_row == 3
 
-        bacnet_obj.set_property(value=AttributeError(), prop=ObjProperty.presentValue)
+        bacnet_obj.set_property(value=AttributeError(), prop=ObjProperty.PRESENT_VALUE)
         bacnet_obj = verifier.process_exception(
             obj=bacnet_obj, exc=bacnet_obj.present_value
         )
@@ -215,7 +215,7 @@ class TestBACnetVerifier:
         assert isinstance(bacnet_obj.changed, datetime.datetime)
         assert str(bacnet_obj.changed) == "2011-11-11 11:11:11"
 
-        bacnet_obj.set_property(value=33.333, prop=ObjProperty.presentValue)
+        bacnet_obj.set_property(value=33.333, prop=ObjProperty.PRESENT_VALUE)
         bacnet_obj = verifier.verify(obj=bacnet_obj)
         assert str(bacnet_obj.updated) > "2011-11-11 22:22:22"
 
@@ -226,7 +226,7 @@ class TestBACnetVerifier:
         verifier = BACnetVerifier(override_threshold=8)
         bacnet_obj = bacnet_obj_factory()
 
-        bacnet_obj.set_property(value=66.666, prop=ObjProperty.presentValue)
+        bacnet_obj.set_property(value=66.666, prop=ObjProperty.PRESENT_VALUE)
         bacnet_objects = [bacnet_obj] * 3
 
         bacnet_objects = verifier.verify_objects(objs=bacnet_objects)

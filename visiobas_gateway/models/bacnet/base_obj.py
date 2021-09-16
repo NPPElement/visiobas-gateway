@@ -14,27 +14,27 @@ class BaseBACnetObj(BaseModel):
     # # type: Union[int, str] = Field(..., alias=ObjProperty.objectType.id_str)
     type: ObjType = Field(
         ...,
-        alias=str(ObjProperty.objectType.prop_id),
+        alias=str(ObjProperty.OBJECT_TYPE.id),
         description="""Indicates membership in a particular object type class.""",
     )
-    device_id: int = Field(..., gt=0, alias=str(ObjProperty.deviceId.prop_id))
+    device_id: int = Field(..., gt=0, alias=str(ObjProperty.DEVICE_ID.id))
     id: int = Field(
         ...,
         ge=0,
-        alias=str(ObjProperty.objectIdentifier.prop_id),
+        alias=str(ObjProperty.OBJECT_IDENTIFIER.id),
         description="""Is a numeric code that is used to identify the object.
         It shall be unique within the BACnet Device that maintains it.""",
     )
     name: str = Field(
         ...,
-        alias=str(ObjProperty.objectName.prop_id),
+        alias=str(ObjProperty.OBJECT_NAME.id),
         min_length=1,
         description="""Represent a name for the object that is unique within the
         BACnet Device that maintains it. The minimum length of the string shall be one
         character. The set of characters used in the Object_Name shall be restricted to
         printable characters.""",
     )
-    property_list: Any = Field(alias=str(ObjProperty.propertyList.prop_id))
+    property_list: Any = Field(alias=str(ObjProperty.PROPERTY_LIST.id))
 
     @validator("type", pre=True)
     def validate_type(cls, value: Union[int, str]) -> ObjType:
