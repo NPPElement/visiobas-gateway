@@ -5,7 +5,12 @@ from .obj_property import ObjProperty
 
 @unique
 class ObjType(int, Enum):
-    """Represent types of BACnet objects."""
+    """Supported BACnet object types.
+
+    Enumerated values 0-127 are reserved for definition by ASHRAE.
+    Enumerated values 128-1023 may be used by others subject to the procedures and
+    constraints
+    """
 
     ANALOG_INPUT = 0
     ANALOG_OUTPUT = 1
@@ -38,7 +43,7 @@ class ObjType(int, Enum):
     LOAD_CONTROL = 28
     STRUCTURED_VIEW = 29
     ACCESS_DOOR = 30
-    FIXME_MISSED_31 = 31  # fixme
+    # value 31 unassigned
     ACCESS_CREDENTIAL = 32
     ACCESS_POINT = 33
     ACCESS_RIGHTS = 34
@@ -65,11 +70,6 @@ class ObjType(int, Enum):
 
     # TODO: add JSON-input = 250
     # TODO: add JSON-output = 251
-
-    # SITE = "site", -1
-    # FOLDER = "folder", -1
-    # TRUNK = "trunk", -1
-    # GRAPHIC = "graphic", -1
 
     @property
     def type_id(self) -> int:
@@ -103,9 +103,9 @@ OUTPUT_TYPES = {
     ObjType.MULTI_STATE_VALUE,
     ObjType.MULTI_STATE_OUTPUT,
 }
-INPUT_PROPERTIES = (ObjProperty.presentValue, ObjProperty.statusFlags)
+INPUT_PROPERTIES = (ObjProperty.PRESENT_VALUE, ObjProperty.STATUS_FLAGS)
 OUTPUT_PROPERTIES = (
-    ObjProperty.presentValue,
-    ObjProperty.statusFlags,
-    ObjProperty.priorityArray,
+    ObjProperty.PRESENT_VALUE,
+    ObjProperty.STATUS_FLAGS,
+    ObjProperty.PRIORITY_ARRAY,
 )

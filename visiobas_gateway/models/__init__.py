@@ -9,6 +9,8 @@ from .bacnet import (
     DeviceObj,
     ObjProperty,
     ObjType,
+    Priority,
+    Reliability,
     SerialDevicePropertyList,
     StatusFlag,
     StatusFlags,
@@ -49,6 +51,8 @@ __all__ = [
     "StatusFlag",
     "StatusFlags",
     "BaseBACnetObj",
+    "Reliability",
+    "Priority",
     # Modbus
     "ModbusReadFunc",
     "ModbusWriteFunc",

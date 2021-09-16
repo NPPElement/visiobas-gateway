@@ -51,9 +51,7 @@ def _write_json_schemas(
     for cls in classes:
         if hasattr(cls, "schema_json"):
             file_path = output_dir / (
-                cls.__module__.replace(package_name + ".", "").rsplit(sep=".", maxsplit=1)[
-                    0
-                ]
+                cls.__module__.removesuffix(package_name).rsplit(sep=".", maxsplit=1)[0]
                 + "."
                 + cls.__name__
                 + ".yml"
