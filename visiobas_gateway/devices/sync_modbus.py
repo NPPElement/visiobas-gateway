@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Any, Callable, Collection, Optional, Union
+from typing import Any, Callable, Optional, Union
 
 from pymodbus.client.sync import ModbusSerialClient, ModbusTcpClient  # type: ignore
 from pymodbus.exceptions import ModbusException, ModbusIOException  # type: ignore
@@ -18,11 +18,6 @@ from ..schemas import (
 from ..utils import log_exceptions
 from ._base_modbus import ModbusEncodeDecodeMixin
 from ._base_polling_device import BasePollingDevice
-
-if TYPE_CHECKING:
-    from ..gateway import Gateway
-else:
-    Gateway = "Gateway"
 
 
 class ModbusDevice(BasePollingDevice, ModbusEncodeDecodeMixin):
@@ -185,7 +180,8 @@ class ModbusDevice(BasePollingDevice, ModbusEncodeDecodeMixin):
             },
         )
 
-    async def _poll_objects(self, objs: Collection[BACnetObj]) -> None:
-
-        for obj in objs:
-            await self.read(obj=obj)
+    # async def _poll_objects(self, objs: Collection[BACnetObj]) -> None:
+    #
+    #     for obj in objs:
+    #         if obj.existing:
+    #             await self.read(obj=obj)

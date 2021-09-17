@@ -76,10 +76,6 @@ class Gateway:
         return gateway
 
     @property
-    def unreachable_threshold(self) -> int:
-        return self.settings.unreachable_threshold
-
-    @property
     def unreachable_reset_period(self) -> int:
         return self.settings.unreachable_reset_period
 
@@ -346,9 +342,9 @@ class Gateway:
         ]
         return objs
 
-    async def verify_objects(self, objs: Collection[BACnetObj]) -> None:
-        """Verify objects in executor pool."""
-        await self.async_add_job(self.verifier.verify_objects, objs)
+    # async def verify_objects(self, objs: Collection[BACnetObj]) -> None:
+    #     """Verify objects in executor pool."""
+    #     await self.async_add_job(self.verifier.verify_objects, objs)
 
     @log_exceptions
     async def send_objects(self, objs: Collection[BACnetObj]) -> None:

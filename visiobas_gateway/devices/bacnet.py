@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Any, Collection, Optional, Union
+from typing import TYPE_CHECKING, Any, Optional, Union
 
 from BAC0.scripts.Lite import Lite  # type: ignore
 
@@ -14,8 +14,6 @@ else:
 
 class BACnetDevice(BasePollingDevice):
     """Implementation of BACnet device client."""
-
-    client: Lite = None  # todo
 
     def __init__(self, device_obj: DeviceObj, gateway: Gateway):
         super().__init__(device_obj, gateway)
@@ -66,9 +64,10 @@ class BACnetDevice(BasePollingDevice):
     async def _disconnect_client(self, client: Lite) -> None:
         client.disconnect()
 
-    async def _poll_objects(self, objs: Collection[BACnetObj]) -> None:
-        for obj in objs:
-            await self.simulate_rpm(obj=obj)
+    # async def _poll_objects(self, objs: Collection[BACnetObj]) -> None:
+    #     for obj in objs:
+    #         if obj.existing:
+    #             await self.simulate_rpm(obj=obj)
 
     # def poll(self) -> None:
     #     """ Poll all object from device.
@@ -145,7 +144,7 @@ class BACnetDevice(BasePollingDevice):
         args = "{0} {1} {2} {3} {4} - {5}".format(
             self.address_port, camel_case(obj.type.name), obj.id, prop.name, value, priority
         )
-        is_successful = self.__class__.client.write(args=args)
+        is_successful = self.interface.client.write(args=args)
         self._LOG.debug(
             "Write",
             extra={
@@ -158,7 +157,7 @@ class BACnetDevice(BasePollingDevice):
         )
         return is_successful
 
-    async def read(
+    async def _read(
         self,
         obj: BACnetObj,
         wait: bool = False,
@@ -175,7 +174,7 @@ class BACnetDevice(BasePollingDevice):
         request = " ".join(
             (self.address_port, camel_case(obj.type.name), str(obj.id), prop.name)
         )
-        response = self.__class__.client.read(request)
+        response = self.interface.client.read(request)
         self._LOG.debug(
             "Read",
             extra={
@@ -217,4 +216,11 @@ class BACnetDevice(BasePollingDevice):
 
     async def simulate_rpm(self, obj: BACnetObj) -> None:
         for prop in obj.polling_properties:
-            await self.read(obj=obj, prop=prop)
+            await self._read(obj=obj, prop=prop)
+
+    async def read(self, obj: BACnetObj, wait: bool = False, **kwargs: Any) -> None:
+        # if obj.segmentation_supported:# todo: implement RPM or RP
+        if wait:
+            await self.interface.polling_event.wait()
+
+        await self.simulate_rpm(obj=obj)

@@ -30,7 +30,6 @@ class BasePollingDevice(BaseDevice, ABC):
 
         # Key: period
         self._objects: dict[float, set[BACnetObj]] = {}
-        self._unreachable_objects: set[BACnetObj] = set()
 
     @abstractmethod
     @property
@@ -110,9 +109,13 @@ class BasePollingDevice(BaseDevice, ABC):
     def is_client_connected(self) -> bool:
         raise NotImplementedError
 
-    @abstractmethod
     async def _poll_objects(self, objs: Collection[BACnetObj]) -> None:
-        raise NotImplementedError
+        for obj in objs:
+            if not obj.existing:
+                continue
+            if obj.unreachable_in_row >= self._gtw.settings.unreachable_threshold:
+                continue
+            await self.read(obj=obj)
 
     @abstractmethod
     async def read(
@@ -178,7 +181,7 @@ class BasePollingDevice(BaseDevice, ABC):
 
     def insert_objects(self, objs: Collection[BACnetObj]) -> None:
         """Groups objects by poll period and insert them into device for polling."""
-        if len(objs):
+        if objs:
             self.interface.polling_event.clear()
             for obj in objs:
                 poll_period = obj.property_list.poll_period
@@ -198,9 +201,7 @@ class BasePollingDevice(BaseDevice, ABC):
         if self.is_client_connected:
             self.interface.polling_event.set()
             for period, objs in self._objects.items():
-                await self._scheduler.spawn(
-                    self.periodic_poll(objs=objs, period=period, first_iter=True)
-                )
+                await self._scheduler.spawn(self.periodic_poll(objs=objs, period=period))
             await self._scheduler.spawn(self._periodic_reset_unreachable())
         else:
             self._LOG.info(
@@ -220,7 +221,7 @@ class BasePollingDevice(BaseDevice, ABC):
         """
         self.interface.polling_event.clear()
         await self._scheduler.close()
-        await self.disconnect_client()  # todo: left client open if used by another device
+        await self.disconnect_client()
         self._LOG.info(
             "Device stopped",
             extra={
@@ -231,24 +232,22 @@ class BasePollingDevice(BaseDevice, ABC):
     async def _periodic_reset_unreachable(self) -> None:
         await asyncio.sleep(self._gtw.unreachable_reset_period)
 
+        for objects in self._objects.values():
+            for obj in objects:
+                obj.unreachable_in_row = 0
+
         self._LOG.debug(
             "Reset unreachable objects",
             extra={
                 "device_id": self.id,
-                "unreachable_objects_number": len(self._unreachable_objects),
             },
         )
-        self.insert_objects(objs=self._unreachable_objects)
-        self._unreachable_objects = set()
-
         await self._scheduler.spawn(self._periodic_reset_unreachable())
 
     async def periodic_poll(
         self,
         objs: set[BACnetObj],
         period: float,
-        *,
-        first_iter: bool = False,
     ) -> None:
         self._LOG.debug(
             "Polling started",
@@ -260,19 +259,8 @@ class BasePollingDevice(BaseDevice, ABC):
         )
         _t0 = datetime.now()
         await self._poll_objects(objs=objs)
-        self._check_unreachable(objs=objs, period=period)  # hotfix
-        if first_iter:
-            nonexistent_objs = {obj for obj in objs if not obj.existing}
-            objs -= nonexistent_objs
-            self._LOG.info(
-                "Removed non-existent objects",
-                extra={
-                    "device_id": self.id,
-                    "nonexistent_objects": nonexistent_objs,
-                    "nonexistent_objects_number": len(nonexistent_objs),
-                },
-            )
         _t_delta = datetime.now() - _t0
+
         self._LOG.info(
             "Objects polled",
             extra={
@@ -297,19 +285,5 @@ class BasePollingDevice(BaseDevice, ABC):
         await self._scheduler.spawn(self.periodic_poll(objs=objs, period=period))
 
     async def _after_polling_tasks(self, objs: set[BACnetObj]) -> None:
-        await self._gtw.verify_objects(objs=objs)
-        await self._gtw.send_objects(objs=objs)
-
-    def _check_unreachable(self, objs: set[BACnetObj], period: float) -> None:
-        for obj in objs.copy():
-            if obj.unreachable_in_row >= self._gtw.unreachable_threshold:
-                self._LOG.debug(
-                    "Marked as unreachable",
-                    extra={
-                        "device_id": obj.device_id,
-                        "object_id": obj.id,
-                        "object_type": obj.type,
-                    },
-                )
-                self._objects[period].remove(obj)
-                self._unreachable_objects.add(obj)
+        verified_objects = self._gtw.verifier.verify_objects(objs=objs)
+        await self._gtw.send_objects(objs=verified_objects)
