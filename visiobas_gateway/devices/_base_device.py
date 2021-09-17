@@ -17,18 +17,13 @@ class BaseDevice(ABC):
     def __init__(self, device_obj: DeviceObj, gateway: Gateway):
         self._gtw = gateway
         self._device_obj = device_obj
-        self._LOG = get_file_logger(name="_".join((__name__, str(self.device_id))))
+        self._LOG = get_file_logger(name="_".join((__name__, str(self.id))))
 
     @property
-    def device_id(self) -> int:
+    def id(self) -> int:
         """Device id."""
         return self._device_obj.id
 
     @property
     def protocol(self) -> Protocol:
         return self._device_obj.property_list.protocol
-
-    @property
-    def timeout(self) -> float:
-        """Timeout in seconds"""
-        return self._device_obj.property_list.timeout / 1000

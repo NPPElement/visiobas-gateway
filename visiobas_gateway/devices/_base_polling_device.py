@@ -32,19 +32,14 @@ class BasePollingDevice(BaseDevice, ABC):
         self._objects: dict[float, set[BACnetObj]] = {}
         self._unreachable_objects: set[BACnetObj] = set()
 
-        self._connected = False
-
-        # IMPORTANT: `clear()` that event to change the objects (load or priority write).
-        # `wait()` that event in polling to provide priority access to write_with_check.
-        self._polling = asyncio.Event()
-
     @abstractmethod
     @property
     def interface_name(self) -> Any:
-        """Interface to interact with controller."""
+        """Interface name, used to get access to interface."""
 
     @property
     def interface(self) -> Any:
+        """Interface to interact with controller."""
         return self.__class__._interfaces[  # pylint: disable=protected-access
             self.interface_name
         ]
@@ -62,10 +57,10 @@ class BasePollingDevice(BaseDevice, ABC):
             async with lock:  # pylint: disable=not-async-context-manager
                 client = await dev.create_client(device_obj=device_obj)
                 client_connected = await dev.connect_client(client=client)
-            polling_event = asyncio.Event(loop=gateway.loop)
+            polling_event = asyncio.Event()
             interface = Interface(
                 name=dev.interface,
-                used_by={dev.device_id},
+                used_by={dev.id},
                 client=client,
                 lock=lock,
                 polling_event=polling_event,
@@ -73,12 +68,13 @@ class BasePollingDevice(BaseDevice, ABC):
             )
             cls._interfaces[dev.interface] = interface
         else:
-            cls._interfaces[dev.interface].used_by.add(dev.device_id)
+            # Using existing interface.
+            cls._interfaces[dev.interface].used_by.add(dev.id)
 
         dev._LOG.debug(
             "Device created",
             extra={
-                "device_id": dev.device_id,
+                "device_id": dev.id,
                 "protocol": dev.protocol,
                 "interface": dev.interface,
             },
@@ -86,18 +82,8 @@ class BasePollingDevice(BaseDevice, ABC):
         return dev
 
     @property
-    def serial_port(self) -> Optional[str]:
-        if hasattr(self._device_obj.property_list, "rtu"):
-            return self._device_obj.property_list.rtu.port  # type: ignore
-        return None
-
-    @property
     def reconnect_period(self) -> int:
         return self._device_obj.property_list.reconnect_period
-
-    @property
-    def retries(self) -> int:
-        return self._device_obj.property_list.retries
 
     @property
     def all_objects(self) -> set[BACnetObj]:
@@ -132,13 +118,13 @@ class BasePollingDevice(BaseDevice, ABC):
     async def read(
         self, obj: BACnetObj, wait: bool = False, **kwargs: Any
     ) -> Optional[Union[int, float, str]]:
-        raise NotImplementedError("You should implement async read method for your device")
+        """You should implement async read method for your device."""
 
     @abstractmethod
     async def write(
         self, value: Union[int, float], obj: BACnetObj, wait: bool = False, **kwargs: Any
     ) -> None:
-        raise NotImplementedError("You should implement async write method for your device")
+        """You should implement async write method for your device."""
 
     async def write_with_check(
         self, value: Union[int, float], obj: BACnetObj, **kwargs: Any
@@ -203,7 +189,7 @@ class BasePollingDevice(BaseDevice, ABC):
             self.interface.polling_event.set()
             self._LOG.debug(
                 "Objects are grouped by period and inserted to device",
-                extra={"device_id": self.device_id, "objects_number": len(objs)},
+                extra={"device_id": self.id, "objects_number": len(objs)},
             )
 
     async def start_periodic_polls(self) -> None:
@@ -220,7 +206,7 @@ class BasePollingDevice(BaseDevice, ABC):
             self._LOG.info(
                 "Client is not connected. Sleeping to next try",
                 extra={
-                    "device_id": self.device_id,
+                    "device_id": self.id,
                     "seconds_to_next_try": self.reconnect_period,
                 },
             )
@@ -238,7 +224,7 @@ class BasePollingDevice(BaseDevice, ABC):
         self._LOG.info(
             "Device stopped",
             extra={
-                "device_id": self.device_id,
+                "device_id": self.id,
             },
         )
 
@@ -248,7 +234,7 @@ class BasePollingDevice(BaseDevice, ABC):
         self._LOG.debug(
             "Reset unreachable objects",
             extra={
-                "device_id": self.device_id,
+                "device_id": self.id,
                 "unreachable_objects_number": len(self._unreachable_objects),
             },
         )
@@ -267,7 +253,7 @@ class BasePollingDevice(BaseDevice, ABC):
         self._LOG.debug(
             "Polling started",
             extra={
-                "device_id": self.device_id,
+                "device_id": self.id,
                 "period": period,
                 "objects_number": len(objs),
             },
@@ -281,7 +267,7 @@ class BasePollingDevice(BaseDevice, ABC):
             self._LOG.info(
                 "Removed non-existent objects",
                 extra={
-                    "device_id": self.device_id,
+                    "device_id": self.id,
                     "nonexistent_objects": nonexistent_objs,
                     "nonexistent_objects_number": len(nonexistent_objs),
                 },
@@ -290,7 +276,7 @@ class BasePollingDevice(BaseDevice, ABC):
         self._LOG.info(
             "Objects polled",
             extra={
-                "device_id": self.device_id,
+                "device_id": self.id,
                 "seconds_took": _t_delta.seconds,
                 "objects_number": len(objs),
                 "period": period,
@@ -299,9 +285,7 @@ class BasePollingDevice(BaseDevice, ABC):
 
         if _t_delta.seconds > period:
             # period *= 1.5
-            self._LOG.warning(
-                "Polling period is too short!", extra={"device_id": self.device_id}
-            )
+            self._LOG.warning("Polling period is too short!", extra={"device_id": self.id})
         await self._scheduler.spawn(self._after_polling_tasks(objs=objs))
         await asyncio.sleep(delay=period - _t_delta.seconds)
 

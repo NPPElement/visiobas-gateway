@@ -177,7 +177,7 @@ class ModbusDevice(BasePollingDevice, ModbusEncodeDecodeMixin):
         self._LOG.debug(
             "Successfully write",
             extra={
-                "device_id": self.device_id,
+                "device_id": self.id,
                 "object_id": obj.id,
                 "object_type": obj.type,
                 "address": obj.address,

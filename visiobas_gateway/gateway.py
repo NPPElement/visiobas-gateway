@@ -302,7 +302,7 @@ class Gateway:
             )
             await self.async_add_job(device.insert_objects, objs)
 
-        self._devices.update({device.device_id: device})
+        self._devices.update({device.id: device})
         _LOG.info(
             "Device loaded",
             extra={
@@ -388,7 +388,7 @@ class Gateway:
         else:
             raise NotImplementedError("Device factory not implemented")
 
-        _LOG.debug("Device object created", extra={"device_id": device.device_id})
+        _LOG.debug("Device object created", extra={"device_id": device.id})
         return device
 
     @staticmethod

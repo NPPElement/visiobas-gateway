@@ -53,7 +53,7 @@ class BACnetDevice(BasePollingDevice):
             raise ConnectionError("No interface in same subnet.")
         self._LOG.debug(
             "Creating BAC0 client",
-            extra={"device_id": self.device_id, "interface": interface},
+            extra={"device_id": self.id, "interface": interface},
         )
         client = Lite(ip=interface)
         return client
@@ -149,7 +149,7 @@ class BACnetDevice(BasePollingDevice):
         self._LOG.debug(
             "Write",
             extra={
-                "device_id": self.device_id,
+                "device_id": self.id,
                 "object_id": obj.id,
                 "object_type": obj.type,
                 "value": value,
@@ -168,7 +168,7 @@ class BACnetDevice(BasePollingDevice):
         prop = kwargs.get("prop")
 
         if wait:
-            await self._polling.wait()
+            await self.interface.polling_event.wait()
         return await self._gtw.async_add_job(self.read_property, obj, prop)
 
     def read_property(self, obj: BACnetObj, prop: ObjProperty) -> BACnetObj:
@@ -179,7 +179,7 @@ class BACnetDevice(BasePollingDevice):
         self._LOG.debug(
             "Read",
             extra={
-                "device_id": self.device_id,
+                "device_id": self.id,
                 "object_id": obj.id,
                 "object_type": obj.type,
                 "response": response,
