@@ -41,6 +41,11 @@ class BaseDevicePropertyList(BaseModel):
     )
     reconnect_period: int = Field(default=300, alias="reconnectPeriod")
 
+    @property
+    def timeout_seconds(self) -> float:
+        """Timeout in seconds."""
+        return self.timeout / 1000
+
 
 class TcpIpDevicePropertyList(BaseDevicePropertyList):
     """PropertyList for TCP/IP devices."""

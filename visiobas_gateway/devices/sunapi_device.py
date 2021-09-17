@@ -1,18 +1,10 @@
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
-from .base_device import BaseDevice
-
-if TYPE_CHECKING:
-    from ..gateway import Gateway
-else:
-    Gateway = "Gateway"
+from ._base_device import BaseDevice
 
 
 class SUNAPIDevice(BaseDevice):
     """Now used for XNP-6550-RH."""
-
-    # def __init__(self, device_obj: BACnetDeviceObj, visiobas_gateway: Gateway) -> None:
-    #     super().__init__(device_obj, visiobas_gateway)
 
     def ptz(self, cgi: str, submenu: str, action: str, **kwargs: Any) -> None:
         """The absolute submenu of `ptzcontrol.cgi` controls absolute a PTZ operation
@@ -66,7 +58,7 @@ class SUNAPIDevice(BaseDevice):
 
         cgi = "ptz" + cgi + ".cgi"
         url_path = "http://{device_ip}/stw‐cgi/{cgi}".format(
-            device_ip=self.address, cgi=cgi
+            device_ip=self._device_obj.property_list.address, cgi=cgi  # type: ignore
         )
         # ex = 'http://<Device IP>/stw‐cgi/ptzcontrol.cgi?
         # msubmenu=absolute&action=control&Pan=90&Zoom=30&Tilt=25'

@@ -3,8 +3,8 @@ from typing import TYPE_CHECKING, Any, Collection, Optional, Union
 from BAC0.scripts.Lite import Lite  # type: ignore
 
 from ..schemas import BACnetObj, DeviceObj, ObjProperty
-from ..utils import camel_case, log_exceptions
-from .base_polling_device import BasePollingDevice
+from ..utils import camel_case, get_subnet_interface, log_exceptions
+from ._base_polling_device import BasePollingDevice
 
 if TYPE_CHECKING:
     from visiobas_gateway.gateway import Gateway
@@ -22,33 +22,49 @@ class BACnetDevice(BasePollingDevice):
 
         self.support_rpm: set[BACnetObj] = set()
         self.not_support_rpm: set[BACnetObj] = set()
-        # self._client: BAC0.scripts.Lite = visiobas_gateway.bacnet
 
         # self.__objects_per_rpm = 25
         # todo: Should we use one RPM for several objects?
 
     @property
     def address_port(self) -> str:
-        return ":".join((str(self.address), str(self.port)))
+        return ":".join(
+            (
+                str(self._device_obj.property_list.address),  # type: ignore
+                str(self._device_obj.property_list.port),  # type: ignore
+            )
+        )
+
+    @property
+    def interface_name(self) -> Any:
+        device_ip_address = self._device_obj.property_list.address  # type: ignore
+        interface = get_subnet_interface(ip=device_ip_address)
+        return interface
 
     @property
     def is_client_connected(self) -> bool:
-        return self.__class__.client is not None
+        return self.interface.client is not None
 
     @log_exceptions
-    def create_client(self) -> None:
+    async def create_client(self, device_obj: DeviceObj) -> Lite:
         """Initializes BAC0 client."""
-        if not self.is_client_connected:
-            self._LOG.debug("Creating BAC0 client", extra={"device_id": self.device_id})
-            self.__class__.client = Lite()  # todo params
-        else:
-            self._LOG.debug(
-                "BAC0 client already created", extra={"device_id": self.device_id}
-            )
+        interface = self.interface_name
+        if not interface:
+            raise ConnectionError("No interface in same subnet.")
+        self._LOG.debug(
+            "Creating BAC0 client",
+            extra={"device_id": self.device_id, "interface": interface},
+        )
+        client = Lite(ip=interface)
+        return client
 
-    def close_client(self) -> None:
-        pass
-        # self._client.disconnect() # todo: add check for client usage by other devices
+    async def connect_client(self, client: Any) -> bool:
+        if isinstance(client, Lite):
+            return True
+        return False
+
+    async def _disconnect_client(self, client: Lite) -> None:
+        client.disconnect()
 
     async def _poll_objects(self, objs: Collection[BACnetObj]) -> None:
         for obj in objs:

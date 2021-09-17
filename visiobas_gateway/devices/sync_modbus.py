@@ -1,4 +1,3 @@
-import asyncio
 from typing import TYPE_CHECKING, Any, Callable, Collection, Optional, Union
 
 from pymodbus.client.sync import ModbusSerialClient, ModbusTcpClient  # type: ignore
@@ -13,9 +12,12 @@ from ..schemas import (
     ModbusReadFunc,
     ModbusWriteFunc,
     Protocol,
+    SerialDevicePropertyList,
+    TcpIpDevicePropertyList,
 )
 from ..utils import log_exceptions
-from .base_modbus import BaseModbusDevice
+from ._base_modbus import ModbusEncodeDecodeMixin
+from ._base_polling_device import BasePollingDevice
 
 if TYPE_CHECKING:
     from ..gateway import Gateway
@@ -23,112 +25,105 @@ else:
     Gateway = "Gateway"
 
 
-class ModbusDevice(BaseModbusDevice):
+class ModbusDevice(BasePollingDevice, ModbusEncodeDecodeMixin):
     """Sync Modbus Device.
 
     Note: AsyncModbusDevice in `pymodbus` didn't work correctly. So support only Sync
         client.
     """
 
-    def __init__(self, device_obj: DeviceObj, gateway: Gateway):
-        super().__init__(device_obj, gateway)
-        self._client: Union[ModbusSerialClient, ModbusTcpClient] = None  # type: ignore
+    @property
+    def interface_name(self) -> Any:
+        if isinstance(self._device_obj.property_list, TcpIpDevicePropertyList):
+            return (
+                self._device_obj.property_list.address,
+                self._device_obj.property_list.port,
+            )
+        if isinstance(self._device_obj.property_list, SerialDevicePropertyList):
+            return self._device_obj.property_list.rtu.port
+        raise NotImplementedError
 
     @log_exceptions
-    def create_client(self) -> None:
+    async def create_client(
+        self, device_obj: DeviceObj
+    ) -> Union[ModbusTcpClient, ModbusSerialClient]:
         """Initializes synchronous modbus client."""
 
-        self._LOG.debug("Creating pymodbus client", extra={"device_id": self.device_id})
-        if self.protocol in {Protocol.MODBUS_TCP, Protocol.MODBUS_RTU_OVER_TCP}:
-            framer = (
-                ModbusRtuFramer
-                if self.protocol is Protocol.MODBUS_RTU_OVER_TCP
-                else ModbusSocketFramer
-            )
-            self._client = ModbusTcpClient(
-                host=str(self.address),
-                port=self.port,
+        self._LOG.debug(
+            "Creating pymodbus client", extra={"device_id": device_obj.device_id}
+        )
+        framer = (
+            ModbusRtuFramer
+            if device_obj.property_list.protocol is Protocol.MODBUS_RTU
+            else ModbusSocketFramer
+        )
+
+        if device_obj.property_list.protocol in {
+            Protocol.MODBUS_TCP,
+            Protocol.MODBUS_RTU_OVER_TCP,
+        }:
+            client = ModbusTcpClient(
+                host=str(device_obj.property_list.address),  # type: ignore
+                port=device_obj.property_list.port,  # type: ignore
                 framer=framer,
-                retries=self.retries,
+                retries=device_obj.property_list.retries,
                 retry_on_empty=True,
                 retry_on_invalid=True,
-                timeout=self.timeout,
+                timeout=device_obj.property_list.timeout_seconds,
             )
-            self._connected = self._client.connect()
-            self._LOG.debug(
-                "Client created",
-                extra={
-                    "device_id": self.device_id,
-                },
+            return client
+        if device_obj.property_list.protocol is Protocol.MODBUS_RTU:
+            client = ModbusSerialClient(
+                method="rtu",
+                port=device_obj.property_list.rtu.port,  # type: ignore
+                baudrate=device_obj.property_list.rtu.baudrate,  # type: ignore
+                bytesize=device_obj.property_list.rtu.bytesize,  # type: ignore
+                parity=device_obj.property_list.rtu.parity,  # type: ignore
+                stopbits=device_obj.property_list.rtu.stopbits,  # type: ignore
+                timeout=device_obj.property_list.timeout_seconds,
             )
-        elif self.protocol is Protocol.MODBUS_RTU:
-            if self.serial_port is None:
-                raise ValueError("Serial port required")
-            if not self._serial_clients.get(self.serial_port):
-                self._LOG.debug(
-                    "Serial port not using. Creating sync client",
-                    extra={
-                        "device_id": self.device_id,
-                        "serial_port": self.serial_port,
-                    },
-                )
-                self._client = ModbusSerialClient(
-                    method="rtu",
-                    port=self.serial_port,
-                    baudrate=self._dev_obj.baudrate,
-                    bytesize=self._dev_obj.bytesize,
-                    parity=self._dev_obj.parity,
-                    stopbits=self._dev_obj.stopbits,
-                    timeout=self.timeout,
-                )
-                self._serial_clients.update({self.serial_port: self._client})
-                self._serial_polling.update({self.serial_port: asyncio.Event()})
-                self._serial_connected.update({self.serial_port: self._client.connect()})
-            else:
-                self._LOG.debug(
-                    "Serial port already using. Getting client",
-                    extra={
-                        "device_id": self.device_id,
-                        "serial_port": self.serial_port,
-                    },
-                )
-                self._client = self._serial_clients[self.serial_port]
-        else:
-            raise NotImplementedError("Other Modbus variants not supported yet")
+            return client
+        raise NotImplementedError("Other Modbus variants not supported yet")
 
-    def close_client(self) -> None:
-        self._client.close()
-        # if self.protocol is Protocol.MODBUS_RTU:
-        #     self.__class__._serial_clients.pop(self.serial_port)
-        #     self.__class__._serial_port_locks.pop(self.serial_port)
+    @property
+    def is_client_connected(self) -> bool:
+        return self.interface.client_connected
 
-    # @property
-    # def is_client_connected(self) -> bool:
-    #     return self._connected
+    async def connect_client(
+        self, client: Union[ModbusTcpClient, ModbusSerialClient]
+    ) -> bool:
+        return client.connect()
+
+    async def _disconnect_client(
+        self, client: Union[ModbusTcpClient, ModbusSerialClient]
+    ) -> None:
+        client.close()
 
     @property
     def read_funcs(self) -> dict[ModbusReadFunc, Callable]:
+        client = self.interface.client
         return {
-            ModbusReadFunc.READ_COILS: self._client.read_coils,
-            ModbusReadFunc.READ_DISCRETE_INPUTS: self._client.read_discrete_inputs,
-            ModbusReadFunc.READ_HOLDING_REGISTERS: self._client.read_holding_registers,
-            ModbusReadFunc.READ_INPUT_REGISTERS: self._client.read_input_registers,
+            ModbusReadFunc.READ_COILS: client.read_coils,
+            ModbusReadFunc.READ_DISCRETE_INPUTS: client.read_discrete_inputs,
+            ModbusReadFunc.READ_HOLDING_REGISTERS: client.read_holding_registers,
+            ModbusReadFunc.READ_INPUT_REGISTERS: client.read_input_registers,
         }
 
     @property
     def write_funcs(self) -> dict[ModbusWriteFunc, Callable]:
+        client = self.interface.client
         return {
-            ModbusWriteFunc.WRITE_COIL: self._client.write_coil,
-            ModbusWriteFunc.WRITE_REGISTER: self._client.write_register,
-            ModbusWriteFunc.WRITE_COILS: self._client.write_coils,
-            ModbusWriteFunc.WRITE_REGISTERS: self._client.write_registers,
+            ModbusWriteFunc.WRITE_COIL: client.write_coil,
+            ModbusWriteFunc.WRITE_REGISTER: client.write_register,
+            ModbusWriteFunc.WRITE_COILS: client.write_coils,
+            ModbusWriteFunc.WRITE_REGISTERS: client.write_registers,
         }
 
     async def read(
         self, obj: BACnetObj, wait: bool = False, **kwargs: Any
     ) -> Optional[Union[int, float]]:
         if wait:
-            await self._polling_event.wait()
+            await self.interface.polling_event.wait()
         return await self._gtw.async_add_job(self.sync_read, obj)
 
     @log_exceptions
@@ -138,7 +133,9 @@ class ModbusDevice(BaseModbusDevice):
         Updates object and return value.
         """
         resp = self.read_funcs[obj.func_read](
-            address=obj.address, count=obj.quantity, unit=self.unit
+            address=obj.address,
+            count=obj.quantity,
+            unit=self._device_obj.property_list.rtu.unit,  # type: ignore
         )
         if resp.isError():
             obj.set_property(value=ModbusIOException(str(resp)))
@@ -170,7 +167,11 @@ class ModbusDevice(BaseModbusDevice):
             assert len(payload) == 1
             payload = payload[0]  # type: ignore
 
-        request = self.write_funcs[obj.func_write](obj.address, payload, unit=self.unit)
+        request = self.write_funcs[obj.func_write](
+            obj.address,
+            payload,
+            unit=self._device_obj.property_list.rtu.unit,  # type: ignore
+        )
         if request.isError():
             raise ModbusIOException("0x80")  # todo: resp.string
         self._LOG.debug(

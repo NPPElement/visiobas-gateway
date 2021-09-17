@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import asyncio
 from abc import ABC, abstractmethod
 from datetime import datetime
@@ -5,11 +7,10 @@ from functools import lru_cache
 from typing import TYPE_CHECKING, Any, Collection, Optional, Union
 
 import aiojobs  # type: ignore
-from pymodbus.client.asynchronous.async_io import AsyncioModbusSerialClient  # type: ignore
-from pymodbus.client.sync import ModbusSerialClient  # type: ignore
 
-from ..schemas import BACnetObj, DeviceObj, ObjType
-from .base_device import BaseDevice
+from ..schemas import BACnetObj, DeviceObj
+from ._base_device import BaseDevice
+from ._interface import Interface
 
 if TYPE_CHECKING:
     from ..gateway import Gateway
@@ -20,13 +21,7 @@ else:
 class BasePollingDevice(BaseDevice, ABC):
     """Base class for devices, that can be periodically polled for update sensors data."""
 
-    _client_creation_lock: asyncio.Lock = None  # type: ignore
-
-    # Key is serial port name.
-    _serial_clients: dict[str, Union[ModbusSerialClient, AsyncioModbusSerialClient]] = {}
-    _serial_port_locks: dict[str, asyncio.Lock] = {}
-    _serial_polling: dict[str, asyncio.Event] = {}
-    _serial_connected: dict[str, bool] = {}
+    _interfaces: dict[str, Interface] = {}
 
     def __init__(self, device_obj: DeviceObj, gateway: Gateway):
         super().__init__(device_obj, gateway)
@@ -36,79 +31,97 @@ class BasePollingDevice(BaseDevice, ABC):
         # Key: period
         self._objects: dict[float, set[BACnetObj]] = {}
         self._unreachable_objects: set[BACnetObj] = set()
-        # self._nonexistent_objects: set[BACnetObj] = set()
 
         self._connected = False
 
-        # IMPORTANT: clear that event to change the objects (load or priority write).
-        # Wait that event in polling to provide priority access to write_with_check.
+        # IMPORTANT: `clear()` that event to change the objects (load or priority write).
+        # `wait()` that event in polling to provide priority access to write_with_check.
         self._polling = asyncio.Event()
 
+    @abstractmethod
     @property
-    def is_client_connected(self) -> bool:
-        if self.serial_port:
-            return bool(self._serial_connected.get(self.serial_port))
-        return self._connected
+    def interface_name(self) -> Any:
+        """Interface to interact with controller."""
+
+    @property
+    def interface(self) -> Any:
+        return self.__class__._interfaces[  # pylint: disable=protected-access
+            self.interface_name
+        ]
 
     @classmethod
-    async def create(cls, device_obj: DeviceObj, gateway: Gateway) -> "BasePollingDevice":
+    async def create(cls, device_obj: DeviceObj, gateway: Gateway) -> BasePollingDevice:
+        """Creates instance of device. Handles client creation with lock or using
+        existing.
+        """
         dev = cls(device_obj=device_obj, gateway=gateway)
         dev._scheduler = await aiojobs.create_scheduler(close_timeout=60, limit=100)
 
-        if not isinstance(cls._client_creation_lock, asyncio.Lock):
-            cls._client_creation_lock = asyncio.Lock(loop=gateway.loop)
+        if not cls._interfaces.get(dev.interface):
+            lock = asyncio.Lock(loop=gateway.loop)
+            async with lock:  # pylint: disable=not-async-context-manager
+                client = await dev.create_client(device_obj=device_obj)
+                client_connected = await dev.connect_client(client=client)
+            polling_event = asyncio.Event(loop=gateway.loop)
+            interface = Interface(
+                name=dev.interface,
+                used_by={dev.device_id},
+                client=client,
+                lock=lock,
+                polling_event=polling_event,
+                client_connected=client_connected,
+            )
+            cls._interfaces[dev.interface] = interface
+        else:
+            cls._interfaces[dev.interface].used_by.add(dev.device_id)
 
-        async with cls._client_creation_lock:  # pylint: disable=not-async-context-manager
-            await dev._gtw.async_add_job(dev.create_client)
         dev._LOG.debug(
             "Device created",
             extra={
                 "device_id": dev.device_id,
                 "protocol": dev.protocol,
-                "serial_clients_dict": cls._serial_clients,
+                "interface": dev.interface,
             },
         )
         return dev
 
     @property
     def serial_port(self) -> Optional[str]:
-        if hasattr(self._dev_obj.property_list, "rtu"):
-            return self._dev_obj.property_list.rtu.port  # type: ignore
+        if hasattr(self._device_obj.property_list, "rtu"):
+            return self._device_obj.property_list.rtu.port  # type: ignore
         return None
 
     @property
-    def _polling_event(self) -> asyncio.Event:
-        port = self.serial_port
-        if port:
-            return self._serial_polling[port]
-        return self._polling
-
-    @property
-    def types_to_rq(self) -> tuple[ObjType, ...]:
-        return self._dev_obj.types_to_rq
-
-    @property
     def reconnect_period(self) -> int:
-        return self._dev_obj.property_list.reconnect_period
+        return self._device_obj.property_list.reconnect_period
 
     @property
     def retries(self) -> int:
-        return self._dev_obj.retries
+        return self._device_obj.property_list.retries
 
     @property
     def all_objects(self) -> set[BACnetObj]:
         return {obj for objs_set in self._objects.values() for obj in objs_set}
 
-    # @abstractmethod
-    # def is_client_connected(self) -> bool:
-    #     raise NotImplementedError
-
     @abstractmethod
-    def create_client(self) -> None:
+    async def create_client(self, device_obj: DeviceObj) -> Any:
         raise NotImplementedError
 
     @abstractmethod
-    def close_client(self) -> None:
+    async def connect_client(self, client: Any) -> bool:
+        raise NotImplementedError
+
+    async def disconnect_client(self) -> None:
+        if not self.interface.used_by:
+            await self._disconnect_client(client=self.interface.client)
+
+    @abstractmethod
+    async def _disconnect_client(self, client: Any) -> None:
+        raise NotImplementedError
+
+    @abstractmethod
+    @property
+    def is_client_connected(self) -> bool:
         raise NotImplementedError
 
     @abstractmethod
@@ -141,10 +154,10 @@ class BasePollingDevice(BaseDevice, ABC):
             True - if write value and read value is consistent.
             False - if they aren't consistent.
         """
-        self._polling_event.clear()
+        self.interface.polling_event.clear()
         await self.write(value=value, obj=obj, **kwargs)
         read_value = await self.read(obj=obj, wait=False, **kwargs)
-        self._polling_event.set()
+        self.interface.polling_event.set()
 
         is_consistent = value == read_value
         self._LOG.debug(
@@ -167,7 +180,7 @@ class BasePollingDevice(BaseDevice, ABC):
             obj_id: Object identifier.
             obj_type_id: Object type identifier.
 
-        # todo: Implement binary search?
+        # todo: Implement binary search
 
         Returns:
             Object instance.
@@ -180,14 +193,14 @@ class BasePollingDevice(BaseDevice, ABC):
     def insert_objects(self, objs: Collection[BACnetObj]) -> None:
         """Groups objects by poll period and insert them into device for polling."""
         if len(objs):
-            self._polling_event.clear()
+            self.interface.polling_event.clear()
             for obj in objs:
                 poll_period = obj.property_list.poll_period
                 try:
                     self._objects[poll_period].add(obj)
                 except KeyError:
                     self._objects[poll_period] = {obj}
-            self._polling_event.set()
+            self.interface.polling_event.set()
             self._LOG.debug(
                 "Objects are grouped by period and inserted to device",
                 extra={"device_id": self.device_id, "objects_number": len(objs)},
@@ -197,7 +210,7 @@ class BasePollingDevice(BaseDevice, ABC):
         """Starts periodic polls for all periods."""
 
         if self.is_client_connected:
-            self._polling_event.set()
+            self.interface.polling_event.set()
             for period, objs in self._objects.items():
                 await self._scheduler.spawn(
                     self.periodic_poll(objs=objs, period=period, first_iter=True)
@@ -219,9 +232,9 @@ class BasePollingDevice(BaseDevice, ABC):
         """Waits for finish of all polling tasks with timeout, and stop polling.
         Closes client.
         """
-        self._polling_event.clear()
+        self.interface.polling_event.clear()
         await self._scheduler.close()
-        self.close_client()  # todo: left client open if used by another device
+        await self.disconnect_client()  # todo: left client open if used by another device
         self._LOG.info(
             "Device stopped",
             extra={
@@ -273,7 +286,6 @@ class BasePollingDevice(BaseDevice, ABC):
                     "nonexistent_objects_number": len(nonexistent_objs),
                 },
             )
-
         _t_delta = datetime.now() - _t0
         self._LOG.info(
             "Objects polled",
@@ -290,7 +302,7 @@ class BasePollingDevice(BaseDevice, ABC):
             self._LOG.warning(
                 "Polling period is too short!", extra={"device_id": self.device_id}
             )
-        await self._scheduler.spawn(self._process_polled(objs=objs))
+        await self._scheduler.spawn(self._after_polling_tasks(objs=objs))
         await asyncio.sleep(delay=period - _t_delta.seconds)
 
         # self._LOG.debug(f'Periodic polling task created',
@@ -300,7 +312,7 @@ class BasePollingDevice(BaseDevice, ABC):
 
         await self._scheduler.spawn(self.periodic_poll(objs=objs, period=period))
 
-    async def _process_polled(self, objs: set[BACnetObj]) -> None:
+    async def _after_polling_tasks(self, objs: set[BACnetObj]) -> None:
         await self._gtw.verify_objects(objs=objs)
         await self._gtw.send_objects(objs=objs)
 

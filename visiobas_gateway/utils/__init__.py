@@ -1,5 +1,6 @@
 from .identifier import SUPPORTED_CASES, camel_case, kebab_case, pascal_case, snake_case
 from .log import ExtraFormatter, get_file_logger, log_exceptions
+from .network import get_subnet_interface
 from .number import round_with_resolution
 
 __all__ = [
@@ -12,4 +13,5 @@ __all__ = [
     "camel_case",
     "SUPPORTED_CASES",
     "round_with_resolution",
+    "get_subnet_interface",
 ]

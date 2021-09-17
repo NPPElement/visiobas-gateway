@@ -1,16 +1,10 @@
-from abc import abstractmethod
-from typing import TYPE_CHECKING, Callable, Optional, Union
+from typing import Union
 
 from pymodbus.bit_read_message import (  # type: ignore
     ReadBitsResponseBase,
     ReadCoilsResponse,
     ReadDiscreteInputsResponse,
 )
-from pymodbus.client.asynchronous.async_io import (  # type: ignore
-    AsyncioModbusSerialClient,
-    AsyncioModbusTcpClient,
-)
-from pymodbus.client.sync import ModbusSerialClient, ModbusTcpClient  # type: ignore
 from pymodbus.payload import BinaryPayloadBuilder, BinaryPayloadDecoder  # type: ignore
 from pymodbus.register_read_message import (  # type: ignore
     ReadHoldingRegistersResponse,
@@ -18,53 +12,19 @@ from pymodbus.register_read_message import (  # type: ignore
     ReadRegistersResponseBase,
 )
 
-from ..schemas import DeviceObj, ModbusDataType, ModbusObj, ModbusReadFunc, ModbusWriteFunc
-from .base_polling_device import BasePollingDevice
+from ..schemas import ModbusDataType, ModbusObj
+from ..utils import get_file_logger
 
-if TYPE_CHECKING:
-    from ..gateway import Gateway
-else:
-    Gateway = "Gateway"
+_LOG = get_file_logger(name=__name__)
 
 
-# _LOG = get_file_logger(name=__name__, size_mb=500)
-
-
-class BaseModbusDevice(BasePollingDevice):
+class ModbusEncodeDecodeMixin:
     """Base class for Modbus devices.
-    Note: Used when sync\async devices supported.
+    Note: sync\async devices supported.
     """
 
-    def __init__(self, device_obj: DeviceObj, gateway: Gateway) -> None:
-        super().__init__(device_obj, gateway)
-
-        self._client: Optional[
-            Union[
-                ModbusSerialClient,
-                ModbusTcpClient,
-                AsyncioModbusTcpClient,
-                AsyncioModbusSerialClient,
-            ]
-        ] = None
-
-    @property
-    def unit(self) -> int:
-        if hasattr(self._dev_obj.property_list, "rtu"):
-            return self._dev_obj.property_list.rtu.unit  # type: ignore
-        return 0x01
-
-    @property
-    @abstractmethod
-    def read_funcs(self) -> dict[ModbusReadFunc, Callable]:
-        raise NotImplementedError
-
-    @property
-    @abstractmethod
-    def write_funcs(self) -> dict[ModbusWriteFunc, Callable]:
-        raise NotImplementedError
-
+    @staticmethod
     def _decode_response(
-        self,
         resp: Union[
             ReadCoilsResponse,
             ReadDiscreteInputsResponse,
@@ -131,7 +91,7 @@ class BaseModbusDevice(BasePollingDevice):
 
                 decoded = decode_funcs[obj.data_length][obj.data_type]()
                 scaled = decoded * obj.scale + obj.offset  # Scaling
-            self._LOG.debug(
+            _LOG.debug(
                 "Decoded",
                 extra={
                     "device_id": obj.device_id,
@@ -153,8 +113,9 @@ class BaseModbusDevice(BasePollingDevice):
             return scaled
         raise NotImplementedError
 
+    @staticmethod
     def _build_payload(
-        self, value: Union[int, float], obj: ModbusObj
+        value: Union[int, float], obj: ModbusObj
     ) -> Union[int, list[Union[int, bytes, bool]]]:
         """
         # TODO make 4 decoders for all combinations in bo, wo and use them?
@@ -206,8 +167,7 @@ class BaseModbusDevice(BasePollingDevice):
         # FIXME: string not support now
         payload = builder.to_coils() if obj.is_coil else builder.to_registers()
 
-        # payload = builder.build()
-        self._LOG.debug(
+        _LOG.debug(
             "Encoded",
             extra={
                 "device_id": obj.device_id,

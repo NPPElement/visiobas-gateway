@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import asyncio
 from typing import (
     TYPE_CHECKING,
@@ -16,10 +18,11 @@ import aiojobs  # type: ignore
 from visiobas_gateway.api import ApiServer
 from visiobas_gateway.clients import HTTPClient, MQTTClient
 from visiobas_gateway.devices import BACnetDevice, ModbusDevice, SUNAPIDevice
-from visiobas_gateway.devices.base_polling_device import BasePollingDevice
-from visiobas_gateway.schemas import Protocol
+from visiobas_gateway.devices._base_polling_device import BasePollingDevice
 from visiobas_gateway.schemas.bacnet import BACnetObj, DeviceObj, ObjType
+from visiobas_gateway.schemas.bacnet.device_obj import POLLING_TYPES
 from visiobas_gateway.schemas.modbus import ModbusObj
+from visiobas_gateway.schemas.protocol import POLLING_PROTOCOLS, Protocol
 from visiobas_gateway.schemas.settings import (
     ApiSettings,
     GatewaySettings,
@@ -30,7 +33,7 @@ from visiobas_gateway.utils import get_file_logger, log_exceptions
 from visiobas_gateway.verifier import BACnetVerifier
 
 if TYPE_CHECKING:
-    from .devices.base_device import BaseDevice
+    from .devices._base_device import BaseDevice
 
 else:
     BaseDevice = "BaseDevice"
@@ -67,7 +70,7 @@ class Gateway:
         # TODO: updating event to return msg in case controlling at update time.
 
     @classmethod
-    async def create(cls, settings: GatewaySettings) -> "Gateway":
+    async def create(cls, settings: GatewaySettings) -> Gateway:
         gateway = cls(settings=settings)
         gateway._scheduler = await aiojobs.create_scheduler(close_timeout=60, limit=100)
         return gateway
@@ -226,7 +229,9 @@ class Gateway:
 
         # Stop polling devices.
         stop_device_polling_tasks = [
-            dev.stop() for dev in self._devices.values() if dev.is_polling_device
+            dev.stop()
+            for dev in self._devices.values()
+            if dev.protocol in POLLING_PROTOCOLS
         ]
         await asyncio.gather(*stop_device_polling_tasks)
         self._devices = {}
@@ -243,21 +248,21 @@ class Gateway:
 
         # TODO: If fails get objects from server - loads it from local.
         """
-        dev_obj_data = await self.http_client.get_objects(
+        device_obj_data = await self.http_client.get_objects(
             dev_id=dev_id, obj_types=(ObjType.DEVICE,)
         )
         _LOG.debug("Device object downloaded", extra={"device_id": dev_id})
 
         if (
-            not isinstance(dev_obj_data, list)
-            or not isinstance(dev_obj_data[0], list)
-            or not dev_obj_data[0]
+            not isinstance(device_obj_data, list)
+            or not isinstance(device_obj_data[0], list)
+            or not device_obj_data[0]
         ):
             _LOG.warning(
                 "Empty device object or exception",
                 extra={
                     "device_id": dev_id,
-                    "data": dev_obj_data,
+                    "data": device_obj_data,
                 },
             )
             return None
@@ -265,13 +270,13 @@ class Gateway:
         # objs in the list, so get [0] element in `dev_obj_data[0]` below
         # request one type - 'device', so [0] element of tuple below
         # todo: refactor
-        dev_obj = await self.async_add_job(self._parse_device_obj, dev_obj_data[0][0])
-        dev = await self.device_factory(dev_obj=dev_obj)
+        device_obj = await self.async_add_job(self._parse_device_obj, device_obj_data[0][0])
+        device = await self.device_factory(dev_obj=device_obj)
 
-        if dev.is_polling_device:
+        if device.protocol in POLLING_PROTOCOLS:
             # todo: use for extractions tasks asyncio.as_completed(tasks):
             objs_data = await self.http_client.get_objects(
-                dev_id=dev_id, obj_types=dev.types_to_rq
+                dev_id=dev_id, obj_types=POLLING_TYPES
             )
             _LOG.debug(
                 "Polling objects downloaded",
@@ -281,7 +286,7 @@ class Gateway:
             )
 
             extract_tasks = [
-                self.async_add_job(self._extract_objects, obj_data, dev_obj)
+                self.async_add_job(self._extract_objects, obj_data, device_obj)
                 for obj_data in objs_data
                 if not isinstance(obj_data, (aiohttp.ClientError, Exception))
             ]
@@ -295,16 +300,16 @@ class Gateway:
                 "Polling objects extracted",
                 extra={"device_id": dev_id, "objects_count": len(objs)},
             )
-            await self.async_add_job(dev.insert_objects, objs)
+            await self.async_add_job(device.insert_objects, objs)
 
-        self._devices.update({dev.device_id: dev})
+        self._devices.update({device.device_id: device})
         _LOG.info(
             "Device loaded",
             extra={
                 "device_id": dev_id,
             },
         )
-        return dev
+        return device
 
     # async def start_device_poll(self, dev_id: int) -> None:
     #     """Starts poll of device."""
