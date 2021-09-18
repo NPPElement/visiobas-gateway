@@ -1,50 +1,18 @@
-# https://docs.docker.com/develop/develop-images/multistage-build/#use-multi-stage-builds
+FROM python:3.9
 
-############### Image for building a virtual environment ################
-# Base - "heavy" image (~ 1 GB, compressed ~ 500 GB)
-FROM python:3.9 as builder
+WORKDIR /visiobas_gateway/
 
-# Create a virtual environment and update `pip`
-RUN python3.9 -m venv /usr/share/python3/gtw \
-    && /usr/share/python3/gtw/bin/pip install --upgrade pip
-#    && /usr/share/python3/gtw/bin/pip install poetry
+# Install Poetry
+RUN curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | POETRY_HOME=/opt/poetry python && \
+    cd /usr/local/bin && \
+    ln -s /opt/poetry/bin/poetry && \
+    poetry config virtualenvs.create false \
 
-# Install `poetry` package manager
-#RUN curl -sSL 'https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py' | python \
-#    && poetry --version
-#COPY ./poetry.lock ./pyproject.toml  /mnt/
-#RUN poetry install --no-dev --no-interaction --no-ansi \
-#    # Upgrading pip
-#    && poetry run pip install --upgrade pip
+# Copy poetry.lock* in case it doesn't exist in the repo
+COPY ./visiobas_gateway/pyproject.toml ./visiobas_gateway/poetry.lock* /visiobas_gateway/
 
-# Install dependencies separately for caching
-# On a subsequent build, `Docker` will skip this step if dependencies does not change
-COPY ./requirements.txt /mnt/
-RUN /usr/share/python3/gtw/bin/pip install -Ur /mnt/requirements.txt
+RUN bash -c poetry install --no-root
 
-# Copy the source distribution to the container and install it
-COPY /dist/ /mnt/dist/
-RUN /usr/share/python3/gtw/bin/pip install /mnt/dist/*.tar.gz \
-    && /usr/share/python3/gtw/bin/pip check
-
-
-########################### Final image ############################
-# Base - "lightweight" image (~ 100 MB, compressed ~ 50 MB)
-FROM python:3.9-slim-buster as gateway
-
-LABEL maintainer="VisioBAS <info.visiobas.com>" description="VisioBAS Gateway"
-
-# IMPORTANT: the virtual environment uses absolute paths, so
-# it must be copied to the same address,
-# with which it was build in a building container.
-
-# Copy the final virtual environment from the builder container
-COPY --from=builder /usr/share/python3/gtw /usr/share/python3/gtw
-
-# Install links to use visiobas_gateway commands
-RUN ln -snf /usr/share/python3/gtw/bin/gateway  /usr/local/bin/
-
-# Set the default command to run when the container starts
-CMD ["gateway"]
+RUN python /visiobas_gateway
 
 EXPOSE 7070
