@@ -1,6 +1,5 @@
 FROM python:3.9
 
-COPY ./visiobas_gateway /visiobas_gateway
 WORKDIR /visiobas_gateway/
 
 # Install Poetry
@@ -14,6 +13,7 @@ COPY ./pyproject.toml ./poetry.lock* /visiobas_gateway/
 
 RUN bash -c poetry install --no-root
 
+COPY ./visiobas_gateway /visiobas_gateway
 EXPOSE 7070
 
 RUN python /visiobas_gateway
