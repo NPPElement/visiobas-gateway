@@ -230,7 +230,7 @@ class BasePollingDevice(BaseDevice, ABC):
         )
 
     async def _periodic_reset_unreachable(self) -> None:
-        await asyncio.sleep(self._gtw.unreachable_reset_period)
+        await asyncio.sleep(self._gtw.settings.unreachable_reset_period)
 
         for objects in self._objects.values():
             for obj in objects:
@@ -272,7 +272,6 @@ class BasePollingDevice(BaseDevice, ABC):
         )
 
         if _t_delta.seconds > period:
-            # period *= 1.5
             self._LOG.warning("Polling period is too short!", extra={"device_id": self.id})
         await self._scheduler.spawn(self._after_polling_tasks(objs=objs))
         await asyncio.sleep(delay=period - _t_delta.seconds)

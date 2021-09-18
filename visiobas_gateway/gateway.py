@@ -51,7 +51,6 @@ class Gateway:
     def __init__(self, settings: GatewaySettings):
         self.loop: asyncio.AbstractEventLoop = asyncio.get_running_loop()
 
-        # self._pending_tasks: list = []
         self.settings = settings
 
         self._stopped: Optional[asyncio.Event] = None
@@ -64,8 +63,7 @@ class Gateway:
         self.api: Optional[ApiServer] = None
         self.verifier = BACnetVerifier(override_threshold=settings.override_threshold)
 
-        self._devices: dict[int, BasePollingDevice] = {}
-        # self._cameras = dict[int, Union[SUNAPIDevice]]
+        self._devices: dict[int, Any] = {}
 
         # TODO: updating event to return msg in case controlling at update time.
 
@@ -74,22 +72,6 @@ class Gateway:
         gateway = cls(settings=settings)
         gateway._scheduler = await aiojobs.create_scheduler(close_timeout=60, limit=100)
         return gateway
-
-    @property
-    def unreachable_reset_period(self) -> int:
-        return self.settings.unreachable_reset_period
-
-    @property
-    def poll_device_ids(self) -> list[int]:
-        return self.settings.poll_device_ids
-
-    @property
-    def upd_period(self) -> int:
-        return self.settings.update_period
-
-    @property
-    def _is_mqtt_enabled(self) -> bool:
-        return self.settings.mqtt_enable
 
     def get_device(self, dev_id: int) -> Optional[BaseDevice]:
         """
@@ -123,7 +105,7 @@ class Gateway:
     async def async_setup(self) -> None:
         """Set up Gateway and spawn update task."""
         self.http_client = HTTPClient(gateway=self, settings=HTTPSettings())
-        if self._is_mqtt_enabled:
+        if self.settings.mqtt_enable:
             self.mqtt_client = MQTTClient.create(gateway=self, settings=MQTTSettings())
 
         self.api = ApiServer.create(gateway=self, settings=ApiSettings())
@@ -134,7 +116,7 @@ class Gateway:
     async def periodic_update(self) -> None:
         """Spawn periodic update task."""
         await self._perform_start_tasks()
-        await asyncio.sleep(delay=self.upd_period)
+        await asyncio.sleep(delay=self.settings.update_period)
         await self._perform_stop_tasks()
 
         await self._scheduler.spawn(self.periodic_update())
@@ -192,7 +174,7 @@ class Gateway:
 
         # Load devices.
         load_device_tasks = [
-            self.load_device(dev_id=dev_id) for dev_id in self.poll_device_ids
+            self.load_device(dev_id=dev_id) for dev_id in self.settings.poll_device_ids
         ]
         # await asyncio.gather(*load_device_tasks)
 
@@ -219,7 +201,7 @@ class Gateway:
             - Stop devices poll
             - Log out to HTTP
         """
-        if self._is_mqtt_enabled:
+        if self.settings.mqtt_enable:
             if isinstance(self.mqtt_client, MQTTClient):
                 await self.mqtt_client.async_disconnect()
 
