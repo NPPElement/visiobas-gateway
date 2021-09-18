@@ -10,8 +10,8 @@ class ApiSettings(BaseSettings):
         default="http://0.0.0.0", description="Host to server API (without port)."
     )
     PORT: int = Field(default=7070, ge=1024, le=65535, description="Port to serve API.")
-    PRIORITY: Priority = Field(
-        default=Priority.CONTROL_LOOP_FLICK_WARN.value,
+    priority: Priority = Field(
+        default=Priority.CONTROL_LOOP_FLICK_WARN,
         description="BACnet priority of write through API.",
     )
 
@@ -22,3 +22,5 @@ class ApiSettings(BaseSettings):
 
 
 api_settings = ApiSettings()
+
+
