@@ -11,7 +11,7 @@ RUN curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-
 # Copy poetry.lock* in case it doesn't exist in the repo
 COPY ./pyproject.toml ./poetry.lock* /visiobas_gateway/
 
-RUN bash -c poetry install
+RUN poetry install
 
 COPY ./visiobas_gateway /visiobas_gateway
 EXPOSE 7070
