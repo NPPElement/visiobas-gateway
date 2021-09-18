@@ -16,7 +16,7 @@ class LogSettings(BaseSettings):
         "%(name)s.%(funcName)s(%(lineno)d): %(message)s"
     )  # [%(threadName)s]
     disable_loggers: list[str] = Field(
-        default_factory=list, description="List of logger " "names to " "disable."
+        default_factory=list, description="List of logger names to disable."
     )
     log_dir: Path = Field(default=BASE_DIR.parent / ".gtw_logs")
 
