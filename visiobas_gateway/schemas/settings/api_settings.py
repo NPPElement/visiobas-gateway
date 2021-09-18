@@ -11,8 +11,8 @@ class ApiSettings(BaseSettings):
     )
     PORT: int = Field(default=7070, ge=1024, le=65535, description="Port to serve API.")
     PRIORITY: Priority = Field(
-        default=Priority.CONTROL_LOOP_FLICK_WARN,
-        description="BACnet " "priority of write through API.",
+        default=Priority.CONTROL_LOOP_FLICK_WARN.value,
+        description="BACnet priority of write through API.",
     )
 
     class Config:  # pylint: disable=missing-class-docstring
