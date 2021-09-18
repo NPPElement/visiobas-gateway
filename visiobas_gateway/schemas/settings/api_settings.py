@@ -1,4 +1,4 @@
-from pydantic import AnyHttpUrl, BaseSettings, Field
+from pydantic import BaseSettings, Field
 
 from ..bacnet.priority import Priority
 
@@ -6,11 +6,9 @@ from ..bacnet.priority import Priority
 class ApiSettings(BaseSettings):
     """Settings of API application."""
 
-    HOST: AnyHttpUrl = Field(
-        default="http://0.0.0.0", description="Host to server API (without port)."
-    )
+    HOST: str = Field(default="0.0.0.0", description="Host to server API (without port).")
     PORT: int = Field(default=7070, ge=1024, le=65535, description="Port to serve API.")
-    priority: Priority = Field(
+    PRIORITY: Priority = Field(
         default=Priority.CONTROL_LOOP_FLICK_WARN,
         description="BACnet priority of write through API.",
     )
@@ -22,5 +20,3 @@ class ApiSettings(BaseSettings):
 
 
 api_settings = ApiSettings()
-
-
