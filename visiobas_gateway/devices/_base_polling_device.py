@@ -31,8 +31,8 @@ class BasePollingDevice(BaseDevice, ABC):
         # Key: period
         self._objects: dict[float, set[BACnetObj]] = {}
 
-    @abstractmethod
     @property
+    @abstractmethod
     def interface_name(self) -> Any:
         """Interface name, used to get access to interface."""
 
@@ -104,8 +104,8 @@ class BasePollingDevice(BaseDevice, ABC):
     async def _disconnect_client(self, client: Any) -> None:
         raise NotImplementedError
 
-    @abstractmethod
     @property
+    @abstractmethod
     def is_client_connected(self) -> bool:
         raise NotImplementedError
 
