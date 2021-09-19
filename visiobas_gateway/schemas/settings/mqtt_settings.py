@@ -10,6 +10,9 @@ from ..mqtt import Qos
 class MQTTSettings(BaseSettings):
     """Settings of MQTT client."""
 
+    enable: bool = Field(
+        default=False, description="Flag for MQTT client activation."
+    )
     url: AnyUrl = Field(...)
 
     qos: Qos = Field(default=Qos.AT_MOST_ONCE_DELIVERY)
@@ -17,14 +20,14 @@ class MQTTSettings(BaseSettings):
     keepalive: int = Field(default=60, ge=1)
 
     topics_sub: list[str] = Field(default=[])
-    client_id: UUID4 = Field(default=None)  # todo add factory/validation
+    client_id: UUID4 = Field(default=None)
 
     @validator("client_id", pre=True)
     def create_client_id(cls, value: Optional[str]) -> str:
         # pylint: disable=no-self-argument
         return value or mqtt.base62(uuid.uuid4().int, padding=22)
 
-    # todo: add certificate
+    # todo: add security
 
     class Config:  # pylint: disable=missing-class-docstring
         # arbitrary_types_allowed = True
