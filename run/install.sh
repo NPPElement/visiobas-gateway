@@ -1,3 +1,5 @@
+# FIXME: Outdated script! Will be updated soon.
+
 # Updates packages
 sudo apt --assume-yes update
 sudo apt --assume-yes upgrade
