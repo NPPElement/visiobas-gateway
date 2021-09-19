@@ -59,6 +59,7 @@ class Gateway:
         self._scheduler: aiojobs.Scheduler = None  # type: ignore
         self.http_client: HTTPClient = None  # type: ignore
 
+        self._mqtt_settings = MQTTSettings()
         self.mqtt_client: Optional[MQTTClient] = None
         self.api: Optional[ApiServer] = None
         self.verifier = BACnetVerifier(override_threshold=settings.override_threshold)
@@ -105,8 +106,8 @@ class Gateway:
     async def async_setup(self) -> None:
         """Set up Gateway and spawn update task."""
         self.http_client = HTTPClient(gateway=self, settings=HTTPSettings())
-        if self.settings.mqtt_enable:
-            self.mqtt_client = MQTTClient.create(gateway=self, settings=MQTTSettings())
+        if self._mqtt_settings.enable:
+            self.mqtt_client = MQTTClient.create(gateway=self, settings=self._mqtt_settings)
 
         self.api = ApiServer.create(gateway=self, settings=ApiSettings())
         await self._scheduler.spawn(self.api.start())
@@ -201,7 +202,7 @@ class Gateway:
             - Stop devices poll
             - Log out to HTTP
         """
-        if self.settings.mqtt_enable:
+        if self._mqtt_settings.enable:
             if isinstance(self.mqtt_client, MQTTClient):
                 await self.mqtt_client.async_disconnect()
 

@@ -2,7 +2,7 @@ import uuid
 from typing import Optional
 
 import paho.mqtt.client as mqtt  # type: ignore
-from pydantic import UUID4, AnyUrl, BaseSettings, Field, validator
+from pydantic import AnyUrl, BaseSettings, Field, validator
 
 from ..mqtt import Qos
 
@@ -10,9 +10,7 @@ from ..mqtt import Qos
 class MQTTSettings(BaseSettings):
     """Settings of MQTT client."""
 
-    enable: bool = Field(
-        default=False, description="Flag for MQTT client activation."
-    )
+    enable: bool = Field(default=False, description="Flag for MQTT client activation.")
     url: AnyUrl = Field(...)
 
     qos: Qos = Field(default=Qos.AT_MOST_ONCE_DELIVERY)
@@ -20,7 +18,7 @@ class MQTTSettings(BaseSettings):
     keepalive: int = Field(default=60, ge=1)
 
     topics_sub: list[str] = Field(default=[])
-    client_id: UUID4 = Field(default=None)
+    client_id: str = Field(default=None)
 
     @validator("client_id", pre=True)
     def create_client_id(cls, value: Optional[str]) -> str:
