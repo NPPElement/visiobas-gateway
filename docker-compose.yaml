@@ -24,7 +24,7 @@ services:
       - PYTHONASYNCIODEBUG=0
     volumes:
       #- /opt/visiobas-visiobas_gateway/logs:/usr/share/python3/gtw/visiobas_gateway/logs
-      - /opt/visiobas-gateway/visiobas_gateway:/visiobas_gateway
+      - /opt/visiobas-gateway:/
       - /dev:/dev # [1]
 #    networks:
 #      - backend
