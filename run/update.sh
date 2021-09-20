@@ -19,5 +19,5 @@ sudo git pull || { echo "Uncommitted changes found. Please, commit them or use '
 sudo docker-compose up --build # -d
 
 echo '************************************'
-echo '     VisioBAS Gateway started!'
+echo '     VisioBAS Gateway updated!'
 echo '************************************'
