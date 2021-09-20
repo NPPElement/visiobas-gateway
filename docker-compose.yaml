@@ -6,7 +6,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: visiobas-gateway:3.3.0-beta
+    image: visiobas-gateway:0.3.1-beta
     logging:
       #driver: none
       driver: "json-file"
@@ -16,11 +16,7 @@ services:
     restart: always
     privileged: true # [1]
     env_file:
-      - config/gateway.env
-      - config/http.env
-      - config/mqtt.env
-      - config/api.env
-      - config/log.env
+      - config/.env
     environment:
       - TZ=Europe/Moscow
       - PYTHONPATH=/
