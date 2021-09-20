@@ -20,27 +20,14 @@ _LOG = get_file_logger(name=__name__)
 class ApiServer:
     """VisioBAS Gateway API."""
 
-    # TODO: add run_in_thread() method
-
     def __init__(self, gateway: Gateway, settings: ApiSettings):
         self._gateway = gateway
         self._settings = settings
         self._app: Optional[Application] = None
         self._stopped = asyncio.Event()
 
-    def __repr__(self) -> str:
-        return self.__class__.__name__
-
-    # @property
-    # def host(self) -> str:
-    #     return self._settings.host
-    #
-    # @property
-    # def port(self) -> int:
-    #     port = self._settings.port
-    #     if port is not None:
-    #         return int(port)
-    #     return 7070
+    # def __repr__(self) -> str:
+    #     return self.__class__.__name__
 
     @property
     def handlers(

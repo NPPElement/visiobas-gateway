@@ -239,12 +239,12 @@ class MQTTClient:
         client: Any,
         userdata: Any,
         flags: Any,
-        result_code: Any,
+        result_code: int,
         properties: Any = None,
     ) -> None:
         # pylint: disable=unused-argument
         # pylint: disable=too-many-arguments
-        if result_code == ResultCode.CONNECTION_SUCCESSFUL.result_code:
+        if result_code == ResultCode.CONNECTION_SUCCESSFUL:
             self._connected = True
             _LOG.info("Connected to broker")
             # Subscribing in on_connect() means that if we lose the connection and

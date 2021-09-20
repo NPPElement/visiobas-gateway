@@ -1,8 +1,8 @@
-from enum import Enum, unique
+from enum import IntEnum, unique
 
 
 @unique
-class ResultCode(int, Enum):
+class ResultCode(IntEnum):
     """Represent MQTT result codes."""
 
     CONNECTION_SUCCESSFUL = 0
@@ -13,7 +13,3 @@ class ResultCode(int, Enum):
     NOT_AUTHORIZED = 5
 
     # other currently unused in paho
-
-    @property
-    def result_code(self) -> int:
-        return self.value
