@@ -1,4 +1,8 @@
+from __future__ import annotations
+
+import asyncio
 import logging
+import typing
 from functools import wraps
 from logging.handlers import RotatingFileHandler
 from typing import Any, Callable
@@ -88,7 +92,7 @@ def get_file_logger(name: str) -> logging.Logger:
 _LOG = get_file_logger(name=__name__)
 
 
-def log_exceptions(func: Callable) -> Any:
+def log_exceptions(func: Callable | Callable[..., typing.Awaitable]) -> Any:
     """Decorator, logging function signature and exception if it occur."""
 
     @wraps(func)
@@ -112,4 +116,29 @@ def log_exceptions(func: Callable) -> Any:
             )
             raise exc
 
-    return wrapper
+    @wraps(func)
+    async def async_wrapper(*args: Any, **kwargs: Any) -> Any:
+        args_repr = [repr(a) for a in args]
+        kwargs_repr = [f"{k}={v!r}" for k, v in kwargs.items()]
+        signature = ", ".join(args_repr + kwargs_repr)
+
+        try:
+            value = await func(*args, **kwargs)
+            return value
+        except Exception as exc:  # pylint: disable=broad-except
+            # TODO: more info
+            # TODO: use extra
+            _LOG.warning(
+                "During %s(%s) call, exception %s: %s occurred",
+                func.__name__,
+                signature,
+                exc.__class__.__name__,
+                exc,
+            )
+            raise exc
+
+    return (
+        async_wrapper
+        if asyncio.iscoroutine(func) or asyncio.iscoroutinefunction(func)
+        else wrapper
+    )

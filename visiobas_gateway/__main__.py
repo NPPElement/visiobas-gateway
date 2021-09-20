@@ -4,6 +4,7 @@ import sys
 
 try:
     import uvloop  # type: ignore
+
     UVLOOP_ENABLE = True
 except ImportError:
     UVLOOP_ENABLE = False
