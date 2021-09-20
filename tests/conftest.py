@@ -1,3 +1,4 @@
+import json
 from typing import Callable, Any
 
 from visiobas_gateway.schemas.bacnet.base_obj import BaseBACnetObj
@@ -164,11 +165,13 @@ def _base_bacnet_obj_kwargs(kwargs: dict[str, Any]) -> dict[str, Any]:
         "75": 75,
         "77": "Name:Name/Name.Name",
         "79": "analog-input",
-        "371": {
-            "template": "",
-            "alias": "",
-            "replace": {},
-        },
+        "371": json.dumps(
+            {
+                "template": "",
+                "alias": "",
+                "replace": {},
+            }
+        ),
         "846": 846,
         **kwargs,
     }
@@ -231,7 +234,7 @@ def _serial_device_property_list_kwargs(kwargs: dict[str, Any]) -> dict[str, Any
 def _tcp_ip_device_obj_kwargs(kwargs: dict[str, Any]) -> dict[str, Any]:
     kwargs = {
         **_base_bacnet_obj_kwargs({}),
-        "371": _tcp_ip_device_property_list_kwargs({}),
+        "371": json.dumps(_tcp_ip_device_property_list_kwargs({})),
         **kwargs,
     }
     return kwargs
@@ -240,7 +243,7 @@ def _tcp_ip_device_obj_kwargs(kwargs: dict[str, Any]) -> dict[str, Any]:
 def _serial_device_obj_kwargs(kwargs: dict[str, Any]) -> dict[str, Any]:
     kwargs = {
         **_base_bacnet_obj_kwargs({}),
-        "371": _serial_device_property_list_kwargs({}),
+        "371": json.dumps(_serial_device_property_list_kwargs({})),
         **kwargs,
     }
     return kwargs

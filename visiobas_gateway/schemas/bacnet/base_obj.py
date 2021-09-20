@@ -1,3 +1,4 @@
+import json
 from typing import Any, Union
 
 from pydantic import BaseModel, Field, validator
@@ -17,6 +18,19 @@ class BaseBACnetObj(BaseModel):
         alias=str(ObjProperty.OBJECT_TYPE.id),
         description="""Indicates membership in a particular object type class.""",
     )
+
+    @validator("type", pre=True)
+    def validate_type(cls, value: Union[int, str]) -> ObjType:
+        # pylint: disable=no-self-argument
+        if isinstance(value, int):
+            return ObjType(value)
+        if isinstance(value, str):
+            try:
+                return ObjType[snake_case(value).upper()]
+            except KeyError:
+                pass
+        raise ValueError("Invalid type")
+
     device_id: int = Field(..., gt=0, alias=str(ObjProperty.DEVICE_ID.id))
     id: int = Field(
         ...,
@@ -36,17 +50,10 @@ class BaseBACnetObj(BaseModel):
     )
     property_list: Any = Field(alias=str(ObjProperty.PROPERTY_LIST.id))
 
-    @validator("type", pre=True)
-    def validate_type(cls, value: Union[int, str]) -> ObjType:
+    @validator("property_list", pre=True)
+    def parse_property_list(cls, value: str) -> str:
         # pylint: disable=no-self-argument
-        if isinstance(value, int):
-            return ObjType(value)
-        if isinstance(value, str):
-            try:
-                return ObjType[snake_case(value).upper()]
-            except KeyError:
-                pass
-        raise ValueError("Invalid type")
+        return json.loads(value)
 
     @property
     def mqtt_topic(self) -> str:

@@ -11,7 +11,9 @@ from .obj_type import ObjType
 class DeviceObj(BaseBACnetObj):
     """Represent device object."""
 
-    property_list: Union[TcpIpDevicePropertyList, SerialDevicePropertyList] = Field(
+    property_list: Union[
+        TcpIpDevicePropertyList, SerialDevicePropertyList
+    ] = Field(  # type: ignore
         ..., alias=str(ObjProperty.PROPERTY_LIST.id)
     )
 

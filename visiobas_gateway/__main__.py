@@ -5,9 +5,9 @@ import sys
 try:
     import uvloop  # type: ignore
 
-    UVLOOP_ENABLE = True
+    _UVLOOP_ENABLE = True
 except ImportError:
-    UVLOOP_ENABLE = False
+    _UVLOOP_ENABLE = False
 
 from visiobas_gateway.gateway import Gateway
 from visiobas_gateway.schemas.settings import GatewaySettings, LogSettings
@@ -36,7 +36,7 @@ def main() -> None:
     log_settings = LogSettings()
     setup_logging(settings=log_settings)
 
-    if UVLOOP_ENABLE:
+    if _UVLOOP_ENABLE:
         uvloop.install()
     asyncio.run(load_and_run())
 

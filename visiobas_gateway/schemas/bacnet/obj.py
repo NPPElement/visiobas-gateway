@@ -55,7 +55,7 @@ class BACnetObj(BaseBACnetObj):
     segmentation_supported: bool = Field(
         default=False, alias=str(ObjProperty.SEGMENTATION_SUPPORTED.id)
     )
-    property_list: BACnetObjPropertyList = Field(
+    property_list: BACnetObjPropertyList = Field(  # type: ignore
         ...,
         alias=str(ObjProperty.PROPERTY_LIST.id),
         description="""This read-only property is a JSON of property identifiers, one
