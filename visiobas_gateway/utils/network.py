@@ -1,3 +1,4 @@
+import socket
 from ipaddress import IPv4Address, IPv4Interface
 from typing import Optional
 
@@ -20,7 +21,7 @@ def get_subnet_interface(ip: IPv4Address) -> Optional[IPv4Interface]:
         NotImplementedError: if `netifaces` not installed
     """
     if not _NETIFACES_ENABLE:
-        return None
+        return _get_ip_address()
 
     if not isinstance(ip, IPv4Address):
         raise ValueError("Instance of `IPv4Address` expected")
@@ -40,3 +41,26 @@ def get_subnet_interface(ip: IPv4Address) -> Optional[IPv4Interface]:
         except KeyError:
             pass
     return None
+
+
+def _get_ip_address() -> IPv4Interface:
+    """Retrieve the IP address connected to internet.
+
+    Adopted from BAC0
+
+    Returns:
+        IP Address as String
+    Raises:
+        ConnectionError: If no addresses connected to internet.
+    """
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        s.connect(("google.com", 0))
+        ip_address = s.getsockname()[0]
+        s.close()
+    except socket.error as exc:
+        raise ConnectionError(
+            "Impossible to retrieve IP, please provide one manually or install "
+            "`netifaces`"
+        ) from exc
+    return IPv4Interface(ip_address)
