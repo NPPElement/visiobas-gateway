@@ -1,6 +1,13 @@
 definitions:
   ObjType:
-    description: Represent types of BACnet objects.
+    description: 'Supported BACnet object types.
+
+
+      Enumerated values 0-127 are reserved for definition by ASHRAE.
+
+      Enumerated values 128-1023 may be used by others subject to the procedures and
+
+      constraints'
     enum:
     - 0
     - 1
@@ -33,7 +40,6 @@ definitions:
     - 28
     - 29
     - 30
-    - 31
     - 32
     - 33
     - 34

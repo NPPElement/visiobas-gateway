@@ -62,7 +62,6 @@ def _generate_json_schemas(
             data = json.loads(cls.schema_json())
             with open(file_path, "w") as file:
                 yaml.dump(data, file)
-            print("Created:", file_path)
 
 
 if __name__ == "__main__":

@@ -106,7 +106,14 @@ definitions:
     title: ModbusWriteFunc
     type: string
   ObjType:
-    description: Represent types of BACnet objects.
+    description: 'Supported BACnet object types.
+
+
+      Enumerated values 0-127 are reserved for definition by ASHRAE.
+
+      Enumerated values 128-1023 may be used by others subject to the procedures and
+
+      constraints'
     enum:
     - 0
     - 1
@@ -139,7 +146,6 @@ definitions:
     - 28
     - 29
     - 30
-    - 31
     - 32
     - 33
     - 34
@@ -165,6 +171,30 @@ definitions:
     - 54
     title: ObjType
     type: integer
+  Reliability:
+    description: 'Enumerated values 0-63 are reserved for definition by ASHRAE.
+
+      Enumerated values 64-65535 may be used by others subject to the procedures and
+
+      constraints.'
+    enum:
+    - 0
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+    - 12
+    - 13
+    - 14
+    - 15
+    title: Reliability
+    type: integer
   StatusFlags:
     description: Represent Combination of 4 `StatusFlag`.
     properties:
@@ -180,9 +210,9 @@ description: Modbus Object.
 properties:
   '103':
     anyOf:
-    - type: integer
+    - $ref: '#/definitions/Reliability'
     - type: string
-    default: ''
+    default: 0
     description: "Provides an indication of whether the `Present_Value` is\n     \
       \   \"reliable\" as far as the BACnet Device can determine and, if not, why."
     title: '103'
