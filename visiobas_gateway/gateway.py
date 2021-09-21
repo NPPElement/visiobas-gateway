@@ -288,7 +288,7 @@ class Gateway:
         _LOG.info(
             "Device loaded",
             extra={
-                "device_id": device_id,
+                "device": device,
             },
         )
         return device
@@ -370,7 +370,7 @@ class Gateway:
         else:
             raise NotImplementedError("Device factory not implemented")
 
-        _LOG.debug("Device object created", extra={"device_id": device.id})
+        _LOG.debug("Device object created", extra={"device": device})
         return device
 
     @staticmethod
