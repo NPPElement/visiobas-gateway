@@ -1,5 +1,6 @@
 from typing import Any
 
+from ..schemas.bacnet.device_property_list import TcpIpDevicePropertyList
 from ._base_device import BaseDevice
 
 
@@ -12,6 +13,7 @@ class SUNAPIDevice(BaseDevice):
 
         # todo: add check
         """
+        assert isinstance(self._device_obj.property_list, TcpIpDevicePropertyList)
 
         control_submenus = {
             "absolute",
@@ -57,9 +59,7 @@ class SUNAPIDevice(BaseDevice):
             raise ValueError("Provide `control` or `config` cgi")
 
         cgi = "ptz" + cgi + ".cgi"
-        url_path = "http://{device_ip}/stw‐cgi/{cgi}".format(
-            device_ip=self._device_obj.property_list.address, cgi=cgi  # type: ignore
-        )
+        url_path = f"http://{self._device_obj.property_list.address}/stw‐cgi/{cgi}"
         # ex = 'http://<Device IP>/stw‐cgi/ptzcontrol.cgi?
         # msubmenu=absolute&action=control&Pan=90&Zoom=30&Tilt=25'
         if self._gtw.http_client is not None:

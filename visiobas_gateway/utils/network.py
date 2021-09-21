@@ -44,14 +44,15 @@ def get_subnet_interface(ip: IPv4Address) -> Optional[IPv4Interface]:
 
 
 def _get_ip_address() -> IPv4Interface:
-    """Retrieve the IP address connected to internet.
+    """Attempt an internet connection and use the network adapter
+    connected to the internet.
 
-    Adopted from BAC0
+       Adopted from BAC0
 
-    Returns:
-        IP Address as String
-    Raises:
-        ConnectionError: If no addresses connected to internet.
+       Returns:
+           IP Address as String
+       Raises:
+           ConnectionError: If no addresses connected to internet.
     """
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     try:

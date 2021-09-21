@@ -65,7 +65,8 @@ class TcpIpDevicePropertyList(BaseDevicePropertyList):
     def address_port(self) -> str:
         return ":".join(
             (
-                str(self.address), str(self.port),  # type: ignore
+                str(self.address),
+                str(self.port),  # type: ignore
             )
         )
 

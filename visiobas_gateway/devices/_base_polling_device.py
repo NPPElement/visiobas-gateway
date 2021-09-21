@@ -9,9 +9,9 @@ from typing import TYPE_CHECKING, Any, Collection, Optional, Union
 import aiojobs  # type: ignore
 
 from ..schemas import BACnetObj, DeviceObj
+from ..utils.log import log_exceptions
 from ._base_device import BaseDevice
 from ._interface import Interface
-from ..utils.log import log_exceptions
 
 if TYPE_CHECKING:
     from ..gateway import Gateway
@@ -32,16 +32,16 @@ class BasePollingDevice(BaseDevice, ABC):
         # Key: period
         self._objects: dict[float, set[BACnetObj]] = {}
 
-    @property
+    @staticmethod
     @abstractmethod
-    def interface_name(self) -> Any:
+    def interface_name(device_obj: DeviceObj) -> Any:
         """Interface name, used to get access to interface."""
 
     @property
     def interface(self) -> Any:
         """Interface to interact with controller."""
         return self.__class__._interfaces.get(  # pylint: disable=protected-access
-            self.interface_name
+            self.interface_name(device_obj=self._device_obj)
         )
 
     @classmethod
@@ -53,7 +53,9 @@ class BasePollingDevice(BaseDevice, ABC):
         device = cls(device_obj=device_obj, gateway=gateway)
         device._scheduler = await aiojobs.create_scheduler(close_timeout=60, limit=100)
 
-        if not cls._interfaces.get(device.interface_name):
+        interface_name = device.interface_name(device_obj=device_obj)
+
+        if not cls._interfaces.get(interface_name):
             lock = asyncio.Lock(loop=gateway.loop)
             async with lock:  # pylint: disable=not-async-context-manager
                 client = await device.create_client(device_obj=device_obj)
@@ -67,10 +69,10 @@ class BasePollingDevice(BaseDevice, ABC):
                 polling_event=polling_event,
                 client_connected=client_connected,
             )
-            cls._interfaces[device.interface_name] = interface
+            cls._interfaces[interface_name] = interface
         else:
             # Using existing interface.
-            cls._interfaces[device.interface_name].used_by.add(device.id)
+            cls._interfaces[interface_name].used_by.add(device.id)
 
         device._LOG.debug(
             "Device created",

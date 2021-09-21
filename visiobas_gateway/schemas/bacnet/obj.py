@@ -198,20 +198,13 @@ class BACnetObj(BaseBACnetObj):
         setattr(self, property_name, value)
 
     def to_mqtt_str(self) -> str:
-        return "{0} {1} {2} {3} {4}".format(
-            self.device_id,
-            self.id,
-            self.type.type_id,
-            self.present_value,
-            self.status_flags,
+        return (
+            f"{self.device_id} {self.id} {self.type.type_id} "
+            f"{self.present_value} {self.status_flags}"
         )
 
     def to_http_str(self) -> str:
-        str_ = "{0} {1} {2}".format(
-            self.id,
-            self.type.type_id,
-            self.present_value,
-        )
+        str_ = f"{self.id} {self.type.type_id} {self.present_value}"
         if self.priority_array:
             pa_str = self._convert_pa_to_str(priority_array=self.priority_array)
             str_ += " " + pa_str
