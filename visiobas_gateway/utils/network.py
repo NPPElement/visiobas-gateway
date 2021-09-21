@@ -1,6 +1,7 @@
 import socket
 from ipaddress import IPv4Address, IPv4Interface
 from typing import Optional
+from .log import get_file_logger
 
 try:
     import netifaces  # type: ignore
@@ -8,6 +9,8 @@ try:
     _NETIFACES_ENABLE = True
 except ImportError:
     _NETIFACES_ENABLE = False
+
+_LOG = get_file_logger(__name__)
 
 
 def get_subnet_interface(ip: IPv4Address) -> Optional[IPv4Interface]:
@@ -27,8 +30,12 @@ def get_subnet_interface(ip: IPv4Address) -> Optional[IPv4Interface]:
         raise ValueError("Instance of `IPv4Address` expected")
 
     interfaces = netifaces.interfaces()
+    _LOG.debug('Available interfaces', extra={'interfaces': interfaces})
+
     for nic in interfaces:
         addresses = netifaces.ifaddresses(nic)
+        _LOG.debug('Addresses for NIC available', extra={'nic': nic, 'addresses':
+            addresses, 'ip': ip})
         try:
             for address in addresses[netifaces.AF_INET]:
                 interface = IPv4Interface(
@@ -38,6 +45,8 @@ def get_subnet_interface(ip: IPv4Address) -> Optional[IPv4Interface]:
 
                 if ip in network:
                     return interface
+                _LOG.debug('IP not available via interface', extra={'ip': ip,
+                                                                    'interface': interface})
         except KeyError:
             pass
     return None
