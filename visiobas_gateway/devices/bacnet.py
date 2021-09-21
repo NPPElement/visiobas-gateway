@@ -25,10 +25,15 @@ class BACnetDevice(BasePollingDevice):
         # todo: Should we use one RPM for several objects?
 
     @staticmethod
-    def interface_name(device_obj: DeviceObj) -> str:
-        device_ip_address = device_obj.property_list.address  # type: ignore
+    def interface_name(device_obj: DeviceObj) -> Optional[str]:
+        assert isinstance(device_obj.property_list, TcpIpDevicePropertyList)
+
+        device_ip_address = device_obj.property_list.address
         interface = get_subnet_interface(ip=device_ip_address)
-        return str(interface)
+
+        if interface:
+            return str(interface)
+        return None
 
     @property
     def is_client_connected(self) -> bool:

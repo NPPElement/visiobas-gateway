@@ -18,7 +18,7 @@ def get_subnet_interface(ip: IPv4Address) -> Optional[IPv4Interface]:
         Interface in same subnet as `ip` which can be used to interact.
             None if no one exists.
     Raises:
-        NotImplementedError: if `netifaces` not installed
+        NotImplementedError: if `netifaces` not installed.
     """
     if not _NETIFACES_ENABLE:
         return _get_ip_address()
