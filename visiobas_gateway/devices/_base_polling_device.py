@@ -11,6 +11,7 @@ import aiojobs  # type: ignore
 from ..schemas import BACnetObj, DeviceObj
 from ._base_device import BaseDevice
 from ._interface import Interface
+from ..utils.log import log_exceptions
 
 if TYPE_CHECKING:
     from ..gateway import Gateway
@@ -44,6 +45,7 @@ class BasePollingDevice(BaseDevice, ABC):
         )
 
     @classmethod
+    @log_exceptions
     async def create(cls, device_obj: DeviceObj, gateway: Gateway) -> BasePollingDevice:
         """Creates instance of device. Handles client creation with lock or using
         existing.
@@ -75,7 +77,8 @@ class BasePollingDevice(BaseDevice, ABC):
             extra={
                 "device_id": device.id,
                 "protocol": device.protocol,
-                "interface": device.interface,
+                "device_interface": device.interface,
+                "interface_state": cls._interfaces,
             },
         )
         return device
