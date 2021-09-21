@@ -34,10 +34,10 @@ class BACnetDevice(BasePollingDevice):
         )
 
     @property
-    def interface_name(self) -> Any:
+    def interface_name(self) -> str:
         device_ip_address = self._device_obj.property_list.address  # type: ignore
         interface = get_subnet_interface(ip=device_ip_address)
-        return interface
+        return str(interface)
 
     @property
     def is_client_connected(self) -> bool:
@@ -172,7 +172,12 @@ class BACnetDevice(BasePollingDevice):
 
     def read_property(self, obj: BACnetObj, prop: ObjProperty) -> BACnetObj:
         request = " ".join(
-            (self.address_port, camel_case(obj.type.name), str(obj.id), prop.name)
+            (
+                self.address_port,
+                camel_case(obj.type.name),
+                str(obj.id),
+                camel_case(prop.name),
+            )
         )
         response = self.interface.client.read(request)
         self._LOG.debug(

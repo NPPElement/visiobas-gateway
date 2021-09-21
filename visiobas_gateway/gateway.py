@@ -175,7 +175,7 @@ class Gateway:
 
         # Load devices.
         load_device_tasks = [
-            self.load_device(dev_id=dev_id) for dev_id in self.settings.poll_device_ids
+            self.load_device(device_id=dev_id) for dev_id in self.settings.poll_device_ids
         ]
         # await asyncio.gather(*load_device_tasks)
 
@@ -219,7 +219,7 @@ class Gateway:
         _LOG.info("Stop tasks performed")
 
     @log_exceptions
-    async def load_device(self, dev_id: int) -> Optional[BaseDevice]:
+    async def load_device(self, device_id: int) -> Optional[BaseDevice]:
         """Tries to download an object of device from server.
         Then gets polling objects and load them into device.
 
@@ -228,9 +228,9 @@ class Gateway:
         # TODO: If fails get objects from server - loads it from local.
         """
         device_obj_data = await self.http_client.get_objects(
-            dev_id=dev_id, obj_types=(ObjType.DEVICE,)
+            dev_id=device_id, obj_types=(ObjType.DEVICE,)
         )
-        _LOG.debug("Device object downloaded", extra={"device_id": dev_id})
+        _LOG.debug("Device object downloaded", extra={"device_id": device_id})
 
         if (
             not isinstance(device_obj_data, list)
@@ -240,7 +240,7 @@ class Gateway:
             _LOG.warning(
                 "Empty device object or exception",
                 extra={
-                    "device_id": dev_id,
+                    "device_id": device_id,
                     "data": device_obj_data,
                 },
             )
@@ -252,15 +252,18 @@ class Gateway:
         device_obj = await self.async_add_job(self._parse_device_obj, device_obj_data[0][0])
         device = await self.device_factory(dev_obj=device_obj)
 
+        if not device:
+            return None
+
         if device.protocol in POLLING_PROTOCOLS:
             # todo: use for extractions tasks asyncio.as_completed(tasks):
             objs_data = await self.http_client.get_objects(
-                dev_id=dev_id, obj_types=POLLING_TYPES
+                dev_id=device_id, obj_types=POLLING_TYPES
             )
             _LOG.debug(
                 "Polling objects downloaded",
                 extra={
-                    "device_id": dev_id,
+                    "device_id": device_id,
                 },
             )
 
@@ -277,7 +280,7 @@ class Gateway:
 
             _LOG.debug(
                 "Polling objects extracted",
-                extra={"device_id": dev_id, "objects_count": len(objs)},
+                extra={"device_id": device_id, "objects_count": len(objs)},
             )
             await self.async_add_job(device.insert_objects, objs)
 
@@ -285,7 +288,7 @@ class Gateway:
         _LOG.info(
             "Device loaded",
             extra={
-                "device_id": dev_id,
+                "device_id": device_id,
             },
         )
         return device
@@ -300,18 +303,18 @@ class Gateway:
     #         _LOG.warning('Is not a polling device', extra={'device_id': dev_id})
 
     @staticmethod
-    def _parse_device_obj(dev_data: dict) -> Optional[DeviceObj]:
+    def _parse_device_obj(data: dict) -> Optional[DeviceObj]:
         """Parses and validate device object data from JSON.
 
         Returns:
             Parsed and validated device object, if no errors throw.
         """
-        dev_obj = DeviceObj(**dev_data)
+        dev_obj = DeviceObj(**data)
         _LOG.debug("Device object parsed", extra={"device_object": dev_obj})
         return dev_obj
 
     def _extract_objects(
-        self, objs_data: tuple, dev_obj: DeviceObj
+        self, data: tuple, dev_obj: DeviceObj
     ) -> list[Union[BACnetObj, ModbusObj]]:
         """Parses and validate objects data from JSON.
 
@@ -320,7 +323,7 @@ class Gateway:
         """
         objs = [
             self.object_factory(dev_obj=dev_obj, obj_data=obj_data)
-            for obj_data in objs_data
+            for obj_data in data
             if not isinstance(obj_data, (aiohttp.ClientError, Exception))
         ]
         return objs

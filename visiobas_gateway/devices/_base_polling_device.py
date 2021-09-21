@@ -39,46 +39,46 @@ class BasePollingDevice(BaseDevice, ABC):
     @property
     def interface(self) -> Any:
         """Interface to interact with controller."""
-        return self.__class__._interfaces[  # pylint: disable=protected-access
+        return self.__class__._interfaces.get(  # pylint: disable=protected-access
             self.interface_name
-        ]
+        )
 
     @classmethod
     async def create(cls, device_obj: DeviceObj, gateway: Gateway) -> BasePollingDevice:
         """Creates instance of device. Handles client creation with lock or using
         existing.
         """
-        dev = cls(device_obj=device_obj, gateway=gateway)
-        dev._scheduler = await aiojobs.create_scheduler(close_timeout=60, limit=100)
+        device = cls(device_obj=device_obj, gateway=gateway)
+        device._scheduler = await aiojobs.create_scheduler(close_timeout=60, limit=100)
 
-        if not cls._interfaces.get(dev.interface):
+        if not cls._interfaces.get(device.interface_name):
             lock = asyncio.Lock(loop=gateway.loop)
             async with lock:  # pylint: disable=not-async-context-manager
-                client = await dev.create_client(device_obj=device_obj)
-                client_connected = await dev.connect_client(client=client)
+                client = await device.create_client(device_obj=device_obj)
+                client_connected = await device.connect_client(client=client)
             polling_event = asyncio.Event()
             interface = Interface(
-                name=dev.interface,
-                used_by={dev.id},
+                name=device.interface,
+                used_by={device.id},
                 client=client,
                 lock=lock,
                 polling_event=polling_event,
                 client_connected=client_connected,
             )
-            cls._interfaces[dev.interface] = interface
+            cls._interfaces[device.interface_name] = interface
         else:
             # Using existing interface.
-            cls._interfaces[dev.interface].used_by.add(dev.id)
+            cls._interfaces[device.interface_name].used_by.add(device.id)
 
-        dev._LOG.debug(
+        device._LOG.debug(
             "Device created",
             extra={
-                "device_id": dev.id,
-                "protocol": dev.protocol,
-                "interface": dev.interface,
+                "device_id": device.id,
+                "protocol": device.protocol,
+                "interface": device.interface,
             },
         )
-        return dev
+        return device
 
     @property
     def reconnect_period(self) -> int:
