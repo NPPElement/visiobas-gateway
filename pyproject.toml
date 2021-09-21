@@ -26,6 +26,7 @@ paho-mqtt = "^1.5.1"
 pydantic = "^1.8.2"
 pymodbus = "^2.5.2"
 BAC0 = "^21.2.25"
+netifaces = "*"
 
 [tool.poetry.scripts]
 gateway = "visiobas_gateway.__main__:main"
