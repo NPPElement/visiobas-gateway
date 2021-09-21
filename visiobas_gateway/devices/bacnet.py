@@ -25,15 +25,6 @@ class BACnetDevice(BasePollingDevice):
         # todo: Should we use one RPM for several objects?
 
     @property
-    def address_port(self) -> str:
-        return ":".join(
-            (
-                str(self._device_obj.property_list.address),  # type: ignore
-                str(self._device_obj.property_list.port),  # type: ignore
-            )
-        )
-
-    @property
     def interface_name(self) -> str:
         device_ip_address = self._device_obj.property_list.address  # type: ignore
         interface = get_subnet_interface(ip=device_ip_address)
@@ -142,7 +133,10 @@ class BACnetDevice(BasePollingDevice):
         """
         # priority = priority or self._gateway.api.priority
         args = "{0} {1} {2} {3} {4} - {5}".format(
-            self.address_port, camel_case(obj.type.name), obj.id, prop.name, value, priority
+            self._device_obj.property_list.address_port, camel_case(obj.type.name),
+            obj.id, prop.name,
+            value,
+            priority
         )
         is_successful = self.interface.client.write(args=args)
         self._LOG.debug(
@@ -173,7 +167,7 @@ class BACnetDevice(BasePollingDevice):
     def read_property(self, obj: BACnetObj, prop: ObjProperty) -> BACnetObj:
         request = " ".join(
             (
-                self.address_port,
+                self._device_obj.property_list.address_port,
                 camel_case(obj.type.name),
                 str(obj.id),
                 camel_case(prop.name),

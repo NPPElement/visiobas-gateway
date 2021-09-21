@@ -28,12 +28,9 @@ class ModbusDevice(BasePollingDevice, ModbusCoderMixin):
     """
 
     @property
-    def interface_name(self) -> Any:
+    def interface_name(self) -> str:
         if isinstance(self._device_obj.property_list, TcpIpDevicePropertyList):
-            return (
-                self._device_obj.property_list.address,
-                self._device_obj.property_list.port,
-            )
+            return self._device_obj.property_list.address_port
         if isinstance(self._device_obj.property_list, SerialDevicePropertyList):
             return self._device_obj.property_list.rtu.port
         raise NotImplementedError

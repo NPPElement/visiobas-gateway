@@ -61,6 +61,14 @@ class TcpIpDevicePropertyList(BaseDevicePropertyList):
             return value
         raise ValueError("Protocol is not TCP/IP")
 
+    @property
+    def address_port(self) -> str:
+        return ":".join(
+            (
+                str(self.address), str(self.port),  # type: ignore
+            )
+        )
+
 
 class SerialDevicePropertyList(BaseDevicePropertyList):
     """PropertyList for Serial devices."""
