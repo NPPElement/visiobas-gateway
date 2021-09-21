@@ -9,7 +9,7 @@ class LogSettings(BaseSettings):
     """Settings of logging."""
 
     level: str = Field(default="DEBUG")
-    file_level = Field(default="DEBUG")
+    file_level: str = Field(default="DEBUG")
     file_size: int = Field(default=50, description="Number of MB for log files.")
     format: str = Field(
         default="%(levelname)-8s [%(asctime)s] "

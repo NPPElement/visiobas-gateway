@@ -11,6 +11,8 @@ from ..schemas.settings.log_settings import log_settings
 
 _MEGABYTE = 10 ** 6
 
+_EXC_INFO = log_settings.file_level == "DEBUG"
+
 
 class ExtraFormatter(logging.Formatter):
     """Formatter for display `extra` params.
@@ -105,14 +107,13 @@ def log_exceptions(func: Callable | Callable[..., typing.Awaitable]) -> Any:
             value = func(*args, **kwargs)
             return value
         except Exception as exc:  # pylint: disable=broad-except
-            # TODO: more info
-            # TODO: use extra
             _LOG.warning(
                 "During %s(%s) call, exception %s: %s occurred",
                 func.__name__,
                 signature,
                 exc.__class__.__name__,
                 exc,
+                exc_info=_EXC_INFO,
             )
             raise exc
 
@@ -126,14 +127,13 @@ def log_exceptions(func: Callable | Callable[..., typing.Awaitable]) -> Any:
             value = await func(*args, **kwargs)
             return value
         except Exception as exc:  # pylint: disable=broad-except
-            # TODO: more info
-            # TODO: use extra
             _LOG.warning(
                 "During %s(%s) call, exception %s: %s occurred",
                 func.__name__,
                 signature,
                 exc.__class__.__name__,
                 exc,
+                exc_info=_EXC_INFO,
             )
             raise exc
 
