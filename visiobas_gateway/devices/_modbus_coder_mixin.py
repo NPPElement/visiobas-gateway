@@ -18,7 +18,7 @@ from ..utils import get_file_logger
 _LOG = get_file_logger(name=__name__)
 
 
-class ModbusEncodeDecodeMixin:
+class ModbusCoderMixin:
     """Base class for Modbus devices.
     Note: sync\async devices supported.
     """

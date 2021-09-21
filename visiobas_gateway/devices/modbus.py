@@ -16,11 +16,11 @@ from ..schemas import (
     TcpIpDevicePropertyList,
 )
 from ..utils import log_exceptions
-from ._base_modbus import ModbusEncodeDecodeMixin
 from ._base_polling_device import BasePollingDevice
+from ._modbus_coder_mixin import ModbusCoderMixin
 
 
-class ModbusDevice(BasePollingDevice, ModbusEncodeDecodeMixin):
+class ModbusDevice(BasePollingDevice, ModbusCoderMixin):
     """Sync Modbus Device.
 
     Note: AsyncModbusDevice in `pymodbus` didn't work correctly. So support only Sync
