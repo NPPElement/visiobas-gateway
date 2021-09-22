@@ -82,7 +82,7 @@ class BACnetObj(BaseBACnetObj):
         handle it.
         """
         # pylint: disable=no-self-argument
-        if not value:
+        if not value or value is [None]:
             return DEFAULT_PRIORITY_ARRAY
 
         return value
