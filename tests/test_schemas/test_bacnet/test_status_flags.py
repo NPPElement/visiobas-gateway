@@ -25,10 +25,8 @@ class TestStatusFlags:
         "before, after",
         [
             *[(i, flags) for i, flags in enumerate(range(16))],
-            ("5", 5),  # duck typing
-            (3.1, 3),  # duck typing
-            (3.5, 3),  # duck typing
-            (3.9, 3),  # duck typing
+            ([1, 1, 1, 1], 15),
+            ([0, 1, 0, 0], 4),
         ],
     )
     def test_construct_happy(self, before, after):
@@ -36,7 +34,7 @@ class TestStatusFlags:
 
     @pytest.mark.parametrize(
         "flags",
-        [-1, None, "bad", [1, 1, 1, 1]],
+        [-1, None, "bad", "5", 3.9, "3.9"],
     )
     def test_construct_bad_flags(self, flags):
         with pytest.raises(pydantic.ValidationError):

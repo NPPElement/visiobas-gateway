@@ -1,7 +1,10 @@
+from __future__ import annotations
+
 from copy import copy
 from enum import Enum, unique
+from typing import Union
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, validator
 
 
 @unique
@@ -19,24 +22,24 @@ class StatusFlags(BaseModel):
 
     flags: int = Field(default=0b0000, ge=0, le=15)
 
-    # fixme: move to bacnet
-    # @validator("flags")
-    # def validate_flags(cls, value: Union[int, list[StatusFlag]]) -> int:
-    #     # pylint: disable=no-self-argument
-    #     if isinstance(value, int):
-    #         return value
-    #     if isinstance(value, (list, tuple)):
-    #         sf_int = 0b0000
-    #         for i, flag in enumerate(value):
-    #             if flag == 1:
-    #                 sf_int |= 1 << len(value) - 1 - i
-    #             elif flag == 0:
-    #                 continue
-    #             raise ValueError('flags must be 0 | 1')
-    #         return sf_int
-    #     raise ValueError("Expected StatusFlags")
+    @validator("flags", pre=True)
+    def validate_flags(cls, value: Union[int, list[StatusFlag]]) -> int:
+        # pylint: disable=no-self-argument
+        if isinstance(value, int):
+            return value
+        if isinstance(value, (list, tuple)):
+            sf_int = 0b0000
+            for i, flag in enumerate(value):
+                if flag == 1:
+                    sf_int |= 1 << len(value) - 1 - i
+                elif flag == 0:
+                    continue
+                else:
+                    raise ValueError(f"flags must be 0 | 1. Got {flag}")
+            return sf_int
+        raise ValueError("Expected StatusFlags")
 
-    def enable(self, flag: StatusFlag) -> "StatusFlags":
+    def enable(self, flag: StatusFlag) -> StatusFlags:
         """Enables flag.
 
         Args:
@@ -47,7 +50,7 @@ class StatusFlags(BaseModel):
             return self
         raise ValueError("StatusFlag expected")
 
-    def disable(self, flag: StatusFlag) -> "StatusFlags":
+    def disable(self, flag: StatusFlag) -> StatusFlags:
         """Disables flag.
 
         Args:
@@ -72,7 +75,7 @@ class StatusFlags(BaseModel):
         raise ValueError("StatusFlag expected")
 
     @property
-    def for_http(self) -> "StatusFlags":
+    def for_http(self) -> StatusFlags:
         """
         Returns:
             Copy of StatusFlags, with disabled flags:
