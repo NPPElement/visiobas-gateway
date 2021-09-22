@@ -19,9 +19,7 @@ _LOG = get_file_logger(name=__name__)
 
 
 class ModbusCoderMixin:
-    """Base class for Modbus devices.
-    Note: sync\async devices supported.
-    """
+    """Mixin for encode/decode interact with `pymodbus`."""
 
     @staticmethod
     def _decode_response(

@@ -150,16 +150,21 @@ class BasePollingDevice(BaseDevice, ABC):
         """
         self.interface.polling_event.clear()
         await self.write(value=value, obj=obj, **kwargs)
-        read_value = await self.read(obj=obj, wait=False, **kwargs)
+        _ = await self.read(obj=obj, wait=False, **kwargs)
         self.interface.polling_event.set()
+
+        verified_obj = self._gtw.verifier.verify(obj=obj)
+        read_value = verified_obj.present_value
+
+        # hotfix
+        await self._gtw._scheduler.spawn(self._gtw.send_objects(objs=[obj]))
 
         is_consistent = value == read_value
         self._LOG.debug(
             "Write with check called",
             extra={
                 "device_id": obj.device_id,
-                "object_id": obj.id,
-                "object_type": obj.type,
+                "object": obj,
                 "value_written": value,
                 "value_read": read_value,
                 "values_are_consistent": is_consistent,

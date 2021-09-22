@@ -82,7 +82,7 @@ class BACnetObj(BaseBACnetObj):
         handle it.
         """
         # pylint: disable=no-self-argument
-        if not value or value is [None]:
+        if not value or value == [None]:
             return DEFAULT_PRIORITY_ARRAY
 
         return value
@@ -228,15 +228,3 @@ class BACnetObj(BaseBACnetObj):
         return ",".join(
             ["" if priority is None else str(priority) for priority in priority_array]
         )
-
-    # @staticmethod
-    # def convert_priority_array(priority_array: PriorityArray) -> list[Optional[float]]:
-    #     """Converts `bacpypes.PriorityArray` as tuple."""
-    #     priorities = [
-    #         v[0] if k[0] != "null" else None
-    #         for k, v in [
-    #             zip(*priority_array.value[i].dict_contents().items())
-    #             for i in range(1, priority_array.value[0] + 1)
-    #         ]
-    #     ]
-    #     return priorities

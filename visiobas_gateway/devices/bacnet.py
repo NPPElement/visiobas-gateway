@@ -1,9 +1,12 @@
-from typing import TYPE_CHECKING, Any, Optional, Union
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any, Optional
 
 from BAC0.scripts.Lite import Lite  # type: ignore
 
 from ..schemas import BACnetObj, DeviceObj, ObjProperty, TcpIpDevicePropertyList
 from ..utils import camel_case, get_subnet_interface, log_exceptions
+from ._bacnet_coder_mixin import BACnetCoderMixin
 from ._base_polling_device import BasePollingDevice
 
 if TYPE_CHECKING:
@@ -12,7 +15,7 @@ else:
     Gateway = "Gateway"
 
 
-class BACnetDevice(BasePollingDevice):
+class BACnetDevice(BasePollingDevice, BACnetCoderMixin):
     """Implementation of BACnet device client."""
 
     def __init__(self, device_obj: DeviceObj, gateway: Gateway):
@@ -113,10 +116,9 @@ class BACnetDevice(BasePollingDevice):
 
     async def write(
         self,
-        value: Union[int, float],
+        value: int | float,
         obj: BACnetObj,
         wait: bool = False,
-        # prop: ObjProperty, priority: Optional[int]
         **kwargs: Any,
     ) -> None:
         prop = kwargs.get("prop")
@@ -124,8 +126,9 @@ class BACnetDevice(BasePollingDevice):
         await self._gtw.async_add_job(self.write_property, value, obj, prop, priority)
         return None
 
+    @log_exceptions
     def write_property(
-        self, value: Union[int, float], obj: BACnetObj, prop: ObjProperty, priority: int
+        self, value: int | float, obj: BACnetObj, prop: ObjProperty, priority: int
     ) -> Optional[bool]:
         """Writes value to property value in object.
 
@@ -140,18 +143,23 @@ class BACnetDevice(BasePollingDevice):
         """
         assert isinstance(self._device_obj.property_list, TcpIpDevicePropertyList)
 
-        # priority = priority or self._gateway.api.priority
+        if self._is_binary_obj(obj=obj) and prop is ObjProperty.PRESENT_VALUE:
+            value = self._encode_binary_present_value(value=value)  # type: ignore
+
         args = (
             f"{self._device_obj.property_list.address_port} "
-            f"{camel_case(obj.type.name)} {obj.id} {prop.name} {value} - {priority}"
+            f"{camel_case(obj.type.name)} "
+            f"{obj.id} "
+            f"{prop.name} "
+            f"{value} "
+            f"- {priority}"
         )
         is_successful = self.interface.client.write(args=args)
         self._LOG.debug(
             "Write",
             extra={
                 "device_id": self.id,
-                "object_id": obj.id,
-                "object_type": obj.type,
+                "object": obj,
                 "value": value,
                 "success": is_successful,
             },
@@ -171,6 +179,7 @@ class BACnetDevice(BasePollingDevice):
             await self.interface.polling_event.wait()
         return await self._gtw.async_add_job(self.read_property, obj, prop)
 
+    @log_exceptions
     def read_property(self, obj: BACnetObj, prop: ObjProperty) -> BACnetObj:
         assert isinstance(self._device_obj.property_list, TcpIpDevicePropertyList)
 
@@ -183,6 +192,10 @@ class BACnetDevice(BasePollingDevice):
             )
         )
         response = self.interface.client.read(request)
+
+        if prop is ObjProperty.PRIORITY_ARRAY:
+            response = self._decode_priority_array(priority_array=response)
+
         self._LOG.debug(
             "Read",
             extra={
