@@ -28,7 +28,9 @@ class JsonRPCView(handler.JSONRPCView, BaseView, CorsViewMixin):
         obj_id = int(kwargs.get('object_id'))
         priority = int(kwargs.get('priority'))
         value = float(kwargs.get('value'))
-        # value = float(value_str) if '.' in value_str else int(value_str)
+
+        if value.is_integer():
+            value = int(value)
 
         dev = self.get_device(dev_id=dev_id)
         if dev is None or not dev.is_polling_device:
