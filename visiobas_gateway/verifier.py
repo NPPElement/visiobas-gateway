@@ -1,4 +1,4 @@
-from typing import Collection, Iterator, Optional, Union
+from typing import Collection, Optional, Union
 
 from .schemas.bacnet import (
     ANALOG_TYPES,
@@ -19,8 +19,8 @@ class BACnetVerifier:
     def __init__(self, override_threshold: Priority = Priority.MANUAL_OPERATOR):
         self.override_threshold = override_threshold
 
-    def verify_objects(self, objs: Collection[BACnetObj]) -> Iterator[BACnetObj]:
-        return (self.verify(obj=obj) for obj in objs)
+    def verify_objects(self, objs: Collection[BACnetObj]) -> list[BACnetObj]:
+        return [self.verify(obj=obj) for obj in objs]
 
     def verify(self, obj: BACnetObj) -> BACnetObj:
         if isinstance(obj.present_value, Exception):
