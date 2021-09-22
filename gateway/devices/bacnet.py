@@ -7,7 +7,7 @@ from BAC0.scripts.Lite import Lite
 from bacpypes.basetypes import PriorityArray
 
 from .base_polling_device import BasePollingDevice
-from ..models import (ObjProperty, BACnetDeviceObj, BACnetObj, StatusFlags)
+from ..models import (ObjProperty, BACnetDeviceObj, BACnetObj, StatusFlags, ObjType)
 
 # Aliases
 VisioBASGateway = Any  # ...gateway_loop
@@ -129,6 +129,13 @@ class BACnetDevice(BasePollingDevice):
         """
         # priority = priority or self._gateway.api.priority
         try:
+            if obj.type in {ObjType.BINARY_INPUT, ObjType.BINARY_VALUE,
+                            ObjType.BINARY_OUTPUT}:
+                if value == 1:
+                    value = 'active'
+                elif value == 0:
+                    value = 'inactive'
+
             args = '{0} {1} {2} {3} {4} - {5}'.format(self.address_port,
                                                       obj.type.name, obj.id,
                                                       prop.name, value, priority)
