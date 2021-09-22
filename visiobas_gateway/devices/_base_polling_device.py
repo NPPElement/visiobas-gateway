@@ -157,7 +157,9 @@ class BasePollingDevice(BaseDevice, ABC):
         read_value = verified_obj.present_value
 
         # hotfix
-        await self._gtw._scheduler.spawn(self._gtw.send_objects(objs=[obj]))
+        await self._gtw._scheduler.spawn(  # pylint: disable=protected-access
+            self._gtw.send_objects(objs=[obj])
+        )
 
         is_consistent = value == read_value
         self._LOG.debug(
