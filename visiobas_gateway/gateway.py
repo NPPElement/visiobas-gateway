@@ -116,9 +116,9 @@ class Gateway:
 
     async def periodic_update(self) -> None:
         """Spawn periodic update task."""
-        await self._perform_start_tasks()
+        await self._startup_tasks()
         await asyncio.sleep(delay=self.settings.update_period)
-        await self._perform_stop_tasks()
+        await self._shutdown_tasks()
 
         await self._scheduler.spawn(self.periodic_update())
         # self._upd_task = self.loop.create_task(self.periodic_update())
@@ -163,27 +163,24 @@ class Gateway:
         if self._stopped is not None:
             self._stopped.set()
 
-    async def _perform_start_tasks(self) -> None:
-        """Performs starting tasks.
+    async def _startup_tasks(self) -> None:
+        """Performs starting tasks."""
 
-        Setup visiobas_gateway steps:
-            - Log in to HTTP
-            - Load devices
-            - Start devices poll
-        """
-        await self.http_client.wait_login()
+        # 0. HTTP startup tasks.
+        await self.http_client.startup_tasks()
 
-        # Load devices.
+        # 1. Load devices.
         load_device_tasks = [
             self.load_device(device_id=dev_id) for dev_id in self.settings.poll_device_ids
         ]
-        # await asyncio.gather(*load_device_tasks)
 
+        # 2. Start devices polling.
         for dev in asyncio.as_completed(load_device_tasks):
             dev = await dev
             if dev and isinstance(dev, BasePollingDevice):
                 await dev.start_periodic_polls()
 
+        # 3. MQTT startup tasks
         # if self._is_mqtt_enabled:
         # TODO: subscribe
 
@@ -194,19 +191,15 @@ class Gateway:
             },
         )
 
-    async def _perform_stop_tasks(self) -> None:
-        """Performs stopping tasks.
+    async def _shutdown_tasks(self) -> None:
+        """Performs stopping tasks."""
+        # 0. MQTT shutdown tasks.
 
-        Stop visiobas_gateway steps:
-            - Unsubscribe to MQTT
-            - Stop devices poll
-            - Log out to HTTP
-        """
-        if self._mqtt_settings.enable:
-            if isinstance(self.mqtt_client, MQTTClient):
-                await self.mqtt_client.async_disconnect()
+        # if self._mqtt_settings.enable:
+        #     if isinstance(self.mqtt_client, MQTTClient):
+        #         await self.mqtt_client.async_disconnect()
 
-        # Stop polling devices.
+        # 1. Stop devices polling.
         stop_device_polling_tasks = [
             dev.stop()
             for dev in self._devices.values()
@@ -215,7 +208,10 @@ class Gateway:
         await asyncio.gather(*stop_device_polling_tasks)
         self._devices = {}
 
-        await self.http_client.logout()
+        # 2. todo: save devices config local
+
+        # 3. HTTP shutdown tasks.
+        await self.http_client.shutdown_tasks()
         _LOG.info("Stop tasks performed")
 
     @log_exceptions
@@ -293,15 +289,6 @@ class Gateway:
         )
         return device
 
-    # async def start_device_poll(self, dev_id: int) -> None:
-    #     """Starts poll of device."""
-    #     dev = self._devices[dev_id]
-    #     if dev.is_polling_device:
-    #         await self.async_add_job(dev.start_periodic_polls)
-    #         _LOG.info('Device polling started', extra={'device_id': dev_id})
-    #     else:
-    #         _LOG.warning('Is not a polling device', extra={'device_id': dev_id})
-
     @staticmethod
     def _parse_device_obj(data: dict) -> Optional[DeviceObj]:
         """Parses and validate device object data from JSON.
@@ -327,10 +314,6 @@ class Gateway:
             if not isinstance(obj_data, (aiohttp.ClientError, Exception))
         ]
         return objs
-
-    # async def verify_objects(self, objs: Collection[BACnetObj]) -> None:
-    #     """Verify objects in executor pool."""
-    #     await self.async_add_job(self.verifier.verify_objects, objs)
 
     @log_exceptions
     async def send_objects(self, objs: Collection[BACnetObj]) -> None:
