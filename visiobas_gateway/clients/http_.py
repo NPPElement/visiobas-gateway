@@ -46,10 +46,6 @@ class HTTPClient:
         return self._authorized
 
     @property
-    def retry_delay(self) -> int:
-        return self._settings.retry
-
-    @property
     def server_get(self) -> HTTPServerConfig:
         return self._settings.server_get
 
@@ -59,7 +55,7 @@ class HTTPClient:
 
     async def setup(self) -> None:
         """Wait for authorization."""
-        await self.wait_login(retry=self.retry_delay)
+        await self.wait_login(next_attempt=self._settings.next_attempt)
 
     async def get_objects(
         self, dev_id: int, obj_types: Collection[ObjType]
@@ -130,20 +126,20 @@ class HTTPClient:
             },
         )
 
-    async def wait_login(self, retry: int = 60) -> None:
+    async def wait_login(self, next_attempt: int) -> None:
         """Ensures the authorization.
 
         # TODO: add backoff
 
         Args:
-            retry: Time to sleep after failed authorization before next attempt
+            next_attempt: Time to sleep after failed authorization before next attempt.
         """
         while not self._authorized:
             self._authorized = await self.login(
                 get_server=self.server_get, post_servers=self.servers_post
             )
             if not self._authorized:
-                await asyncio.sleep(delay=retry)
+                await asyncio.sleep(delay=next_attempt)
 
     async def login(
         self, get_server: HTTPServerConfig, post_servers: Collection[HTTPServerConfig]

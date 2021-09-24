@@ -7,7 +7,7 @@ class HTTPSettings(BaseSettings):
     """Settings of HTTP client."""
 
     timeout: int = Field(default=10)
-    retry: int = Field(default=3)
+    next_attempt: int = Field(default=60)
 
     server_get: HTTPServerConfig = Field(...)
     servers_post: list[HTTPServerConfig] = Field(..., min_items=1)
