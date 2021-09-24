@@ -1,6 +1,13 @@
-from typing import Collection, Iterator, Optional, Union
+from typing import Collection, Optional, Union
 
-from .schemas.bacnet import ANALOG_TYPES, BACnetObj, Reliability, StatusFlag, StatusFlags
+from .schemas.bacnet import (
+    ANALOG_TYPES,
+    BACnetObj,
+    Priority,
+    Reliability,
+    StatusFlag,
+    StatusFlags,
+)
 from .utils import get_file_logger, round_with_resolution
 
 _LOG = get_file_logger(name=__name__)
@@ -9,11 +16,11 @@ _LOG = get_file_logger(name=__name__)
 class BACnetVerifier:
     """Represent data process workflow."""
 
-    def __init__(self, override_threshold: int = 8):
+    def __init__(self, override_threshold: Priority = Priority.MANUAL_OPERATOR):
         self.override_threshold = override_threshold
 
-    def verify_objects(self, objs: Collection[BACnetObj]) -> Iterator[BACnetObj]:
-        return (self.verify(obj=obj) for obj in objs)
+    def verify_objects(self, objs: Collection[BACnetObj]) -> list[BACnetObj]:
+        return [self.verify(obj=obj) for obj in objs]
 
     def verify(self, obj: BACnetObj) -> BACnetObj:
         if isinstance(obj.present_value, Exception):
@@ -140,7 +147,7 @@ class BACnetVerifier:
         for i, priority in enumerate(priority_array):
             if priority is None:
                 continue
-            if i >= self.override_threshold:
+            if i >= int(self.override_threshold):
                 obj.status_flags.enable(flag=StatusFlag.OVERRIDEN)
 
         obj.priority_array = priority_array

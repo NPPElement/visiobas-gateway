@@ -1,5 +1,5 @@
 import asyncio
-from typing import TYPE_CHECKING, Any, Collection, Optional, Union
+from typing import TYPE_CHECKING, Any, Collection, Union
 
 import aiohttp
 
@@ -19,7 +19,6 @@ class HTTPClient:
     """HTTP client of visiobas_gateway."""
 
     # TODO: add decorator re-login on 401
-    # TODO: add decorator handle exceptions and log them
     # TODO: refactor
 
     _URL_LOGIN = "{base_url}/auth/rest/login"
@@ -42,14 +41,6 @@ class HTTPClient:
         return self.__class__.__name__
 
     @property
-    def is_authorized(self) -> bool:
-        return self._authorized
-
-    @property
-    def retry_delay(self) -> int:
-        return self._settings.retry
-
-    @property
     def server_get(self) -> HTTPServerConfig:
         return self._settings.server_get
 
@@ -57,9 +48,13 @@ class HTTPClient:
     def servers_post(self) -> list[HTTPServerConfig]:
         return self._settings.servers_post
 
-    async def setup(self) -> None:
+    async def startup_tasks(self) -> None:
         """Wait for authorization."""
-        await self.wait_login(retry=self.retry_delay)
+        await self.wait_login(next_attempt=self._settings.next_attempt)
+
+    async def shutdown_tasks(self) -> None:
+        """Perform logout."""
+        await self.logout(servers=[self.server_get, *self.servers_post])
 
     async def get_objects(
         self, dev_id: int, obj_types: Collection[ObjType]
@@ -79,7 +74,7 @@ class HTTPClient:
             self.request(
                 method="GET",
                 url=self._URL_GET.format(
-                    base_url=self.server_get.current_url,
+                    base_url=self.server_get.get_url_str,
                     device_id=str(dev_id),
                     object_type_kebab=kebab_case(obj_type.name),
                 ),
@@ -93,24 +88,22 @@ class HTTPClient:
         return extracted_data
 
     @log_exceptions
-    async def logout(self, servers: Optional[Collection[HTTPServerConfig]] = None) -> None:
+    async def logout(self, servers: list[HTTPServerConfig]) -> None:
         """Performs log out from servers.
 
         Args:
             servers: Servers to perform logout.
-                    If None - perform logout from all servers. # fixme
 
         Returns:
             True: Successful logout
             False: Failed logout
         """
-        servers = servers or [self.server_get, *self.servers_post]
 
         _LOG.debug("Logging out", extra={"servers": servers})
         logout_tasks = [
             self.request(
                 method="GET",
-                url=self._URL_LOGOUT.format(base_url=server.current_url),
+                url=self._URL_LOGOUT.format(base_url=server.get_url_str),
                 headers=server.auth_headers,
                 raise_for_status=True,
             )
@@ -130,34 +123,37 @@ class HTTPClient:
             },
         )
 
-    async def wait_login(self, retry: int = 60) -> None:
+    async def wait_login(self, next_attempt: int) -> None:
         """Ensures the authorization.
 
         # TODO: add backoff
 
         Args:
-            retry: Time to sleep after failed authorization before next attempt
+            next_attempt: Time to sleep after failed authorization before next attempt.
         """
         while not self._authorized:
             self._authorized = await self.login(
                 get_server=self.server_get, post_servers=self.servers_post
             )
             if not self._authorized:
-                await asyncio.sleep(delay=retry)
+                await asyncio.sleep(delay=next_attempt)
 
     async def login(
-        self, get_server: HTTPServerConfig, post_servers: Collection[HTTPServerConfig]
+        self, get_server: HTTPServerConfig, post_servers: list[HTTPServerConfig]
     ) -> bool:
         """Perform authorization to all servers, required for work.
 
         Args:
-            get_server: Server to send GET requests
-            post_servers: Servers to send POST requests
+            get_server: Server to send GET requests.
+            post_servers: Servers to send POST requests.
 
         Returns:
             True: Can continue with current authorizations.
-            False: Cannot continue.
+            False: Otherwise.
         """
+
+        if get_server in post_servers:
+            post_servers.remove(get_server)
         _LOG.debug(
             "Logging in to servers",
             extra={"server_get": get_server, "servers_post": post_servers},
@@ -167,15 +163,14 @@ class HTTPClient:
             self._login_server(server=get_server),
             *[self._login_server(server=server) for server in post_servers],
         )
-        is_get_authorized = res[0]  # first instance is always GET server -> [0]
-        is_post_authorized = any(res[1:])
-        successfully_authorized = bool(is_get_authorized and is_post_authorized)
+        is_get_authorized = bool(res[0])  # First instance is always GET server. Required.
+        is_post_authorized = any(res[1:])  # At lease one of POST servers required.
 
-        if successfully_authorized:
+        if is_get_authorized and is_post_authorized:
             _LOG.info("Successfully authorized")
-        else:
-            _LOG.warning("Failed authorizations!")
-        return successfully_authorized
+            return True
+        _LOG.warning("Failed authorizations!")
+        return False
 
     @log_exceptions
     async def _login_server(self, server: HTTPServerConfig) -> bool:
@@ -192,37 +187,35 @@ class HTTPClient:
             False: Server is not authorized.
         """
         _LOG.debug("Perform authorization", extra={"server": server})
-        while not server.is_authorized:
+        for url in server.urls:
+            server.current_url = url
             try:
+                url_str = server.get_url_str(url=url)
                 auth_data = await self.request(
                     method="POST",
-                    url=self._URL_LOGIN.format(base_url=server.current_url),
+                    url=self._URL_LOGIN.format(base_url=url_str),
                     json=server.auth_payload,
                     extract_data=True,
                 )
-                # auth_data = await self.async_extract_response_data(resp=auth_resp)
                 if isinstance(auth_data, dict):
                     server.set_auth_data(**auth_data)
+                    _LOG.info(
+                        "Successfully authorized",
+                        extra={
+                            "server": server,
+                        },
+                    )
 
-            except (aiohttp.ClientError, OSError) as exc:
+                    return True
+            except (aiohttp.ClientError, asyncio.TimeoutError, OSError) as exc:
                 _LOG.warning(
                     "Failed authorization",
                     extra={
-                        "url": server.current_url,
+                        "server": server,
                         "exc": exc,
                     },
                 )
-            if not server.switch_current():
-                break
-
-        if server.is_authorized:
-            _LOG.info(
-                "Successfully authorized",
-                extra={
-                    "server": server,
-                },
-            )
-            return True
+                continue
         return False
 
     @log_exceptions
@@ -243,7 +236,7 @@ class HTTPClient:
             self.request(
                 method="POST",
                 url=self._URL_POST_LIGHT.format(
-                    base_url=server.current_url, device_id=str(dev_id)
+                    base_url=server.get_url_str, device_id=str(dev_id)
                 ),
                 headers=server.auth_headers,
                 data=data,
@@ -278,7 +271,7 @@ class HTTPClient:
             self.request(
                 method="POST",
                 url=self._URL_POST_PROPERTY.format(
-                    base_url=server.current_url,
+                    base_url=server.get_url_str,
                     property_id=str(property_.id),
                     replaced_object_name=obj.mqtt_topic,
                 ),

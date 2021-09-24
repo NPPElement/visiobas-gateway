@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import asyncio
 from typing import (
     TYPE_CHECKING,
@@ -16,10 +18,11 @@ import aiojobs  # type: ignore
 from visiobas_gateway.api import ApiServer
 from visiobas_gateway.clients import HTTPClient, MQTTClient
 from visiobas_gateway.devices import BACnetDevice, ModbusDevice, SUNAPIDevice
-from visiobas_gateway.devices.base_polling_device import BasePollingDevice
-from visiobas_gateway.schemas import Protocol
+from visiobas_gateway.devices._base_polling_device import BasePollingDevice
 from visiobas_gateway.schemas.bacnet import BACnetObj, DeviceObj, ObjType
+from visiobas_gateway.schemas.bacnet.device_obj import POLLING_TYPES
 from visiobas_gateway.schemas.modbus import ModbusObj
+from visiobas_gateway.schemas.protocol import POLLING_PROTOCOLS, Protocol
 from visiobas_gateway.schemas.settings import (
     ApiSettings,
     GatewaySettings,
@@ -30,7 +33,7 @@ from visiobas_gateway.utils import get_file_logger, log_exceptions
 from visiobas_gateway.verifier import BACnetVerifier
 
 if TYPE_CHECKING:
-    from .devices.base_device import BaseDevice
+    from .devices._base_device import BaseDevice
 
 else:
     BaseDevice = "BaseDevice"
@@ -48,7 +51,6 @@ class Gateway:
     def __init__(self, settings: GatewaySettings):
         self.loop: asyncio.AbstractEventLoop = asyncio.get_running_loop()
 
-        # self._pending_tasks: list = []
         self.settings = settings
 
         self._stopped: Optional[asyncio.Event] = None
@@ -57,40 +59,20 @@ class Gateway:
         self._scheduler: aiojobs.Scheduler = None  # type: ignore
         self.http_client: HTTPClient = None  # type: ignore
 
+        self._mqtt_settings = MQTTSettings()
         self.mqtt_client: Optional[MQTTClient] = None
         self.api: Optional[ApiServer] = None
         self.verifier = BACnetVerifier(override_threshold=settings.override_threshold)
 
-        self._devices: dict[int, BasePollingDevice] = {}
-        # self._cameras = dict[int, Union[SUNAPIDevice]]
+        self._devices: dict[int, Any] = {}
 
         # TODO: updating event to return msg in case controlling at update time.
 
     @classmethod
-    async def create(cls, settings: GatewaySettings) -> "Gateway":
+    async def create(cls, settings: GatewaySettings) -> Gateway:
         gateway = cls(settings=settings)
         gateway._scheduler = await aiojobs.create_scheduler(close_timeout=60, limit=100)
         return gateway
-
-    @property
-    def unreachable_threshold(self) -> int:
-        return self.settings.unreachable_threshold
-
-    @property
-    def unreachable_reset_period(self) -> int:
-        return self.settings.unreachable_reset_period
-
-    @property
-    def poll_device_ids(self) -> list[int]:
-        return self.settings.poll_device_ids
-
-    @property
-    def upd_period(self) -> int:
-        return self.settings.update_period
-
-    @property
-    def _is_mqtt_enabled(self) -> bool:
-        return self.settings.mqtt_enable
 
     def get_device(self, dev_id: int) -> Optional[BaseDevice]:
         """
@@ -124,8 +106,8 @@ class Gateway:
     async def async_setup(self) -> None:
         """Set up Gateway and spawn update task."""
         self.http_client = HTTPClient(gateway=self, settings=HTTPSettings())
-        if self._is_mqtt_enabled:
-            self.mqtt_client = MQTTClient.create(gateway=self, settings=MQTTSettings())
+        if self._mqtt_settings.enable:
+            self.mqtt_client = MQTTClient.create(gateway=self, settings=self._mqtt_settings)
 
         self.api = ApiServer.create(gateway=self, settings=ApiSettings())
         await self._scheduler.spawn(self.api.start())
@@ -134,9 +116,9 @@ class Gateway:
 
     async def periodic_update(self) -> None:
         """Spawn periodic update task."""
-        await self._perform_start_tasks()
-        await asyncio.sleep(delay=self.upd_period)
-        await self._perform_stop_tasks()
+        await self._startup_tasks()
+        await asyncio.sleep(delay=self.settings.update_period)
+        await self._shutdown_tasks()
 
         await self._scheduler.spawn(self.periodic_update())
         # self._upd_task = self.loop.create_task(self.periodic_update())
@@ -181,27 +163,24 @@ class Gateway:
         if self._stopped is not None:
             self._stopped.set()
 
-    async def _perform_start_tasks(self) -> None:
-        """Performs starting tasks.
+    async def _startup_tasks(self) -> None:
+        """Performs starting tasks."""
 
-        Setup visiobas_gateway steps:
-            - Log in to HTTP
-            - Load devices
-            - Start devices poll
-        """
-        await self.http_client.wait_login()
+        # 0. HTTP startup tasks.
+        await self.http_client.startup_tasks()
 
-        # Load devices.
+        # 1. Load devices.
         load_device_tasks = [
-            self.load_device(dev_id=dev_id) for dev_id in self.poll_device_ids
+            self.load_device(device_id=dev_id) for dev_id in self.settings.poll_device_ids
         ]
-        # await asyncio.gather(*load_device_tasks)
 
+        # 2. Start devices polling.
         for dev in asyncio.as_completed(load_device_tasks):
             dev = await dev
             if dev and isinstance(dev, BasePollingDevice):
                 await dev.start_periodic_polls()
 
+        # 3. MQTT startup tasks
         # if self._is_mqtt_enabled:
         # TODO: subscribe
 
@@ -212,30 +191,31 @@ class Gateway:
             },
         )
 
-    async def _perform_stop_tasks(self) -> None:
-        """Performs stopping tasks.
+    async def _shutdown_tasks(self) -> None:
+        """Performs stopping tasks."""
+        # 0. MQTT shutdown tasks.
 
-        Stop visiobas_gateway steps:
-            - Unsubscribe to MQTT
-            - Stop devices poll
-            - Log out to HTTP
-        """
-        if self._is_mqtt_enabled:
-            if isinstance(self.mqtt_client, MQTTClient):
-                await self.mqtt_client.async_disconnect()
+        # if self._mqtt_settings.enable:
+        #     if isinstance(self.mqtt_client, MQTTClient):
+        #         await self.mqtt_client.async_disconnect()
 
-        # Stop polling devices.
+        # 1. Stop devices polling.
         stop_device_polling_tasks = [
-            dev.stop() for dev in self._devices.values() if dev.is_polling_device
+            dev.stop()
+            for dev in self._devices.values()
+            if dev.protocol in POLLING_PROTOCOLS
         ]
         await asyncio.gather(*stop_device_polling_tasks)
         self._devices = {}
 
-        await self.http_client.logout()
+        # 2. todo: save devices config local
+
+        # 3. HTTP shutdown tasks.
+        await self.http_client.shutdown_tasks()
         _LOG.info("Stop tasks performed")
 
     @log_exceptions
-    async def load_device(self, dev_id: int) -> Optional[BaseDevice]:
+    async def load_device(self, device_id: int) -> Optional[BaseDevice]:
         """Tries to download an object of device from server.
         Then gets polling objects and load them into device.
 
@@ -243,21 +223,21 @@ class Gateway:
 
         # TODO: If fails get objects from server - loads it from local.
         """
-        dev_obj_data = await self.http_client.get_objects(
-            dev_id=dev_id, obj_types=(ObjType.DEVICE,)
+        device_obj_data = await self.http_client.get_objects(
+            dev_id=device_id, obj_types=(ObjType.DEVICE,)
         )
-        _LOG.debug("Device object downloaded", extra={"device_id": dev_id})
+        _LOG.debug("Device object downloaded", extra={"device_id": device_id})
 
         if (
-            not isinstance(dev_obj_data, list)
-            or not isinstance(dev_obj_data[0], list)
-            or not dev_obj_data[0]
+            not isinstance(device_obj_data, list)
+            or not isinstance(device_obj_data[0], list)
+            or not device_obj_data[0]
         ):
             _LOG.warning(
                 "Empty device object or exception",
                 extra={
-                    "device_id": dev_id,
-                    "data": dev_obj_data,
+                    "device_id": device_id,
+                    "data": device_obj_data,
                 },
             )
             return None
@@ -265,23 +245,26 @@ class Gateway:
         # objs in the list, so get [0] element in `dev_obj_data[0]` below
         # request one type - 'device', so [0] element of tuple below
         # todo: refactor
-        dev_obj = await self.async_add_job(self._parse_device_obj, dev_obj_data[0][0])
-        dev = await self.device_factory(dev_obj=dev_obj)
+        device_obj = await self.async_add_job(self._parse_device_obj, device_obj_data[0][0])
+        device = await self.device_factory(dev_obj=device_obj)
 
-        if dev.is_polling_device:
+        if not device:
+            return None
+
+        if device.protocol in POLLING_PROTOCOLS:
             # todo: use for extractions tasks asyncio.as_completed(tasks):
             objs_data = await self.http_client.get_objects(
-                dev_id=dev_id, obj_types=dev.types_to_rq
+                dev_id=device_id, obj_types=POLLING_TYPES
             )
             _LOG.debug(
                 "Polling objects downloaded",
                 extra={
-                    "device_id": dev_id,
+                    "device_id": device_id,
                 },
             )
 
             extract_tasks = [
-                self.async_add_job(self._extract_objects, obj_data, dev_obj)
+                self.async_add_job(self._extract_objects, obj_data, device_obj)
                 for obj_data in objs_data
                 if not isinstance(obj_data, (aiohttp.ClientError, Exception))
             ]
@@ -293,41 +276,32 @@ class Gateway:
 
             _LOG.debug(
                 "Polling objects extracted",
-                extra={"device_id": dev_id, "objects_count": len(objs)},
+                extra={"device_id": device_id, "objects_count": len(objs)},
             )
-            await self.async_add_job(dev.insert_objects, objs)
+            await self.async_add_job(device.insert_objects, objs)
 
-        self._devices.update({dev.device_id: dev})
+        self._devices.update({device.id: device})
         _LOG.info(
             "Device loaded",
             extra={
-                "device_id": dev_id,
+                "device": device,
             },
         )
-        return dev
-
-    # async def start_device_poll(self, dev_id: int) -> None:
-    #     """Starts poll of device."""
-    #     dev = self._devices[dev_id]
-    #     if dev.is_polling_device:
-    #         await self.async_add_job(dev.start_periodic_polls)
-    #         _LOG.info('Device polling started', extra={'device_id': dev_id})
-    #     else:
-    #         _LOG.warning('Is not a polling device', extra={'device_id': dev_id})
+        return device
 
     @staticmethod
-    def _parse_device_obj(dev_data: dict) -> Optional[DeviceObj]:
+    def _parse_device_obj(data: dict) -> Optional[DeviceObj]:
         """Parses and validate device object data from JSON.
 
         Returns:
             Parsed and validated device object, if no errors throw.
         """
-        dev_obj = DeviceObj(**dev_data)
+        dev_obj = DeviceObj(**data)
         _LOG.debug("Device object parsed", extra={"device_object": dev_obj})
         return dev_obj
 
     def _extract_objects(
-        self, objs_data: tuple, dev_obj: DeviceObj
+        self, data: tuple, dev_obj: DeviceObj
     ) -> list[Union[BACnetObj, ModbusObj]]:
         """Parses and validate objects data from JSON.
 
@@ -336,14 +310,10 @@ class Gateway:
         """
         objs = [
             self.object_factory(dev_obj=dev_obj, obj_data=obj_data)
-            for obj_data in objs_data
+            for obj_data in data
             if not isinstance(obj_data, (aiohttp.ClientError, Exception))
         ]
         return objs
-
-    async def verify_objects(self, objs: Collection[BACnetObj]) -> None:
-        """Verify objects in executor pool."""
-        await self.async_add_job(self.verifier.verify_objects, objs)
 
     @log_exceptions
     async def send_objects(self, objs: Collection[BACnetObj]) -> None:
@@ -383,7 +353,7 @@ class Gateway:
         else:
             raise NotImplementedError("Device factory not implemented")
 
-        _LOG.debug("Device object created", extra={"device_id": device.device_id})
+        _LOG.debug("Device object created", extra={"device": device})
         return device
 
     @staticmethod

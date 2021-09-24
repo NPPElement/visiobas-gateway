@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "visiobas-gateway"
-version = "3.3.0"
+version = "0.3.1"
 description = "Polling devices using various protocols and transmitting data to the VisioBAS system"
 repository = "https://github.com/NPPElement/visiobas-gateway"
 keywords = ["VisioBAS", "Gateway", "IoT", "BACnet", "Modbus"]
@@ -26,6 +26,7 @@ paho-mqtt = "^1.5.1"
 pydantic = "^1.8.2"
 pymodbus = "^2.5.2"
 BAC0 = "^21.2.25"
+netifaces = "*"
 
 [tool.poetry.scripts]
 gateway = "visiobas_gateway.__main__:main"
@@ -54,7 +55,7 @@ isort .\
  && pylint visiobas_gateway\
  && pytest --cov visiobas_gateway tests --cov-report=term-missing\
 """
-docs = """python -m docs --package visiobas_gateway.models --output_dir ./docs
+docs = """python -m docs --package visiobas_gateway.schemas --output_dir ./docs
 """
 
 [tool.black]

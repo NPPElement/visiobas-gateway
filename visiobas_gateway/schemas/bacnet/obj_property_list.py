@@ -5,7 +5,7 @@ class BACnetObjPropertyList(BaseModel):
     """Represent PropertyList (371) for BACnet objects."""
 
     poll_period: float = Field(
-        default=None, alias="pollPeriod", description="Period to send data to server."
+        default=90, alias="pollPeriod", description="Period to send data to server."
     )
     # TODO: add usage
     # send_period: float = Field(

@@ -3,7 +3,6 @@ from json import JSONDecodeError, dumps, loads
 from typing import TYPE_CHECKING, Any, Optional, Sequence, Union
 
 import paho.mqtt.client as mqtt  # type: ignore
-import pydantic
 
 from ..schemas.mqtt import Qos, ResultCode
 from ..schemas.settings import MQTTSettings
@@ -22,7 +21,7 @@ class MQTTClient:
 
     def __init__(self, gateway: Gateway, settings: MQTTSettings) -> None:
         self._gtw = gateway
-        self._settings = settings
+        self.settings = settings
 
         self._client: Optional[mqtt.Client] = None
         self._stopped: Optional[asyncio.Event] = None
@@ -50,43 +49,39 @@ class MQTTClient:
 
     @property
     def _host(self) -> str:
-        return self._settings.url.host
+        return self.settings.url.host
 
     @property
     def _port(self) -> int:
-        port = self._settings.url.port
+        port = self.settings.url.port
         if isinstance(port, str):
             return int(port)
         return 1883
 
     @property
     def _username(self) -> str:
-        return self._settings.url.user or ""
+        return self.settings.url.user or ""
 
     @property
     def _password(self) -> str:
-        return self._settings.url.password or ""
+        return self.settings.url.password or ""
 
     @property
     def _qos(self) -> int:
-        return int(self._settings.qos)
+        return int(self.settings.qos)
 
     @property
     def _retain(self) -> bool:
-        return self._settings.retain
+        return self.settings.retain
 
     @property
     def _keepalive(self) -> int:
-        return self._settings.keepalive
+        return self.settings.keepalive
 
     @property
     def topics_sub(self) -> list[tuple[str, int]]:
         """Topics to subscribe."""
-        return [(topic, self._qos) for topic in self._settings.topics_sub]
-
-    @property
-    def _client_id(self) -> pydantic.UUID4:
-        return self._settings.client_id
+        return [(topic, self._qos) for topic in self.settings.topics_sub]
 
     # @property
     # def certificate(self) -> str:
@@ -98,7 +93,7 @@ class MQTTClient:
     def setup(self) -> None:
         """Initialize MQTT client."""
         self._client = mqtt.Client(
-            client_id=self._client_id,
+            client_id=self.settings.client_id,
             protocol=mqtt.MQTTv311,
             transport="tcp",  # todo ws
         )  # todo add protocol version choice
@@ -244,12 +239,12 @@ class MQTTClient:
         client: Any,
         userdata: Any,
         flags: Any,
-        result_code: Any,
+        result_code: int,
         properties: Any = None,
     ) -> None:
         # pylint: disable=unused-argument
         # pylint: disable=too-many-arguments
-        if result_code == ResultCode.CONNECTION_SUCCESSFUL.result_code:
+        if result_code == ResultCode.CONNECTION_SUCCESSFUL:
             self._connected = True
             _LOG.info("Connected to broker")
             # Subscribing in on_connect() means that if we lose the connection and

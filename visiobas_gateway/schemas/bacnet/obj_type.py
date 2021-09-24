@@ -81,6 +81,12 @@ ANALOG_TYPES = {
     ObjType.ANALOG_OUTPUT,
     ObjType.ANALOG_VALUE,
 }
+BINARY_TYPES = {
+    ObjType.BINARY_INPUT,
+    ObjType.BINARY_VALUE,
+    ObjType.BINARY_OUTPUT,
+}
+
 DISCRETE_TYPES = {
     ObjType.BINARY_INPUT,
     ObjType.BINARY_VALUE,

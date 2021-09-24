@@ -1,4 +1,8 @@
+from __future__ import annotations
+
+import asyncio
 import logging
+import typing
 from functools import wraps
 from logging.handlers import RotatingFileHandler
 from typing import Any, Callable
@@ -6,6 +10,8 @@ from typing import Any, Callable
 from ..schemas.settings.log_settings import log_settings
 
 _MEGABYTE = 10 ** 6
+
+_EXC_INFO = log_settings.file_level == "DEBUG"
 
 
 class ExtraFormatter(logging.Formatter):
@@ -88,7 +94,7 @@ def get_file_logger(name: str) -> logging.Logger:
 _LOG = get_file_logger(name=__name__)
 
 
-def log_exceptions(func: Callable) -> Any:
+def log_exceptions(func: Callable | Callable[..., typing.Awaitable]) -> Any:
     """Decorator, logging function signature and exception if it occur."""
 
     @wraps(func)
@@ -101,15 +107,38 @@ def log_exceptions(func: Callable) -> Any:
             value = func(*args, **kwargs)
             return value
         except Exception as exc:  # pylint: disable=broad-except
-            # TODO: more info
-            # TODO: use extra
             _LOG.warning(
                 "During %s(%s) call, exception %s: %s occurred",
                 func.__name__,
                 signature,
                 exc.__class__.__name__,
                 exc,
+                exc_info=_EXC_INFO,
             )
             raise exc
 
-    return wrapper
+    @wraps(func)
+    async def async_wrapper(*args: Any, **kwargs: Any) -> Any:
+        args_repr = [repr(a) for a in args]
+        kwargs_repr = [f"{k}={v!r}" for k, v in kwargs.items()]
+        signature = ", ".join(args_repr + kwargs_repr)
+
+        try:
+            value = await func(*args, **kwargs)
+            return value
+        except Exception as exc:  # pylint: disable=broad-except
+            _LOG.warning(
+                "During %s(%s) call, exception %s: %s occurred",
+                func.__name__,
+                signature,
+                exc.__class__.__name__,
+                exc,
+                exc_info=_EXC_INFO,
+            )
+            raise exc
+
+    return (
+        async_wrapper
+        if asyncio.iscoroutine(func) or asyncio.iscoroutinefunction(func)
+        else wrapper
+    )

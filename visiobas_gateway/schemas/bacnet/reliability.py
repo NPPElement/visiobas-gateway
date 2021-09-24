@@ -1,8 +1,8 @@
-from enum import Enum, unique
+from enum import IntEnum, unique
 
 
 @unique
-class Reliability(int, Enum):
+class Reliability(IntEnum):
     """Enumerated values 0-63 are reserved for definition by ASHRAE.
     Enumerated values 64-65535 may be used by others subject to the procedures and
     constraints.

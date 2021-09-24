@@ -1,12 +1,13 @@
 from ipaddress import IPv4Address
 
-from pydantic import BaseModel, Field, validator
+from pydantic import Field, validator
 
 from ..modbus import DeviceRtuProperties
 from ..protocol import SERIAL_PROTOCOLS, TCP_IP_PROTOCOLS, Protocol
+from .obj_property_list import BACnetObjPropertyList
 
 
-class BaseDevicePropertyList(BaseModel):
+class BaseDevicePropertyList(BACnetObjPropertyList):
     """Base class for PropertyList's (371) of device."""
 
     protocol: Protocol = Field(...)
@@ -36,10 +37,15 @@ class BaseDevicePropertyList(BaseModel):
     send_period: float = Field(
         default=300, alias="sendPeriod", description="Period to internal object poll."
     )
-    poll_period: float = Field(
-        default=90, alias="pollPeriod", description="Period to send data to server."
-    )
+    # poll_period: float = Field(
+    #     default=90, alias="pollPeriod", description="Period to send data to server."
+    # )
     reconnect_period: int = Field(default=300, alias="reconnectPeriod")
+
+    @property
+    def timeout_seconds(self) -> float:
+        """Timeout in seconds."""
+        return self.timeout / 1000
 
 
 class TcpIpDevicePropertyList(BaseDevicePropertyList):
@@ -54,6 +60,15 @@ class TcpIpDevicePropertyList(BaseDevicePropertyList):
         if value in TCP_IP_PROTOCOLS:
             return value
         raise ValueError("Protocol is not TCP/IP")
+
+    @property
+    def address_port(self) -> str:
+        return ":".join(
+            (
+                str(self.address),
+                str(self.port),  # type: ignore
+            )
+        )
 
 
 class SerialDevicePropertyList(BaseDevicePropertyList):

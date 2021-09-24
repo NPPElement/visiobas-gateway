@@ -74,6 +74,7 @@ def test_kebab_case():
         ("Title Case", "TitleCase"),
         ("s3_config", "S3Config"),
         ("__LeadingUnderscore", "LeadingUnderscore"),
+        ("UPPER_SNAKE_CASE", "UpperSnakeCase"),
     ],
 )
 def test_pascal_case(before, after):
@@ -89,6 +90,7 @@ def test_pascal_case(before, after):
         ("Title Case", "titleCase"),
         ("s3_config", "s3Config"),
         ("__LeadingUnderscore", "leadingUnderscore"),
+        ("UPPER_SNAKE_CASE", "upperSnakeCase"),
     ],
 )
 def test_camel_case(before, after):

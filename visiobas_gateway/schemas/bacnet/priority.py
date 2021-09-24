@@ -1,8 +1,8 @@
-from enum import Enum, unique
+from enum import IntEnum, unique
 
 
 @unique
-class Priority(int, Enum):
+class Priority(IntEnum):
     """Priority enumeration."""
 
     MANUAL_LIFE_SAFETY = 1

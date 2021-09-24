@@ -1,3 +1,5 @@
+import json
+
 import pydantic
 import pytest
 from visiobas_gateway.schemas.bacnet import ObjType
@@ -48,7 +50,7 @@ class TestBaseBACnetObj:
         "data",
         [
             {"77": "other_name"},
-            {"371": "other_property_list"},
+            {"371": json.dumps({"other": "property_list"})},
         ],
     )
     def test___hash___same(self, base_bacnet_obj_factory, data):

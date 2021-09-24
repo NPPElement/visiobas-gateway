@@ -22,17 +22,13 @@ class GatewaySettings(BaseSettings):
         ),
     )
     poll_device_ids: list[PositiveInt] = Field(
-        ..., min_items=1, description="List of " "polling device ids"
+        ..., min_items=1, description="List of polling device ids"
     )
 
     @validator("poll_device_ids")
     def drop_duplicated_ids(cls, value: list[PositiveInt]) -> list[PositiveInt]:
         # pylint: disable=no-self-argument
         return list(set(value))
-
-    mqtt_enable: bool = Field(
-        default=False, description="Initialize connection by mqtt"  # todo: temp
-    )
 
     class Config:  # pylint: disable=missing-class-docstring
         env_prefix = "GTW_"

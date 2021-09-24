@@ -65,21 +65,18 @@ cd /opt/visiobas-gateway
 ### Configuration
 
 Application configures via environment variables. Environment variables are provided
-via `.env` files. Paths to `.env` files are specified in `docker-compose.yaml`.
+via `.env` file. Paths to `.env` file are specified in `docker-compose.yaml`.
 
-Configuration can be changed in files:
+Configuration can be changed in file:
 
-- `config/log.env` [template](/config/templates/log.env)
-- `config/gateway.env` [template](/config/templates/gateway.env)
-- `config/http.env` [template](/config/templates/http.env)
-- `config/mqtt.env` [template](/config/templates/mqtt.env)
-- `config/api.env` [template](/config/templates/api.env)
+- `config/.env` [template](/config/template.env)
+
 
 ### Objects configuration
 
 [/docs](/docs) contains JSON-schema definitions for used `pydantic` models. 
 
-Outdated: [~~/docs/properties.md~~](/docs/properties.md) (will be removed soon).
+[~~/docs/properties.md~~](/docs/properties.md) (Outdated & will be removed soon).
 
 ### Setting Serial ports
 

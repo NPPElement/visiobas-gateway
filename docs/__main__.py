@@ -39,7 +39,7 @@ def _get_pydantic_classes(package_name: str) -> Iterable[ModelMetaclass]:
     return pydantic_classes
 
 
-def _write_json_schemas(
+def _generate_json_schemas(
     output_dir: Path, classes: Iterable[ModelMetaclass], package_name: str
 ) -> None:
     """Writes JSON-schemas for classes in YAML."""
@@ -51,7 +51,9 @@ def _write_json_schemas(
     for cls in classes:
         if hasattr(cls, "schema_json"):
             file_path = output_dir / (
-                cls.__module__.removesuffix(package_name).rsplit(sep=".", maxsplit=1)[0]
+                cls.__module__.removeprefix(package_name + ".").rsplit(sep=".", maxsplit=1)[
+                    0
+                ]
                 + "."
                 + cls.__name__
                 + ".yml"
@@ -79,6 +81,6 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     pydantic_models = _get_pydantic_classes(package_name=args.package)
-    _write_json_schemas(
+    _generate_json_schemas(
         output_dir=Path(args.output_dir), classes=pydantic_models, package_name=args.package
     )

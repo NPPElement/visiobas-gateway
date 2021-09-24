@@ -18,18 +18,24 @@ def split_words(value: str) -> list[str]:
     # We can't guess words if there is no capital letter
     if any(c.isupper() for c in value):
         value = " ".join(re.split("([A-Z]?[a-z]+)", value))
+    if value.isupper():
+        value = value.lower()
     return re.findall(rf"[^{DELIMITERS}]+", value)
 
 
 def snake_case(value: str) -> str:
     """Converts to snake_case"""
     words = split_words(sanitize(value))
+    if all(w.isupper() for w in words):
+        words = (w.lower for w in words)  # type: ignore
     return "_".join(words).lower()
 
 
 def pascal_case(value: str) -> str:
     """Converts to PascalCase"""
     words = split_words(sanitize(value))
+    if all(w.isupper() for w in words):
+        words = (w.lower for w in words)  # type: ignore
     capitalized_words = (
         word.capitalize() if not word.isupper() else word for word in words
     )
@@ -39,6 +45,8 @@ def pascal_case(value: str) -> str:
 def camel_case(value: str) -> str:
     """Converts to camelCase"""
     words = split_words(sanitize(value))
+    if all(w.isupper() for w in words):
+        words = (w.lower for w in words)  # type: ignore
     lower_word = words[0].lower()
     capitalized_words = (
         word.capitalize() if not word.isupper() else word for word in words[1:]
@@ -49,6 +57,8 @@ def camel_case(value: str) -> str:
 def kebab_case(value: str) -> str:
     """Converts to kebab-case"""
     words = split_words(sanitize(value))
+    if all(w.isupper() for w in words):
+        words = (w.lower for w in words)  # type: ignore
     return "-".join(words).lower()
 
 

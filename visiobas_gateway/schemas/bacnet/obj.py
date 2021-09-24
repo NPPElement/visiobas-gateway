@@ -11,12 +11,8 @@ from .obj_type import INPUT_PROPERTIES, INPUT_TYPES, OUTPUT_PROPERTIES, OUTPUT_T
 from .reliability import Reliability
 from .status_flags import StatusFlags
 
-# try:
-#     from bacpypes.basetypes import PriorityArray  # type: ignore
-# except ImportError as exc:
-#     raise NotImplementedError from exc
-
 DEFAULT_RESOLUTION = 0.1
+DEFAULT_PRIORITY_ARRAY: list[Optional[float]] = [None] * 16
 
 
 class BACnetObj(BaseBACnetObj):
@@ -29,6 +25,19 @@ class BACnetObj(BaseBACnetObj):
         description="""Indicates the smallest recognizable change in `Present_Value` in
         engineering units (read-only).""",
     )
+
+    @validator("resolution", pre=True)
+    def set_default_resolution_if_none(cls, value: Optional[float]) -> float:
+        """None should be interpreted as default value 0.1 -- `pydantic` does not
+        handle it.
+        """
+        # pylint: disable=no-self-argument
+        if value is None:
+            return DEFAULT_RESOLUTION
+        if isinstance(value, float):
+            return value
+        raise ValueError("Invalid resolution")
+
     status_flags: StatusFlags = Field(
         default=StatusFlags(flags=0b0000),
         alias=str(ObjProperty.STATUS_FLAGS.id),
@@ -39,41 +48,75 @@ class BACnetObj(BaseBACnetObj):
         that are linked to these flags. The relationship between individual flags is
         not defined by the protocol.""",
     )
-    priority_array: Optional[list[Optional[float]]] = Field(
+
+    @validator("status_flags", pre=True)
+    def cast_list(cls, value: list[bool]) -> StatusFlags:
+        """Status flag stored as list of 4 booleans. Converts it to one integer."""
+        # pylint: disable=no-self-argument
+        if isinstance(value, list) and len(value) == 4:
+            int_value = 0b0000
+            for i, flag in enumerate(value):
+                if not isinstance(flag, bool):
+                    raise ValueError("Invalid flag")
+                if flag:
+                    int_value |= 1 << len(value) - 1 - i
+            return StatusFlags(flags=int_value)
+        if isinstance(value, int) and 0 <= value <= 15:
+            return StatusFlags(flags=value)
+        raise ValueError("Invalid StatusFlags")
+
+    priority_array: list[Optional[float]] = Field(
+        default=DEFAULT_PRIORITY_ARRAY,
         alias=str(ObjProperty.PRIORITY_ARRAY.id),
         max_items=16,
         min_items=16,
         description="""Priority array. This property is a read-only array that contains
         prioritized commands that are in effect for this object.""",
     )
+
+    @validator("priority_array", pre=True)
+    def set_default_priority_array_if_none(
+        cls, value: Optional[list[Optional[float]]]
+    ) -> list[Optional[float]]:
+        """None should be interpreted as default value 0.1 -- `pydantic` does not
+        handle it.
+        """
+        # pylint: disable=no-self-argument
+        if not value or value == [None]:
+            return DEFAULT_PRIORITY_ARRAY
+
+        return value
+
     reliability: Union[Reliability, str] = Field(
         default=Reliability.NO_FAULT_DETECTED,
         alias=str(ObjProperty.RELIABILITY.id),
         description="""Provides an indication of whether the `Present_Value` is
         "reliable" as far as the BACnet Device can determine and, if not, why.""",
     )
+
+    @validator("reliability", pre=True)
+    def try_cast_reliability(
+        cls, value: Union[Reliability, str]
+    ) -> Union[Reliability, str]:
+        # pylint: disable=no-self-argument
+        if value is None:
+            return Reliability.NO_FAULT_DETECTED
+        try:
+            # Receive `Reliability` | `str`, but trying detect known `Reliability`.
+            return Reliability[snake_case(value).upper()]  # type: ignore
+        except KeyError:
+            return value
+
     segmentation_supported: bool = Field(
         default=False, alias=str(ObjProperty.SEGMENTATION_SUPPORTED.id)
     )
-    property_list: BACnetObjPropertyList = Field(
+    property_list: BACnetObjPropertyList = Field(  # type: ignore
         ...,
         alias=str(ObjProperty.PROPERTY_LIST.id),
         description="""This read-only property is a JSON of property identifiers, one
         property identifier  for each property that exists within the object. The standard
         properties are not included in the JSON.""",
     )
-
-    # # FIXME: hotfix
-    # default_poll_period: Optional[float] = Field(
-    #     default=None,
-    #     description="Internal variable to set default value into propertyList",
-    # )
-    #
-    # # TODO: add usage
-    # default_send_period: Optional[int] = Field(
-    #     default=None,
-    #     description="Internal variable to set default value into propertyList",
-    # )
 
     present_value: Any = Field(
         default=None,
@@ -115,45 +158,6 @@ class BACnetObj(BaseBACnetObj):
     #     if values["property_list"].send_period is None:
     #         values["property_list"].send_period = value
 
-    @validator("resolution", pre=True)
-    def set_default_if_none(cls, value: Optional[float]) -> float:
-        """None should be interpreted as default value 0.1 -- `pydantic` does not
-        handle it.
-        """
-        # pylint: disable=no-self-argument
-        if value is None:
-            return DEFAULT_RESOLUTION
-        if isinstance(value, float):
-            return value
-        raise ValueError("Invalid resolution")
-
-    @validator("reliability")
-    def try_cast_reliability(
-        cls, value: Union[Reliability, str]
-    ) -> Union[Reliability, str]:
-        # pylint: disable=no-self-argument
-        try:
-            # Receive `Reliability` | `str`, but trying detect known `Reliability`.
-            return Reliability[snake_case(value).upper()]  # type: ignore
-        except KeyError:
-            return value
-
-    @validator("status_flags", pre=True)
-    def cast_list(cls, value: list[bool]) -> StatusFlags:
-        """Status flag stored as list of 4 booleans. Converts it to one integer."""
-        # pylint: disable=no-self-argument
-        if isinstance(value, list) and len(value) == 4:
-            int_value = 0b0000
-            for i, flag in enumerate(value):
-                if not isinstance(flag, bool):
-                    raise ValueError("Invalid flag")
-                if flag:
-                    int_value |= 1 << len(value) - 1 - i
-            return StatusFlags(flags=int_value)
-        if isinstance(value, int) and 0 <= value <= 15:
-            return StatusFlags(flags=value)
-        raise ValueError("Invalid StatusFlags")
-
     @property
     def polling_properties(self) -> tuple[ObjProperty, ...]:
         if self.type in INPUT_TYPES:
@@ -194,20 +198,13 @@ class BACnetObj(BaseBACnetObj):
         setattr(self, property_name, value)
 
     def to_mqtt_str(self) -> str:
-        return "{0} {1} {2} {3} {4}".format(
-            self.device_id,
-            self.id,
-            self.type.type_id,
-            self.present_value,
-            self.status_flags,
+        return (
+            f"{self.device_id} {self.id} {self.type.type_id} "
+            f"{self.present_value} {self.status_flags}"
         )
 
     def to_http_str(self) -> str:
-        str_ = "{0} {1} {2}".format(
-            self.id,
-            self.type.type_id,
-            self.present_value,
-        )
+        str_ = f"{self.id} {self.type.type_id} {self.present_value}"
         if self.priority_array:
             pa_str = self._convert_pa_to_str(priority_array=self.priority_array)
             str_ += " " + pa_str
@@ -231,15 +228,3 @@ class BACnetObj(BaseBACnetObj):
         return ",".join(
             ["" if priority is None else str(priority) for priority in priority_array]
         )
-
-    # @staticmethod
-    # def convert_priority_array(priority_array: PriorityArray) -> list[Optional[float]]:
-    #     """Converts `bacpypes.PriorityArray` as tuple."""
-    #     priorities = [
-    #         v[0] if k[0] != "null" else None
-    #         for k, v in [
-    #             zip(*priority_array.value[i].dict_contents().items())
-    #             for i in range(1, priority_array.value[0] + 1)
-    #         ]
-    #     ]
-    #     return priorities
