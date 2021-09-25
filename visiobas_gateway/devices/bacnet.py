@@ -179,7 +179,7 @@ class BACnetDevice(BasePollingDevice, BACnetCoderMixin):
             await self.interface.polling_event.wait()
         return await self._gtw.async_add_job(self.read_property, obj, prop)
 
-    @log_exceptions
+    # @log_exceptions
     def read_property(self, obj: BACnetObj, prop: ObjProperty) -> BACnetObj:
         assert isinstance(self._device_obj.property_list, TcpIpDevicePropertyList)
 

@@ -92,17 +92,7 @@ class ModbusCoderMixin:
             _LOG.debug(
                 "Decoded",
                 extra={
-                    "device_id": obj.device_id,
-                    "object_id": obj.id,
-                    "object_type": obj.type,
-                    "address": obj.address,
-                    "object_is_register": obj.is_register,
-                    "objects_is_coil": obj.is_coil,
-                    "word_order": obj.word_order,
-                    "byte_order": obj.byte_order,
-                    "quantity": obj.quantity,
-                    "data_length": obj.data_length,
-                    "data_type": obj.data_type,
+                    "object": obj,
                     "value_raw": data,
                     "value_decoded": decoded,
                     "value_scaled": scaled,

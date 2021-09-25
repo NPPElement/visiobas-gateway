@@ -141,7 +141,7 @@ class ModbusDevice(BasePollingDevice, ModbusCoderMixin):
     ) -> None:
         await self._gtw.async_add_job(self.sync_write, value, obj)
 
-    @log_exceptions
+    # @log_exceptions
     def sync_write(self, value: Union[int, float], obj: ModbusObj) -> None:
         """Write value to Modbus object.
 
