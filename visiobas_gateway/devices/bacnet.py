@@ -31,8 +31,8 @@ class BACnetDevice(BasePollingDevice, BACnetCoderMixin):
     def interface_name(device_obj: DeviceObj) -> Optional[str]:
         assert isinstance(device_obj.property_list, TcpIpDevicePropertyList)
 
-        device_ip_address = device_obj.property_list.address
-        interface = get_subnet_interface(ip=device_ip_address)
+        ip_address = device_obj.property_list.address
+        interface = get_subnet_interface(ip=ip_address)
 
         if interface:
             return str(interface)

@@ -169,7 +169,7 @@ class Gateway:
         # 0. HTTP startup tasks.
         await self.http_client.startup_tasks()
 
-        # 1. Load devices.
+        # 1. Load devices tasks.
         load_device_tasks = [
             self.load_device(device_id=dev_id) for dev_id in self.settings.poll_device_ids
         ]

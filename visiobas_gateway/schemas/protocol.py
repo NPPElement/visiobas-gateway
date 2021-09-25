@@ -28,3 +28,8 @@ TCP_IP_PROTOCOLS = {
     Protocol.SUN_API,
 }
 SERIAL_PROTOCOLS = {Protocol.MODBUS_RTU}
+
+MODBUS_TCP_IP_PROTOCOLS = {
+    Protocol.MODBUS_TCP,
+    Protocol.MODBUS_RTU_OVER_TCP,
+}

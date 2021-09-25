@@ -2,8 +2,8 @@ from ipaddress import IPv4Address
 
 from pydantic import Field, validator
 
-from ..modbus import DeviceRtuProperties
-from ..protocol import SERIAL_PROTOCOLS, TCP_IP_PROTOCOLS, Protocol
+from ..modbus.device_rtu_properties import DeviceRtuProperties, DeviceTcpIpRtuProperties
+from ..protocol import MODBUS_TCP_IP_PROTOCOLS, SERIAL_PROTOCOLS, TCP_IP_PROTOCOLS, Protocol
 from .obj_property_list import BACnetObjPropertyList
 
 
@@ -69,6 +69,19 @@ class TcpIpDevicePropertyList(BaseDevicePropertyList):
                 str(self.port),  # type: ignore
             )
         )
+
+
+class TcpIpModbusDevicePropertyList(TcpIpDevicePropertyList):
+    """PropertyList for TCP/IP Modbus devices."""
+
+    rtu: DeviceTcpIpRtuProperties
+
+    @validator("protocol")
+    def validate_protocol(cls, value: Protocol) -> Protocol:
+        # pylint: disable=no-self-argument
+        if value in MODBUS_TCP_IP_PROTOCOLS:
+            return value
+        raise ValueError("Protocol is not Modbus via TCP/IP")
 
 
 class SerialDevicePropertyList(BaseDevicePropertyList):
