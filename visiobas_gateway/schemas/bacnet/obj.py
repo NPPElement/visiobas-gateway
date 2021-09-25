@@ -103,6 +103,8 @@ class BACnetObj(BaseBACnetObj):
         # pylint: disable=no-self-argument
         if value is None:
             return Reliability.NO_FAULT_DETECTED
+        if isinstance(value, Reliability):
+            return value
         try:
             # Receive `Reliability` | `str`, but trying detect known `Reliability`.
             return Reliability[snake_case(value).upper()]  # type: ignore
@@ -221,6 +223,8 @@ class BACnetObj(BaseBACnetObj):
             reliability = obj.reliability.value  # type: ignore
         if reliability:
             str_ += " " + str(reliability)
+
+        str_ += ";"
         return str_
 
     @staticmethod

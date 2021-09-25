@@ -1,7 +1,9 @@
 import pytest
 
+from visiobas_gateway.schemas import ObjType
 from visiobas_gateway.schemas.bacnet.obj_property import ObjProperty
 from visiobas_gateway.schemas.bacnet.reliability import Reliability
+from visiobas_gateway.schemas.bacnet.obj import DEFAULT_PRIORITY_ARRAY
 
 
 class TestBACnetObj:
@@ -37,3 +39,33 @@ class TestBACnetObj:
         bacnet_obj.set_property(value=2, prop=ObjProperty.STATUS_FLAGS)
         assert bacnet_obj.status_flags.flags == 2
         assert bacnet_obj.unreachable_in_row == 0
+
+    @pytest.mark.parametrize(
+        "priority_array, expected",
+        [
+            (None, ",,,,,,,,,,,,,,,"),
+            ([None], ",,,,,,,,,,,,,,,"),
+            (DEFAULT_PRIORITY_ARRAY, ",,,,,,,,,,,,,,,"),
+            ([*[None] * 8, 40.5, *[None] * 5, 49.2, None], ",,,,,,,,40.5,,,,,,49.2,"),
+        ],
+    )
+    def test_priority_array_to_http_str(self, bacnet_obj_factory, priority_array, expected):
+        bacnet_obj = bacnet_obj_factory(**{"87": priority_array})
+        assert (
+            bacnet_obj.priority_array_to_http_str(priority_array=bacnet_obj.priority_array)
+            == expected
+        )
+
+    @pytest.mark.parametrize(
+        "data, expected",
+        [
+            ({"103": "", "111": 8, "85": 6.666, "79": 0}, "75 0 6.666 ,,,,,,,,,,,,,,, 0;"),
+            (
+                {"103": Reliability.OVER_RANGE, "79": ObjType.BINARY_INPUT},
+                "75 3 85.8585 ," ",,,,,,,,,,,,,, 0 2;",
+            ),
+        ],
+    )
+    def test_to_http_str(self, bacnet_obj_factory, data, expected):
+        bacnet_obj = bacnet_obj_factory(**data)
+        assert bacnet_obj.to_http_str(obj=bacnet_obj) == expected

@@ -321,7 +321,7 @@ class Gateway:
             raise ValueError("Cannot sent nothing")
 
         dev_id = list(objs)[0].device_id
-        str_ = ";".join([obj.to_http_str(obj=obj) for obj in objs]) + ";"
+        str_ = " ".join([obj.to_http_str(obj=obj) for obj in objs])
         if isinstance(self.http_client, HTTPClient):
             try:
                 await self.http_client.post_device(

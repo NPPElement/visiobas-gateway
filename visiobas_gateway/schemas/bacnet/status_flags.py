@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from copy import copy
+from copy import deepcopy
 from enum import Enum, unique
 from typing import Union
 
@@ -83,7 +83,7 @@ class StatusFlags(BaseModel):
                 - OVERRIDEN
                 - IN_ALARM
         """
-        sf_copy = copy(self)
+        sf_copy = deepcopy(self)
         sf_copy.disable(flag=StatusFlag.OUT_OF_SERVICE)
         sf_copy.disable(flag=StatusFlag.OVERRIDEN)
         sf_copy.disable(flag=StatusFlag.IN_ALARM)

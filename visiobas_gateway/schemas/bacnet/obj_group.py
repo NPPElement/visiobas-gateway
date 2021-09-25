@@ -16,13 +16,8 @@ class ObjectGroup:
 
     period: float
 
-    # Key: tuple[object_id, object_type_id]
+    # Unique object - tuple[object_id, object_type_id]
     objects: dict[tuple[int, int], BACnetObj]
-
-    @staticmethod
-    def to_http_str(objs: list[BACnetObj]) -> str:
-        str_ = ";".join([obj.to_http_str(obj=obj) for obj in objs]) + ";"
-        return str_
 
 
 def group_by_period(objs: list[BACnetObj]) -> dict[float, ObjectGroup]:
