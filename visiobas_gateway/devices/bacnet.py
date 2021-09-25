@@ -236,7 +236,12 @@ class BACnetDevice(BasePollingDevice, BACnetCoderMixin):
 
     async def simulate_rpm(self, obj: BACnetObj) -> None:
         for prop in obj.polling_properties:
-            await self._read(obj=obj, prop=prop)
+            try:
+                await self._read(obj=obj, prop=prop)
+            except Exception as exc:  # pylint: disable=broad-except
+                self._LOG.warning(
+                    "Read error", extra={"object": obj, "property": prop, "exception": exc}
+                )
 
     async def read(self, obj: BACnetObj, wait: bool = False, **kwargs: Any) -> None:
         # if obj.segmentation_supported:# todo: implement RPM or RP
