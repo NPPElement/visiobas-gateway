@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING, Any, Collection, Optional, Union
 import aiojobs  # type: ignore
 
 from ..schemas import BACnetObj, DeviceObj
+from ..schemas.bacnet.obj_group import ObjectGroup
 from ..utils.log import log_exceptions
 from ._base_device import BaseDevice
 from ._interface import Interface
@@ -30,7 +31,8 @@ class BasePollingDevice(BaseDevice, ABC):
         self._scheduler: aiojobs.Scheduler = None  # type: ignore
 
         # Key: period
-        self._objects: dict[float, set[BACnetObj]] = {}
+        self.object_groups: dict[float, ObjectGroup] = {}
+        # self._objects: dict[float, set[BACnetObj]] = {}
 
     @staticmethod
     @abstractmethod
@@ -88,10 +90,6 @@ class BasePollingDevice(BaseDevice, ABC):
     @property
     def reconnect_period(self) -> int:
         return self._device_obj.property_list.reconnect_period
-
-    @property
-    def all_objects(self) -> set[BACnetObj]:
-        return {obj for objs_set in self._objects.values() for obj in objs_set}
 
     @abstractmethod
     async def create_client(self, device_obj: DeviceObj) -> Any:
@@ -181,39 +179,23 @@ class BasePollingDevice(BaseDevice, ABC):
             obj_id: Object identifier.
             obj_type_id: Object type identifier.
 
-        # todo: slow! use hash
-
         Returns:
             Object instance.
         """
-        for obj in self.all_objects:
-            if obj.type.type_id == obj_type_id and obj.id == obj_id:
-                return obj
+        for obj_group in self.object_groups.values():
+            if (obj_id, obj_type_id) in obj_group.objects:
+                return obj_group.objects[(obj_id, obj_type_id)]
         return None
-
-    def insert_objects(self, objs: Collection[BACnetObj]) -> None:
-        """Groups objects by poll period and insert them into device for polling."""
-        if objs:
-            self.interface.polling_event.clear()
-            for obj in objs:
-                poll_period = obj.property_list.poll_period
-                try:
-                    self._objects[poll_period].add(obj)
-                except KeyError:
-                    self._objects[poll_period] = {obj}
-            self.interface.polling_event.set()
-            self._LOG.debug(
-                "Objects are grouped by period and inserted to device",
-                extra={"device_id": self.id, "objects_number": len(objs)},
-            )
 
     async def start_periodic_polls(self) -> None:
         """Starts periodic polls for all periods."""
 
         if self.is_client_connected:
             self.interface.polling_event.set()
-            for period, objs in self._objects.items():
-                await self._scheduler.spawn(self.periodic_poll(objs=objs, period=period))
+            for period, objs_group in self.object_groups.items():
+                await self._scheduler.spawn(
+                    self.periodic_poll(objs=objs_group.objects.values(), period=period)
+                )
             await self._scheduler.spawn(self._periodic_reset_unreachable())
         else:
             self._LOG.info(
@@ -244,8 +226,8 @@ class BasePollingDevice(BaseDevice, ABC):
     async def _periodic_reset_unreachable(self) -> None:
         await asyncio.sleep(self._gtw.settings.unreachable_reset_period)
 
-        for objects in self._objects.values():
-            for obj in objects:
+        for objs_group in self.object_groups.values():
+            for obj in objs_group.objects.values():
                 obj.unreachable_in_row = 0
 
         self._LOG.debug(
@@ -258,16 +240,12 @@ class BasePollingDevice(BaseDevice, ABC):
 
     async def periodic_poll(
         self,
-        objs: set[BACnetObj],
+        objs: Collection[BACnetObj],
         period: float,
     ) -> None:
         self._LOG.debug(
             "Polling started",
-            extra={
-                "device_id": self.id,
-                "period": period,
-                "objects_number": len(objs),
-            },
+            extra={"device_id": self.id, "period": period, "objects_number": len(objs)},
         )
         _t0 = datetime.now()
         await self._poll_objects(objs=objs)
@@ -295,6 +273,6 @@ class BasePollingDevice(BaseDevice, ABC):
 
         await self._scheduler.spawn(self.periodic_poll(objs=objs, period=period))
 
-    async def _after_polling_tasks(self, objs: set[BACnetObj]) -> None:
+    async def _after_polling_tasks(self, objs: Collection[BACnetObj]) -> None:
         verified_objects = self._gtw.verifier.verify_objects(objs=objs)
         await self._gtw.send_objects(objs=verified_objects)

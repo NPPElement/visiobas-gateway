@@ -21,6 +21,7 @@ from visiobas_gateway.devices import BACnetDevice, ModbusDevice, SUNAPIDevice
 from visiobas_gateway.devices._base_polling_device import BasePollingDevice
 from visiobas_gateway.schemas.bacnet import BACnetObj, DeviceObj, ObjType
 from visiobas_gateway.schemas.bacnet.device_obj import POLLING_TYPES
+from visiobas_gateway.schemas.bacnet.obj_group import ObjectGroup, group_by_period
 from visiobas_gateway.schemas.modbus import ModbusObj
 from visiobas_gateway.schemas.protocol import POLLING_PROTOCOLS, Protocol
 from visiobas_gateway.schemas.settings import (
@@ -252,33 +253,8 @@ class Gateway:
             return None
 
         if device.protocol in POLLING_PROTOCOLS:
-            # todo: use for extractions tasks asyncio.as_completed(tasks):
-            objs_data = await self.http_client.get_objects(
-                dev_id=device_id, obj_types=POLLING_TYPES
-            )
-            _LOG.debug(
-                "Polling objects downloaded",
-                extra={
-                    "device_id": device_id,
-                },
-            )
-
-            extract_tasks = [
-                self.async_add_job(self._extract_objects, obj_data, device_obj)
-                for obj_data in objs_data
-                if not isinstance(obj_data, (aiohttp.ClientError, Exception))
-            ]
-            objs_lists = await asyncio.gather(*extract_tasks)
-            objs = [obj for lst in objs_lists for obj in lst if obj]  # Flat list of lists.
-
-            if not objs:
-                raise ValueError("There aren't polling objects")
-
-            _LOG.debug(
-                "Polling objects extracted",
-                extra={"device_id": device_id, "objects_count": len(objs)},
-            )
-            await self.async_add_job(device.insert_objects, objs)
+            groups = self.download_objects(device_obj=device_obj)
+            device.object_groups = groups
 
         self._devices.update({device.id: device})
         _LOG.info(
@@ -288,6 +264,29 @@ class Gateway:
             },
         )
         return device
+
+    async def download_objects(self, device_obj: DeviceObj) -> dict[float, ObjectGroup]:
+        # todo: use for extractions tasks asyncio.as_completed(tasks):
+        objs_data = await self.http_client.get_objects(
+            dev_id=device_obj.id, obj_types=POLLING_TYPES
+        )
+        _LOG.debug(
+            "Polling objects downloaded",
+            extra={"device_id": device_obj.id},
+        )
+
+        extract_tasks = [
+            self.async_add_job(self._extract_objects, obj_data, device_obj)
+            for obj_data in objs_data
+            if not isinstance(obj_data, (aiohttp.ClientError, Exception))
+        ]
+        objs_lists = await asyncio.gather(*extract_tasks)
+        objs = [obj for lst in objs_lists for obj in lst if obj]  # Flat list of lists.
+        if not objs:
+            raise ValueError("There aren't polling objects")
+
+        groups = group_by_period(objs=objs)
+        return groups
 
     @staticmethod
     def _parse_device_obj(data: dict) -> Optional[DeviceObj]:
@@ -322,7 +321,7 @@ class Gateway:
             raise ValueError("Cannot sent nothing")
 
         dev_id = list(objs)[0].device_id
-        str_ = ";".join([obj.to_http_str() for obj in objs]) + ";"
+        str_ = ";".join([obj.to_http_str(obj=obj) for obj in objs]) + ";"
         if isinstance(self.http_client, HTTPClient):
             try:
                 await self.http_client.post_device(

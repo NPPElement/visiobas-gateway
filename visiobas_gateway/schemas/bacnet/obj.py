@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from datetime import datetime
 from typing import Any, Optional, Union
 
@@ -203,24 +205,26 @@ class BACnetObj(BaseBACnetObj):
             f"{self.present_value} {self.status_flags}"
         )
 
-    def to_http_str(self) -> str:
-        str_ = f"{self.id} {self.type.type_id} {self.present_value}"
-        if self.priority_array:
-            pa_str = self._convert_pa_to_str(priority_array=self.priority_array)
+    @staticmethod
+    def to_http_str(obj: BACnetObj) -> str:
+        str_ = f"{obj.id} {obj.type.type_id} {obj.present_value}"
+
+        if obj.priority_array:
+            pa_str = obj.priority_array_to_http_str(priority_array=obj.priority_array)
             str_ += " " + pa_str
 
-        str_ += " " + str(self.status_flags.for_http.flags)  # SF with disabled flags!
+        str_ += " " + str(obj.status_flags.for_http.flags)  # SF with disabled flags!
 
-        reliability = self.reliability
+        reliability = obj.reliability
         if isinstance(reliability, Reliability):
             # `Reliability` is subclass of `Enum`, which has `value` attribute.
-            reliability = self.reliability.value  # type: ignore
-
-        str_ += " " + str(reliability)
+            reliability = obj.reliability.value  # type: ignore
+        if reliability:
+            str_ += " " + str(reliability)
         return str_
 
     @staticmethod
-    def _convert_pa_to_str(priority_array: list[Optional[float]]) -> str:
+    def priority_array_to_http_str(priority_array: list[Optional[float]]) -> str:
         """Convert priority array tuple to str.
 
         Result example: ,,,,,,,,40.5,,,,,,49.2,
