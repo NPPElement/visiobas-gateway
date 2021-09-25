@@ -220,10 +220,9 @@ class BACnetObj(BaseBACnetObj):
         reliability = obj.reliability
         if isinstance(reliability, Reliability):
             # `Reliability` is subclass of `Enum`, which has `value` attribute.
-            reliability = obj.reliability.value  # type: ignore
-        if reliability:
-            str_ += " " + str(reliability)
-
+            reliability = str(obj.reliability.value)  # type: ignore
+        if reliability and not reliability.isspace():
+            str_ += " " + reliability
         str_ += ";"
         return str_
 

@@ -83,7 +83,7 @@ class BACnetVerifier:
         if obj.verified_present_value == "null":
             status_flags.enable(flag=StatusFlag.FAULT)
         if status_flags.flags == 0b0000:
-            obj.reliability = ""
+            obj.reliability = Reliability.NO_FAULT_DETECTED
 
         obj.status_flags = status_flags
         return obj
@@ -138,12 +138,6 @@ class BACnetVerifier:
         self, obj: BACnetObj, priority_array: list[Optional[float]]
     ) -> BACnetObj:
         """Sets OVERRIDE status flag if priority array contains override priority."""
-
-        # todo: move priorities into Enum
-        # MANUAL_LIFE_SAFETY = 9 - 1
-        # AUTOMATIC_LIFE_SAFETY = 10 - 1
-        # OVERRIDE_PRIORITIES = {MANUAL_LIFE_SAFETY,
-        #                        AUTOMATIC_LIFE_SAFETY, }
         for i, priority in enumerate(priority_array):
             if priority is None:
                 continue

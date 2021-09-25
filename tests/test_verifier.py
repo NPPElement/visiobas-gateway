@@ -71,7 +71,7 @@ class TestBACnetVerifier:
             obj=bacnet_obj, status_flags=bacnet_obj.status_flags
         )
         assert bacnet_obj.status_flags.flags == 0b0000
-        assert bacnet_obj.reliability == ""
+        assert bacnet_obj.reliability == Reliability.NO_FAULT_DETECTED
 
     def test_verify_status_flags_not_zero(self, bacnet_obj_factory):
         verifier = BACnetVerifier(override_threshold=8)
