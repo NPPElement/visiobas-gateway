@@ -324,9 +324,12 @@ class Gateway:
         dev_id = list(objs)[0].device_id
         str_ = ";".join([obj.to_http_str() for obj in objs]) + ";"
         if isinstance(self.http_client, HTTPClient):
-            await self.http_client.post_device(
-                servers=self.http_client.servers_post, dev_id=dev_id, data=str_
-            )
+            try:
+                await self.http_client.post_device(
+                    servers=self.http_client.servers_post, dev_id=dev_id, data=str_
+                )
+            except aiohttp.ClientError:
+                pass
         # if self._is_mqtt_enabled:  # todo
 
     @log_exceptions

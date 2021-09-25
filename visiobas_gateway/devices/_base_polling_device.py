@@ -181,7 +181,7 @@ class BasePollingDevice(BaseDevice, ABC):
             obj_id: Object identifier.
             obj_type_id: Object type identifier.
 
-        # todo: Implement binary search
+        # todo: slow! use hash
 
         Returns:
             Object instance.
