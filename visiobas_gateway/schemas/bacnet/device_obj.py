@@ -3,7 +3,11 @@ from typing import Union
 from pydantic import Field
 
 from .base_obj import BaseBACnetObj
-from .device_property_list import SerialDevicePropertyList, TcpIpDevicePropertyList
+from .device_property_list import (
+    SerialDevicePropertyList,
+    TcpIpDevicePropertyList,
+    TcpIpModbusDevicePropertyList,
+)
 from .obj_property import ObjProperty
 from .obj_type import ObjType
 
@@ -12,7 +16,7 @@ class DeviceObj(BaseBACnetObj):
     """Represent device object."""
 
     property_list: Union[
-        TcpIpDevicePropertyList, SerialDevicePropertyList
+        TcpIpDevicePropertyList, SerialDevicePropertyList, TcpIpModbusDevicePropertyList
     ] = Field(  # type: ignore
         ..., alias=str(ObjProperty.PROPERTY_LIST.id)
     )
