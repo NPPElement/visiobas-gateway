@@ -132,6 +132,22 @@ def tcp_ip_device_factory() -> Callable[..., DeviceObj]:
 
 
 @pytest.fixture
+def tcp_ip_modbus_device_factory() -> Callable[..., DeviceObj]:
+    """
+    Produces `DeviceObj` with `TcpIpDevicePropertyList` for tests.
+
+    You can pass the same params into this as the `DeviceObj` constructor to
+    override defaults.
+    """
+
+    def _factory(**kwargs):
+        kwargs = _tcp_ip_modbus_device_obj_kwargs(kwargs)
+        return DeviceObj(**kwargs)
+
+    return _factory
+
+
+@pytest.fixture
 def serial_device_factory() -> Callable[..., DeviceObj]:
     """
     Produces `DeviceObj` with `SerialDevicePropertyList` for tests.
@@ -253,7 +269,7 @@ def _tcp_ip_modbus_device_property_list_kwargs(kwargs: dict[str, Any]) -> dict[s
         "replace": {},
         "address": "10.21.10.21",
         "port": 502,
-        "protocol": "ModbusRTUoverTCP",
+        "protocol": "ModbusTCP",
         "timeout": 500,
         "retries": 3,
         "rtu": _device_tcp_ip_modbus_properties_kwargs({}),
@@ -278,6 +294,15 @@ def _tcp_ip_device_obj_kwargs(kwargs: dict[str, Any]) -> dict[str, Any]:
     kwargs = {
         **_base_bacnet_obj_kwargs({}),
         "371": json.dumps(_tcp_ip_device_property_list_kwargs({})),
+        **kwargs,
+    }
+    return kwargs
+
+
+def _tcp_ip_modbus_device_obj_kwargs(kwargs: dict[str, Any]) -> dict[str, Any]:
+    kwargs = {
+        **_base_bacnet_obj_kwargs({}),
+        "371": json.dumps(_tcp_ip_modbus_device_property_list_kwargs({})),
         **kwargs,
     }
     return kwargs

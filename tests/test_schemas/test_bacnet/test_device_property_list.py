@@ -71,7 +71,7 @@ class TestTcpIpModbusDevicePropertyList:
         tcp_ip_modbus_device_property_list = tcp_ip_modbus_device_property_list_factory(
             apduTimeout=10_000, numberOfApduRetries=2
         )
-        assert tcp_ip_modbus_device_property_list.protocol == Protocol.MODBUS_RTU_OVER_TCP
+        assert tcp_ip_modbus_device_property_list.protocol == Protocol.MODBUS_TCP
         assert tcp_ip_modbus_device_property_list.timeout == 10_000
         assert tcp_ip_modbus_device_property_list.retries == 2
         assert tcp_ip_modbus_device_property_list.send_period == 300
