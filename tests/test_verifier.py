@@ -191,10 +191,18 @@ class TestBACnetVerifier:
         [
             (
                 {"79": ObjType.BINARY_INPUT},
-                "bad_binary",
+                "bad_binary_value",
             ),
             (
                 {"79": ObjType.BINARY_INPUT, "85": 1},
+                Reliability.NO_FAULT_DETECTED,
+            ),
+            (
+                {"79": ObjType.MULTI_STATE_OUTPUT},
+                "bad_multistate_value",
+            ),
+            (
+                {"79": ObjType.MULTI_STATE_OUTPUT, "85": 4},
                 Reliability.NO_FAULT_DETECTED,
             ),
         ],

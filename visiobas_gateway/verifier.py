@@ -3,6 +3,7 @@ from typing import Collection, Optional, Union
 from .schemas import (
     ANALOG_TYPES,
     BINARY_TYPES,
+    MULTI_STATE_TYPES,
     BACnetObj,
     Priority,
     Reliability,
@@ -95,7 +96,11 @@ class BACnetVerifier:
     def type_check(obj: BACnetObj) -> BACnetObj:
         if obj.type in BINARY_TYPES:
             if obj.present_value not in {1, 0}:
-                obj.reliability = "bad_binary"
+                obj.reliability = "bad_binary_value"
+        if obj.type in MULTI_STATE_TYPES:
+            if 0 > obj.present_value > 10:
+                obj.reliability = "bad_multistate_value"
+
         return obj
 
     @staticmethod
