@@ -113,9 +113,9 @@ class BACnetVerifier:
             return obj
 
         if isinstance(value, str):
-            if value.replace(".", "").isdecimal():
+            try:
                 value = float(value)
-            else:
+            except ValueError:
                 # Other `str` values unexpected here
                 obj.reliability = "unexpected-value"
                 obj.verified_present_value = "null"

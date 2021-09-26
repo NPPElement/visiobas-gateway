@@ -58,6 +58,8 @@ class TcpIpDevicePropertyList(BaseDevicePropertyList):
     def validate_protocol(cls, value: Protocol) -> Protocol:
         # pylint: disable=no-self-argument
         if value in TCP_IP_PROTOCOLS:
+            if value in MODBUS_TCP_IP_PROTOCOLS:
+                raise ValueError("Another model for TCP/IP Modbus.")
             return value
         raise ValueError("Protocol is not TCP/IP")
 

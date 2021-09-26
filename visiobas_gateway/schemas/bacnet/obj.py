@@ -218,9 +218,12 @@ class BACnetObj(BaseBACnetObj):
         str_ += " " + str(obj.status_flags.for_http.flags)  # SF with disabled flags!
 
         reliability = obj.reliability
+
         if isinstance(reliability, Reliability):
             # `Reliability` is subclass of `Enum`, which has `value` attribute.
             reliability = str(obj.reliability.value)  # type: ignore
+        if not isinstance(reliability, str):
+            raise ValueError(f"Unexpected reliability type: {type(reliability)}")
         if reliability and not reliability.isspace():
             str_ += " " + reliability
         str_ += ";"

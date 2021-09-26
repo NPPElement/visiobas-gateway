@@ -6,6 +6,7 @@ from visiobas_gateway.schemas.bacnet.device_property_list import (
     BaseDevicePropertyList,
     TcpIpDevicePropertyList,
     SerialDevicePropertyList,
+    TcpIpModbusDevicePropertyList,
 )
 from visiobas_gateway.schemas.modbus.device_rtu_properties import DeviceRtuProperties
 from visiobas_gateway.schemas.modbus.modbus_properties import ModbusProperties
@@ -76,6 +77,24 @@ def tcp_ip_device_property_list_factory() -> Callable[..., TcpIpDevicePropertyLi
     def _factory(**kwargs):
         kwargs = _tcp_ip_device_property_list_kwargs(kwargs)
         return TcpIpDevicePropertyList(**kwargs)
+
+    return _factory
+
+
+@pytest.fixture
+def tcp_ip_modbus_device_property_list_factory() -> Callable[
+    ..., TcpIpModbusDevicePropertyList
+]:
+    """
+    Produces `TcpIpModbusDevicePropertyList` for tests.
+
+    You can pass the same params into this as the `TcpIpModbusDevicePropertyList` constructor to
+    override defaults.
+    """
+
+    def _factory(**kwargs):
+        kwargs = _tcp_ip_modbus_device_property_list_kwargs(kwargs)
+        return TcpIpModbusDevicePropertyList(**kwargs)
 
     return _factory
 
@@ -191,6 +210,14 @@ def _device_rtu_properties_kwargs(kwargs: dict[str, Any]) -> dict[str, Any]:
     return kwargs
 
 
+def _device_tcp_ip_modbus_properties_kwargs(kwargs: dict[str, Any]) -> dict[str, Any]:
+    kwargs = {
+        "unit": 1,
+        **kwargs,
+    }
+    return kwargs
+
+
 def _base_device_property_list_kwargs(kwargs: dict[str, Any]) -> dict[str, Any]:
     kwargs = {
         "template": "",
@@ -210,10 +237,26 @@ def _tcp_ip_device_property_list_kwargs(kwargs: dict[str, Any]) -> dict[str, Any
         "alias": "",
         "replace": {},
         "address": "10.21.10.21",
-        "port": 502,
-        "protocol": "ModbusTCP",
+        "port": 47808,
+        "protocol": "BACnet",
         "timeout": 500,
         "retries": 3,
+        **kwargs,
+    }
+    return kwargs
+
+
+def _tcp_ip_modbus_device_property_list_kwargs(kwargs: dict[str, Any]) -> dict[str, Any]:
+    kwargs = {
+        "template": "",
+        "alias": "",
+        "replace": {},
+        "address": "10.21.10.21",
+        "port": 502,
+        "protocol": "ModbusRTUoverTCP",
+        "timeout": 500,
+        "retries": 3,
+        "rtu": _device_tcp_ip_modbus_properties_kwargs({}),
         **kwargs,
     }
     return kwargs
