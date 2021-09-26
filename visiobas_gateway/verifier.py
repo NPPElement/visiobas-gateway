@@ -1,6 +1,14 @@
 from typing import Collection, Optional, Union
 
-from .schemas import ANALOG_TYPES, BACnetObj, Priority, Reliability, StatusFlag, StatusFlags
+from .schemas import (
+    ANALOG_TYPES,
+    BINARY_TYPES,
+    BACnetObj,
+    Priority,
+    Reliability,
+    StatusFlag,
+    StatusFlags,
+)
 from .utils import get_file_logger, round_with_resolution
 
 _LOG = get_file_logger(name=__name__)
@@ -27,6 +35,8 @@ class BACnetVerifier:
         if previous_value != obj.verified_present_value:
             obj.changed = obj.updated
         obj.present_value = obj.verified_present_value
+
+        obj = self.type_check(obj=obj)
 
         obj = self.verify_status_flags(obj=obj, status_flags=obj.status_flags)
         if obj.priority_array:
@@ -79,6 +89,13 @@ class BACnetVerifier:
             obj.reliability = Reliability.NO_FAULT_DETECTED
 
         obj.status_flags = status_flags
+        return obj
+
+    @staticmethod
+    def type_check(obj: BACnetObj) -> BACnetObj:
+        if obj.type in BINARY_TYPES:
+            if obj.present_value not in {1, 0}:
+                obj.reliability = "bad_binary"
         return obj
 
     @staticmethod

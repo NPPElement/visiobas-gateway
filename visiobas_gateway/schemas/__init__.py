@@ -9,6 +9,7 @@ from .bacnet.obj import BACnetObj
 from .bacnet.obj_property_list import BACnetObjPropertyList
 from .bacnet.obj_type import (
     ANALOG_TYPES,
+    BINARY_TYPES,
     DISCRETE_TYPES,
     INPUT_TYPES,
     OUTPUT_TYPES,
@@ -48,6 +49,7 @@ __all__ = [
     "BACnetObjPropertyList",
     "ObjType",
     "ANALOG_TYPES",
+    "BINARY_TYPES",
     "DISCRETE_TYPES",
     "INPUT_TYPES",
     "OUTPUT_TYPES",
