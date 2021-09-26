@@ -59,7 +59,7 @@ class TcpIpDevicePropertyList(BaseDevicePropertyList):
         # pylint: disable=no-self-argument
         if value in TCP_IP_PROTOCOLS - MODBUS_TCP_IP_PROTOCOLS:
             return value
-        raise ValueError("Protocol is not TCP/IP or ModbusTCP")
+        raise ValueError(f"Expected {TCP_IP_PROTOCOLS - MODBUS_TCP_IP_PROTOCOLS}")
 
     @property
     def address_port(self) -> str:
@@ -81,7 +81,7 @@ class TcpIpModbusDevicePropertyList(TcpIpDevicePropertyList):
         # pylint: disable=no-self-argument
         if value in MODBUS_TCP_IP_PROTOCOLS:
             return value
-        raise ValueError("Protocol is not Modbus via TCP/IP")
+        raise ValueError(f"Expected {MODBUS_TCP_IP_PROTOCOLS}")
 
 
 class SerialDevicePropertyList(BaseDevicePropertyList):
@@ -94,4 +94,4 @@ class SerialDevicePropertyList(BaseDevicePropertyList):
         # pylint: disable=no-self-argument
         if value in SERIAL_PROTOCOLS:
             return value
-        raise ValueError("Protocol is not Serial")
+        raise ValueError(f"Expected {SERIAL_PROTOCOLS}")
