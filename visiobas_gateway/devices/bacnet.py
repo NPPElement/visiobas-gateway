@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from functools import lru_cache
 from typing import TYPE_CHECKING, Any, Optional
 
 from BAC0.scripts.Lite import Lite  # type: ignore
@@ -28,6 +29,7 @@ class BACnetDevice(BasePollingDevice, BACnetCoderMixin):
         # todo: Should we use one RPM for several objects?
 
     @staticmethod
+    @lru_cache(maxsize=10)
     def interface_name(device_obj: DeviceObj) -> Optional[str]:
         assert isinstance(device_obj.property_list, TcpIpDevicePropertyList)
 
