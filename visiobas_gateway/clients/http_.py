@@ -152,8 +152,8 @@ class HTTPClient:
             False: Otherwise.
         """
 
-        if get_server in post_servers:
-            post_servers.remove(get_server)
+        # if get_server in post_servers:
+        #     post_servers.remove(get_server)
         _LOG.debug(
             "Logging in to servers",
             extra={"server_get": get_server, "servers_post": post_servers},
@@ -202,7 +202,7 @@ class HTTPClient:
                     _LOG.info(
                         "Successfully authorized",
                         extra={
-                            "server": server,
+                            "server": server.current_url,
                         },
                     )
 
