@@ -101,7 +101,7 @@ class BACnetObj(BaseBACnetObj):
         cls, value: Union[Reliability, str]
     ) -> Union[Reliability, str]:
         # pylint: disable=no-self-argument
-        if value is None:
+        if not value:
             return Reliability.NO_FAULT_DETECTED
         if isinstance(value, Reliability):
             return value
