@@ -1,21 +1,23 @@
-from .bacnet import (
+from .bacnet.base_obj import BaseBACnetObj
+from .bacnet.device_obj import (
+    DeviceObj,
+    SerialDevicePropertyList,
+    TcpIpDevicePropertyList,
+    TcpIpModbusDevicePropertyList,
+)
+from .bacnet.obj import BACnetObj
+from .bacnet.obj_property_list import BACnetObjPropertyList
+from .bacnet.obj_type import (
     ANALOG_TYPES,
     DISCRETE_TYPES,
     INPUT_TYPES,
     OUTPUT_TYPES,
-    BACnetObj,
-    BACnetObjPropertyList,
-    BaseBACnetObj,
-    DeviceObj,
     ObjProperty,
     ObjType,
-    Priority,
-    Reliability,
-    SerialDevicePropertyList,
-    StatusFlag,
-    StatusFlags,
-    TcpIpDevicePropertyList,
 )
+from .bacnet.priority import Priority
+from .bacnet.reliability import Reliability
+from .bacnet.status_flags import StatusFlag, StatusFlags
 from .modbus import (
     READ_COIL_FUNCS,
     READ_REGISTER_FUNCS,
@@ -39,6 +41,7 @@ __all__ = [
     # BACnet
     "DeviceObj",
     "TcpIpDevicePropertyList",
+    "TcpIpModbusDevicePropertyList",
     "SerialDevicePropertyList",
     "BACnetObj",
     "ObjProperty",

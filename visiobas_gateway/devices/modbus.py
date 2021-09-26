@@ -13,7 +13,7 @@ from ..schemas import (
     ModbusWriteFunc,
     Protocol,
     SerialDevicePropertyList,
-    TcpIpDevicePropertyList,
+    TcpIpModbusDevicePropertyList,
 )
 from ..utils import log_exceptions
 from ._base_polling_device import BasePollingDevice
@@ -29,7 +29,7 @@ class ModbusDevice(BasePollingDevice, ModbusCoderMixin):
 
     @staticmethod
     def interface_name(device_obj: DeviceObj) -> str:
-        if isinstance(device_obj.property_list, TcpIpDevicePropertyList):
+        if isinstance(device_obj.property_list, TcpIpModbusDevicePropertyList):
             return device_obj.property_list.address_port
         if isinstance(device_obj.property_list, SerialDevicePropertyList):
             return device_obj.property_list.rtu.port

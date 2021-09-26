@@ -1,13 +1,6 @@
 from typing import Collection, Optional, Union
 
-from .schemas.bacnet import (
-    ANALOG_TYPES,
-    BACnetObj,
-    Priority,
-    Reliability,
-    StatusFlag,
-    StatusFlags,
-)
+from .schemas import ANALOG_TYPES, BACnetObj, Priority, Reliability, StatusFlag, StatusFlags
 from .utils import get_file_logger, round_with_resolution
 
 _LOG = get_file_logger(name=__name__)

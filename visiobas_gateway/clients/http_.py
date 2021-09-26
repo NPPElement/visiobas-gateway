@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, Any, Collection, Union
 
 import aiohttp
 
-from ..schemas.bacnet import BaseBACnetObj, ObjProperty, ObjType
+from ..schemas import BaseBACnetObj, ObjProperty, ObjType
 from ..schemas.settings import HTTPServerConfig, HTTPSettings
 from ..utils import get_file_logger, kebab_case, log_exceptions
 

@@ -3,7 +3,7 @@ from typing import Any
 from aiohttp_cors import CorsViewMixin, ResourceOptions  # type: ignore
 from aiohttp_jsonrpc import handler  # type: ignore
 
-from ...schemas.bacnet import ObjProperty
+from ...schemas import ObjProperty
 from ...utils import get_file_logger
 from ..base_view import BaseView
 

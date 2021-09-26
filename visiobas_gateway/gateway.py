@@ -19,7 +19,7 @@ from visiobas_gateway.api import ApiServer
 from visiobas_gateway.clients import HTTPClient, MQTTClient
 from visiobas_gateway.devices import BACnetDevice, ModbusDevice, SUNAPIDevice
 from visiobas_gateway.devices._base_polling_device import BasePollingDevice
-from visiobas_gateway.schemas.bacnet import BACnetObj, DeviceObj, ObjType
+from visiobas_gateway.schemas import BACnetObj, DeviceObj, ObjType
 from visiobas_gateway.schemas.bacnet.device_obj import POLLING_TYPES
 from visiobas_gateway.schemas.bacnet.obj_group import ObjectGroup, group_by_period
 from visiobas_gateway.schemas.modbus import ModbusObj

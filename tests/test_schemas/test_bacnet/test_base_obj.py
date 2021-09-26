@@ -2,7 +2,7 @@ import json
 
 import pydantic
 import pytest
-from visiobas_gateway.schemas.bacnet import ObjType
+from visiobas_gateway.schemas.bacnet.obj_type import ObjType
 
 
 class TestBaseBACnetObj:
