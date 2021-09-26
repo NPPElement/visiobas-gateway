@@ -215,7 +215,7 @@ class BACnetObj(BaseBACnetObj):
             pa_str = obj.priority_array_to_http_str(priority_array=obj.priority_array)
             str_ += " " + pa_str
 
-        str_ += " " + str(obj.status_flags.for_http.flags)  # SF with disabled flags!
+        str_ += "" + str(obj.status_flags.for_http.flags)  # SF with disabled flags!
 
         reliability = obj.reliability
 
