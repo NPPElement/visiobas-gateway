@@ -74,7 +74,7 @@ def get_file_logger(name: str) -> logging.Logger:
     except FileExistsError:
         pass
 
-    filename = log_settings.log_dir / f"{name}.log"
+    filename = log_settings.log_dir / f"{name.removeprefix('visiobas_gateway.')}.log"
     size = log_settings.file_size + _MEGABYTE
 
     file_handler = RotatingFileHandler(
