@@ -211,7 +211,7 @@ class BACnetObj(BaseBACnetObj):
     def to_http_str(obj: BACnetObj) -> str:
         str_ = f"{obj.id} {obj.type.type_id} {obj.present_value}"
 
-        if obj.priority_array:
+        if obj.type in OUTPUT_TYPES and obj.priority_array:
             pa_str = obj.priority_array_to_http_str(priority_array=obj.priority_array)
             str_ += " " + pa_str
 
