@@ -1,9 +1,11 @@
 import asyncio
 import datetime
 
+from visiobas_gateway.schemas.bacnet.obj_type import ObjType
 from visiobas_gateway.verifier import BACnetVerifier
 from visiobas_gateway.schemas.bacnet.obj_property import ObjProperty
 from visiobas_gateway.schemas.bacnet.reliability import Reliability
+from visiobas_gateway.schemas.bacnet.priority import Priority
 
 import pytest
 
@@ -15,7 +17,7 @@ class TestBACnetVerifier:
         except ImportError as import_exc:
             raise NotImplementedError from import_exc
 
-        verifier = BACnetVerifier(override_threshold=8)
+        verifier = BACnetVerifier(override_threshold=Priority.MANUAL_OPERATOR)
         bacnet_obj = bacnet_obj_factory(**{"85": asyncio.TimeoutError()})
 
         bacnet_obj = verifier.process_exception(
@@ -56,13 +58,13 @@ class TestBACnetVerifier:
         assert bacnet_obj.unreachable_in_row == 4
 
     def test_process_exception_bad_exception(self, bacnet_obj_factory):
-        verifier = BACnetVerifier(override_threshold=8)
+        verifier = BACnetVerifier(override_threshold=Priority.MANUAL_OPERATOR)
         bacnet_obj = bacnet_obj_factory(**{"85": "not_exception"})
         with pytest.raises(ValueError):
             verifier.process_exception(obj=bacnet_obj, exc=bacnet_obj.present_value)
 
     def test_verify_status_flags_zero(self, bacnet_obj_factory):
-        verifier = BACnetVerifier(override_threshold=8)
+        verifier = BACnetVerifier(override_threshold=Priority.MANUAL_OPERATOR)
         bacnet_obj = bacnet_obj_factory(
             **{"103": "reliability", "verified_present_value": 85.8585}
         )
@@ -74,7 +76,7 @@ class TestBACnetVerifier:
         assert bacnet_obj.reliability == Reliability.NO_FAULT_DETECTED
 
     def test_verify_status_flags_not_zero(self, bacnet_obj_factory):
-        verifier = BACnetVerifier(override_threshold=8)
+        verifier = BACnetVerifier(override_threshold=Priority.MANUAL_OPERATOR)
         bacnet_obj = bacnet_obj_factory(
             **{
                 "103": "reliability",
@@ -90,7 +92,7 @@ class TestBACnetVerifier:
         assert bacnet_obj.reliability == "reliability"
 
     def test_verify_status_flags_null_verified_pv(self, bacnet_obj_factory):
-        verifier = BACnetVerifier(override_threshold=8)
+        verifier = BACnetVerifier(override_threshold=Priority.MANUAL_OPERATOR)
         bacnet_obj = bacnet_obj_factory(
             **{
                 "103": "reliability",
@@ -121,7 +123,7 @@ class TestBACnetVerifier:
     def test_verify_present_value_happy(
         self, bacnet_obj_factory, present_value, verified_present_value
     ):
-        verifier = BACnetVerifier(override_threshold=8)
+        verifier = BACnetVerifier(override_threshold=Priority.MANUAL_OPERATOR)
 
         bacnet_obj = bacnet_obj_factory(**{"85": present_value})
         bacnet_obj = verifier.verify_present_value(
@@ -146,7 +148,7 @@ class TestBACnetVerifier:
     def test_verify_present_value_reliability_affected(
         self, bacnet_obj_factory, present_value, verified_present_value, reliability
     ):
-        verifier = BACnetVerifier(override_threshold=8)
+        verifier = BACnetVerifier(override_threshold=Priority.MANUAL_OPERATOR)
 
         bacnet_obj = bacnet_obj_factory(**{"85": present_value})
         bacnet_obj = verifier.verify_present_value(
@@ -159,24 +161,7 @@ class TestBACnetVerifier:
         "priority_array, status_flags",
         [
             (
-                [
-                    None,
-                    None,
-                    None,
-                    None,
-                    None,
-                    None,
-                    None,
-                    None,
-                    3.3,
-                    None,
-                    None,
-                    None,
-                    None,
-                    None,
-                    None,
-                    None,
-                ],
+                [*[None] * 8, 3.3, *[None] * 7],
                 0b0100,
             ),
             ([None] * 16, 0b0000),
@@ -185,7 +170,7 @@ class TestBACnetVerifier:
     def test_verify_priority_array_happy(
         self, bacnet_obj_factory, priority_array, status_flags
     ):
-        verifier = BACnetVerifier(override_threshold=8)
+        verifier = BACnetVerifier(override_threshold=Priority.MANUAL_OPERATOR)
 
         bacnet_obj = bacnet_obj_factory(**{"87": priority_array})
 
@@ -195,14 +180,35 @@ class TestBACnetVerifier:
         assert bacnet_obj.status_flags.flags == status_flags
 
     def test_verify_exception(self, bacnet_obj_factory):
-        verifier = BACnetVerifier(override_threshold=8)
+        verifier = BACnetVerifier(override_threshold=Priority.MANUAL_OPERATOR)
         bacnet_obj = bacnet_obj_factory(**{"85": ValueError()})
 
         bacnet_obj = verifier.verify(obj=bacnet_obj)
         assert bacnet_obj.status_flags.flags == 0b0010
 
+    @pytest.mark.parametrize(
+        "data, expected_reliability",
+        [
+            (
+                {"79": ObjType.BINARY_INPUT},
+                "bad_binary",
+            ),
+            (
+                {"79": ObjType.BINARY_INPUT, "85": 1},
+                Reliability.NO_FAULT_DETECTED,
+            ),
+        ],
+    )
+    def test_type_check(self, bacnet_obj_factory, data, expected_reliability):
+        verifier = BACnetVerifier(override_threshold=Priority.MANUAL_OPERATOR)
+        bacnet_obj = bacnet_obj_factory(**data)
+        assert bacnet_obj.reliability == Reliability.NO_FAULT_DETECTED
+
+        bacnet_obj = verifier.type_check(obj=bacnet_obj)
+        assert bacnet_obj.reliability == expected_reliability
+
     def test_verify_happy(self, bacnet_obj_factory):
-        verifier = BACnetVerifier(override_threshold=8)
+        verifier = BACnetVerifier(override_threshold=Priority.MANUAL_OPERATOR)
         bacnet_obj = bacnet_obj_factory(
             **{
                 "85": 66.666,
@@ -223,7 +229,7 @@ class TestBACnetVerifier:
         assert str(bacnet_obj.changed) > "2011-11-11 22:22:22"
 
     def test_verify_objects(self, bacnet_obj_factory):
-        verifier = BACnetVerifier(override_threshold=8)
+        verifier = BACnetVerifier(override_threshold=Priority.MANUAL_OPERATOR)
         bacnet_obj = bacnet_obj_factory()
 
         bacnet_obj.set_property(value=66.666, prop=ObjProperty.PRESENT_VALUE)
