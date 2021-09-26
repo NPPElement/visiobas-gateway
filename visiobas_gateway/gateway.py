@@ -254,7 +254,7 @@ class Gateway:
             return None
 
         if device.protocol in POLLING_PROTOCOLS:
-            groups = self.download_objects(device_obj=device_obj)
+            groups = await self.download_objects(device_obj=device_obj)
             device.object_groups = groups
 
         self._devices.update({device.id: device})
