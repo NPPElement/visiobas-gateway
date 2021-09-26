@@ -172,7 +172,8 @@ class Gateway:
 
         # 1. Load devices tasks.
         load_device_tasks = [
-            self.load_device(device_id=dev_id) for dev_id in self.settings.poll_device_ids
+            self.download_device(device_id=dev_id)
+            for dev_id in self.settings.poll_device_ids
         ]
 
         # 2. Start devices polling.
@@ -216,7 +217,7 @@ class Gateway:
         _LOG.info("Stop tasks performed")
 
     @log_exceptions
-    async def load_device(self, device_id: int) -> Optional[BaseDevice]:
+    async def download_device(self, device_id: int) -> Optional[BaseDevice]:
         """Tries to download an object of device from server.
         Then gets polling objects and load them into device.
 

@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, Any, Collection, Union
 
 import aiohttp
 
-from ..schemas import BaseBACnetObj, ObjProperty, ObjType
+from ..schemas import ObjType
 from ..schemas.settings import HTTPServerConfig, HTTPSettings
 from ..utils import get_file_logger, kebab_case, log_exceptions
 
@@ -74,7 +74,7 @@ class HTTPClient:
             self.request(
                 method="GET",
                 url=self._URL_GET.format(
-                    base_url=self.server_get.get_url_str,
+                    base_url=self.server_get.get_url_str(url=self.server_get.current_url),
                     device_id=str(dev_id),
                     object_type_kebab=kebab_case(obj_type.name),
                 ),
@@ -103,7 +103,9 @@ class HTTPClient:
         logout_tasks = [
             self.request(
                 method="GET",
-                url=self._URL_LOGOUT.format(base_url=server.get_url_str),
+                url=self._URL_LOGOUT.format(
+                    base_url=server.get_url_str(url=server.current_url)
+                ),
                 headers=server.auth_headers,
                 raise_for_status=True,
             )
@@ -236,7 +238,8 @@ class HTTPClient:
             self.request(
                 method="POST",
                 url=self._URL_POST_LIGHT.format(
-                    base_url=server.get_url_str, device_id=str(dev_id)
+                    base_url=server.get_url_str(url=server.current_url),
+                    device_id=str(dev_id),
                 ),
                 headers=server.auth_headers,
                 data=data,
@@ -258,39 +261,39 @@ class HTTPClient:
         #     asyncio.as_completed(asyncio.gather(*post_tasks))
         # ]
 
-    @log_exceptions
-    async def post_property(
-        self,
-        value: Any,
-        property_: ObjProperty,
-        obj: BaseBACnetObj,
-        servers: Collection[HTTPServerConfig],
-    ) -> None:
-        """TODO: NOT USED NOW."""
-        post_tasks = [
-            self.request(
-                method="POST",
-                url=self._URL_POST_PROPERTY.format(
-                    base_url=server.get_url_str,
-                    property_id=str(property_.id),
-                    replaced_object_name=obj.mqtt_topic,
-                ),
-                headers=server.auth_headers,
-                data=value,
-            )
-            for server in servers
-        ]
-        await asyncio.gather(*post_tasks)
-        # TODO: add check
-        _LOG.debug(
-            "Successfully sent property",
-            extra={
-                "device_id": obj.device_id,
-                "property": property_,
-                "value": value,
-                "servers": servers,
-            },
-        )
+    # @log_exceptions
+    # async def post_property(
+    #     self,
+    #     value: Any,
+    #     property_: ObjProperty,
+    #     obj: BaseBACnetObj,
+    #     servers: Collection[HTTPServerConfig],
+    # ) -> None:
+    #     """TODO: NOT USED NOW."""
+    #     post_tasks = [
+    #         self.request(
+    #             method="POST",
+    #             url=self._URL_POST_PROPERTY.format(
+    #                 base_url=server.get_url_str(url=server.current_url),
+    #                 property_id=str(property_.id),
+    #                 replaced_object_name=obj.mqtt_topic,
+    #             ),
+    #             headers=server.auth_headers,
+    #             data=value,
+    #         )
+    #         for server in servers
+    #     ]
+    #     await asyncio.gather(*post_tasks)
+    #     # TODO: add check
+    #     _LOG.debug(
+    #         "Successfully sent property",
+    #         extra={
+    #             "device_id": obj.device_id,
+    #             "property": property_,
+    #             "value": value,
+    #             "servers": servers,
+    #         },
+    #     )
 
     async def request(
         self,
