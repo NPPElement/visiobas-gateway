@@ -17,7 +17,7 @@ class DeviceRtuProperties(BaseModel):
     parity: Parity = Field(default=Parity.NONE)
 
 
-class DeviceTcpIpRtuProperties(BaseModel):
+class DeviceModbusTcpIpProperties(BaseModel):
     """Represent RTU properties for Modbus TCP/IP devices."""
 
     unit: int = Field(..., ge=0, description="Address of unit.")
