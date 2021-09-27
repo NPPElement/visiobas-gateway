@@ -9,7 +9,6 @@ from typing import TYPE_CHECKING, Any, Collection, Optional, Union
 import aiojobs  # type: ignore
 
 from ..schemas import BACnetObj, DeviceObj
-from ..schemas.bacnet.obj_group import ObjectGroup
 from ..utils.log import log_exceptions
 from ._base_device import BaseDevice
 from ._interface import Interface
@@ -31,7 +30,7 @@ class BasePollingDevice(BaseDevice, ABC):
         self._scheduler: aiojobs.Scheduler = None  # type: ignore
 
         # Key: period
-        self.object_groups: dict[float, ObjectGroup] = {}
+        self.object_groups: dict[float, dict[tuple[int, int], BACnetObj]] = {}
         # self._objects: dict[float, set[BACnetObj]] = {}
 
     @staticmethod
@@ -183,8 +182,8 @@ class BasePollingDevice(BaseDevice, ABC):
             Object instance.
         """
         for obj_group in self.object_groups.values():
-            if (obj_id, obj_type_id) in obj_group.objects:
-                return obj_group.objects[(obj_id, obj_type_id)]
+            if (obj_id, obj_type_id) in obj_group:
+                return obj_group[(obj_id, obj_type_id)]
         return None
 
     async def start_periodic_polls(self) -> None:
@@ -194,7 +193,7 @@ class BasePollingDevice(BaseDevice, ABC):
             self.interface.polling_event.set()
             for period, objs_group in self.object_groups.items():
                 await self._scheduler.spawn(
-                    self.periodic_poll(objs=objs_group.objects.values(), period=period)
+                    self.periodic_poll(objs=objs_group.values(), period=period)
                 )
             await self._scheduler.spawn(self._periodic_reset_unreachable())
         else:
@@ -227,7 +226,7 @@ class BasePollingDevice(BaseDevice, ABC):
         await asyncio.sleep(self._gtw.settings.unreachable_reset_period)
 
         for objs_group in self.object_groups.values():
-            for obj in objs_group.objects.values():
+            for obj in objs_group.values():
                 obj.unreachable_in_row = 0
 
         self._LOG.debug(
