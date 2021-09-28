@@ -16,8 +16,8 @@ from ..schemas import (
     TcpIpModbusDevicePropertyList,
 )
 from ..utils import log_exceptions
-from ._base_polling_device import BasePollingDevice
 from ._modbus_coder_mixin import ModbusCoderMixin
+from .base_polling_device import BasePollingDevice
 
 
 class ModbusDevice(BasePollingDevice, ModbusCoderMixin):

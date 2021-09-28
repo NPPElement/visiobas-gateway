@@ -1,7 +1,7 @@
 from typing import Any
 
 from ..schemas.bacnet.device_property_list import TcpIpDevicePropertyList
-from ._base_device import BaseDevice
+from .base_device import BaseDevice
 
 
 class SUNAPIDevice(BaseDevice):

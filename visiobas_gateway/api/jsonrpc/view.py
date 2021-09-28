@@ -1,4 +1,4 @@
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from aiohttp_cors import CorsViewMixin, ResourceOptions  # type: ignore
 from aiohttp_jsonrpc import handler  # type: ignore
@@ -8,6 +8,14 @@ from ...utils import get_file_logger
 from ..base_view import BaseView
 
 _LOG = get_file_logger(name=__name__)
+
+
+if TYPE_CHECKING:
+    from ...devices.base_polling_device import BasePollingDevice
+    from ...devices.sunapi import SUNAPIDevice
+else:
+    BasePollingDevice = "BasePollingDevice"
+    SUNAPIDevice = "SUNAPIDevice"
 
 
 class JsonRPCView(handler.JSONRPCView, BaseView, CorsViewMixin):
@@ -34,7 +42,7 @@ class JsonRPCView(handler.JSONRPCView, BaseView, CorsViewMixin):
                 "kwargs_": kwargs,
             },
         )
-        dev_id = int(kwargs["device_id"])
+        device_id = int(kwargs["device_id"])
         obj_type_id = int(kwargs["object_type"])
         obj_id = int(kwargs["object_id"])
         priority = int(kwargs["priority"])
@@ -42,20 +50,22 @@ class JsonRPCView(handler.JSONRPCView, BaseView, CorsViewMixin):
         if value.is_integer():
             value = int(value)
 
-        dev = self.get_device(dev_id=dev_id)
-        if dev is None or not dev.is_polling_device:
+        device = self.get_device(device_id=device_id)
+        if device is None:
             raise Exception("Device not found")
+        if not isinstance(device, BasePollingDevice):
+            raise Exception("Device protocol is not polling.")
 
-        obj = self.get_obj(dev=dev, obj_type_id=obj_type_id, obj_id=obj_id)
+        obj = self.get_obj(device=device, obj_type_id=obj_type_id, obj_id=obj_id)
         if obj is None:
             raise Exception("Object not found")
 
-        is_consistent = await dev.write_with_check(
+        is_consistent = await device.write_with_check(
             value=value,
             prop=ObjProperty.PRESENT_VALUE,
             priority=priority,
             obj=obj,
-            device=dev,
+            device=device,
         )
         return {"success": is_consistent}
 
@@ -68,12 +78,15 @@ class JsonRPCView(handler.JSONRPCView, BaseView, CorsViewMixin):
             },
         )
 
-        dev_id = int(kwargs["device_id"])
-        dev = self.get_device(dev_id=dev_id)
+        device_id = int(kwargs["device_id"])
+        device = self.get_device(device_id=device_id)
 
-        if dev is None or not dev.is_camera:
-            raise Exception("Device not found")
+        if device is None:
+            raise Exception("Device not found.")
 
-        dev.ptz(**kwargs)  # add check
+        if not isinstance(device, SUNAPIDevice):
+            raise Exception("Device is not SunAPI camera.")
 
-        return {"success": "not checking now"}
+        device.ptz(**kwargs)  # add check
+
+        return {"success": "WARNING! Success check is not implemented now!"}

@@ -18,7 +18,7 @@ import aiojobs  # type: ignore
 from visiobas_gateway.api import ApiServer
 from visiobas_gateway.clients import HTTPClient, MQTTClient
 from visiobas_gateway.devices import BACnetDevice, ModbusDevice, SUNAPIDevice
-from visiobas_gateway.devices._base_polling_device import BasePollingDevice
+from visiobas_gateway.devices.base_polling_device import BasePollingDevice
 from visiobas_gateway.schemas import BACnetObj, DeviceObj, ObjType
 from visiobas_gateway.schemas.bacnet.device_obj import POLLING_TYPES
 from visiobas_gateway.schemas.bacnet.obj import group_by_period
@@ -34,7 +34,7 @@ from visiobas_gateway.utils import get_file_logger, log_exceptions
 from visiobas_gateway.verifier import BACnetVerifier
 
 if TYPE_CHECKING:
-    from .devices._base_device import BaseDevice
+    from .devices.base_device import BaseDevice
 
 else:
     BaseDevice = "BaseDevice"

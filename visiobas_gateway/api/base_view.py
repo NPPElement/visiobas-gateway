@@ -1,4 +1,4 @@
-from typing import Any, Optional
+from typing import TYPE_CHECKING, Optional
 
 from aiohttp.web_urldispatcher import View
 
@@ -6,42 +6,53 @@ from ..utils import get_file_logger
 
 _LOG = get_file_logger(name=__name__)
 
-# Aliases # fixme
-VisioBASGatewayAlias = Any  # '..gateway_.VisioBASGateway'
-DeviceAlias = Any  # Union['..devices.AsyncModbusDevice',]
-ObjAlias = Any  # Union['..schemas.BACnetObj',]
+if TYPE_CHECKING:
+    from ..devices.base_device import BaseDevice
+    from ..devices.base_polling_device import BasePollingDevice
+    from ..gateway import Gateway
+    from ..schemas import BACnetObj
+else:
+    BaseDevice = "BaseDevice"
+    Gateway = "Gateway"
+    BACnetObj = "BACnetObj"
+    BasePollingDevice = "BasePollingDevice"
 
 
 class BaseView(View):
     """Base class for all endpoints related with devices and their objects."""
 
     @property
-    def gtw(self) -> VisioBASGatewayAlias:
+    def gtw(self) -> Gateway:
         """
         Returns:
             Gateway instance.
         """
         return self.request.app["visiobas_gateway"]
 
-    def get_device(self, dev_id: int) -> Optional[DeviceAlias]:
+    def get_device(self, device_id: int) -> Optional[BaseDevice]:
         """
         Args:
-            dev_id: Device identifier.
+            device_id: Device identifier.
 
         Returns:
             Device instance if exists.
         """
-        return self.gtw.get_device(dev_id=dev_id)
+        return self.gtw.get_device(dev_id=device_id)
 
     @staticmethod
-    def get_obj(obj_id: int, obj_type_id: int, dev: DeviceAlias) -> Optional[ObjAlias]:
+    def get_obj(
+        obj_id: int, obj_type_id: int, device: BasePollingDevice
+    ) -> Optional[BACnetObj]:
         """
         Args:
-            dev: Device instance.
+            device: Device instance.
             obj_type_id: Object type identifier.
             obj_id: Object identifier.
 
         Returns:
             Object instance if exist.
         """
-        return dev.get_object(obj_id=obj_id, obj_type_id=obj_type_id)
+        if not isinstance(device, BasePollingDevice):
+            raise ValueError(f"Polling device expected. Got {type(device)}.")
+
+        return device.get_object(obj_id=obj_id, obj_type_id=obj_type_id)

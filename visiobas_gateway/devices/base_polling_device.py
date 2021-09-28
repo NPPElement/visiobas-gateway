@@ -10,8 +10,8 @@ import aiojobs  # type: ignore
 
 from ..schemas import BACnetObj, DeviceObj
 from ..utils.log import log_exceptions
-from ._base_device import BaseDevice
 from ._interface import Interface
+from .base_device import BaseDevice
 
 if TYPE_CHECKING:
     from ..gateway import Gateway
@@ -154,9 +154,7 @@ class BasePollingDevice(BaseDevice, ABC):
         read_value = verified_obj.present_value
 
         # hotfix
-        await self._gtw._scheduler.spawn(  # pylint: disable=protected-access
-            self._gtw.send_objects(objs=[obj])
-        )
+        await self._scheduler.spawn(self._gtw.send_objects(objs=[obj]))
 
         is_consistent = value == read_value
         self._LOG.debug(
