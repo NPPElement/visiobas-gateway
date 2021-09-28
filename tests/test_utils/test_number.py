@@ -10,6 +10,7 @@ import pytest
         (1.23456789, 1, 1),
         (1.23456789, 5, 0),
         (-1.23456789, 0.25, -1.25),
+        (-1.2345678987654321, 1e-07, -1.2345679),
     ],
 )
 def test_round_with_resolution_happy(before, resolution, after):

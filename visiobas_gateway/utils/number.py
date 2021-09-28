@@ -1,5 +1,7 @@
 from typing import Union
 
+_FLOAT_FORMAT = ".10f"
+
 
 def round_with_resolution(value: Union[float, int], resolution: Union[int, float]) -> float:
     if not isinstance(resolution, (int, float)):
@@ -16,6 +18,6 @@ def round_with_resolution(value: Union[float, int], resolution: Union[int, float
     if isinstance(resolution, int):
         return rounded
 
-    _, fractional_part = str(resolution).split(".", maxsplit=1)
+    _, fractional_part = format(resolution, _FLOAT_FORMAT).split(".", maxsplit=1)
     digits = len(fractional_part)
     return round(rounded, ndigits=digits)
