@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Any, Optional
 from BAC0.scripts.Lite import Lite  # type: ignore
 
 from ..schemas import BACnetObj, DeviceObj, ObjProperty, TcpIpDevicePropertyList
-from ..utils import camel_case, get_subnet_interface, log_exceptions
+from ..utils import camel_case, get_file_logger, get_subnet_interface, log_exceptions
 from ._bacnet_coder_mixin import BACnetCoderMixin
 from .base_polling_device import BasePollingDevice
 
@@ -14,6 +14,8 @@ if TYPE_CHECKING:
     from visiobas_gateway.gateway import Gateway
 else:
     Gateway = "Gateway"
+
+_LOG = get_file_logger(name=__name__)
 
 
 class BACnetDevice(BasePollingDevice, BACnetCoderMixin):
@@ -44,7 +46,7 @@ class BACnetDevice(BasePollingDevice, BACnetCoderMixin):
     def is_client_connected(self) -> bool:
         return self.interface.client is not None
 
-    @log_exceptions
+    @log_exceptions(logger=_LOG)
     async def create_client(self, device_obj: DeviceObj) -> Lite:
         """Initializes BAC0 client."""
         assert isinstance(device_obj.property_list, TcpIpDevicePropertyList)
@@ -128,7 +130,7 @@ class BACnetDevice(BasePollingDevice, BACnetCoderMixin):
         await self._gtw.async_add_job(self.write_property, value, obj, prop, priority)
         return None
 
-    @log_exceptions
+    @log_exceptions(logger=_LOG)
     def write_property(
         self, value: int | float, obj: BACnetObj, prop: ObjProperty, priority: int
     ) -> Optional[bool]:

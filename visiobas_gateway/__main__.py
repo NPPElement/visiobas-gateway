@@ -21,6 +21,7 @@ def setup_logging(settings: LogSettings) -> None:
 
     root_log = logging.getLogger()
     root_log.setLevel(settings.level)
+
     hdlr = logging.StreamHandler(stream=sys.stderr)
     fmt = ExtraFormatter(fmt=settings.format)
     hdlr.setFormatter(fmt=fmt)

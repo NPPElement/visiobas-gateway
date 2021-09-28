@@ -91,54 +91,59 @@ def get_file_logger(name: str) -> logging.Logger:
     return logger
 
 
-_LOG = get_file_logger(name=__name__)
+def log_exceptions(
+    logger: logging.Logger,
+    func: Callable | Callable[..., typing.Awaitable] = None,  # type: ignore
+) -> Any:
+    def _log_exceptions(func: Callable | Callable[..., typing.Awaitable]) -> Any:
+        """Decorator, logging function signature and exception if it occur."""
 
+        @wraps(func)
+        def wrapper(*args: Any, **kwargs: Any) -> Any:
+            args_repr = [repr(a) for a in args]
+            kwargs_repr = [f"{k}={v!r}" for k, v in kwargs.items()]
+            signature = ", ".join(args_repr + kwargs_repr)
 
-def log_exceptions(func: Callable | Callable[..., typing.Awaitable]) -> Any:
-    """Decorator, logging function signature and exception if it occur."""
+            try:
+                value = func(*args, **kwargs)
+                return value
+            except Exception as exc:  # pylint: disable=broad-except
+                logger.warning(
+                    "During %s(%s) call, exception %s: %s occurred",
+                    func.__name__,
+                    signature,
+                    exc.__class__.__name__,
+                    exc,
+                    exc_info=_EXC_INFO,
+                )
+                raise exc
 
-    @wraps(func)
-    def wrapper(*args: Any, **kwargs: Any) -> Any:
-        args_repr = [repr(a) for a in args]
-        kwargs_repr = [f"{k}={v!r}" for k, v in kwargs.items()]
-        signature = ", ".join(args_repr + kwargs_repr)
+        @wraps(func)
+        async def async_wrapper(*args: Any, **kwargs: Any) -> Any:
+            args_repr = [repr(a) for a in args]
+            kwargs_repr = [f"{k}={v!r}" for k, v in kwargs.items()]
+            signature = ", ".join(args_repr + kwargs_repr)
 
-        try:
-            value = func(*args, **kwargs)
-            return value
-        except Exception as exc:  # pylint: disable=broad-except
-            _LOG.warning(
-                "During %s(%s) call, exception %s: %s occurred",
-                func.__name__,
-                signature,
-                exc.__class__.__name__,
-                exc,
-                exc_info=_EXC_INFO,
-            )
-            raise exc
+            try:
+                value = await func(*args, **kwargs)
+                return value
+            except Exception as exc:  # pylint: disable=broad-except
+                logger.warning(
+                    "During %s(%s) call, exception %s: %s occurred",
+                    func.__name__,
+                    signature,
+                    exc.__class__.__name__,
+                    exc,
+                    exc_info=_EXC_INFO,
+                )
+                raise exc
 
-    @wraps(func)
-    async def async_wrapper(*args: Any, **kwargs: Any) -> Any:
-        args_repr = [repr(a) for a in args]
-        kwargs_repr = [f"{k}={v!r}" for k, v in kwargs.items()]
-        signature = ", ".join(args_repr + kwargs_repr)
+        return (
+            async_wrapper
+            if asyncio.iscoroutine(func) or asyncio.iscoroutinefunction(func)
+            else wrapper
+        )
 
-        try:
-            value = await func(*args, **kwargs)
-            return value
-        except Exception as exc:  # pylint: disable=broad-except
-            _LOG.warning(
-                "During %s(%s) call, exception %s: %s occurred",
-                func.__name__,
-                signature,
-                exc.__class__.__name__,
-                exc,
-                exc_info=_EXC_INFO,
-            )
-            raise exc
-
-    return (
-        async_wrapper
-        if asyncio.iscoroutine(func) or asyncio.iscoroutinefunction(func)
-        else wrapper
-    )
+    if func:
+        return _log_exceptions(func=func)
+    return _log_exceptions

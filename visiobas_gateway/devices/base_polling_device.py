@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, Any, Collection, Optional, Union
 import aiojobs  # type: ignore
 
 from ..schemas import BACnetObj, DeviceObj
-from ..utils.log import log_exceptions
+from ..utils import get_file_logger, log_exceptions
 from ._interface import Interface
 from .base_device import BaseDevice
 
@@ -17,6 +17,8 @@ if TYPE_CHECKING:
     from ..gateway import Gateway
 else:
     Gateway = "Gateway"
+
+_LOG = get_file_logger(name=__name__)
 
 
 class BasePollingDevice(BaseDevice, ABC):
@@ -46,7 +48,7 @@ class BasePollingDevice(BaseDevice, ABC):
         )
 
     @classmethod
-    @log_exceptions
+    @log_exceptions(logger=_LOG)
     async def create(cls, device_obj: DeviceObj, gateway: Gateway) -> BasePollingDevice:
         """Creates instance of device. Handles client creation with lock or using
         existing.

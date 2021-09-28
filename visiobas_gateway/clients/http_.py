@@ -87,7 +87,7 @@ class HTTPClient:
 
         return extracted_data
 
-    @log_exceptions
+    @log_exceptions(logger=_LOG)
     async def logout(self, servers: list[HTTPServerConfig]) -> None:
         """Performs log out from servers.
 
@@ -174,7 +174,7 @@ class HTTPClient:
         _LOG.warning("Failed authorizations!")
         return False
 
-    @log_exceptions
+    @log_exceptions(logger=_LOG)
     async def _login_server(self, server: HTTPServerConfig) -> bool:
         """Perform authorization to server (primary server or mirrors).
 
@@ -220,7 +220,7 @@ class HTTPClient:
                 continue
         return False
 
-    @log_exceptions
+    @log_exceptions(logger=_LOG)
     async def post_device(
         self, servers: Collection[HTTPServerConfig], dev_id: int, data: str
     ) -> None:

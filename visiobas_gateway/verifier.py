@@ -10,7 +10,7 @@ from .schemas import (
     StatusFlag,
     StatusFlags,
 )
-from .utils import get_file_logger, round_with_resolution
+from .utils import get_file_logger, log_exceptions, round_with_resolution
 
 _LOG = get_file_logger(name=__name__)
 
@@ -24,6 +24,7 @@ class BACnetVerifier:
     def verify_objects(self, objs: Collection[BACnetObj]) -> list[BACnetObj]:
         return [self.verify(obj=obj) for obj in objs]
 
+    @log_exceptions(logger=_LOG)
     def verify(self, obj: BACnetObj) -> BACnetObj:
         if isinstance(obj.present_value, Exception):
             obj = self.process_exception(obj=obj, exc=obj.present_value)

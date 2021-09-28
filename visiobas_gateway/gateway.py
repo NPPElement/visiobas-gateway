@@ -216,7 +216,7 @@ class Gateway:
         await self.http_client.shutdown_tasks()
         _LOG.info("Stop tasks performed")
 
-    @log_exceptions
+    @log_exceptions(logger=_LOG)
     async def download_device(self, device_id: int) -> Optional[BaseDevice]:
         """Tries to download an object of device from server.
         Then gets polling objects and load them into device.
@@ -317,7 +317,7 @@ class Gateway:
         ]
         return objs
 
-    @log_exceptions
+    @log_exceptions(logger=_LOG)
     async def send_objects(self, objs: Collection[BACnetObj]) -> None:
         """Sends objects to server."""
         if not objs:
@@ -334,7 +334,7 @@ class Gateway:
                 pass
         # if self._is_mqtt_enabled:  # todo
 
-    @log_exceptions
+    @log_exceptions(_LOG)
     async def device_factory(self, dev_obj: DeviceObj) -> BaseDevice:
         """Creates device for provided protocol.
 
@@ -362,7 +362,7 @@ class Gateway:
         return device
 
     @staticmethod
-    @log_exceptions
+    @log_exceptions(logger=_LOG)
     def object_factory(
         dev_obj: DeviceObj, obj_data: dict[str, Any]
     ) -> Union[ModbusObj, BACnetObj]:

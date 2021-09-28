@@ -15,9 +15,11 @@ from ..schemas import (
     SerialDevicePropertyList,
     TcpIpModbusDevicePropertyList,
 )
-from ..utils import log_exceptions
+from ..utils import get_file_logger, log_exceptions
 from ._modbus_coder_mixin import ModbusCoderMixin
 from .base_polling_device import BasePollingDevice
+
+_LOG = get_file_logger(name=__name__)
 
 
 class ModbusDevice(BasePollingDevice, ModbusCoderMixin):
@@ -35,7 +37,7 @@ class ModbusDevice(BasePollingDevice, ModbusCoderMixin):
             return device_obj.property_list.rtu.port
         raise NotImplementedError
 
-    @log_exceptions
+    @log_exceptions(logger=_LOG)
     async def create_client(
         self, device_obj: DeviceObj
     ) -> Union[ModbusTcpClient, ModbusSerialClient]:
@@ -118,7 +120,7 @@ class ModbusDevice(BasePollingDevice, ModbusCoderMixin):
             await self.interface.polling_event.wait()
         return await self._gtw.async_add_job(self.sync_read, obj)
 
-    @log_exceptions
+    @log_exceptions(logger=_LOG)
     def sync_read(self, obj: ModbusObj) -> ModbusObj:
         """Read data from Modbus object.
 
