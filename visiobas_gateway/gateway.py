@@ -21,7 +21,7 @@ from visiobas_gateway.devices import BACnetDevice, ModbusDevice, SUNAPIDevice
 from visiobas_gateway.devices._base_polling_device import BasePollingDevice
 from visiobas_gateway.schemas import BACnetObj, DeviceObj, ObjType
 from visiobas_gateway.schemas.bacnet.device_obj import POLLING_TYPES
-from visiobas_gateway.schemas.bacnet.obj_group import ObjectGroup, group_by_period
+from visiobas_gateway.schemas.bacnet.obj import group_by_period
 from visiobas_gateway.schemas.modbus import ModbusObj
 from visiobas_gateway.schemas.protocol import POLLING_PROTOCOLS, Protocol
 from visiobas_gateway.schemas.settings import (
@@ -266,7 +266,9 @@ class Gateway:
         )
         return device
 
-    async def download_objects(self, device_obj: DeviceObj) -> dict[float, ObjectGroup]:
+    async def download_objects(
+        self, device_obj: DeviceObj
+    ) -> dict[float, dict[tuple[int, int], BACnetObj]]:
         # todo: use for extractions tasks asyncio.as_completed(tasks):
         objs_data = await self.http_client.get_objects(
             dev_id=device_obj.id, obj_types=POLLING_TYPES

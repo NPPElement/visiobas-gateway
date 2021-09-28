@@ -238,3 +238,16 @@ class BACnetObj(BaseBACnetObj):
         return ",".join(
             ["" if priority is None else str(priority) for priority in priority_array]
         )
+
+
+def group_by_period(objs: list[BACnetObj]) -> dict[float, dict[tuple[int, int], BACnetObj]]:
+    """Groups objects by poll period and insert them into device for polling."""
+    groups: dict[float, dict[tuple[int, int], BACnetObj]] = {}
+
+    for obj in objs:
+        poll_period = obj.property_list.poll_period
+        try:
+            groups[poll_period][(obj.id, obj.type.type_id)] = obj
+        except KeyError:
+            groups[poll_period] = {(obj.id, obj.type.type_id): obj}
+    return groups
