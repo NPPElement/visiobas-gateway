@@ -152,11 +152,10 @@ class BACnetDevice(BasePollingDevice, BACnetCoderMixin):
             f"{self._device_obj.property_list.address_port} "
             f"{camel_case(obj.type.name)} "
             f"{obj.id} "
-            f"{prop.name} "
+            f"{camel_case(prop.name)} "
             f"{value} "
             f"- {priority}"
         )
-        self._LOG.debug("WRITE ARGS", extra={"args": args})
         is_successful = self.interface.client.write(args=args)
         self._LOG.debug(
             "Write",

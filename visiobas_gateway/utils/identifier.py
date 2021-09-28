@@ -3,6 +3,7 @@
 # blob/main/openapi_python_client/test_utils.py>
 
 import re
+from functools import lru_cache
 from typing import Callable
 
 DELIMITERS = " _-"
@@ -42,6 +43,7 @@ def pascal_case(value: str) -> str:
     return "".join(capitalized_words)
 
 
+@lru_cache(maxsize=50)
 def camel_case(value: str) -> str:
     """Converts to camelCase"""
     words = split_words(sanitize(value))
