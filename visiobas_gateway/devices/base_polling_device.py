@@ -81,7 +81,7 @@ class BasePollingDevice(BaseDevice, ABC):
                 "device_id": device.id,
                 "protocol": device.protocol,
                 "device_interface": device.interface,
-                "interface_state": cls._interfaces,
+                "interface_state": cls._interfaces.items(),
             },
         )
         return device
@@ -203,7 +203,7 @@ class BasePollingDevice(BaseDevice, ABC):
                 },
             )
             await asyncio.sleep(delay=self.reconnect_period)
-            await self._gtw.async_add_job(self.create_client)
+            await self._gtw.async_add_job(self.create_client, self._device_obj)
             await self._scheduler.spawn(self.start_periodic_polls())
 
     async def stop(self) -> None:
