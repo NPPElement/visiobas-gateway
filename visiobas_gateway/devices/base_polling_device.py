@@ -63,7 +63,7 @@ class BasePollingDevice(BaseDevice, ABC):
                 client_connected = await device.connect_client(client=client)
             polling_event = asyncio.Event()
             interface = Interface(
-                name=device.interface,
+                name=interface_name,
                 used_by={device.id},
                 client=client,
                 lock=lock,
