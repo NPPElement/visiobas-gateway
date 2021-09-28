@@ -52,6 +52,6 @@ class BaseView(View):
             Object instance if exist.
         """
         if not isinstance(device, BasePollingDevice):
-            raise ValueError(f"Polling device expected. Got {type(device)}.")
+            raise ValueError(f"Device type must be polling. Got {type(device)}.")
 
         return device.get_object(obj_id=obj_id, obj_type_id=obj_type_id)

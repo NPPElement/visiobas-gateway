@@ -156,6 +156,7 @@ class BACnetDevice(BasePollingDevice, BACnetCoderMixin):
             f"{value} "
             f"- {priority}"
         )
+        self._LOG.debug("WRITE ARGS", extra={"args": args})
         is_successful = self.interface.client.write(args=args)
         self._LOG.debug(
             "Write",
