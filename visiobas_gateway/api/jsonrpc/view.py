@@ -1,21 +1,15 @@
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from aiohttp_cors import CorsViewMixin, ResourceOptions  # type: ignore
 from aiohttp_jsonrpc import handler  # type: ignore
 
+from ...devices.base_polling_device import BasePollingDevice
+from ...devices.sunapi import SUNAPIDevice
 from ...schemas import ObjProperty
 from ...utils import get_file_logger
 from ..base_view import BaseView
 
 _LOG = get_file_logger(name=__name__)
-
-
-if TYPE_CHECKING:
-    from ...devices.base_polling_device import BasePollingDevice
-    from ...devices.sunapi import SUNAPIDevice
-else:
-    BasePollingDevice = "BasePollingDevice"
-    SUNAPIDevice = "SUNAPIDevice"
 
 
 class JsonRPCView(handler.JSONRPCView, BaseView, CorsViewMixin):
@@ -54,7 +48,10 @@ class JsonRPCView(handler.JSONRPCView, BaseView, CorsViewMixin):
         if device is None:
             raise Exception("Device not found")
         if not isinstance(device, BasePollingDevice):
-            raise Exception("Device protocol is not polling.")
+            raise Exception(
+                f"Device protocol must be polling. Protocol of device "
+                f"id:{device_id} is {device.protocol}."
+            )
 
         obj = self.get_obj(device=device, obj_type_id=obj_type_id, obj_id=obj_id)
         if obj is None:

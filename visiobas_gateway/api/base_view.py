@@ -2,20 +2,19 @@ from typing import TYPE_CHECKING, Optional
 
 from aiohttp.web_urldispatcher import View
 
+from ..devices.base_polling_device import BasePollingDevice
 from ..utils import get_file_logger
 
 _LOG = get_file_logger(name=__name__)
 
 if TYPE_CHECKING:
     from ..devices.base_device import BaseDevice
-    from ..devices.base_polling_device import BasePollingDevice
     from ..gateway import Gateway
     from ..schemas import BACnetObj
 else:
     BaseDevice = "BaseDevice"
     Gateway = "Gateway"
     BACnetObj = "BACnetObj"
-    BasePollingDevice = "BasePollingDevice"
 
 
 class BaseView(View):
