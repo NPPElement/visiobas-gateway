@@ -50,10 +50,10 @@ class ModbusCoderMixin:
             data = resp.registers
             scaled: Union[float, int]
             if obj.data_type == ModbusDataType.BOOL:
-                if obj.data_length == 1:
-                    scaled = decoded = 1 if data[0] else 0
-                elif obj.bit:
+                if obj.bit:
                     scaled = decoded = 1 if data[obj.bit] else 0
+                elif obj.data_length == 1:
+                    scaled = decoded = 1 if data[0] else 0
                 else:
                     scaled = decoded = any(data)
             else:
