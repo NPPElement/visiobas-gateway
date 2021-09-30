@@ -190,22 +190,9 @@ class BasePollingDevice(BaseDevice, ABC):
     @log_exceptions(logger=_LOG)
     async def start_periodic_polls(self) -> None:
         """Starts periodic polls for all periods."""
-        self._LOG.debug(
-            "Starting polling",
-            extra={"device_id": self.id},
-        )
 
         if self.is_client_connected:
-            self._LOG.debug(
-                "Client connected. Setting polling event.",
-                extra={"device_id": self.id},
-            )
-
             self.interface.polling_event.set()
-            self._LOG.debug(
-                "Polling event setted.",
-                extra={"device_id": self.id},
-            )
             for period, objs_group in self.object_groups.items():
                 self._LOG.debug(
                     f"Spawning polling task for period={period} objects_count="

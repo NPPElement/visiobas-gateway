@@ -33,6 +33,7 @@ services:
     devices: # To detect devices connected via Serial port
       - "/dev/ttyS0:/dev/ttyS0"
       - "/dev/ttyUSB0:/dev/ttyUSB0"
+      - "/dev/ttyUSB1:/dev/ttyUSB1"
 
 #networks:
 #  backend:
