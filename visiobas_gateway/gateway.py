@@ -285,6 +285,11 @@ class Gateway:
         ]
         objs_lists = await asyncio.gather(*extract_tasks)
         objs = [obj for lst in objs_lists for obj in lst if obj]  # Flat list of lists.
+        _LOG.debug(
+            "Polling objects created",
+            extra={"device_id": device_obj.id, "objects_count": len(objs)},
+        )
+
         if not objs:
             raise ValueError("There aren't polling objects")
 
