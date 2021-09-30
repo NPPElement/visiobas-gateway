@@ -54,7 +54,7 @@ class BasePollingDevice(BaseDevice, ABC):
         existing.
         """
         device = cls(device_obj=device_obj, gateway=gateway)
-        device._scheduler = await aiojobs.create_scheduler(close_timeout=60, limit=100)
+        device._scheduler = await aiojobs.create_scheduler(close_timeout=60, limit=250)
 
         interface_name = device.interface_name(device_obj=device_obj)
 
@@ -123,18 +123,19 @@ class BasePollingDevice(BaseDevice, ABC):
 
     @abstractmethod
     async def read(
-        self, obj: BACnetObj, wait: bool = False, **kwargs: Any
+            self, obj: BACnetObj, wait: bool = False, **kwargs: Any
     ) -> Optional[Union[int, float, str]]:
         """You should implement async read method for your device."""
 
     @abstractmethod
     async def write(
-        self, value: Union[int, float], obj: BACnetObj, wait: bool = False, **kwargs: Any
+            self, value: Union[int, float], obj: BACnetObj, wait: bool = False,
+            **kwargs: Any
     ) -> None:
         """You should implement async write method for your device."""
 
     async def write_with_check(
-        self, value: Union[int, float], obj: BACnetObj, **kwargs: Any
+            self, value: Union[int, float], obj: BACnetObj, **kwargs: Any
     ) -> bool:
         """Writes value to object at controller and check it by read.
 
@@ -189,10 +190,28 @@ class BasePollingDevice(BaseDevice, ABC):
     @log_exceptions(logger=_LOG)
     async def start_periodic_polls(self) -> None:
         """Starts periodic polls for all periods."""
+        self._LOG.debug(
+            "Starting polling",
+            extra={"device_id": self.id},
+        )
 
         if self.is_client_connected:
+            self._LOG.debug(
+                "Client connected. Setting polling event.",
+                extra={"device_id": self.id},
+            )
+
             self.interface.polling_event.set()
+            self._LOG.debug(
+                "Polling event setted.",
+                extra={"device_id": self.id},
+            )
             for period, objs_group in self.object_groups.items():
+                self._LOG.debug(
+                    f"Spawning polling task for period={period} objects_count="
+                    f"{len(objs_group.values())}",
+                    extra={"device_id": self.id},
+                )
                 await self._scheduler.spawn(
                     self.periodic_poll(objs=objs_group.values(), period=period)
                 )
@@ -239,9 +258,9 @@ class BasePollingDevice(BaseDevice, ABC):
         await self._scheduler.spawn(self._periodic_reset_unreachable())
 
     async def periodic_poll(
-        self,
-        objs: Collection[BACnetObj],
-        period: float,
+            self,
+            objs: Collection[BACnetObj],
+            period: float,
     ) -> None:
         self._LOG.debug(
             "Polling started",
