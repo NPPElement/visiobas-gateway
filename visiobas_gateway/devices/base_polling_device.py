@@ -186,6 +186,7 @@ class BasePollingDevice(BaseDevice, ABC):
                 return obj_group[(obj_id, obj_type_id)]
         return None
 
+    @log_exceptions(logger=_LOG)
     async def start_periodic_polls(self) -> None:
         """Starts periodic polls for all periods."""
 

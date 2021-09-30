@@ -177,9 +177,9 @@ class Gateway:
         ]
 
         # 2. Start devices polling.
-        for dev in asyncio.as_completed(load_device_tasks):
+        for dev in asyncio.as_completed(load_device_tasks, timeout=60):
             dev = await dev
-            if dev and isinstance(dev, BasePollingDevice):
+            if isinstance(dev, BasePollingDevice):
                 await dev.start_periodic_polls()
 
         # 3. MQTT startup tasks
