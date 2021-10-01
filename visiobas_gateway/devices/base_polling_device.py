@@ -123,19 +123,18 @@ class BasePollingDevice(BaseDevice, ABC):
 
     @abstractmethod
     async def read(
-            self, obj: BACnetObj, wait: bool = False, **kwargs: Any
+        self, obj: BACnetObj, wait: bool = False, **kwargs: Any
     ) -> Optional[Union[int, float, str]]:
         """You should implement async read method for your device."""
 
     @abstractmethod
     async def write(
-            self, value: Union[int, float], obj: BACnetObj, wait: bool = False,
-            **kwargs: Any
+        self, value: Union[int, float], obj: BACnetObj, wait: bool = False, **kwargs: Any
     ) -> None:
         """You should implement async write method for your device."""
 
     async def write_with_check(
-            self, value: Union[int, float], obj: BACnetObj, **kwargs: Any
+        self, value: Union[int, float], obj: BACnetObj, **kwargs: Any
     ) -> bool:
         """Writes value to object at controller and check it by read.
 
@@ -245,9 +244,9 @@ class BasePollingDevice(BaseDevice, ABC):
         await self._scheduler.spawn(self._periodic_reset_unreachable())
 
     async def periodic_poll(
-            self,
-            objs: Collection[BACnetObj],
-            period: float,
+        self,
+        objs: Collection[BACnetObj],
+        period: float,
     ) -> None:
         self._LOG.debug(
             "Polling started",
