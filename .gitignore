@@ -1,16 +1,29 @@
-venv
-.idea
+__pycache__/
+build/
+dist/
+*.egg-info/
+.pytest_cache/
 
-*.egg-info
-dist
-build
-.github
+# pyenv
+.python-version
 
-*.pyc
+# Environments
+.env
+.venv
 
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
 
-*.log*
-*.DS_Store
-.DS_Store
+# JetBrains
+.idea/
 
+# Coverage
+/coverage.xml
+/.coverage
+htmlcov/
+
+# Gateway propuction
+.gtw_logs
 config/prod/*

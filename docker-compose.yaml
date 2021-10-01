@@ -2,11 +2,11 @@ version: "3.7"
 
 services:
   vb_gateway:
-    container_name: gateway
+    container_name: visiobas_gateway
     build:
       context: .
       dockerfile: Dockerfile
-    image: visiobas-gateway:3.3.0-alpha
+    image: visiobas-gateway:0.3.1-beta
     logging:
       #driver: none
       driver: "json-file"
@@ -16,34 +16,27 @@ services:
     restart: always
     privileged: true # [1]
     env_file:
-      - config/gateway.env
-      - config/http.env
-      - config/api.env
+      - config/.env
     environment:
       - TZ=Europe/Moscow
       - PYTHONPATH=/
-
       # Logging
       - PYTHONASYNCIODEBUG=0
-      #- GTW_LOG_FORMAT="%(levelname)-8s [%(asctime)s] [%(threadName)s] %(name)s.%(funcName)s(%(lineno)d): %(message)s"
-      - GTW_LOG_LEVEL=DEBUG
-      - GTW_LOG_FILE_SIZE=50 # in MB
-      - GTW_LOG_FILE_LEVEL=DEBUG
     volumes:
-      #- /opt/visiobas-gateway/logs:/usr/share/python3/gtw/gateway/logs
-      - /opt/visiobas-gateway/gateway:/usr/share/python3/gtw/lib/python3.9/site-packages/gateway
+      #- /opt/visiobas-visiobas_gateway/logs:/usr/share/python3/gtw/visiobas_gateway/logs
+      - /opt/visiobas-gateway/.gtw_logs:/.gtw_logs
       - /dev:/dev # [1]
-    network_mode: host
-    #ports:
-    #  - 7070:7070
-
-    devices: # To detect Modbus RTU devices
+#    networks:
+#      - backend
+    ports:
+      - "7070:7070"
+    devices: # To detect devices connected via Serial port
       - "/dev/ttyS0:/dev/ttyS0"
       - "/dev/ttyUSB0:/dev/ttyUSB0"
+      - "/dev/ttyUSB1:/dev/ttyUSB1"
 
 #networks:
-#  default:
-#    external: true
-#    name: services_backend
+#  backend:
+#    driver: bridge
 
 # [1]: https://www.losant.com/blog/how-to-access-serial-devices-in-docker

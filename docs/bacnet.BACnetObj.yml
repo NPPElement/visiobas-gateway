@@ -1,0 +1,221 @@
+definitions:
+  BACnetObjPropertyList:
+    description: Represent PropertyList (371) for BACnet objects.
+    properties:
+      pollPeriod:
+        description: Period to send data to server.
+        title: Pollperiod
+        type: number
+    title: BACnetObjPropertyList
+    type: object
+  ObjType:
+    description: 'Supported BACnet object types.
+
+
+      Enumerated values 0-127 are reserved for definition by ASHRAE.
+
+      Enumerated values 128-1023 may be used by others subject to the procedures and
+
+      constraints'
+    enum:
+    - 0
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+    - 11
+    - 12
+    - 13
+    - 14
+    - 15
+    - 16
+    - 17
+    - 18
+    - 19
+    - 20
+    - 21
+    - 22
+    - 23
+    - 24
+    - 25
+    - 26
+    - 27
+    - 28
+    - 29
+    - 30
+    - 32
+    - 33
+    - 34
+    - 35
+    - 36
+    - 37
+    - 38
+    - 39
+    - 40
+    - 41
+    - 42
+    - 43
+    - 44
+    - 45
+    - 46
+    - 47
+    - 48
+    - 49
+    - 50
+    - 51
+    - 52
+    - 53
+    - 54
+    title: ObjType
+    type: integer
+  Reliability:
+    description: 'Enumerated values 0-63 are reserved for definition by ASHRAE.
+
+      Enumerated values 64-65535 may be used by others subject to the procedures and
+
+      constraints.'
+    enum:
+    - 0
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+    - 12
+    - 13
+    - 14
+    - 15
+    title: Reliability
+    type: integer
+  StatusFlags:
+    description: Represent Combination of 4 `StatusFlag`.
+    properties:
+      flags:
+        default: 0
+        maximum: 15
+        minimum: 0
+        title: Flags
+        type: integer
+    title: StatusFlags
+    type: object
+description: Represent BACnet objects.
+properties:
+  '103':
+    anyOf:
+    - $ref: '#/definitions/Reliability'
+    - type: string
+    default: 0
+    description: "Provides an indication of whether the `Present_Value` is\n     \
+      \   \"reliable\" as far as the BACnet Device can determine and, if not, why."
+    title: '103'
+  '106':
+    default: 0.1
+    description: "Indicates the smallest recognizable change in `Present_Value` in\n\
+      \        engineering units (read-only)."
+    exclusiveMinimum: 0
+    title: '106'
+    type: number
+  '107':
+    default: false
+    title: '107'
+    type: boolean
+  '111':
+    allOf:
+    - $ref: '#/definitions/StatusFlags'
+    default:
+      flags: 0
+    description: "\n        Status flags. represents four Boolean flags that indicate\
+      \ the general \"health\" of\n        an value. Three of the flags are associated\
+      \ with the values of other properties of\n        this object. A more detailed\
+      \ status could be determined by reading the properties\n        that are linked\
+      \ to these flags. The relationship between individual flags is\n        not\
+      \ defined by the protocol."
+    title: '111'
+  '371':
+    allOf:
+    - $ref: '#/definitions/BACnetObjPropertyList'
+    description: "This read-only property is a JSON of property identifiers, one\n\
+      \        property identifier  for each property that exists within the object.\
+      \ The standard\n        properties are not included in the JSON."
+    title: '371'
+  '75':
+    description: "Is a numeric code that is used to identify the object.\n       \
+      \ It shall be unique within the BACnet Device that maintains it."
+    minimum: 0
+    title: '75'
+    type: integer
+  '77':
+    description: "Represent a name for the object that is unique within the\n    \
+      \    BACnet Device that maintains it. The minimum length of the string shall\
+      \ be one\n        character. The set of characters used in the Object_Name shall\
+      \ be restricted to\n        printable characters."
+    minLength: 1
+    title: '77'
+    type: string
+  '79':
+    allOf:
+    - $ref: '#/definitions/ObjType'
+    description: Indicates membership in a particular object type class.
+  '846':
+    exclusiveMinimum: 0
+    title: '846'
+    type: integer
+  '85':
+    description: "Indicates the current value, in engineering units, of the `TYPE`.\n\
+      \        `Present_Value` shall be optionally commandable. If `Present_Value`\
+      \ is commandable\n        for a given object instance, then the `Priority_Array`\
+      \ and `Relinquish_Default`\n        properties shall also be present for that\
+      \ instance.\n\n        The `Present_Value` property shall be writable when `Out_Of_Service`\
+      \ is TRUE.\n        "
+    title: '85'
+  '87':
+    description: "Priority array. This property is a read-only array that contains\n\
+      \        prioritized commands that are in effect for this object."
+    items:
+      type: number
+    maxItems: 16
+    minItems: 16
+    title: '87'
+    type: array
+  changed:
+    format: date-time
+    title: Changed
+    type: string
+  existing:
+    default: true
+    description: False if object not exists (incorrect object data on server).
+    title: Existing
+    type: boolean
+  timestamp:
+    format: date-time
+    title: Timestamp
+    type: string
+  unreachable_in_row:
+    default: 0
+    title: Unreachable In Row
+    type: integer
+  verified_present_value:
+    anyOf:
+    - type: number
+    - type: string
+    default: 'null'
+    title: Verified Present Value
+required:
+- '79'
+- '846'
+- '75'
+- '77'
+- '371'
+title: BACnetObj
+type: object

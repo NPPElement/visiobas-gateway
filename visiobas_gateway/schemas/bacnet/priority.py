@@ -1,0 +1,23 @@
+from enum import IntEnum, unique
+
+
+@unique
+class Priority(IntEnum):
+    """Priority enumeration."""
+
+    MANUAL_LIFE_SAFETY = 1
+    AUTOMATIC_LIFE_SAFETY = 2
+    PRIORITY_3 = 3
+    LINKNET_DEFAULT_VALUE = 4
+    CRITICAL_EQUIPMENT_CONTROL = 5
+    MIN_ON_OFF_STARTUP_DELAY = 6
+    DOOR_ELEVATOR_CONTROLLER = 7
+    MANUAL_OPERATOR = 8
+    BO_SEQUENCING_DELAY = 9
+    GCL_PLUS = 10
+    CONTROL_LOOP_FLICK_WARN = 11
+    SCHEDULE_OVERRIDE = 12
+    PRIORITY_13 = 13
+    LIGHTING_GROUP = 14
+    PRIORITY_15 = 15
+    PRIORITY_16 = 16

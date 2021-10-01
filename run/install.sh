@@ -1,3 +1,5 @@
+# FIXME: Outdated script! Will be updated soon.
+
 # Updates packages
 sudo apt --assume-yes update
 sudo apt --assume-yes upgrade
@@ -19,15 +21,24 @@ sudo curl -L https://289122.selcdn.ru/Visiodesk-Cloud/containers/docker-compose-
 sudo chmod 755 $DESTINATION
 docker-compose --version
 
-# Install gateway
-cd /opt/visiobas-gateway
-sudo python3 setup.py sdist  # create a source distribution
+# Install Poetry
+sudo curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry
+.py | python3 -
 
-# Copy configuration templates into /opt/visiobas-gateway/config
-sudo cp /opt/visiobas-gateway/config/templates/gateway.env /opt/visiobas-gateway/config/gateway.env
-sudo cp /opt/visiobas-gateway/config/templates/http.env /opt/visiobas-gateway/config/http.env
-sudo cp /opt/visiobas-gateway/config/templates/mqtt.env /opt/visiobas-gateway/config/mqtt.env
-sudo cp /opt/visiobas-gateway/config/templates/api.env /opt/visiobas-gateway/config/api.env
+# Install visiobas_gateway
+cd /opt/visiobas-visiobas_gateway
+#sudo python3 setup.py sdist  # create a source distribution
+sudo ~/.poetry/bin/poetry build  # create a source distribution
+
+# Export dependencies from Poetry to requirements.txt
+sudo sudo ~/.poetry/bin/poetry export -f requirements.txt --output requirements.txt
+#  --without-hashes
+
+# Copy configuration templates into /opt/visiobas-visiobas_gateway/config
+sudo cp /opt/visiobas-visiobas_gateway/config/templates/visiobas_gateway.env /opt/visiobas-visiobas_gateway/config/visiobas_gateway.env
+sudo cp /opt/visiobas-visiobas_gateway/config/templates/http.env /opt/visiobas-visiobas_gateway/config/http.env
+sudo cp /opt/visiobas-visiobas_gateway/config/templates/mqtt.env /opt/visiobas-visiobas_gateway/config/mqtt.env
+sudo cp /opt/visiobas-visiobas_gateway/config/templates/api.env /opt/visiobas-visiobas_gateway/config/api.env
 
 # Run container
 sudo docker-compose up --build -d
