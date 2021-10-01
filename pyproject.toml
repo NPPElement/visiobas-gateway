@@ -1,0 +1,109 @@
+[tool.poetry]
+name = "visiobas-gateway"
+version = "0.3.1"
+description = "Polling devices using various protocols and transmitting data to the VisioBAS system"
+repository = "https://github.com/NPPElement/visiobas-gateway"
+keywords = ["VisioBAS", "Gateway", "IoT", "BACnet", "Modbus"]
+authors = ["Matvey Ovtsin <mtovtsin@gmail.com>"]
+classifiers = [
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Telecommunications Industry",
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+]
+license = "GPL-3.0"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.9"
+uvloop = "*"
+aiohttp = "^3.7.4.post0"
+aiojobs = "^0.3.0"
+aiohttp-jsonrpc = "^0.3.0"
+aiohttp-cors = "^0.7.0"
+paho-mqtt = "^1.5.1"
+pydantic = "^1.8.2"
+pymodbus = "^2.5.2"
+BAC0 = "^21.2.25"
+netifaces = "*"
+
+[tool.poetry.scripts]
+gateway = "visiobas_gateway.__main__:main"
+
+[tool.poetry.dev-dependencies]
+pytest = "*"
+pytest-mock = "*"
+mypy = "*"
+isort = "^5.0.5"
+black = "*"
+pylint = "^2.9.6"
+flake8 = "*"
+taskipy = "*"
+pyyaml = "^5.4.1"
+types-PyYAML = "^5.4.10"
+safety = "*"
+pytest-cov = "*"
+
+[tool.taskipy.tasks]
+check = """
+isort .\
+ && black .\
+ && flake8 visiobas_gateway\
+ && poetry export -f requirements.txt | poetry run safety check --bare --stdin\
+ && mypy visiobas_gateway\
+ && pylint visiobas_gateway\
+ && pytest --cov visiobas_gateway tests --cov-report=term-missing\
+"""
+docs = """python -m docs --package visiobas_gateway.schemas --output_dir ./docs
+"""
+
+[tool.black]
+line-length = 92
+target_version = ['py39']
+exclude = '''
+(
+  /(
+    | \.git
+    | \.venv
+    | \.mypy_cache
+    | \.pytest_cache
+    | \.gateway_logs
+  )/
+)
+'''
+
+[tool.isort]
+line_length = 92
+profile = "black"
+skip = [".venv", "tests"]
+
+[tool.pylint.format]
+max-line-length = 92
+
+[tool.pylint.messages_control]
+disable = [
+    # Sometimes necessary to prevent cycles
+    "import-outside-toplevel",
+    # Some imports duplicates
+    "duplicate-code",
+    # Modules are mostly used for organization here, there is no lib API
+    "missing-module-docstring",
+    # Organization is important, even when just separating classes
+    "too-few-public-methods",
+    # Disable any type-checking, that's what mypy is for
+    "no-member",
+    "no-name-in-module",
+    "import-error",
+    # Fixme-s may have low demand
+    "fixme",
+    # Mostly function described by name
+    "missing-function-docstring",
+    "no-self-use",
+    # Used in classname aliases
+    "invalid-name",
+]
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
