@@ -32,9 +32,9 @@ class JsonRPCView(handler.JSONRPCView, BaseView, CorsViewMixin):
     async def rpc_resetSetPoint(self, *args: Any, **kwargs: Any) -> dict:
         # pylint: disable=unused-argument
         device_id = int(kwargs["device_id"])
-        obj_type = ObjType(kwargs["object_type"])
+        obj_type = ObjType(int(kwargs["object_type"]))
         obj_id = int(kwargs["object_id"])
-        priority = Priority(kwargs["priority"])
+        priority = Priority(int(kwargs["priority"]))
 
         device = self.get_polling_device(device_id=device_id)
         if not isinstance(device, BACnetDevice):
@@ -56,9 +56,9 @@ class JsonRPCView(handler.JSONRPCView, BaseView, CorsViewMixin):
     async def rpc_writeSetPoint(self, *args: Any, **kwargs: Any) -> dict:
         # pylint: disable=unused-argument
         device_id = int(kwargs["device_id"])
-        obj_type = ObjType(kwargs["object_type"])
+        obj_type = ObjType(int(kwargs["object_type"]))
         obj_id = int(kwargs["object_id"])
-        priority = Priority(kwargs["priority"])
+        priority = Priority(int(kwargs["priority"]))
         value = float(kwargs["value"])
         if value.is_integer():
             value = int(value)
