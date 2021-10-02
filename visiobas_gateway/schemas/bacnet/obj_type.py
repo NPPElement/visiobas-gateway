@@ -7,7 +7,7 @@ from .obj_property import ObjProperty
 class ObjType(int, Enum):
     """Supported BACnet object types.
 
-    Enumerated values 0-127 are reserved for definition by ASHRAE.
+    Enumerated values 0-127 are reserved for definition by `ASHRAE`.
     Enumerated values 128-1023 may be used by others subject to the procedures and
     constraints
     """

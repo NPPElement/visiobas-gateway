@@ -3,19 +3,16 @@ from typing import TYPE_CHECKING
 import aiojobs  # type: ignore
 from aiohttp.web_urldispatcher import View
 
-from ..devices.base_polling_device import BasePollingDevice
+from ..devices import BaseDevice, BasePollingDevice
+from ..schemas import BACnetObj
 from ..utils import get_file_logger
 
 _LOG = get_file_logger(name=__name__)
 
 if TYPE_CHECKING:
-    from ..devices.base_device import BaseDevice
     from ..gateway import Gateway
-    from ..schemas import BACnetObj
 else:
-    BaseDevice = "BaseDevice"
     Gateway = "Gateway"
-    BACnetObj = "BACnetObj"
 
 
 class BaseView(View):
@@ -89,7 +86,7 @@ class BaseView(View):
         """
         obj = device.get_object(obj_id=obj_id, obj_type_id=obj_type_id)
 
-        if obj:
+        if isinstance(obj, BACnetObj):
             return obj
 
         raise Exception(
