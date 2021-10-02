@@ -15,7 +15,17 @@ else:
     Gateway = "Gateway"
 
 _LOG = get_file_logger(name=__name__)
-_AIOHTTP_ACCESS_LOG = get_file_logger("aiohttp.access")
+
+_AIOHTTP_LOGGERS = [
+    "aiohttp.access",
+    "aiohttp.client",
+    "aiohttp.internal",
+    "aiohttp.server",
+    "aiohttp.web",
+    "aiohttp.websocket",
+]
+for aiohttp_logger in _AIOHTTP_LOGGERS:
+    get_file_logger(aiohttp_logger)
 
 
 class ApiServer:
