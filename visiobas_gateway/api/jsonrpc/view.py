@@ -58,7 +58,17 @@ class JsonRPCView(handler.JSONRPCView, BaseView, CorsViewMixin):
             obj=obj,
             device=device,
         )
-        return {"success": obj.priority_array[priority.value] is None}
+        success = obj.priority_array[priority.value] is None
+        if success:
+            return {"success": success}
+        return {
+            "success": success,
+            'msg': f'Priority not `null`.',
+            'debug': {
+                'priority': priority.value,
+                'priorityArray': obj.priority_array
+            }
+        }
 
     @log_exceptions(logger=_LOG)
     async def rpc_writeSetPoint(self, *args: Any, **kwargs: Any) -> dict:
@@ -84,14 +94,17 @@ class JsonRPCView(handler.JSONRPCView, BaseView, CorsViewMixin):
         )
         await self._scheduler.spawn(self._gateway.send_objects(objs=[obj]))
 
-        is_consistent = value == obj.present_value
+        success = value == obj.present_value
 
-        if is_consistent:
-            return {"success": is_consistent}
+        if success:
+            return {"success": success}
         return {
-            "success": is_consistent,
-            "msg": f"The written value ({value}) does not match the "
-            f"read ({obj.present_value}).",
+            "success": success,
+            "msg": "The written value does not match the read.",
+            'debug': {
+                'written_value': value,
+                'read_value': obj.present_value
+            }
         }
 
     # async def rpc_ptz(self, *args: Any, **kwargs: Any) -> dict:
