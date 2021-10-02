@@ -4,7 +4,7 @@ import asyncio
 from abc import ABC, abstractmethod
 from datetime import datetime
 from functools import lru_cache
-from typing import TYPE_CHECKING, Any, Collection, Optional, Union
+from typing import TYPE_CHECKING, Any, Collection, Optional
 
 import aiojobs  # type: ignore
 
@@ -122,19 +122,17 @@ class BasePollingDevice(BaseDevice, ABC):
             await self.read(obj=obj)
 
     @abstractmethod
-    async def read(
-        self, obj: BACnetObj, wait: bool = False, **kwargs: Any
-    ) -> Optional[Union[int, float, str]]:
+    async def read(self, obj: BACnetObj, wait: bool = False, **kwargs: Any) -> BACnetObj:
         """You should implement async read method for your device."""
 
     @abstractmethod
     async def write(
-        self, value: Union[int, float], obj: BACnetObj, wait: bool = False, **kwargs: Any
+        self, value: int | float | str, obj: BACnetObj, wait: bool = False, **kwargs: Any
     ) -> None:
         """You should implement async write method for your device."""
 
     async def write_with_check(
-        self, value: Union[int, float], obj: BACnetObj, **kwargs: Any
+        self, value: int | float | str, obj: BACnetObj, **kwargs: Any
     ) -> bool:
         """Writes value to object at controller and check it by read.
 
@@ -194,9 +192,12 @@ class BasePollingDevice(BaseDevice, ABC):
             self.interface.polling_event.set()
             for period, objs_group in self.object_groups.items():
                 self._LOG.debug(
-                    f"Spawning polling task for period={period} objects_count="
-                    f"{len(objs_group.values())}",
-                    extra={"device_id": self.id},
+                    "Spawning polling task for objects group",
+                    extra={
+                        "device_id": self.id,
+                        "period": period,
+                        "objects_quantity": len(objs_group.values()),
+                    },
                 )
                 await self._scheduler.spawn(
                     self.periodic_poll(objs=objs_group.values(), period=period)

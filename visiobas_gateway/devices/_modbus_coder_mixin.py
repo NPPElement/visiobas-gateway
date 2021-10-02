@@ -1,4 +1,4 @@
-from typing import Union
+from __future__ import annotations
 
 from pymodbus.bit_read_message import (  # type: ignore
     ReadBitsResponseBase,
@@ -23,14 +23,12 @@ class ModbusCoderMixin:
 
     @staticmethod
     def _decode_response(
-        resp: Union[
-            ReadCoilsResponse,
-            ReadDiscreteInputsResponse,
-            ReadHoldingRegistersResponse,
-            ReadInputRegistersResponse,
-        ],
+        resp: ReadCoilsResponse
+        | ReadDiscreteInputsResponse
+        | ReadHoldingRegistersResponse
+        | ReadInputRegistersResponse,
         obj: ModbusObj,
-    ) -> Union[bool, int, float]:
+    ) -> bool | int | float:
         """Decodes value from registers and scale them.
         # TODO make 4 decoders for all combinations in bo, wo and use them?
         Args:
@@ -48,7 +46,7 @@ class ModbusCoderMixin:
             return 1 if data[0] else 0  # TODO: add support several bits?
         if isinstance(resp, ReadRegistersResponseBase):
             data = resp.registers
-            scaled: Union[float, int]
+            scaled: float | int
             if obj.data_type == ModbusDataType.BOOL:
                 if obj.bit and obj.data_length == 1:
                     value = format(data[0], "0>16b")
@@ -105,8 +103,8 @@ class ModbusCoderMixin:
 
     @staticmethod
     def _build_payload(
-        value: Union[int, float], obj: ModbusObj
-    ) -> Union[int, list[Union[int, bytes, bool]]]:
+        value: int | float, obj: ModbusObj
+    ) -> int | list[int | bytes | bool]:
         """
         # TODO make 4 decoders for all combinations in bo, wo and use them?
         Args:
