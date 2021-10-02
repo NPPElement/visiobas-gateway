@@ -27,10 +27,8 @@ _AIOHTTP_LOGGERS = [
     "aiohttp.web",
     "aiohttp.websocket",
 ]
-_AIOHTTP_JSON_RPC_LOGGERS = [
-    "aiohttp_jsonrpc.handler",
-]
-for aiohttp_logger in [*_AIOHTTP_LOGGERS, *_AIOHTTP_JSON_RPC_LOGGERS]:
+
+for aiohttp_logger in [*_AIOHTTP_LOGGERS]:
     get_file_logger(aiohttp_logger)
 
 

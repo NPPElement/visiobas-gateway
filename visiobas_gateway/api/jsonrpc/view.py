@@ -3,14 +3,18 @@ from typing import Any
 from aiohttp_cors import CorsViewMixin, ResourceOptions  # type: ignore
 from aiohttp_jsonrpc import handler  # type: ignore
 
-from visiobas_gateway.devices.bacnet import BACnetDevice
-
-from ...devices.sunapi import SUNAPIDevice
+from ...devices import BACnetDevice
 from ...schemas import ObjProperty, ObjType, Priority
-from ...utils import get_file_logger
+from ...utils import get_file_logger, log_exceptions
 from ..base_view import BaseView
 
 _LOG = get_file_logger(name=__name__)
+
+_AIOHTTP_JSON_RPC_LOGGERS = [
+    "aiohttp_jsonrpc.handler",
+]
+for aiohttp_logger in [*_AIOHTTP_JSON_RPC_LOGGERS]:
+    get_file_logger(aiohttp_logger)
 
 
 class JsonRPCView(handler.JSONRPCView, BaseView, CorsViewMixin):
@@ -29,8 +33,11 @@ class JsonRPCView(handler.JSONRPCView, BaseView, CorsViewMixin):
         )
     }
 
+    @log_exceptions(logger=_LOG)
     async def rpc_resetSetPoint(self, *args: Any, **kwargs: Any) -> dict:
-        # pylint: disable=unused-argument
+        """Resets priorityArray value in BACnet device."""
+        _LOG.debug("Call params", extra={"args_": args, "kwargs_": kwargs})
+
         device_id = int(kwargs["device_id"])
         obj_type = ObjType(int(kwargs["object_type"]))
         obj_id = int(kwargs["object_id"])
@@ -53,8 +60,11 @@ class JsonRPCView(handler.JSONRPCView, BaseView, CorsViewMixin):
         )
         return {"success": obj.priority_array[priority.value] is None}
 
+    @log_exceptions(logger=_LOG)
     async def rpc_writeSetPoint(self, *args: Any, **kwargs: Any) -> dict:
-        # pylint: disable=unused-argument
+        """Writes value to any polling device."""
+        _LOG.debug("Call params", extra={"args_": args, "kwargs_": kwargs})
+
         device_id = int(kwargs["device_id"])
         obj_type = ObjType(int(kwargs["object_type"]))
         obj_id = int(kwargs["object_id"])
@@ -80,26 +90,25 @@ class JsonRPCView(handler.JSONRPCView, BaseView, CorsViewMixin):
             return {"success": is_consistent}
         return {
             "success": is_consistent,
-            "msg": f"The written value ({value}) does not match "
-            "the "
+            "msg": f"The written value ({value}) does not match the "
             f"read ({obj.present_value}).",
         }
 
-    async def rpc_ptz(self, *args: Any, **kwargs: Any) -> dict:
-        _LOG.debug(
-            "Call params",
-            extra={
-                "args_": args,
-                "kwargs_": kwargs,
-            },
-        )
-
-        device_id = int(kwargs["device_id"])
-        device = self._get_device(device_id=device_id)
-
-        if not isinstance(device, SUNAPIDevice):
-            raise Exception("Device is not SunAPI camera.")
-
-        device.ptz(**kwargs)  # add check
-
-        return {"success": "WARNING! Success check is not implemented now!"}
+    # async def rpc_ptz(self, *args: Any, **kwargs: Any) -> dict:
+    #     _LOG.debug(
+    #         "Call params",
+    #         extra={
+    #             "args_": args,
+    #             "kwargs_": kwargs,
+    #         },
+    #     )
+    #
+    #     device_id = int(kwargs["device_id"])
+    #     device = self._get_device(device_id=device_id)
+    #
+    #     if not isinstance(device, SUNAPIDevice):
+    #         raise Exception("Device is not SunAPI camera.")
+    #
+    #     device.ptz(**kwargs)  # add check
+    #
+    #     return {"success": "WARNING! Success check is not implemented now!"}
