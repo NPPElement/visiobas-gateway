@@ -1,7 +1,10 @@
+from __future__ import annotations
+
 import asyncio
 from typing import TYPE_CHECKING, Optional
 
 import aiohttp_cors  # type: ignore
+import aiojobs  # type: ignore
 from aiohttp.web import Application
 from aiohttp.web_runner import AppRunner, TCPSite
 
@@ -24,7 +27,10 @@ _AIOHTTP_LOGGERS = [
     "aiohttp.web",
     "aiohttp.websocket",
 ]
-for aiohttp_logger in _AIOHTTP_LOGGERS:
+_AIOHTTP_JSON_RPC_LOGGERS = [
+    "aiohttp_jsonrpc.handler",
+]
+for aiohttp_logger in [*_AIOHTTP_LOGGERS, *_AIOHTTP_JSON_RPC_LOGGERS]:
     get_file_logger(aiohttp_logger)
 
 
@@ -47,9 +53,9 @@ class ApiServer:
         return JSON_RPC_HANDLERS
 
     @classmethod
-    def create(cls, gateway: Gateway, settings: ApiSettings) -> "ApiServer":
+    async def create(cls, gateway: Gateway, settings: ApiSettings) -> ApiServer:
         api = cls(gateway=gateway, settings=settings)
-        api._app = api.create_app()
+        api._app = await api.create_app()
         return api
 
     async def stop(self) -> None:
@@ -59,12 +65,12 @@ class ApiServer:
     async def start(self) -> None:
         """Starts Gateway API until stopped."""
         if self._app is None:
-            self._app = self.create_app()
+            self._app = await self.create_app()
         await self.run_app(
             app=self._app, host=str(self._settings.HOST), port=self._settings.PORT
         )
 
-    def create_app(self) -> Application:
+    async def create_app(self) -> Application:
         """Creates an instance of the application.
 
         Returns:
@@ -72,7 +78,8 @@ class ApiServer:
         """
         _LOG.debug("Creating app")
         app = Application()
-        app["visiobas_gateway"] = self._gateway
+        app["gateway"] = self._gateway
+        app["scheduler"] = await aiojobs.create_scheduler(close_timeout=60, limit=100)
 
         # Configure default CORS settings.
         cors = aiohttp_cors.setup(
@@ -92,10 +99,7 @@ class ApiServer:
         for handler in self.handlers:
             _LOG.debug(
                 "Registering handler",
-                extra={
-                    "handler": handler.__name__,
-                    "url": handler.URL_PATH,
-                },
+                extra={"handler": handler.__name__, "url": handler.URL_PATH},
             )
             cors.add(app.router.add_route("*", handler.URL_PATH, handler))
 
@@ -114,33 +118,22 @@ class ApiServer:
             host: TCP/IP hostname to serve on.
             port: TCP/IP port to serve on.
         """
-        _LOG.info(
-            "Starting app",
-            extra={
-                "host": host,
-                "port": port,
-            },
-        )
+        _LOG.info("Starting app", extra={"host": host, "port": port})
         runner = AppRunner(app=app)
         await runner.setup()
         site = TCPSite(runner=runner, host=host, port=port)
         await site.start()
 
         await self._stopped.wait()
-        _LOG.debug(
-            "Stopping app",
-            extra={
-                "host": host,
-                "port": port,
-            },
-        )
+        _LOG.debug("Stopping app", extra={"host": host, "port": port})
+        await app["scheduler"].close()
         await runner.cleanup()
 
 
 # if __name__ == "__main__":
 #
 #     async def main():
-#         api = VisioGtwApi.create(visiobas_gateway=None, settings=ApiSettings())
+#         api = await VisioGtwApi.create(visiobas_gateway=None, settings=ApiSettings())
 #         await api.start()
 #
 #     asyncio.run(main())

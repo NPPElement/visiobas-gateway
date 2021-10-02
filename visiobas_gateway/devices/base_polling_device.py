@@ -133,7 +133,7 @@ class BasePollingDevice(BaseDevice, ABC):
 
     async def write_with_check(
         self, value: int | float | str, obj: BACnetObj, **kwargs: Any
-    ) -> bool:
+    ) -> BACnetObj:
         """Writes value to object at controller and check it by read.
 
         Args:
@@ -151,23 +151,14 @@ class BasePollingDevice(BaseDevice, ABC):
         self.interface.polling_event.set()
 
         verified_obj = self._gtw.verifier.verify(obj=obj)
-        read_value = verified_obj.present_value
-
-        # hotfix
-        await self._scheduler.spawn(self._gtw.send_objects(objs=[obj]))
-
-        is_consistent = value == read_value
         self._LOG.debug(
             "Write with check called",
             extra={
-                "device_id": obj.device_id,
                 "object": obj,
-                "value_written": value,
-                "value_read": read_value,
-                "values_are_consistent": is_consistent,
+                "value_write": value,
             },
         )
-        return is_consistent
+        return verified_obj
 
     @lru_cache(maxsize=10)
     def get_object(self, obj_id: int, obj_type_id: int) -> Optional[BACnetObj]:

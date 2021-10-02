@@ -110,7 +110,7 @@ class Gateway:
         if self._mqtt_settings.enable:
             self.mqtt_client = MQTTClient.create(gateway=self, settings=self._mqtt_settings)
 
-        self.api = ApiServer.create(gateway=self, settings=ApiSettings())
+        self.api = await ApiServer.create(gateway=self, settings=ApiSettings())
         await self._scheduler.spawn(self.api.start())
 
         await self._scheduler.spawn(coro=self.periodic_update())
