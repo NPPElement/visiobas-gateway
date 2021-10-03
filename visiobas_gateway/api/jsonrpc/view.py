@@ -58,7 +58,7 @@ class JsonRPCView(handler.JSONRPCView, BaseView, CorsViewMixin):
             obj=obj,
             device=device,
         )
-        success = obj.priority_array[params.priority.value] is None
+        success = obj.priority_array[params.priority.value + 1] is None
         if success:
             return {"success": success}
         return {
