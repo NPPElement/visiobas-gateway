@@ -147,16 +147,13 @@ class BasePollingDevice(BaseDevice, ABC):
         """
         self.interface.polling_event.clear()
         await self.write(value=value, obj=obj, **kwargs)
-        _ = await self.read(obj=obj, wait=False, **kwargs)
+        obj = await self.read(obj=obj, wait=False, **kwargs)
         self.interface.polling_event.set()
 
         verified_obj = self._gtw.verifier.verify(obj=obj)
         self._LOG.debug(
             "Write with check called",
-            extra={
-                "object": obj,
-                "value_write": value,
-            },
+            extra={"object": verified_obj, "value_write": value},
         )
         return verified_obj
 

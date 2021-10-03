@@ -20,9 +20,7 @@ class BACnetCoderMixin:
 
     @staticmethod
     def _encode_binary_present_value(value: int | float) -> str:
-        if value:
-            return "active"
-        return "inactive"
+        return "active" if value else "inactive"
 
     # def _decode_response(self, resp: Any, prop: ObjProperty) -> Any:
     #

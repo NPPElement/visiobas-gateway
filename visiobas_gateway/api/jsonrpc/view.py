@@ -37,9 +37,10 @@ class JsonRPCView(handler.JSONRPCView, BaseView, CorsViewMixin):
     @log_exceptions(logger=_LOG)
     async def rpc_resetSetPoint(self, *args: Any, **kwargs: Any) -> dict:
         """Resets priorityArray value in BACnet device."""
-        _LOG.debug("Call params", extra={"args_": args, "kwargs_": kwargs})
-
         params = JsonRPCSetPointParams(**kwargs)
+        _LOG.debug(
+            "Call params", extra={"args_": args, "kwargs_": kwargs, "params": params}
+        )
 
         device = self.get_polling_device(device_id=params.device_id)
         if not isinstance(device, BACnetDevice):
@@ -73,9 +74,10 @@ class JsonRPCView(handler.JSONRPCView, BaseView, CorsViewMixin):
     @log_exceptions(logger=_LOG)
     async def rpc_writeSetPoint(self, *args: Any, **kwargs: Any) -> dict:
         """Writes value to any polling device."""
-        _LOG.debug("Call params", extra={"args_": args, "kwargs_": kwargs})
-
         params = JsonRPCSetPointParams(**kwargs)
+        _LOG.debug(
+            "Call params", extra={"args_": args, "kwargs_": kwargs, "params": params}
+        )
 
         device = self.get_polling_device(device_id=params.device_id)
         obj = self.get_obj(
