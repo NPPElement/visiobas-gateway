@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from abc import ABC
 from typing import Any
 
 from pydantic import BaseModel, Field, validator
@@ -10,7 +11,7 @@ from .obj_property import ObjProperty
 from .obj_type import ObjType
 
 
-class BaseBACnetObj(BaseModel):
+class BaseBACnetObj(BaseModel, ABC):
     """Base class for all BACnet objects."""
 
     # for evident exception use code below + validation

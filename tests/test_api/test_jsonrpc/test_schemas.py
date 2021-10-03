@@ -6,15 +6,17 @@ import pytest
 
 class TestJsonRPCSetPointParams:
     @pytest.mark.parametrize(
-        "data, expected_value",
+        "data, expected_value, expected_type",
         [
-            ({"value": 2}, 2),
-            ({"value": "2"}, 2),
-            ({"value": "2.0"}, 2),
-            ({"value": "22.22"}, 22.22),
+            ({"value": 2}, 2, int),
+            ({"value": "2"}, 2, int),
+            ({"value": "2.0"}, 2, int),
+            ({"value": "22.22"}, 22.22, float),
         ],
     )
-    def test_construct_happy(self, json_rpc_set_point_params_factory, data, expected_value):
+    def test_construct_happy(
+        self, json_rpc_set_point_params_factory, data, expected_value, expected_type
+    ):
         params = json_rpc_set_point_params_factory(**data)
 
         assert params.device_id == 846
@@ -24,3 +26,4 @@ class TestJsonRPCSetPointParams:
         assert params.property == ObjProperty.PRESENT_VALUE
 
         assert params.value == expected_value
+        assert isinstance(params.value, expected_type)

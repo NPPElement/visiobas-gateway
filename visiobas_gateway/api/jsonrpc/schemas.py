@@ -23,10 +23,10 @@ class JsonRPCSetPointParams(BaseBACnetObj):
             return ObjProperty(value)
         raise ValueError(f"Value must be `{ObjProperty}`. Got `{type(value)}`.")
 
-    value: Union[float, int] = Field(...)
+    value: Union[int, float] = Field(...)
 
-    @validator("value", pre=True)
-    def cast_value(cls, value: float | int | str) -> float | int:
+    @validator("value")
+    def validate_value(cls, value: float | int | str) -> float | int:
         # pylint: disable=no-self-argument
         if isinstance(value, str):
             value = float(value)
