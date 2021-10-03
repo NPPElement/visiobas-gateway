@@ -375,7 +375,3 @@ class ObjProperty(int, Enum):
     TRANSITION = 385
     EGRESS_ACTIVE = 386
     DEVICE_ID = 846
-
-    @property
-    def id(self) -> int:
-        return self.value

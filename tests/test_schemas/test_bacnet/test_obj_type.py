@@ -8,7 +8,8 @@ class TestObjType:
         [*{i for i in range(55)} - {31}],
     )
     def test_type_id(self, id_):
-        assert ObjType(id_).type_id == id_
+
+        assert ObjType(id_).value == id_
 
     # @pytest.mark.parametrize(
     #     "obj_type, expected",

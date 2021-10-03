@@ -3,13 +3,19 @@ from typing import Any
 from aiohttp_cors import CorsViewMixin, ResourceOptions  # type: ignore
 from aiohttp_jsonrpc import handler  # type: ignore
 
-from ...devices.base_polling_device import BasePollingDevice
-from ...devices.sunapi import SUNAPIDevice
+from ...devices import BACnetDevice
 from ...schemas import ObjProperty
-from ...utils import get_file_logger
+from ...utils import get_file_logger, log_exceptions
 from ..base_view import BaseView
+from .schemas import JsonRPCSetPointParams
 
 _LOG = get_file_logger(name=__name__)
+
+_AIOHTTP_JSON_RPC_LOGGERS = [
+    "aiohttp_jsonrpc.handler",
+]
+for aiohttp_logger in [*_AIOHTTP_JSON_RPC_LOGGERS]:
+    get_file_logger(aiohttp_logger)
 
 
 class JsonRPCView(handler.JSONRPCView, BaseView, CorsViewMixin):
@@ -28,62 +34,89 @@ class JsonRPCView(handler.JSONRPCView, BaseView, CorsViewMixin):
         )
     }
 
-    async def rpc_writeSetPoint(self, *args: str, **kwargs: str) -> dict:
+    @log_exceptions(logger=_LOG)
+    async def rpc_resetSetPoint(self, *args: Any, **kwargs: Any) -> dict:
+        """Resets priorityArray value in BACnet device."""
+        params = JsonRPCSetPointParams(**kwargs)
         _LOG.debug(
-            "Call params",
-            extra={
-                "args_": args,
-                "kwargs_": kwargs,
-            },
+            "Call params", extra={"args_": args, "kwargs_": kwargs, "params": params}
         )
-        device_id = int(kwargs["device_id"])
-        obj_type_id = int(kwargs["object_type"])
-        obj_id = int(kwargs["object_id"])
-        priority = int(kwargs["priority"])
-        value = float(kwargs["value"])
-        if value.is_integer():
-            value = int(value)
 
-        device = self.get_device(device_id=device_id)
-        if device is None:
-            raise Exception("Device not found")
-        if not isinstance(device, BasePollingDevice):
+        device = self.get_polling_device(device_id=params.device_id)
+        if not isinstance(device, BACnetDevice):
             raise Exception(
-                f"Device protocol must be polling. Protocol of device "
-                f"id:{device_id} is {device.protocol}."
+                "Only BACnet objects has priorityArray. "
+                "So only BACnet devices can reset priorityArray. "
+                f"This device using {device.protocol} protocol."
             )
-
-        obj = self.get_obj(device=device, obj_type_id=obj_type_id, obj_id=obj_id)
-        if obj is None:
-            raise Exception("Object not found")
-
-        is_consistent = await device.write_with_check(
-            value=value,
+        obj = self.get_obj(
+            device=device, obj_type_id=params.object_type.value, obj_id=params.object_id
+        )
+        obj = await device.write_with_check(
+            value="null",
             prop=ObjProperty.PRESENT_VALUE,
-            priority=priority,
+            priority=params.priority.value,
             obj=obj,
             device=device,
         )
-        return {"success": is_consistent}
-
-    async def rpc_ptz(self, *args: Any, **kwargs: Any) -> dict:
-        _LOG.debug(
-            "Call params",
-            extra={
-                "args_": args,
-                "kwargs_": kwargs,
+        success = obj.priority_array[params.priority.value + 1] is None
+        if success:
+            return {"success": success}
+        return {
+            "success": success,
+            "msg": "Priority not `null`.",
+            "debug": {
+                "priority": params.priority.value,
+                "priorityArray": obj.priority_array,
             },
+        }
+
+    @log_exceptions(logger=_LOG)
+    async def rpc_writeSetPoint(self, *args: Any, **kwargs: Any) -> dict:
+        """Writes value to any polling device."""
+        params = JsonRPCSetPointParams(**kwargs)
+        _LOG.debug(
+            "Call params", extra={"args_": args, "kwargs_": kwargs, "params": params}
         )
 
-        device_id = int(kwargs["device_id"])
-        device = self.get_device(device_id=device_id)
+        device = self.get_polling_device(device_id=params.device_id)
+        obj = self.get_obj(
+            device=device, obj_type_id=params.object_type.value, obj_id=params.object_id
+        )
+        obj = await device.write_with_check(
+            value=params.value,
+            prop=ObjProperty.PRESENT_VALUE,
+            priority=params.priority.value,
+            obj=obj,
+            device=device,
+        )
+        await self._scheduler.spawn(self._gateway.send_objects(objs=[obj]))
 
-        if device is None:
-            raise Exception("Device not found.")
+        success = params.value == obj.present_value
 
-        if not isinstance(device, SUNAPIDevice):
-            raise Exception("Device is not SunAPI camera.")
+        if success:
+            return {"success": success}
+        return {
+            "success": success,
+            "msg": "The written value does not match the read.",
+            "debug": {"written_value": params.value, "read_value": obj.present_value},
+        }
 
-        device.ptz(**kwargs)  # add check
-
-        return {"success": "WARNING! Success check is not implemented now!"}
+    # async def rpc_ptz(self, *args: Any, **kwargs: Any) -> dict:
+    #     _LOG.debug(
+    #         "Call params",
+    #         extra={
+    #             "args_": args,
+    #             "kwargs_": kwargs,
+    #         },
+    #     )
+    #
+    #     device_id = int(kwargs["device_id"])
+    #     device = self._get_device(device_id=device_id)
+    #
+    #     if not isinstance(device, SUNAPIDevice):
+    #         raise Exception("Device is not SunAPI camera.")
+    #
+    #     device.ptz(**kwargs)  # add check
+    #
+    #     return {"success": "WARNING! Success check is not implemented now!"}

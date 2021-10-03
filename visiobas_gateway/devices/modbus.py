@@ -1,4 +1,6 @@
-from typing import Any, Callable, Optional, Union
+from __future__ import annotations
+
+from typing import Any, Callable
 
 from pymodbus.client.sync import ModbusSerialClient, ModbusTcpClient  # type: ignore
 from pymodbus.exceptions import ModbusException, ModbusIOException  # type: ignore
@@ -40,7 +42,7 @@ class ModbusDevice(BasePollingDevice, ModbusCoderMixin):
     @log_exceptions(logger=_LOG)
     async def create_client(
         self, device_obj: DeviceObj
-    ) -> Union[ModbusTcpClient, ModbusSerialClient]:
+    ) -> ModbusTcpClient | ModbusSerialClient:
         """Initializes synchronous modbus client."""
 
         self._LOG.debug(
@@ -83,13 +85,11 @@ class ModbusDevice(BasePollingDevice, ModbusCoderMixin):
     def is_client_connected(self) -> bool:
         return self.interface.client_connected
 
-    async def connect_client(
-        self, client: Union[ModbusTcpClient, ModbusSerialClient]
-    ) -> bool:
+    async def connect_client(self, client: ModbusTcpClient | ModbusSerialClient) -> bool:
         return client.connect()
 
     async def _disconnect_client(
-        self, client: Union[ModbusTcpClient, ModbusSerialClient]
+        self, client: ModbusTcpClient | ModbusSerialClient
     ) -> None:
         client.close()
 
@@ -113,9 +113,7 @@ class ModbusDevice(BasePollingDevice, ModbusCoderMixin):
             ModbusWriteFunc.WRITE_REGISTERS: client.write_registers,
         }
 
-    async def read(
-        self, obj: BACnetObj, wait: bool = False, **kwargs: Any
-    ) -> Optional[Union[int, float]]:
+    async def read(self, obj: BACnetObj, wait: bool = False, **kwargs: Any) -> BACnetObj:
         if wait:
             await self.interface.polling_event.wait()
         return await self._gtw.async_add_job(self.sync_read, obj)
@@ -139,12 +137,11 @@ class ModbusDevice(BasePollingDevice, ModbusCoderMixin):
         return obj
 
     async def write(
-        self, value: Union[int, float], obj: BACnetObj, wait: bool = False, **kwargs: Any
+        self, value: int | float | str, obj: BACnetObj, wait: bool = False, **kwargs: Any
     ) -> None:
         await self._gtw.async_add_job(self.sync_write, value, obj)
 
-    # @log_exceptions
-    def sync_write(self, value: Union[int, float], obj: ModbusObj) -> None:
+    def sync_write(self, value: int | float | str, obj: ModbusObj) -> None:
         """Write value to Modbus object.
 
         Args:
@@ -153,6 +150,8 @@ class ModbusDevice(BasePollingDevice, ModbusCoderMixin):
         """
         if obj.func_write is None:
             raise ModbusException("Object cannot be overwritten")
+        if isinstance(value, str):
+            raise NotImplementedError('Modbus expected numbers to write. Got "str".')
 
         payload = self._build_payload(value=value, obj=obj)
 
@@ -172,8 +171,8 @@ class ModbusDevice(BasePollingDevice, ModbusCoderMixin):
             "Successfully write",
             extra={
                 "device_id": self.id,
-                "object_id": obj.id,
-                "object_type": obj.type,
+                "object_id": obj.object_id,
+                "object_type": obj.object_type,
                 "address": obj.address,
                 "value": value,
             },

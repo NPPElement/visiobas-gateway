@@ -1,13 +1,13 @@
 from hashlib import md5
 from typing import Any, Optional
 
-from pydantic import AnyHttpUrl, BaseModel, Field, validator
+from pydantic import AnyHttpUrl, BaseModel, Field, SecretStr, validator
 
 
 class AuthData(BaseModel):
     """Auth settings of `HTTPServerConfig`."""
 
-    bearer_token: str = Field(..., alias="token")
+    bearer_token: SecretStr = Field(..., alias="token")
     user_id: int = Field(...)
     auth_user_id: int = Field(...)
 
@@ -49,7 +49,9 @@ class HTTPServerConfig(BaseModel):
     @property
     def auth_headers(self) -> dict[str, str]:
         if self.auth_data:
-            return {"Authorization": f"Bearer {self.auth_data.bearer_token}"}
+            return {
+                "Authorization": f"Bearer {self.auth_data.bearer_token.get_secret_value()}"
+            }
         return {}
 
     # def __str__(self) -> str:

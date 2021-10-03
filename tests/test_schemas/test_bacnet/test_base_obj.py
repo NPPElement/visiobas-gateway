@@ -8,9 +8,9 @@ from visiobas_gateway.schemas.bacnet.obj_type import ObjType
 class TestBaseBACnetObj:
     def test_construct_happy(self, base_bacnet_obj_factory):
         obj1 = base_bacnet_obj_factory()
-        assert obj1.id == 75
+        assert obj1.object_id == 75
         assert obj1.name == "Name:Name/Name.Name"
-        assert obj1.type == ObjType.ANALOG_INPUT
+        assert obj1.object_type == ObjType.ANALOG_INPUT
         assert obj1.property_list == {
             "template": "",
             "alias": "",
@@ -19,15 +19,29 @@ class TestBaseBACnetObj:
         assert obj1.device_id == 846
 
         obj2 = base_bacnet_obj_factory(**{"79": 1})
-        assert obj2.id == 75
+        assert obj2.object_id == 75
         assert obj2.name == "Name:Name/Name.Name"
-        assert obj2.type == ObjType.ANALOG_OUTPUT
+        assert obj2.object_type == ObjType.ANALOG_OUTPUT
         assert obj2.property_list == {
             "template": "",
             "alias": "",
             "replace": {},
         }
         assert obj2.device_id == 846
+
+    @pytest.mark.parametrize(
+        "data",
+        [
+            {"79": 1},
+            {"79": "1"},
+            {"79": "analog-output"},
+            {"79": "ANALOG_OUTPUT"},
+            {"79": "analogOutput"},
+        ],
+    )
+    def test_type_happy(self, base_bacnet_obj_factory, data):
+        obj = base_bacnet_obj_factory(**data)
+        assert obj.object_type == ObjType.ANALOG_OUTPUT
 
     @pytest.mark.parametrize(
         "data",

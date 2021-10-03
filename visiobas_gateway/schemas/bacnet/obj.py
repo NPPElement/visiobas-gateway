@@ -22,7 +22,7 @@ class BACnetObj(BaseBACnetObj):
 
     resolution: float = Field(
         default=DEFAULT_RESOLUTION,
-        alias=str(ObjProperty.RESOLUTION.id),
+        alias=str(ObjProperty.RESOLUTION.value),
         gt=0,
         description="""Indicates the smallest recognizable change in `Present_Value` in
         engineering units (read-only).""",
@@ -42,7 +42,7 @@ class BACnetObj(BaseBACnetObj):
 
     status_flags: StatusFlags = Field(
         default=StatusFlags(flags=0b0000),
-        alias=str(ObjProperty.STATUS_FLAGS.id),
+        alias=str(ObjProperty.STATUS_FLAGS.value),
         description="""
         Status flags. represents four Boolean flags that indicate the general "health" of
         an value. Three of the flags are associated with the values of other properties of
@@ -69,7 +69,7 @@ class BACnetObj(BaseBACnetObj):
 
     priority_array: list[Optional[float]] = Field(
         default=DEFAULT_PRIORITY_ARRAY,
-        alias=str(ObjProperty.PRIORITY_ARRAY.id),
+        alias=str(ObjProperty.PRIORITY_ARRAY.value),
         max_items=16,
         min_items=16,
         description="""Priority array. This property is a read-only array that contains
@@ -91,15 +91,13 @@ class BACnetObj(BaseBACnetObj):
 
     reliability: Union[Reliability, str] = Field(
         default=Reliability.NO_FAULT_DETECTED,
-        alias=str(ObjProperty.RELIABILITY.id),
+        alias=str(ObjProperty.RELIABILITY.value),
         description="""Provides an indication of whether the `Present_Value` is
         "reliable" as far as the BACnet Device can determine and, if not, why.""",
     )
 
     @validator("reliability", pre=True)
-    def try_cast_reliability(
-        cls, value: Union[Reliability, str]
-    ) -> Union[Reliability, str]:
+    def try_cast_reliability(cls, value: Reliability | str) -> Reliability | str:
         # pylint: disable=no-self-argument
         if not value:
             return Reliability.NO_FAULT_DETECTED
@@ -112,11 +110,11 @@ class BACnetObj(BaseBACnetObj):
             return value
 
     segmentation_supported: bool = Field(
-        default=False, alias=str(ObjProperty.SEGMENTATION_SUPPORTED.id)
+        default=False, alias=str(ObjProperty.SEGMENTATION_SUPPORTED.value)
     )
     property_list: BACnetObjPropertyList = Field(  # type: ignore
         ...,
-        alias=str(ObjProperty.PROPERTY_LIST.id),
+        alias=str(ObjProperty.PROPERTY_LIST.value),
         description="""This read-only property is a JSON of property identifiers, one
         property identifier  for each property that exists within the object. The standard
         properties are not included in the JSON.""",
@@ -124,7 +122,7 @@ class BACnetObj(BaseBACnetObj):
 
     present_value: Any = Field(
         default=None,
-        alias=str(ObjProperty.PRESENT_VALUE.id),
+        alias=str(ObjProperty.PRESENT_VALUE.value),
         description="""Indicates the current value, in engineering units, of the `TYPE`.
         `Present_Value` shall be optionally commandable. If `Present_Value` is commandable
         for a given object instance, then the `Priority_Array` and `Relinquish_Default`
@@ -164,14 +162,14 @@ class BACnetObj(BaseBACnetObj):
 
     @property
     def polling_properties(self) -> tuple[ObjProperty, ...]:
-        if self.type in INPUT_TYPES:
+        if self.object_type in INPUT_TYPES:
             return INPUT_PROPERTIES
-        if self.type in OUTPUT_TYPES:
+        if self.object_type in OUTPUT_TYPES:
             return OUTPUT_PROPERTIES
         raise NotImplementedError("Properties for other types not defined")
 
     def set_property(
-        self, value: Union[Any, Exception], prop: ObjProperty = ObjProperty.PRESENT_VALUE
+        self, value: Any | Exception, prop: ObjProperty = ObjProperty.PRESENT_VALUE
     ) -> None:
         """Sets `presentValue` with round by `resolution`.
         Use it to set new `presentValue` by read from controller.
@@ -203,15 +201,15 @@ class BACnetObj(BaseBACnetObj):
 
     def to_mqtt_str(self) -> str:
         return (
-            f"{self.device_id} {self.id} {self.type.type_id} "
+            f"{self.device_id} {self.object_id} {self.object_type.value} "
             f"{self.present_value} {self.status_flags}"
         )
 
     @staticmethod
     def to_http_str(obj: BACnetObj) -> str:
-        str_ = f"{obj.id} {obj.type.type_id} {obj.present_value}"
+        str_ = f"{obj.object_id} {obj.object_type.value} {obj.present_value}"
 
-        if obj.type in OUTPUT_TYPES and obj.priority_array:
+        if obj.object_type in OUTPUT_TYPES and obj.priority_array:
             pa_str = obj.priority_array_to_http_str(priority_array=obj.priority_array)
             str_ += " " + pa_str
 
@@ -247,7 +245,7 @@ def group_by_period(objs: list[BACnetObj]) -> dict[float, dict[tuple[int, int], 
     for obj in objs:
         poll_period = obj.property_list.poll_period
         try:
-            groups[poll_period][(obj.id, obj.type.type_id)] = obj
+            groups[poll_period][(obj.object_id, obj.object_type.value)] = obj
         except KeyError:
-            groups[poll_period] = {(obj.id, obj.type.type_id): obj}
+            groups[poll_period] = {(obj.object_id, obj.object_type.value): obj}
     return groups

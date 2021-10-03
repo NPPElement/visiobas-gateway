@@ -1,47 +1,77 @@
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
+import aiojobs  # type: ignore
 from aiohttp.web_urldispatcher import View
 
-from ..devices.base_polling_device import BasePollingDevice
+from ..devices import BaseDevice, BasePollingDevice
+from ..schemas import BACnetObj
 from ..utils import get_file_logger
 
 _LOG = get_file_logger(name=__name__)
 
 if TYPE_CHECKING:
-    from ..devices.base_device import BaseDevice
     from ..gateway import Gateway
-    from ..schemas import BACnetObj
 else:
-    BaseDevice = "BaseDevice"
     Gateway = "Gateway"
-    BACnetObj = "BACnetObj"
 
 
 class BaseView(View):
     """Base class for all endpoints related with devices and their objects."""
 
     @property
-    def gtw(self) -> Gateway:
+    def _gateway(self) -> Gateway:
         """
         Returns:
             Gateway instance.
         """
-        return self.request.app["visiobas_gateway"]
+        return self.request.app["gateway"]
 
-    def get_device(self, device_id: int) -> Optional[BaseDevice]:
+    @property
+    def _scheduler(self) -> aiojobs.Scheduler:
+        """
+        Returns:
+            Scheduler instance.
+        """
+        return self.request.app["scheduler"]
+
+    def _get_device(self, device_id: int) -> BaseDevice:
         """
         Args:
             device_id: Device identifier.
 
         Returns:
             Device instance if exists.
+
+        Raises:
+            Exception: if device not found.
         """
-        return self.gtw.get_device(dev_id=device_id)
+        device = self._gateway.get_device(dev_id=device_id)
+        if isinstance(device, BaseDevice):
+            return device
+        raise Exception(f"Device {device_id} not found.")
+
+    def get_polling_device(self, device_id: int) -> BasePollingDevice:
+        """
+        Args:
+            device_id: Device identifier.
+
+        Returns:
+            Device instance if exists.
+
+        Raises:
+            Exception: if device not subclass of `BasePollingDevice`.
+        """
+        device = self._get_device(device_id=device_id)
+        if isinstance(device, BasePollingDevice):
+            return device
+        raise Exception(
+            f"Device protocol must be polling. "
+            f"Protocol of device {device.id} is {device.protocol}. It's not polling "
+            f"protocol."
+        )
 
     @staticmethod
-    def get_obj(
-        obj_id: int, obj_type_id: int, device: BasePollingDevice
-    ) -> Optional[BACnetObj]:
+    def get_obj(obj_id: int, obj_type_id: int, device: BasePollingDevice) -> BACnetObj:
         """
         Args:
             device: Device instance.
@@ -49,9 +79,16 @@ class BaseView(View):
             obj_id: Object identifier.
 
         Returns:
-            Object instance if exist.
-        """
-        if not isinstance(device, BasePollingDevice):
-            raise ValueError(f"Device type must be polling. Got {type(device)}.")
+            Object instance.
 
-        return device.get_object(obj_id=obj_id, obj_type_id=obj_type_id)
+        Raises:
+            Exception: if object not found.
+        """
+        obj = device.get_object(obj_id=obj_id, obj_type_id=obj_type_id)
+
+        if isinstance(obj, BACnetObj):
+            return obj
+
+        raise Exception(
+            f"Object ({obj_type_id}, {obj_id}) not found in device {device.id}."
+        )

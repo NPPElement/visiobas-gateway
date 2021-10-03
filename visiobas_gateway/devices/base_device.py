@@ -17,12 +17,12 @@ class BaseDevice(ABC):
     def __init__(self, device_obj: DeviceObj, gateway: Gateway):
         self._gtw = gateway
         self._device_obj = device_obj
-        self._LOG = get_file_logger(name="_".join((__name__, str(self.id))))
+        self._LOG = get_file_logger(name="_".join(("device", str(self.id))))
 
     @property
     def id(self) -> int:
         """Device id."""
-        return self._device_obj.id
+        return self._device_obj.object_id
 
     @property
     def protocol(self) -> Protocol:

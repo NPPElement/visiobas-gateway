@@ -7,7 +7,7 @@ from .obj_property import ObjProperty
 class ObjType(int, Enum):
     """Supported BACnet object types.
 
-    Enumerated values 0-127 are reserved for definition by ASHRAE.
+    Enumerated values 0-127 are reserved for definition by `ASHRAE`.
     Enumerated values 128-1023 may be used by others subject to the procedures and
     constraints
     """
@@ -70,10 +70,6 @@ class ObjType(int, Enum):
 
     # TODO: add JSON-input = 250
     # TODO: add JSON-output = 251
-
-    @property
-    def type_id(self) -> int:
-        return self.value
 
 
 ANALOG_TYPES = {

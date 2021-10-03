@@ -20,7 +20,7 @@ class DeviceObj(BaseBACnetObj):
         TcpIpDevicePropertyList,
         SerialDevicePropertyList,
     ] = Field(  # type: ignore
-        ..., alias=str(ObjProperty.PROPERTY_LIST.id)
+        ..., alias=str(ObjProperty.PROPERTY_LIST.value)
     )
 
 

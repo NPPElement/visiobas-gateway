@@ -29,6 +29,7 @@ class BACnetDevice(BasePollingDevice, BACnetCoderMixin):
 
         # self.__objects_per_rpm = 25
         # todo: Should we use one RPM for several objects?
+        # todo: use COV subscribe
 
     @staticmethod
     @lru_cache(maxsize=10)
@@ -120,7 +121,7 @@ class BACnetDevice(BasePollingDevice, BACnetCoderMixin):
 
     async def write(
         self,
-        value: int | float,
+        value: int | float | str,
         obj: BACnetObj,
         wait: bool = False,
         **kwargs: Any,
@@ -132,7 +133,7 @@ class BACnetDevice(BasePollingDevice, BACnetCoderMixin):
 
     @log_exceptions(logger=_LOG)
     def write_property(
-        self, value: int | float, obj: BACnetObj, prop: ObjProperty, priority: int
+        self, value: int | float | str, obj: BACnetObj, prop: ObjProperty, priority: int
     ) -> Optional[bool]:
         """Writes value to property value in object.
 
@@ -152,8 +153,8 @@ class BACnetDevice(BasePollingDevice, BACnetCoderMixin):
 
         args = (
             f"{self._device_obj.property_list.address_port} "
-            f"{camel_case(obj.type.name)} "
-            f"{obj.id} "
+            f"{camel_case(obj.object_type.name)} "
+            f"{obj.object_id} "
             f"{camel_case(prop.name)} "
             f"{value} "
             f"- {priority}"
@@ -176,7 +177,7 @@ class BACnetDevice(BasePollingDevice, BACnetCoderMixin):
         wait: bool = False,
         # prop: ObjProperty
         **kwargs: Any,
-    ) -> Any:
+    ) -> BACnetObj:
         prop = kwargs.get("prop")
 
         if wait:
@@ -190,8 +191,8 @@ class BACnetDevice(BasePollingDevice, BACnetCoderMixin):
         request = " ".join(
             (
                 self._device_obj.property_list.address_port,
-                camel_case(obj.type.name),
-                str(obj.id),
+                camel_case(obj.object_type.name),
+                str(obj.object_id),
                 camel_case(prop.name),
             )
         )
@@ -238,7 +239,7 @@ class BACnetDevice(BasePollingDevice, BACnetCoderMixin):
     #     #     else:
     #     #         raise ReadPropertyMultipleException('Response is None')
 
-    async def simulate_rpm(self, obj: BACnetObj) -> None:
+    async def simulate_rpm(self, obj: BACnetObj) -> BACnetObj:
         for prop in obj.polling_properties:
             try:
                 await self._read(obj=obj, prop=prop)
@@ -246,10 +247,12 @@ class BACnetDevice(BasePollingDevice, BACnetCoderMixin):
                 self._LOG.warning(
                     "Read error", extra={"object": obj, "property": prop, "exception": exc}
                 )
+        return obj
 
-    async def read(self, obj: BACnetObj, wait: bool = False, **kwargs: Any) -> None:
+    async def read(self, obj: BACnetObj, wait: bool = False, **kwargs: Any) -> BACnetObj:
         # if obj.segmentation_supported:# todo: implement RPM or RP
         if wait:
             await self.interface.polling_event.wait()
 
         await self.simulate_rpm(obj=obj)
+        return obj
