@@ -4,9 +4,10 @@ from aiohttp_cors import CorsViewMixin, ResourceOptions  # type: ignore
 from aiohttp_jsonrpc import handler  # type: ignore
 
 from ...devices import BACnetDevice
-from ...schemas import ObjProperty, ObjType, Priority
+from ...schemas import ObjProperty
 from ...utils import get_file_logger, log_exceptions
 from ..base_view import BaseView
+from .schemas import JsonRPCSetPointParams
 
 _LOG = get_file_logger(name=__name__)
 
@@ -38,36 +39,35 @@ class JsonRPCView(handler.JSONRPCView, BaseView, CorsViewMixin):
         """Resets priorityArray value in BACnet device."""
         _LOG.debug("Call params", extra={"args_": args, "kwargs_": kwargs})
 
-        device_id = int(kwargs["device_id"])
-        obj_type = ObjType(int(kwargs["object_type"]))
-        obj_id = int(kwargs["object_id"])
-        priority = Priority(int(kwargs["priority"]))
+        params = JsonRPCSetPointParams(**kwargs)
 
-        device = self.get_polling_device(device_id=device_id)
+        device = self.get_polling_device(device_id=params.device_id)
         if not isinstance(device, BACnetDevice):
             raise Exception(
                 "Only BACnet objects has priorityArray. "
                 "So only BACnet devices can reset priorityArray. "
                 f"This device using {device.protocol} protocol."
             )
-        obj = self.get_obj(device=device, obj_type_id=obj_type.value, obj_id=obj_id)
+        obj = self.get_obj(
+            device=device, obj_type_id=params.object_type.value, obj_id=params.object_id
+        )
         obj = await device.write_with_check(
             value="null",
             prop=ObjProperty.PRESENT_VALUE,
-            priority=priority.value,
+            priority=params.priority.value,
             obj=obj,
             device=device,
         )
-        success = obj.priority_array[priority.value] is None
+        success = obj.priority_array[params.priority.value] is None
         if success:
             return {"success": success}
         return {
             "success": success,
-            'msg': f'Priority not `null`.',
-            'debug': {
-                'priority': priority.value,
-                'priorityArray': obj.priority_array
-            }
+            "msg": "Priority not `null`.",
+            "debug": {
+                "priority": params.priority.value,
+                "priorityArray": obj.priority_array,
+            },
         }
 
     @log_exceptions(logger=_LOG)
@@ -75,36 +75,29 @@ class JsonRPCView(handler.JSONRPCView, BaseView, CorsViewMixin):
         """Writes value to any polling device."""
         _LOG.debug("Call params", extra={"args_": args, "kwargs_": kwargs})
 
-        device_id = int(kwargs["device_id"])
-        obj_type = ObjType(int(kwargs["object_type"]))
-        obj_id = int(kwargs["object_id"])
-        priority = Priority(int(kwargs["priority"]))
-        value = float(kwargs["value"])
-        if value.is_integer():
-            value = int(value)
+        params = JsonRPCSetPointParams(**kwargs)
 
-        device = self.get_polling_device(device_id=device_id)
-        obj = self.get_obj(device=device, obj_type_id=obj_type.value, obj_id=obj_id)
+        device = self.get_polling_device(device_id=params.device_id)
+        obj = self.get_obj(
+            device=device, obj_type_id=params.object_type.value, obj_id=params.object_id
+        )
         obj = await device.write_with_check(
-            value=value,
+            value=params.value,
             prop=ObjProperty.PRESENT_VALUE,
-            priority=priority.value,
+            priority=params.priority.value,
             obj=obj,
             device=device,
         )
         await self._scheduler.spawn(self._gateway.send_objects(objs=[obj]))
 
-        success = value == obj.present_value
+        success = params.value == obj.present_value
 
         if success:
             return {"success": success}
         return {
             "success": success,
             "msg": "The written value does not match the read.",
-            'debug': {
-                'written_value': value,
-                'read_value': obj.present_value
-            }
+            "debug": {"written_value": params.value, "read_value": obj.present_value},
         }
 
     # async def rpc_ptz(self, *args: Any, **kwargs: Any) -> dict:

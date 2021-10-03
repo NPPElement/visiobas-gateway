@@ -95,10 +95,10 @@ class BACnetVerifier:
 
     @staticmethod
     def type_check(obj: BACnetObj) -> BACnetObj:
-        if obj.type in BINARY_TYPES:
+        if obj.object_type in BINARY_TYPES:
             if obj.present_value not in {1, 0}:
                 obj.reliability = "bad_binary_value"
-        if obj.type in MULTI_STATE_TYPES:
+        if obj.object_type in MULTI_STATE_TYPES:
             if not 0 <= obj.present_value <= 10:
                 obj.reliability = "bad_multistate_value"
 
@@ -138,7 +138,7 @@ class BACnetVerifier:
                 return obj
 
         if isinstance(value, (int, float)):
-            if obj.type in ANALOG_TYPES:
+            if obj.object_type in ANALOG_TYPES:
                 value = round_with_resolution(value=value, resolution=obj.resolution)
             if isinstance(value, float) and value.is_integer():
                 value = int(value)

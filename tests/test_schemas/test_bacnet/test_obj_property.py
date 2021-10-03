@@ -48,7 +48,7 @@ class TestObjProperty:
         ],
     )
     def test_type_id_happy(self, id_):
-        assert ObjProperty(id_).id == id_
+        assert ObjProperty(id_).value == id_
 
     @pytest.mark.parametrize(
         "id_",

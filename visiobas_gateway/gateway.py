@@ -271,11 +271,11 @@ class Gateway:
     ) -> dict[float, dict[tuple[int, int], BACnetObj]]:
         # todo: use for extractions tasks asyncio.as_completed(tasks):
         objs_data = await self.http_client.get_objects(
-            dev_id=device_obj.id, obj_types=POLLING_TYPES
+            dev_id=device_obj.object_id, obj_types=POLLING_TYPES
         )
         _LOG.debug(
             "Polling objects downloaded",
-            extra={"device_id": device_obj.id},
+            extra={"device_id": device_obj.object_id},
         )
 
         extract_tasks = [
@@ -287,7 +287,7 @@ class Gateway:
         objs = [obj for lst in objs_lists for obj in lst if obj]  # Flat list of lists.
         _LOG.debug(
             "Polling objects created",
-            extra={"device_id": device_obj.id, "objects_count": len(objs)},
+            extra={"device_id": device_obj.object_id, "objects_count": len(objs)},
         )
 
         if not objs:

@@ -13,6 +13,7 @@ from visiobas_gateway.schemas.modbus.modbus_properties import ModbusProperties
 
 from visiobas_gateway.schemas.bacnet.device_obj import DeviceObj
 from visiobas_gateway.schemas.bacnet.obj import BACnetObj
+from visiobas_gateway.api.jsonrpc.schemas import JsonRPCSetPointParams
 
 import pytest
 
@@ -195,6 +196,22 @@ def bacnet_obj_factory() -> Callable[..., BACnetObj]:
     return _factory
 
 
+@pytest.fixture
+def json_rpc_set_point_params_factory() -> Callable[..., JsonRPCSetPointParams]:
+    """
+    Produces `JsonRPCSetPointParams` for tests.
+
+    You can pass the same params into this as the `JsonRPCSetPointParams` constructor to
+    override defaults.
+    """
+
+    def _factory(**kwargs):
+        kwargs = _jsonrpc_set_point_params(kwargs)
+        return JsonRPCSetPointParams(**kwargs)
+
+    return _factory
+
+
 def _base_bacnet_obj_kwargs(kwargs: dict[str, Any]) -> dict[str, Any]:
     kwargs = {
         "75": 75,
@@ -340,6 +357,21 @@ def _bacnet_obj_kwargs(kwargs: dict[str, Any]) -> dict[str, Any]:
         "111": [False, False, False, False],
         "85": 85.8585,
         "timestamp": "2011-11-11 11:11:11",
+        **kwargs,
+    }
+    return kwargs
+
+
+def _jsonrpc_set_point_params(kwargs: dict[str, Any]) -> dict[str, Any]:
+    kwargs = {
+        "device_id": "846",
+        "object_type": "1",
+        "object_id": "75",
+        "property": "85",
+        "priority": "8",
+        "index": "-1",
+        "tag": "9",
+        "value": "22.22",
         **kwargs,
     }
     return kwargs

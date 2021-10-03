@@ -22,7 +22,7 @@ class BaseDevice(ABC):
     @property
     def id(self) -> int:
         """Device id."""
-        return self._device_obj.id
+        return self._device_obj.object_id
 
     @property
     def protocol(self) -> Protocol:

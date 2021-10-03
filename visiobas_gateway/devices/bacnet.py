@@ -153,8 +153,8 @@ class BACnetDevice(BasePollingDevice, BACnetCoderMixin):
 
         args = (
             f"{self._device_obj.property_list.address_port} "
-            f"{camel_case(obj.type.name)} "
-            f"{obj.id} "
+            f"{camel_case(obj.object_type.name)} "
+            f"{obj.object_id} "
             f"{camel_case(prop.name)} "
             f"{value} "
             f"- {priority}"
@@ -191,8 +191,8 @@ class BACnetDevice(BasePollingDevice, BACnetCoderMixin):
         request = " ".join(
             (
                 self._device_obj.property_list.address_port,
-                camel_case(obj.type.name),
-                str(obj.id),
+                camel_case(obj.object_type.name),
+                str(obj.object_id),
                 camel_case(prop.name),
             )
         )

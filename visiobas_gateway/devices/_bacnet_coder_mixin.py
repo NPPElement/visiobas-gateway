@@ -16,7 +16,7 @@ class BACnetCoderMixin:
 
     @staticmethod
     def _is_binary_obj(obj: BACnetObj) -> bool:
-        return obj.type in BINARY_TYPES
+        return obj.object_type in BINARY_TYPES
 
     @staticmethod
     def _encode_binary_present_value(value: int | float) -> str:

@@ -71,10 +71,6 @@ class ObjType(int, Enum):
     # TODO: add JSON-input = 250
     # TODO: add JSON-output = 251
 
-    @property
-    def type_id(self) -> int:
-        return self.value
-
 
 ANALOG_TYPES = {
     ObjType.ANALOG_INPUT,

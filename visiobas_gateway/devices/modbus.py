@@ -171,8 +171,8 @@ class ModbusDevice(BasePollingDevice, ModbusCoderMixin):
             "Successfully write",
             extra={
                 "device_id": self.id,
-                "object_id": obj.id,
-                "object_type": obj.type,
+                "object_id": obj.object_id,
+                "object_type": obj.object_type,
                 "address": obj.address,
                 "value": value,
             },
