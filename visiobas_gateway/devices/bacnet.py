@@ -133,7 +133,7 @@ class BACnetDevice(BasePollingDevice, BACnetCoderMixin):
 
     @log_exceptions(logger=_LOG)
     def write_property(
-        self, value: int | float, obj: BACnetObj, prop: ObjProperty, priority: int
+        self, value: int | float | str, obj: BACnetObj, prop: ObjProperty, priority: int
     ) -> Optional[bool]:
         """Writes value to property value in object.
 
