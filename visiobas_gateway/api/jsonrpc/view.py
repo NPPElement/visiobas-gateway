@@ -59,7 +59,9 @@ class JsonRPCView(handler.JSONRPCView, BaseView, CorsViewMixin):
             obj=obj,
             device=device,
         )
-        success = obj.priority_array[params.priority.value + 1] is None
+        await self._scheduler.spawn(self._gateway.send_objects(objs=[obj]))
+
+        success = obj.priority_array[params.priority.value - 1] is None
         if success:
             return {"success": success}
         return {

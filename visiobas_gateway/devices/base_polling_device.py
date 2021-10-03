@@ -131,6 +131,7 @@ class BasePollingDevice(BaseDevice, ABC):
     ) -> None:
         """You should implement async write method for your device."""
 
+    @log_exceptions(logger=_LOG)
     async def write_with_check(
         self, value: int | float | str, obj: BACnetObj, **kwargs: Any
     ) -> BACnetObj:
