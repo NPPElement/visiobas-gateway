@@ -49,7 +49,9 @@ class HTTPServerConfig(BaseModel):
     @property
     def auth_headers(self) -> dict[str, str]:
         if self.auth_data:
-            return {"Authorization": f"Bearer {self.auth_data.bearer_token}"}
+            return {
+                "Authorization": f"Bearer {self.auth_data.bearer_token.get_secret_value()}"
+            }
         return {}
 
     # def __str__(self) -> str:
