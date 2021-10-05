@@ -1,4 +1,5 @@
 import socket
+from functools import lru_cache
 from ipaddress import IPv4Address, IPv4Interface
 from typing import Optional
 
@@ -14,6 +15,7 @@ except ImportError:
 _LOG = get_file_logger(__name__)
 
 
+@lru_cache(maxsize=10)
 def get_subnet_interface(ip: IPv4Address) -> Optional[IPv4Interface]:
     """
     Args:
