@@ -19,6 +19,12 @@ class BaseDevice(ABC):
         self._device_obj = device_obj
         self._LOG = get_file_logger(name="_".join(("device", str(self.id))))
 
+    def __repr__(self) -> str:
+        return (
+            f"{self.__class__.__name__}[{self._device_obj.device_id}, "
+            f"{self._device_obj.property_list.protocol}]"
+        )
+
     @property
     def id(self) -> int:
         """Device id."""
