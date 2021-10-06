@@ -50,10 +50,7 @@ class BACnetVerifier:
         import asyncio
 
         try:
-            from BAC0.core.io.IOExceptions import (  # type: ignore
-                NoResponseFromController,
-                UnknownObjectError,
-            )
+            from BAC0.core.io.IOExceptions import UnknownObjectError  # type: ignore
         except ImportError as import_exc:
             raise NotImplementedError from import_exc
 
@@ -67,7 +64,7 @@ class BACnetVerifier:
         if isinstance(exc, (asyncio.TimeoutError, asyncio.CancelledError)):
             obj.reliability = "timeout"
             return obj
-        if isinstance(exc, (UnknownObjectError, NoResponseFromController)):
+        if isinstance(exc, UnknownObjectError):
             obj.existing = False
             obj.reliability = Reliability.NO_SENSOR
             return obj
