@@ -203,11 +203,7 @@ class BACnetDevice(BasePollingDevice, BACnetCoderMixin):
 
         self._LOG.debug(
             "Read",
-            extra={
-                "device_id": self.id,
-                "object": obj,
-                "response": response,
-            },
+            extra={"device_id": self.id, "object": obj, "response": response},
         )
         obj.set_property(value=response, prop=prop)
         return obj
