@@ -78,7 +78,7 @@ class BasePollingDevice(BaseDevice, ABC):
 
         device._LOG.debug(
             "Device created",
-            extra={"device": device, "interface_state": cls._interfaces.items()},
+            extra={"device": device, "used_interfaces": cls._interfaces.items()},
         )
         return device
 
@@ -185,14 +185,13 @@ class BasePollingDevice(BaseDevice, ABC):
                 await self._scheduler.spawn(
                     self.periodic_poll(objs=objs_group.values(), period=period)
                 )
-            await self._scheduler.spawn(self._periodic_reset_unreachable())
+            await self._scheduler.spawn(
+                self._periodic_reset_unreachable(self.object_groups)
+            )
         else:
             self._LOG.info(
                 "Client is not connected. Sleeping to next try",
-                extra={
-                    "device_id": self.id,
-                    "seconds_to_next_try": self.reconnect_period,
-                },
+                extra={"device_id": self.id, "seconds_to_next_try": self.reconnect_period},
             )
             await asyncio.sleep(delay=self.reconnect_period)
             await self._gtw.async_add_job(self.create_client, self._device_obj)
@@ -205,27 +204,21 @@ class BasePollingDevice(BaseDevice, ABC):
         self.interface.polling_event.clear()
         await self._scheduler.close()
         await self.disconnect_client()
-        self._LOG.info(
-            "Device stopped",
-            extra={
-                "device_id": self.id,
-            },
-        )
+        self._LOG.info("Device stopped", extra={"device_id": self.id})
 
-    async def _periodic_reset_unreachable(self) -> None:
+    async def _periodic_reset_unreachable(
+        self, object_groups: dict[float, dict[tuple[int, int], BACnetObj]]
+    ) -> None:
         await asyncio.sleep(self._gtw.settings.unreachable_reset_period)
 
-        for objs_group in self.object_groups.values():
+        for objs_group in object_groups.values():
             for obj in objs_group.values():
                 obj.unreachable_in_row = 0
 
-        self._LOG.debug(
-            "Reset unreachable objects",
-            extra={
-                "device_id": self.id,
-            },
+        self._LOG.debug("Reset unreachable objects", extra={"device_id": self.id})
+        await self._scheduler.spawn(
+            self._periodic_reset_unreachable(object_groups=object_groups)
         )
-        await self._scheduler.spawn(self._periodic_reset_unreachable())
 
     async def periodic_poll(
         self,
