@@ -4,7 +4,7 @@ import asyncio
 from abc import ABC, abstractmethod
 from datetime import datetime
 from functools import lru_cache
-from typing import TYPE_CHECKING, Any, Collection, Optional
+from typing import TYPE_CHECKING, Any, Collection
 
 import aiojobs  # type: ignore
 
@@ -33,7 +33,6 @@ class BasePollingDevice(BaseDevice, ABC):
 
         # Key: period
         self.object_groups: dict[float, dict[tuple[int, int], BACnetObj]] = {}
-        # self._objects: dict[float, set[BACnetObj]] = {}
 
     @staticmethod
     @abstractmethod
@@ -79,12 +78,7 @@ class BasePollingDevice(BaseDevice, ABC):
 
         device._LOG.debug(
             "Device created",
-            extra={
-                "device_id": device.id,
-                "protocol": device.protocol,
-                "device_interface": device.interface,
-                "interface_state": cls._interfaces.items(),
-            },
+            extra={"device": device, "interface_state": cls._interfaces.items()},
         )
         return device
 
@@ -159,7 +153,7 @@ class BasePollingDevice(BaseDevice, ABC):
         return verified_obj
 
     @lru_cache(maxsize=10)
-    def get_object(self, obj_id: int, obj_type_id: int) -> Optional[BACnetObj]:
+    def get_object(self, obj_id: int, obj_type_id: int) -> BACnetObj | None:
         """Cache last 10 object instances.
         Args:
             obj_id: Object identifier.
@@ -251,7 +245,7 @@ class BasePollingDevice(BaseDevice, ABC):
             extra={
                 "device_id": self.id,
                 "seconds_took": _t_delta.seconds,
-                "objects_number": len(objs),
+                "objects_quantity": len(objs),
                 "period": period,
             },
         )
@@ -259,6 +253,9 @@ class BasePollingDevice(BaseDevice, ABC):
         if _t_delta.seconds > period:
             self._LOG.warning("Polling period is too short!", extra={"device_id": self.id})
         verified_objs = await self._after_polling_tasks(objs=objs)
+        self.object_groups[period] = {
+            (obj.object_id, obj.object_type.value): obj for obj in verified_objs
+        }
         await asyncio.sleep(delay=period - _t_delta.seconds)
 
         # self._LOG.debug(f'Periodic polling task created',
