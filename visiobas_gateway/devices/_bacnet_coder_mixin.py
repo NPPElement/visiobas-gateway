@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import Optional
-
 from bacpypes.basetypes import PriorityArray  # type: ignore
 
 from ..schemas import BACnetObj
@@ -29,7 +27,7 @@ class BACnetCoderMixin:
     #         return resp
 
     @staticmethod
-    def _decode_priority_array(priority_array: PriorityArray) -> list[Optional[float]]:
+    def _decode_priority_array(priority_array: PriorityArray) -> list[float | None]:
         """Converts `bacpypes.PriorityArray` to list."""
         priority_array = [
             v[0] if k[0] != "null" else None

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from functools import lru_cache
-from typing import TYPE_CHECKING, Any, Optional
+from typing import TYPE_CHECKING, Any
 
 from BAC0.scripts.Lite import Lite  # type: ignore
 
@@ -33,7 +33,7 @@ class BACnetDevice(BasePollingDevice, BACnetCoderMixin):
 
     @staticmethod
     @lru_cache(maxsize=10)
-    def interface_name(device_obj: DeviceObj) -> Optional[str]:
+    def interface_name(device_obj: DeviceObj) -> str | None:
         assert isinstance(device_obj.property_list, TcpIpDevicePropertyList)
 
         ip_address = device_obj.property_list.address
@@ -134,7 +134,7 @@ class BACnetDevice(BasePollingDevice, BACnetCoderMixin):
     @log_exceptions(logger=_LOG)
     def write_property(
         self, value: int | float | str, obj: BACnetObj, prop: ObjProperty, priority: int
-    ) -> Optional[bool]:
+    ) -> bool | None:
         """Writes value to property value in object.
 
         Args:
@@ -202,8 +202,7 @@ class BACnetDevice(BasePollingDevice, BACnetCoderMixin):
             response = self._decode_priority_array(priority_array=response)
 
         self._LOG.debug(
-            "Read",
-            extra={"device_id": self.id, "object": obj, "response": response},
+            "Read", extra={"device_id": self.id, "object": obj, "response": response}
         )
         obj.set_property(value=response, prop=prop)
         return obj

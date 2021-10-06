@@ -167,19 +167,4 @@ class ModbusDevice(BasePollingDevice, ModbusCoderMixin):
         )
         if request.isError():
             raise ModbusIOException("0x80")  # todo: resp.string
-        self._LOG.debug(
-            "Successfully write",
-            extra={
-                "device_id": self.id,
-                "object_id": obj.object_id,
-                "object_type": obj.object_type,
-                "address": obj.address,
-                "value": value,
-            },
-        )
-
-    # async def _poll_objects(self, objs: Collection[BACnetObj]) -> None:
-    #
-    #     for obj in objs:
-    #         if obj.existing:
-    #             await self.read(obj=obj)
+        self._LOG.debug("Successfully write", extra={"object": obj, "value": value})

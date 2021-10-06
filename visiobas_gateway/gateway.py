@@ -237,10 +237,7 @@ class Gateway:
         ):
             _LOG.warning(
                 "Empty device object or exception",
-                extra={
-                    "device_id": device_id,
-                    "data": device_obj_data,
-                },
+                extra={"device_id": device_id, "data": device_obj_data},
             )
             return None
 
@@ -258,12 +255,7 @@ class Gateway:
             device.object_groups = groups
 
         self._devices.update({device.id: device})
-        _LOG.info(
-            "Device loaded",
-            extra={
-                "device": device,
-            },
-        )
+        _LOG.info("Device loaded", extra={"device": device})
         return device
 
     async def download_objects(
@@ -273,10 +265,7 @@ class Gateway:
         objs_data = await self.http_client.get_objects(
             dev_id=device_obj.object_id, obj_types=POLLING_TYPES
         )
-        _LOG.debug(
-            "Polling objects downloaded",
-            extra={"device_id": device_obj.object_id},
-        )
+        _LOG.debug("Polling objects downloaded", extra={"device_id": device_obj.object_id})
 
         extract_tasks = [
             self.async_add_job(self._extract_objects, obj_data, device_obj)
