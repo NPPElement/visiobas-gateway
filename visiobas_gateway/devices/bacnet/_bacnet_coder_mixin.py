@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from bacpypes.basetypes import PriorityArray  # type: ignore
 
-from ..schemas import BACnetObj
-from ..schemas.bacnet.obj_type import BINARY_TYPES
-from ..utils import get_file_logger
+from ...schemas import BACnetObj
+from ...schemas.bacnet.obj_type import BINARY_TYPES
+from ...utils import get_file_logger
 
 _LOG = get_file_logger(name=__name__)
 

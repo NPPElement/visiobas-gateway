@@ -12,8 +12,8 @@ from pymodbus.register_read_message import (  # type: ignore
     ReadRegistersResponseBase,
 )
 
-from ..schemas import ModbusDataType, ModbusObj
-from ..utils import get_file_logger
+from ...schemas import ModbusDataType, ModbusObj
+from ...utils import get_file_logger
 
 _LOG = get_file_logger(name=__name__)
 
