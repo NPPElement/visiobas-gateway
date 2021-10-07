@@ -107,13 +107,19 @@ class BasePollingDevice(BaseDevice, ABC):
     def is_client_connected(self) -> bool:
         raise NotImplementedError
 
-    async def _poll_objects(self, objs: Collection[BACnetObj]) -> None:
+    async def _poll_objects(
+        self, objs: Collection[BACnetObj], unreachable_threshold: int
+    ) -> list[BACnetObj]:
+        polled_obj = []
+
         for obj in objs:
             if not obj.existing:
                 continue
-            if obj.unreachable_in_row >= self._gtw.settings.unreachable_threshold:
+            if obj.unreachable_in_row >= unreachable_threshold:
                 continue
-            await self.read(obj=obj)
+            obj = await self.read(obj=obj)
+            polled_obj.append(obj)
+        return polled_obj
 
     @abstractmethod
     async def read(self, obj: BACnetObj, wait: bool = False, **kwargs: Any) -> BACnetObj:
@@ -142,10 +148,10 @@ class BasePollingDevice(BaseDevice, ABC):
         """
         self.interface.polling_event.clear()
         await self.write(value=value, obj=obj, **kwargs)
-        obj = await self.read(obj=obj, wait=False, **kwargs)
+        polled_obj = await self.read(obj=obj, wait=False, **kwargs)
         self.interface.polling_event.set()
 
-        verified_obj = self._gtw.verifier.verify(obj=obj)
+        verified_obj = self._gtw.verifier.verify(obj=polled_obj)
         self._LOG.debug(
             "Write with check called",
             extra={"object": verified_obj, "value_write": value},
@@ -231,7 +237,9 @@ class BasePollingDevice(BaseDevice, ABC):
             extra={"device_id": self.id, "period": period, "objects_number": len(objs)},
         )
         _t0 = datetime.now()
-        await self._poll_objects(objs=objs)
+        polled_objs = await self._poll_objects(
+            objs=objs, unreachable_threshold=self._gtw.settings.unreachable_threshold
+        )
         _t_delta = datetime.now() - _t0
 
         self._LOG.info(
@@ -239,17 +247,14 @@ class BasePollingDevice(BaseDevice, ABC):
             extra={
                 "device_id": self.id,
                 "seconds_took": _t_delta.seconds,
-                "objects_quantity": len(objs),
+                "objects_quantity": len(polled_objs),
                 "period": period,
             },
         )
 
         if _t_delta.seconds > period:
             self._LOG.warning("Polling period is too short!", extra={"device_id": self.id})
-        verified_objs = await self._after_polling_tasks(objs=objs)
-        # self.object_groups[period] = {
-        #     (obj.object_id, obj.object_type.value): obj for obj in verified_objs
-        # }
+        verified_objs = await self._after_polling_tasks(objs=polled_objs)
         await asyncio.sleep(delay=period - _t_delta.seconds)
         await self._scheduler.spawn(self.periodic_poll(objs=verified_objs, period=period))
 

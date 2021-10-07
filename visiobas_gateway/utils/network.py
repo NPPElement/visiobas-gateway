@@ -38,10 +38,6 @@ def get_subnet_interface(ip: IPv4Address) -> IPv4Interface | None:
 
     for nic in interfaces:
         addresses = netifaces.ifaddresses(nic)
-        _LOG.debug(
-            "Addresses for NIC available",
-            extra={"nic": nic, "addresses": addresses[netifaces.AF_INET], "ip": ip},
-        )
         try:
             for address in addresses[netifaces.AF_INET]:
                 interface = IPv4Interface(
@@ -50,10 +46,14 @@ def get_subnet_interface(ip: IPv4Address) -> IPv4Interface | None:
                 network = interface.network
 
                 if ip in network:
+                    _LOG.debug(
+                        "Target IP is available via interface",
+                        extra={"target_ip": ip, "interface": interface, "nic": nic},
+                    )
                     return interface
                 _LOG.debug(
-                    "IP not available via interface",
-                    extra={"ip": ip, "interface": interface},
+                    "Target IP is not available via interface",
+                    extra={"target_ip": ip, "interface": interface, "nic": nic},
                 )
         except KeyError:
             pass

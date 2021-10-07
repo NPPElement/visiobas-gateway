@@ -159,30 +159,28 @@ class BACnetDevice(BasePollingDevice, BACnetCoderMixin):
             f"{value} "
             f"- {priority}"
         )
-        is_successful = self.interface.client.write(args=args)
+        success = self.interface.client.write(args=args)
         self._LOG.debug(
             "Write",
-            extra={
-                "device_id": self.id,
-                "object": obj,
-                "value": value,
-                "success": is_successful,
-            },
+            extra={"device_id": self.id, "object": obj, "value": value, "success": success},
         )
-        return is_successful
+        return success
 
     async def _read(
         self,
         obj: BACnetObj,
+        prop: ObjProperty,
         wait: bool = False,
-        # prop: ObjProperty
-        **kwargs: Any,
     ) -> BACnetObj:
-        prop = kwargs.get("prop")
+        # prop = kwargs.get("prop")
+        if not isinstance(prop, ObjProperty):
+            raise ValueError(f"`prop` must be `ObjProperty` instance. Got {type(prop)}")
 
         if wait:
             await self.interface.polling_event.wait()
-        return await self._gtw.async_add_job(self.read_property, obj, prop)
+        polled_obj = self.read_property(obj=obj, prop=prop)
+        return polled_obj
+        # return await self._gtw.async_add_job(self.read_property, obj, prop)
 
     # @log_exceptions
     def read_property(self, obj: BACnetObj, prop: ObjProperty) -> BACnetObj:
@@ -237,7 +235,7 @@ class BACnetDevice(BasePollingDevice, BACnetCoderMixin):
     async def simulate_rpm(self, obj: BACnetObj) -> BACnetObj:
         for prop in obj.polling_properties:
             try:
-                await self._read(obj=obj, prop=prop)
+                obj = await self._read(obj=obj, prop=prop)
             except Exception as exc:  # pylint: disable=broad-except
                 self._LOG.warning(
                     "Read error", extra={"object": obj, "property": prop, "exception": exc}
@@ -245,9 +243,8 @@ class BACnetDevice(BasePollingDevice, BACnetCoderMixin):
         return obj
 
     async def read(self, obj: BACnetObj, wait: bool = False, **kwargs: Any) -> BACnetObj:
-        # if obj.segmentation_supported:# todo: implement RPM or RP
         if wait:
             await self.interface.polling_event.wait()
-
-        await self.simulate_rpm(obj=obj)
-        return obj
+        # if obj.segmentation_supported:# todo: implement RPM or RP
+        polled_obj = await self.simulate_rpm(obj=obj)
+        return polled_obj
