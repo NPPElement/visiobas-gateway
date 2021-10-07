@@ -114,9 +114,13 @@ class ModbusDevice(BasePollingDevice, ModbusCoderMixin):
         }
 
     async def read(self, obj: BACnetObj, wait: bool = False, **kwargs: Any) -> BACnetObj:
+        if not isinstance(obj, ModbusObj):
+            raise ValueError(f"`obj` must be `ModbusObj`. Got {type(obj)}")
         if wait:
             await self.interface.polling_event.wait()
-        return await self._gtw.async_add_job(self.sync_read, obj)
+        polled_obj = self.sync_read(obj=obj)
+        return polled_obj
+        # return await self._gtw.async_add_job(self.sync_read, obj)
 
     @log_exceptions(logger=_LOG)
     def sync_read(self, obj: ModbusObj) -> ModbusObj:
@@ -139,7 +143,10 @@ class ModbusDevice(BasePollingDevice, ModbusCoderMixin):
     async def write(
         self, value: int | float | str, obj: BACnetObj, wait: bool = False, **kwargs: Any
     ) -> None:
-        await self._gtw.async_add_job(self.sync_write, value, obj)
+        if not isinstance(obj, ModbusObj):
+            raise ValueError(f"`obj` must be `ModbusObj`. Got {type(obj)}")
+        self.sync_write(value=value, obj=obj)
+        # await self._gtw.async_add_job(self.sync_write, value, obj)
 
     def sync_write(self, value: int | float | str, obj: ModbusObj) -> None:
         """Write value to Modbus object.
@@ -151,7 +158,7 @@ class ModbusDevice(BasePollingDevice, ModbusCoderMixin):
         if obj.func_write is None:
             raise ModbusException("Object cannot be overwritten")
         if isinstance(value, str):
-            raise NotImplementedError('Modbus expected numbers to write. Got "str".')
+            raise NotImplementedError("Modbus expected numbers to write. Got `str`.")
 
         payload = self._build_payload(value=value, obj=obj)
 
