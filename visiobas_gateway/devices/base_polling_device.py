@@ -220,6 +220,7 @@ class BasePollingDevice(BaseDevice, ABC):
             self._periodic_reset_unreachable(object_groups=object_groups)
         )
 
+    @log_exceptions(logger=_LOG)
     async def periodic_poll(
         self,
         objs: Collection[BACnetObj],
