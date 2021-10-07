@@ -49,7 +49,7 @@ class Gateway:
         self._upd_task: asyncio.Task | None = None
 
         self._scheduler: aiojobs.Scheduler = None  # type: ignore
-        self.http_client: HTTPClient = None  # type: ignore
+        self.http_client: HTTPClient | None = None
 
         self._mqtt_settings = MQTTSettings()
         self.mqtt_client: MQTTClient | None = None
@@ -103,7 +103,6 @@ class Gateway:
 
         self.api = await ApiServer.create(gateway=self, settings=ApiSettings())
         await self._scheduler.spawn(self.api.start())
-
         await self._scheduler.spawn(coro=self.periodic_update())
 
     async def periodic_update(self) -> None:
@@ -159,7 +158,8 @@ class Gateway:
         """Performs starting tasks."""
 
         # 0. HTTP startup tasks.
-        await self.http_client.startup_tasks()
+        if isinstance(self.http_client, HTTPClient):
+            await self.http_client.startup_tasks()
 
         # 1. Load devices tasks.
         load_device_tasks = [
@@ -177,12 +177,7 @@ class Gateway:
         # if self._is_mqtt_enabled:
         # TODO: subscribe
 
-        _LOG.info(
-            "Start tasks performed",
-            extra={
-                "gateway_settings": self.settings,
-            },
-        )
+        _LOG.info("Start tasks performed", extra={"gateway_settings": self.settings})
 
     async def _shutdown_tasks(self) -> None:
         """Performs stopping tasks."""
@@ -204,7 +199,9 @@ class Gateway:
         # 2. todo: save devices config local
 
         # 3. HTTP shutdown tasks.
-        await self.http_client.shutdown_tasks()
+        if isinstance(self.http_client, HTTPClient):
+            await self.http_client.shutdown_tasks()
+
         _LOG.info("Stop tasks performed")
 
     @log_exceptions(logger=_LOG)
@@ -216,6 +213,9 @@ class Gateway:
 
         # TODO: If fails get objects from server - loads it from local.
         """
+        if not isinstance(self.http_client, HTTPClient):
+            raise NotImplementedError
+
         device_obj_data = await self.http_client.get_objects(
             dev_id=device_id, obj_types=(ObjType.DEVICE,)
         )
@@ -253,6 +253,9 @@ class Gateway:
         self, device_obj: DeviceObj
     ) -> dict[float, dict[tuple[int, int], BACnetObj]]:
         # todo: use for extractions tasks asyncio.as_completed(tasks):
+        if not isinstance(self.http_client, HTTPClient):
+            raise NotImplementedError
+
         objs_data = await self.http_client.get_objects(
             dev_id=device_obj.object_id, obj_types=POLLING_TYPES
         )
