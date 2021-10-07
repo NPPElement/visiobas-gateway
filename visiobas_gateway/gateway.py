@@ -122,7 +122,7 @@ class Gateway:
             args: parameters for target to call.
         """
         if target is None:
-            raise ValueError("None not allowed")
+            raise ValueError("`None` not allowed")
         self.loop.call_soon_threadsafe(self.async_add_job, target, *args)
 
     def async_add_job(self, target: Callable, *args: Any) -> Awaitable | asyncio.Task:
@@ -168,10 +168,11 @@ class Gateway:
         ]
 
         # 2. Start devices polling.
-        for dev in asyncio.as_completed(load_device_tasks, timeout=60):
-            dev = await dev
-            if isinstance(dev, BasePollingDevice):
-                await dev.start_periodic_polls()
+        for ready_device in asyncio.as_completed(load_device_tasks, timeout=30):
+            ready_device = await ready_device
+            if isinstance(ready_device, BasePollingDevice):
+                await ready_device.start_periodic_polls()
+            _LOG.warning("Device not started", extra={"device": ready_device})
 
         # 3. MQTT startup tasks
         # if self._is_mqtt_enabled:
@@ -221,6 +222,7 @@ class Gateway:
         )
         _LOG.debug("Device object downloaded", extra={"device_id": device_id})
 
+        # todo: refactor
         if (
             not isinstance(device_obj_data, list)
             or not isinstance(device_obj_data[0], list)
@@ -230,16 +232,16 @@ class Gateway:
                 "Empty device object or exception",
                 extra={"device_id": device_id, "data": device_obj_data},
             )
-            return None
+            raise ValueError("Device data not loaded.")
 
         # objs in the list, so get [0] element in `dev_obj_data[0]` below
         # request one type - 'device', so [0] element of tuple below
         # todo: refactor
-        device_obj = await self.async_add_job(self._parse_device_obj, device_obj_data[0][0])
+        device_obj = self._parse_device_obj(data=device_obj_data[0][0])
         device = await self.device_factory(dev_obj=device_obj)
 
         if not device:
-            return None
+            raise ValueError("Device not constructed.")
 
         if device.protocol in POLLING_PROTOCOLS:
             groups = await self.download_objects(device_obj=device_obj)
@@ -261,6 +263,7 @@ class Gateway:
         )
         _LOG.debug("Polling objects downloaded", extra={"device_id": device_obj.object_id})
 
+        # todo: refactor!
         extract_tasks = [
             self.async_add_job(self._extract_objects, obj_data, device_obj)
             for obj_data in objs_data
@@ -274,7 +277,7 @@ class Gateway:
         )
 
         if not objs:
-            raise ValueError("There aren't polling objects")
+            raise ValueError("Polling objects not loaded")
 
         groups = group_by_period(objs=objs)
         return groups
