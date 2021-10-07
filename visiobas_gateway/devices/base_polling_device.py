@@ -246,16 +246,10 @@ class BasePollingDevice(BaseDevice, ABC):
         if _t_delta.seconds > period:
             self._LOG.warning("Polling period is too short!", extra={"device_id": self.id})
         verified_objs = await self._after_polling_tasks(objs=objs)
-        self.object_groups[period] = {
-            (obj.object_id, obj.object_type.value): obj for obj in verified_objs
-        }
+        # self.object_groups[period] = {
+        #     (obj.object_id, obj.object_type.value): obj for obj in verified_objs
+        # }
         await asyncio.sleep(delay=period - _t_delta.seconds)
-
-        # self._LOG.debug(f'Periodic polling task created',
-        #                 extra={'device_id': self.id, 'period': period,
-        #                        'jobs_active_count': self.scheduler.active_count,
-        #                        'jobs_pending_count': self.scheduler.pending_count, })
-
         await self._scheduler.spawn(self.periodic_poll(objs=verified_objs, period=period))
 
     async def _after_polling_tasks(self, objs: Collection[BACnetObj]) -> list[BACnetObj]:
