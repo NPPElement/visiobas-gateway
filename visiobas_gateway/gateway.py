@@ -1,16 +1,7 @@
 from __future__ import annotations
 
 import asyncio
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Awaitable,
-    Callable,
-    Collection,
-    Optional,
-    Type,
-    Union,
-)
+from typing import TYPE_CHECKING, Any, Awaitable, Callable, Collection, Type, Union
 
 import aiohttp
 import aiojobs  # type: ignore
@@ -54,15 +45,15 @@ class Gateway:
 
         self.settings = settings
 
-        self._stopped: Optional[asyncio.Event] = None
-        self._upd_task: Optional[asyncio.Task] = None
+        self._stopped: asyncio.Event | None = None
+        self._upd_task: asyncio.Task | None = None
 
         self._scheduler: aiojobs.Scheduler = None  # type: ignore
         self.http_client: HTTPClient = None  # type: ignore
 
         self._mqtt_settings = MQTTSettings()
-        self.mqtt_client: Optional[MQTTClient] = None
-        self.api: Optional[ApiServer] = None
+        self.mqtt_client: MQTTClient | None = None
+        self.api: ApiServer | None = None
         self.verifier = BACnetVerifier(override_threshold=settings.override_threshold)
 
         self._devices: dict[int, Any] = {}
@@ -75,7 +66,7 @@ class Gateway:
         gateway._scheduler = await aiojobs.create_scheduler(close_timeout=60, limit=100)
         return gateway
 
-    def get_device(self, dev_id: int) -> Optional[BaseDevice]:
+    def get_device(self, dev_id: int) -> BaseDevice | None:
         """
         Args:
             dev_id: Device identifier.
@@ -135,7 +126,7 @@ class Gateway:
             raise ValueError("None not allowed")
         self.loop.call_soon_threadsafe(self.async_add_job, target, *args)
 
-    def async_add_job(self, target: Callable, *args: Any) -> Union[Awaitable, asyncio.Task]:
+    def async_add_job(self, target: Callable, *args: Any) -> Awaitable | asyncio.Task:
         """Adds a job from within the event loop.
 
         Args:
@@ -150,7 +141,7 @@ class Gateway:
         if target is None:
             raise ValueError("None not allowed")
 
-        task: Union[Awaitable, asyncio.Task]
+        task: Awaitable | asyncio.Task
         if asyncio.iscoroutine(target) or asyncio.iscoroutinefunction(target):
             # await self._scheduler.spawn(target(*args))
             task = self.loop.create_task(target(*args))
@@ -217,7 +208,7 @@ class Gateway:
         _LOG.info("Stop tasks performed")
 
     @log_exceptions(logger=_LOG)
-    async def download_device(self, device_id: int) -> Optional[BaseDevice]:
+    async def download_device(self, device_id: int) -> BaseDevice | None:
         """Tries to download an object of device from server.
         Then gets polling objects and load them into device.
 
@@ -286,7 +277,7 @@ class Gateway:
         return groups
 
     @staticmethod
-    def _parse_device_obj(data: dict) -> Optional[DeviceObj]:
+    def _parse_device_obj(data: dict) -> DeviceObj | None:
         """Parses and validate device object data from JSON.
 
         Returns:
@@ -298,7 +289,7 @@ class Gateway:
 
     def _extract_objects(
         self, data: tuple, dev_obj: DeviceObj
-    ) -> list[Union[BACnetObj, ModbusObj]]:
+    ) -> list[BACnetObj | ModbusObj]:
         """Parses and validate objects data from JSON.
 
         Returns:
@@ -359,7 +350,7 @@ class Gateway:
     @log_exceptions(logger=_LOG)
     def object_factory(
         dev_obj: DeviceObj, obj_data: dict[str, Any]
-    ) -> Union[ModbusObj, BACnetObj]:
+    ) -> ModbusObj | BACnetObj:
         """Creates object for provided protocol data.
 
         Returns:

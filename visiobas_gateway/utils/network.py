@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 import socket
 from functools import lru_cache
 from ipaddress import IPv4Address, IPv4Interface

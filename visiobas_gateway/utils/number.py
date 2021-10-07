@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 _FLOAT_FORMAT = ".10f"
 
 
