@@ -44,6 +44,7 @@ pyyaml = "^5.4.1"
 types-PyYAML = "^5.4.10"
 safety = "*"
 pytest-cov = "*"
+pytest_aiohttp = "*"
 
 [tool.taskipy.tasks]
 check = """

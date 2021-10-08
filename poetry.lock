@@ -508,6 +508,18 @@ toml = "*"
 testing = ["argcomplete", "hypothesis (>=3.56)", "mock", "nose", "requests", "xmlschema"]
 
 [[package]]
+name = "pytest-aiohttp"
+version = "0.3.0"
+description = "pytest plugin for aiohttp support"
+category = "dev"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+aiohttp = ">=2.3.5"
+pytest = "*"
+
+[[package]]
 name = "pytest-cov"
 version = "3.0.0"
 description = "Pytest plugin for measuring coverage."
@@ -687,7 +699,7 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "15ac81db94869ef6831acfb5fd2ab1c7c871d9731cb2c822679e45459be1e270"
+content-hash = "959bbaa3c789b4ccb99dc8842829120ea4858cd8758e0ffa2e55024522915a78"
 
 [metadata.files]
 aiohttp = [
@@ -1120,6 +1132,10 @@ pyserial = [
 pytest = [
     {file = "pytest-6.2.5-py3-none-any.whl", hash = "sha256:7310f8d27bc79ced999e760ca304d69f6ba6c6649c0b60fb0e04a4a77cacc134"},
     {file = "pytest-6.2.5.tar.gz", hash = "sha256:131b36680866a76e6781d13f101efb86cf674ebb9762eb70d3082b6f29889e89"},
+]
+pytest-aiohttp = [
+    {file = "pytest-aiohttp-0.3.0.tar.gz", hash = "sha256:c929854339637977375838703b62fef63528598bc0a9d451639eba95f4aaa44f"},
+    {file = "pytest_aiohttp-0.3.0-py3-none-any.whl", hash = "sha256:0b9b660b146a65e1313e2083d0d2e1f63047797354af9a28d6b7c9f0726fa33d"},
 ]
 pytest-cov = [
     {file = "pytest-cov-3.0.0.tar.gz", hash = "sha256:e7f0f5b1617d2210a2cabc266dfe2f4c75a8d32fb89eafb7ad9d06f6d076d470"},
