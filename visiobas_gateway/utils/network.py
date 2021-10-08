@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-import socket
+import asyncio
+import platform
 from functools import lru_cache
 from ipaddress import IPv4Address, IPv4Interface
 
@@ -28,8 +29,10 @@ def get_subnet_interface(ip: IPv4Address) -> IPv4Interface | None:
         NotImplementedError: if `netifaces` not installed.
     """
     if not _NETIFACES_ENABLE:
-        return _get_ip_address()
-
+        raise NotImplementedError(
+            "`netifaces` must be installed to find available network interface"
+        )
+        # return _get_ip_address()
     if not isinstance(ip, IPv4Address):
         raise ValueError("Instance of `IPv4Address` expected")
 
@@ -60,25 +63,49 @@ def get_subnet_interface(ip: IPv4Address) -> IPv4Interface | None:
     return None
 
 
-def _get_ip_address() -> IPv4Interface:
-    """Attempt an internet connection and use the network adapter
-    connected to the internet.
-
-       Adopted from BAC0
-
-       Returns:
-           IP Address as String
-       Raises:
-           ConnectionError: If no addresses connected to internet.
+async def ping(host: str, attempts: int) -> bool:
     """
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    try:
-        s.connect(("google.com", 0))
-        ip_address = s.getsockname()[0]
-        s.close()
-    except socket.error as exc:
-        raise ConnectionError(
-            "Impossible to retrieve IP, please provide one manually or install "
-            "`netifaces`"
-        ) from exc
-    return IPv4Interface(ip_address)
+    Adopted from <https://stackoverflow.com/a/67745987>
+
+    Args:
+        host: Host to ping.
+        attempts: Attempts quantity.
+
+    Returns: Ping is successful.
+    """
+    current_os = platform.system().lower()
+    parameter = "n" if current_os == "windows" else "c"
+    ping_process = await asyncio.create_subprocess_shell(
+        f"ping -{parameter} {attempts} {host}"
+    )
+    await ping_process.wait()
+    return ping_process.returncode == 0
+
+
+#
+# def tty_exists(tty: str) -> bool:
+#     pass
+
+
+# def _get_ip_address() -> IPv4Interface:
+#     """Attempt an internet connection and use the network adapter
+#     connected to the internet.
+#
+#        Adopted from BAC0
+#
+#        Returns:
+#            IP Address as String
+#        Raises:
+#            ConnectionError: If no addresses connected to internet.
+#     """
+#     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+#     try:
+#         s.connect(("google.com", 0))
+#         ip_address = s.getsockname()[0]
+#         s.close()
+#     except socket.error as exc:
+#         raise ConnectionError(
+#             "Impossible to retrieve IP, please provide one manually or install "
+#             "`netifaces`"
+#         ) from exc
+#     return IPv4Interface(ip_address)

@@ -106,7 +106,7 @@ def log_exceptions(
                 kwargs_repr = [f"{k}={v!r}" for k, v in kwargs.items()]
                 signature = ", ".join(args_repr + kwargs_repr)
             else:
-                signature = '** PARAMETERS OMITTED **'
+                signature = "** PARAMETERS OMITTED **"
 
             try:
                 value = func(*args, **kwargs)
