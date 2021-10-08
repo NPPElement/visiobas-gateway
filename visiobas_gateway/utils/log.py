@@ -94,15 +94,19 @@ def get_file_logger(name: str) -> logging.Logger:
 def log_exceptions(
     logger: logging.Logger,
     func: Callable | Callable[..., typing.Awaitable] = None,  # type: ignore
+    parameters_enable: bool = True,
 ) -> Any:
     def _log_exceptions(func: Callable | Callable[..., typing.Awaitable]) -> Any:
         """Decorator, logging function signature and exception if it occur."""
 
         @wraps(func)
         def wrapper(*args: Any, **kwargs: Any) -> Any:
-            args_repr = [repr(a) for a in args]
-            kwargs_repr = [f"{k}={v!r}" for k, v in kwargs.items()]
-            signature = ", ".join(args_repr + kwargs_repr)
+            if parameters_enable:
+                args_repr = [repr(a) for a in args]
+                kwargs_repr = [f"{k}={v!r}" for k, v in kwargs.items()]
+                signature = ", ".join(args_repr + kwargs_repr)
+            else:
+                signature = '** PARAMETERS OMITTED **'
 
             try:
                 value = func(*args, **kwargs)

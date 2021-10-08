@@ -26,7 +26,6 @@ from visiobas_gateway.verifier import BACnetVerifier
 
 if TYPE_CHECKING:
     from .devices.base_device import BaseDevice
-
 else:
     BaseDevice = "BaseDevice"
 
@@ -41,6 +40,11 @@ class Gateway:
     # pylint: disable=too-many-instance-attributes
 
     def __init__(self, settings: GatewaySettings):
+        """Note: `Gateway.create()` must be used for gateway Instance construction.
+
+        Args:
+            settings:
+        """
         self.loop: asyncio.AbstractEventLoop = asyncio.get_running_loop()
 
         self.settings = settings
@@ -55,6 +59,7 @@ class Gateway:
         self.mqtt_client: MQTTClient | None = None
         self.api: ApiServer | None = None
         self.verifier = BACnetVerifier(override_threshold=settings.override_threshold)
+
 
         self._devices: dict[int, Any] = {}
 
@@ -300,6 +305,8 @@ class Gateway:
 
         Returns:
             List of parsed and validated objects.
+
+        # todo: use pydantic for parsing
         """
         objs = [
             self.object_factory(dev_obj=dev_obj, obj_data=obj_data)
@@ -308,7 +315,7 @@ class Gateway:
         ]
         return objs
 
-    @log_exceptions(logger=_LOG)
+    @log_exceptions(logger=_LOG, parameters_enable=False)
     async def send_objects(self, objs: Collection[BACnetObj]) -> None:
         """Sends objects to server."""
         if not objs:
