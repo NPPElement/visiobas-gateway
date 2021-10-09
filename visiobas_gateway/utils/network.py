@@ -2,8 +2,9 @@ from __future__ import annotations
 
 import asyncio
 import platform
-from functools import lru_cache
 from ipaddress import IPv4Address, IPv4Interface
+
+import serial.tools.list_ports  # type: ignore
 
 from .log import get_file_logger
 
@@ -17,7 +18,6 @@ except ImportError:
 _LOG = get_file_logger(__name__)
 
 
-@lru_cache(maxsize=10)
 def get_subnet_interface(ip: IPv4Address) -> IPv4Interface | None:
     """
     Args:
@@ -26,15 +26,15 @@ def get_subnet_interface(ip: IPv4Address) -> IPv4Interface | None:
         Interface in same subnet as `ip` which can be used to interact.
             None if no one exists.
     Raises:
-        NotImplementedError: if `netifaces` not installed.
+        EnvironmentError: if `netifaces` not installed.
     """
     if not _NETIFACES_ENABLE:
-        raise NotImplementedError(
+        raise EnvironmentError(
             "`netifaces` must be installed to find available network interface"
         )
         # return _get_ip_address()
     if not isinstance(ip, IPv4Address):
-        raise ValueError("Instance of `IPv4Address` expected")
+        raise ValueError(f"`ip` must be `IPv4Address`. Got `{type(ip)}`")
 
     interfaces = netifaces.interfaces()
     _LOG.debug("Available interfaces", extra={"interfaces": interfaces})
@@ -82,9 +82,10 @@ async def ping(host: str, attempts: int) -> bool:
     return ping_process.returncode == 0
 
 
-#
-# def tty_exists(tty: str) -> bool:
-#     pass
+def serial_port_exist(serial_port: None) -> bool:
+
+    serial_ports = serial.tools.list_ports.comports()
+    return serial_port in serial_ports
 
 
 # def _get_ip_address() -> IPv4Interface:

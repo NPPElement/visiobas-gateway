@@ -60,7 +60,6 @@ class Gateway:
         self.api: ApiServer | None = None
         self.verifier = BACnetVerifier(override_threshold=settings.override_threshold)
 
-
         self._devices: dict[int, Any] = {}
 
         # TODO: updating event to return msg in case controlling at update time.
