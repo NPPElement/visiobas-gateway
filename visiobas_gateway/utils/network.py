@@ -6,6 +6,7 @@ from ipaddress import IPv4Address, IPv4Interface
 
 import serial.tools.list_ports  # type: ignore
 
+from ..schemas.serial_port import SerialPort
 from .log import get_file_logger
 
 try:
@@ -82,7 +83,7 @@ async def ping(host: str, attempts: int) -> bool:
     return ping_process.returncode == 0
 
 
-def serial_port_exist(serial_port: None) -> bool:
+def serial_port_exist(serial_port: SerialPort) -> bool:
 
     serial_ports = serial.tools.list_ports.comports()
     return serial_port in serial_ports
