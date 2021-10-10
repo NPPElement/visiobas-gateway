@@ -33,7 +33,7 @@ class MQTTClient:
         self.setup()
 
     @classmethod
-    def create(cls, gateway: Gateway, settings: MQTTSettings) -> "MQTTClient":
+    def create(cls, gateway: Gateway, settings: MQTTSettings) -> MQTTClient:
         mqtt_client = cls(gateway=gateway, settings=settings)
         mqtt_client.setup()
         return mqtt_client
