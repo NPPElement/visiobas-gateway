@@ -4,11 +4,12 @@ import asyncio
 from abc import ABC, abstractmethod
 from datetime import datetime
 from functools import lru_cache
+from ipaddress import IPv4Address
 from typing import TYPE_CHECKING, Any, Collection
 
 import aiojobs  # type: ignore
 
-from ..schemas import BACnetObj, DeviceObj
+from ..schemas import BACnetObj, DeviceObj, SerialPort
 from ..utils import get_file_logger, log_exceptions
 from ._interface import Interface
 from .base_device import BaseDevice
@@ -24,7 +25,7 @@ _LOG = get_file_logger(name=__name__)
 class BasePollingDevice(BaseDevice, ABC):
     """Base class for devices, that can be periodically polled for update sensors data."""
 
-    _interfaces: dict[str, Interface] = {}
+    _interfaces: dict[tuple[IPv4Address, int] | SerialPort, Interface] = {}
 
     def __init__(self, device_obj: DeviceObj, gateway: Gateway):
         super().__init__(device_obj, gateway)
@@ -34,17 +35,18 @@ class BasePollingDevice(BaseDevice, ABC):
         # Key: period
         self.object_groups: dict[float, dict[tuple[int, int], BACnetObj]] = {}
 
-    @staticmethod
-    @abstractmethod
-    def interface_name(device_obj: DeviceObj) -> Any:
-        """Interface name, used to get access to interface."""
+    # @staticmethod
+    # @abstractmethod
+    # def is_reachable(interface: Interface) -> bool:
+    #     """Check device interface is available to interaction."""
+    #     pass
 
     @property
-    def interface(self) -> Any:
+    def interface(self) -> Interface:
         """Interface to interact with controller."""
-        return self.__class__._interfaces.get(  # pylint: disable=protected-access
-            self.interface_name(device_obj=self._device_obj)
-        )
+        return self.__class__._interfaces[  # pylint: disable=protected-access
+            self._device_obj.property_list.interface
+        ]
 
     @classmethod
     @log_exceptions(logger=_LOG)
@@ -52,29 +54,31 @@ class BasePollingDevice(BaseDevice, ABC):
         """Creates instance of device. Handles client creation with lock or using
         existing.
         """
+        # if not cls.is_reachable()
+        #     raise EnvironmentError(f'{} is down.')
         device = cls(device_obj=device_obj, gateway=gateway)
         device._scheduler = await aiojobs.create_scheduler(close_timeout=60, limit=250)
 
-        interface_name = device.interface_name(device_obj=device_obj)
+        interface_key = device._device_obj.property_list.interface
 
-        if not cls._interfaces.get(interface_name):
+        if interface_key not in cls._interfaces:
             lock = asyncio.Lock(loop=gateway.loop)
             async with lock:  # pylint: disable=not-async-context-manager
                 client = await device.create_client(device_obj=device_obj)
                 client_connected = await device.connect_client(client=client)
             polling_event = asyncio.Event()
             interface = Interface(
-                name=interface_name,
+                interface_key=device_obj.property_list.interface,
                 used_by={device.id},
                 client=client,
                 lock=lock,
                 polling_event=polling_event,
                 client_connected=client_connected,
             )
-            cls._interfaces[interface_name] = interface
+            cls._interfaces[interface_key] = interface
         else:
             # Using existing interface.
-            cls._interfaces[interface_name].used_by.add(device.id)
+            cls._interfaces[interface_key].used_by.add(device.id)
 
         device._LOG.debug(
             "Device created",
@@ -95,8 +99,9 @@ class BasePollingDevice(BaseDevice, ABC):
         raise NotImplementedError
 
     async def disconnect_client(self) -> None:
-        if not self.interface.used_by:
-            await self._disconnect_client(client=self.interface.client)
+        interface = self.interface
+        if not interface.used_by:
+            await self._disconnect_client(client=interface.client)
 
     @abstractmethod
     async def _disconnect_client(self, client: Any) -> None:

@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from functools import lru_cache
 from typing import TYPE_CHECKING, Any
 
 from BAC0.scripts.Lite import Lite  # type: ignore
@@ -32,7 +31,6 @@ class BACnetDevice(BasePollingDevice, BACnetCoderMixin):
         # todo: use COV subscribe
 
     @staticmethod
-    @lru_cache(maxsize=10)
     def interface_name(device_obj: DeviceObj) -> str | None:
         assert isinstance(device_obj.property_list, TcpIpDevicePropertyList)
 
@@ -45,7 +43,7 @@ class BACnetDevice(BasePollingDevice, BACnetCoderMixin):
 
     @property
     def is_client_connected(self) -> bool:
-        return self.interface.client is not None
+        return bool(self.interface.client)
 
     @log_exceptions(logger=_LOG)
     async def create_client(self, device_obj: DeviceObj) -> Lite:
@@ -152,7 +150,7 @@ class BACnetDevice(BasePollingDevice, BACnetCoderMixin):
             value = self._encode_binary_present_value(value=value)  # type: ignore
 
         args = (
-            f"{self._device_obj.property_list.address_port} "
+            f"{self._device_obj.property_list.interface} "
             f"{camel_case(obj.object_type.name)} "
             f"{obj.object_id} "
             f"{camel_case(prop.name)} "
@@ -188,7 +186,7 @@ class BACnetDevice(BasePollingDevice, BACnetCoderMixin):
 
         request = " ".join(
             (
-                self._device_obj.property_list.address_port,
+                ":".join([str(item) for item in self._device_obj.property_list.interface]),
                 camel_case(obj.object_type.name),
                 str(obj.object_id),
                 camel_case(prop.name),
