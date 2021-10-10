@@ -9,9 +9,10 @@ from pymodbus.framer.socket_framer import ModbusSocketFramer  # type: ignore
 
 from ...schemas import (
     BACnetObj,
-    DeviceObj,
     ModbusObj,
     ModbusReadFunc,
+    ModbusSerialDeviceObj,
+    ModbusTCPDeviceObj,
     ModbusWriteFunc,
     Protocol,
 )
@@ -31,7 +32,7 @@ class ModbusDevice(BasePollingDevice, ModbusCoderMixin):
 
     @log_exceptions(logger=_LOG)
     async def create_client(
-        self, device_obj: DeviceObj
+        self, device_obj: ModbusSerialDeviceObj | ModbusTCPDeviceObj
     ) -> ModbusTcpClient | ModbusSerialClient:
         """Initializes synchronous modbus client."""
 

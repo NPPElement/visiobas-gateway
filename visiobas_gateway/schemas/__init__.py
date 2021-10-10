@@ -1,5 +1,6 @@
 from .bacnet.base_obj import BaseBACnetObj
 from .bacnet.device_obj import (
+    BACnetDeviceObj,
     DeviceObj,
     SerialDevicePropertyList,
     TcpIpDevicePropertyList,
@@ -36,12 +37,14 @@ from .modbus import (
     Parity,
     StopBits,
 )
+from .modbus.device_obj import ModbusSerialDeviceObj, ModbusTCPDeviceObj
 from .protocol import Protocol
 from .serial_port import SerialPort
 
 __all__ = [
     "Protocol",
     # BACnet
+    "BACnetDeviceObj",
     "DeviceObj",
     "TcpIpDevicePropertyList",
     "TcpIpModbusDevicePropertyList",
@@ -62,6 +65,8 @@ __all__ = [
     "Reliability",
     "Priority",
     # Modbus
+    "ModbusTCPDeviceObj",
+    "ModbusSerialDeviceObj",
     "ModbusReadFunc",
     "ModbusWriteFunc",
     "WRITE_COIL_FUNCS",

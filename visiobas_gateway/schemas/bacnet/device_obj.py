@@ -1,3 +1,4 @@
+from abc import ABC
 from typing import Union
 
 from pydantic import Field
@@ -12,7 +13,7 @@ from .obj_property import ObjProperty
 from .obj_type import ObjType
 
 
-class DeviceObj(BaseBACnetObj):
+class DeviceObj(BaseBACnetObj, ABC):
     """Represent device object."""
 
     property_list: Union[
@@ -20,6 +21,14 @@ class DeviceObj(BaseBACnetObj):
         TcpIpDevicePropertyList,
         SerialDevicePropertyList,
     ] = Field(  # type: ignore
+        ..., alias=str(ObjProperty.PROPERTY_LIST.value)
+    )
+
+
+class BACnetDeviceObj(DeviceObj):
+    """Device object for BACnet devices."""
+
+    property_list: TcpIpDevicePropertyList = Field(
         ..., alias=str(ObjProperty.PROPERTY_LIST.value)
     )
 
