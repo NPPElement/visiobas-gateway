@@ -59,9 +59,13 @@ def device_base_property_list_factory() -> Callable[..., BaseDevicePropertyList]
     override defaults.
     """
 
+    class ForTestBaseDevicePropertyList(BaseDevicePropertyList):
+        def interface(self) -> Any:
+            pass
+
     def _factory(**kwargs):
         kwargs = _base_device_property_list_kwargs(kwargs)
-        return BaseDevicePropertyList(**kwargs)
+        return ForTestBaseDevicePropertyList(**kwargs)
 
     return _factory
 
