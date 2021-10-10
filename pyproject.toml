@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "visiobas-gateway"
-version = "0.3.4"
+version = "0.3.5"
 description = "Polling devices using various protocols and transmitting data to the VisioBAS system"
 repository = "https://github.com/NPPElement/visiobas-gateway"
 keywords = ["VisioBAS", "Gateway", "IoT", "BACnet", "Modbus"]
@@ -69,7 +69,7 @@ exclude = '''
     | \.venv
     | \.mypy_cache
     | \.pytest_cache
-    | \.gateway_logs
+    | \.gtw_logs
   )/
 )
 '''
