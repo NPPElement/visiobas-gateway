@@ -8,7 +8,7 @@ import aiojobs  # type: ignore
 
 from visiobas_gateway.api import ApiServer
 from visiobas_gateway.clients import HTTPClient, MQTTClient
-from visiobas_gateway.devices import BACnetDevice, ModbusDevice, SUNAPIDevice
+from visiobas_gateway.devices import BACnetDevice, ModbusDevice
 from visiobas_gateway.devices.base_polling_device import BasePollingDevice
 from visiobas_gateway.schemas import BACnetObj, DeviceObj, ObjType
 from visiobas_gateway.schemas.bacnet.device_obj import POLLING_TYPES
@@ -346,14 +346,14 @@ class Gateway:
             Protocol.MODBUS_RTU,
         }:
             cls = ModbusDevice  # type: ignore
-            device = await cls.create(device_obj=dev_obj, gateway=self)
         elif protocol is Protocol.BACNET:
             cls = BACnetDevice  # type: ignore
-            device = await cls.create(device_obj=dev_obj, gateway=self)
-        elif protocol is Protocol.SUN_API:
-            device = SUNAPIDevice(device_obj=dev_obj, gateway=self)
+        # elif protocol is Protocol.SUN_API:
+        #     cls = SUNAPIDevice(device_obj=dev_obj, gateway=self)
         else:
             raise NotImplementedError("Device factory not implemented")
+
+        device = await cls.create(device_obj=dev_obj, gateway=self)
 
         _LOG.debug("Device object created", extra={"device": device})
         return device
