@@ -4,14 +4,13 @@ import asyncio
 from abc import ABC, abstractmethod
 from datetime import datetime
 from functools import lru_cache
-from ipaddress import IPv4Address
 from typing import TYPE_CHECKING, Any, Collection
 
 import aiojobs  # type: ignore
 
-from ..schemas import BACnetObj, DeviceObj, SerialPort
+from ..schemas import BACnetObj, DeviceObj
 from ..utils import get_file_logger, log_exceptions
-from ._interface import Interface
+from ._interface import Interface, InterfaceKey
 from .base_device import BaseDevice
 
 if TYPE_CHECKING:
@@ -19,33 +18,44 @@ if TYPE_CHECKING:
 else:
     Gateway = "Gateway"
 
+
+ObjectKey = tuple[int, int]  # obj_id, obj_type_id
+
 _LOG = get_file_logger(name=__name__)
 
 
 class BasePollingDevice(BaseDevice, ABC):
     """Base class for devices, that can be periodically polled for update sensors data."""
 
-    _interfaces: dict[tuple[IPv4Address, int] | SerialPort, Interface] = {}
+    _interfaces: dict[InterfaceKey, Interface] = {}
 
     def __init__(self, device_obj: DeviceObj, gateway: Gateway):
         super().__init__(device_obj, gateway)
 
         self._scheduler: aiojobs.Scheduler = None  # type: ignore
 
-        ObjectKey = tuple[int, int]  # obj_id, obj_type_id
         self.object_groups: dict[float, dict[ObjectKey, BACnetObj]] = {}  # Key: period
 
     @staticmethod
     @abstractmethod
-    async def is_reachable(interface_key: tuple[IPv4Address, int] | SerialPort) -> bool:
+    async def is_reachable(interface_key: InterfaceKey) -> bool:
         """Check device interface is available to interaction."""
 
     @property
     def interface(self) -> Interface:
         """Interface to interact with controller."""
         return self.__class__._interfaces[  # pylint: disable=protected-access
-            self._device_obj.property_list.interface
+            self.interface_key(device_obj=self._device_obj)
         ]
+
+    @staticmethod
+    @abstractmethod
+    def interface_key(
+        device_obj: DeviceObj,
+    ) -> InterfaceKey:
+        """Hashable interface to interaction with device with lock.
+        Used as key in `dict`.
+        """
 
     @classmethod
     @log_exceptions(logger=_LOG)
@@ -53,7 +63,7 @@ class BasePollingDevice(BaseDevice, ABC):
         """Creates instance of device. Handles client creation with lock or using
         existing.
         """
-        interface_key = device_obj.property_list.interface
+        interface_key = cls.interface_key(device_obj=device_obj)
         if not await cls.is_reachable(interface_key=interface_key):
             raise EnvironmentError(f"{interface_key} is unreachable.")
 

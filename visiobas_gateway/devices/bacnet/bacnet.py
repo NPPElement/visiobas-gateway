@@ -5,8 +5,9 @@ from typing import Any
 
 from BAC0.scripts.Lite import Lite  # type: ignore
 
-from ...schemas import BACnetObj, DeviceObj, ObjProperty, SerialPort
+from ...schemas import BACnetObj, DeviceObj, ObjProperty, TcpDevicePropertyList
 from ...utils import camel_case, get_file_logger, get_subnet_interface, log_exceptions, ping
+from .._interface import InterfaceKey
 from ..base_polling_device import BasePollingDevice
 from ._bacnet_coder_mixin import BACnetCoderMixin
 
@@ -28,12 +29,18 @@ class BACnetDevice(BasePollingDevice, BACnetCoderMixin):
     #     # todo: Should we use one RPM for several objects?
     #     # todo: use COV subscribe
 
+    @staticmethod
+    def interface_key(device_obj: DeviceObj) -> IPv4Address:
+        if isinstance(device_obj.property_list, TcpDevicePropertyList):
+            return device_obj.property_list.address
+        raise ValueError("`IPv4Address` expected. No address found.")
+
     @property
     def is_client_connected(self) -> bool:
         return bool(self.interface.client)
 
     @staticmethod
-    async def is_reachable(interface_key: tuple[IPv4Address, int] | SerialPort) -> bool:
+    async def is_reachable(interface_key: InterfaceKey) -> bool:
         if isinstance(interface_key, tuple) and isinstance(interface_key[0], IPv4Address):
             return await ping(host=str(interface_key[0]), attempts=4)
         raise ValueError
@@ -45,10 +52,11 @@ class BACnetDevice(BasePollingDevice, BACnetCoderMixin):
         ip, port = device_obj.property_list.interface
         if not isinstance(ip, IPv4Address):
             raise ValueError(f"`IPv4Address` expected. Got `{type(ip)}`")
-        ip_in_subnet = get_subnet_interface(ip=ip)
 
+        ip_in_subnet = get_subnet_interface(ip=ip)
         if not ip_in_subnet:
             raise EnvironmentError(f"No IP in same subnet with {ip}")
+
         self._LOG.debug(
             "Creating `BAC0` client",
             extra={"device_id": self.id, "ip_in_subnet": ip_in_subnet},

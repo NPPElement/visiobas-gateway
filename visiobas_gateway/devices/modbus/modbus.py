@@ -10,6 +10,7 @@ from pymodbus.framer.socket_framer import ModbusSocketFramer  # type: ignore
 
 from ...schemas import (
     BACnetObj,
+    DeviceObj,
     ModbusObj,
     ModbusReadFunc,
     ModbusSerialDeviceObj,
@@ -19,6 +20,7 @@ from ...schemas import (
     SerialPort,
 )
 from ...utils import get_file_logger, log_exceptions, ping, serial_port_exist
+from .._interface import InterfaceKey
 from ..base_polling_device import BasePollingDevice
 from ._modbus_coder_mixin import ModbusCoderMixin
 
@@ -33,7 +35,11 @@ class ModbusDevice(BasePollingDevice, ModbusCoderMixin):
     """
 
     @staticmethod
-    async def is_reachable(interface_key: tuple[IPv4Address, int] | SerialPort) -> bool:
+    def interface_key(device_obj: DeviceObj) -> InterfaceKey:
+        return device_obj.property_list.interface
+
+    @staticmethod
+    async def is_reachable(interface_key: InterfaceKey) -> bool:
         if isinstance(interface_key, SerialPort):
             return serial_port_exist(serial_port=interface_key)
         if isinstance(interface_key, tuple) and isinstance(interface_key[0], IPv4Address):
