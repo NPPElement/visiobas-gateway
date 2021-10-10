@@ -13,7 +13,7 @@ from visiobas_gateway.devices.base_polling_device import BasePollingDevice
 from visiobas_gateway.schemas import BACnetObj, DeviceObj, ObjType
 from visiobas_gateway.schemas.bacnet.device_obj import POLLING_TYPES
 from visiobas_gateway.schemas.bacnet.obj import group_by_period
-from visiobas_gateway.schemas.modbus import ModbusObj
+from visiobas_gateway.schemas.modbus.obj import ModbusObj
 from visiobas_gateway.schemas.protocol import POLLING_PROTOCOLS, Protocol
 from visiobas_gateway.schemas.settings import (
     ApiSettings,

@@ -5,7 +5,7 @@ from typing import Any
 
 from BAC0.scripts.Lite import Lite  # type: ignore
 
-from ...schemas import BACnetDeviceObj, BACnetObj, ObjProperty, SerialPort
+from ...schemas import BACnetObj, DeviceObj, ObjProperty, SerialPort
 from ...utils import camel_case, get_file_logger, get_subnet_interface, log_exceptions, ping
 from ..base_polling_device import BasePollingDevice
 from ._bacnet_coder_mixin import BACnetCoderMixin
@@ -39,11 +39,12 @@ class BACnetDevice(BasePollingDevice, BACnetCoderMixin):
         raise ValueError
 
     @log_exceptions(logger=_LOG)
-    async def create_client(self, device_obj: BACnetDeviceObj) -> Lite:
+    async def create_client(self, device_obj: DeviceObj) -> Lite:
         """Initializes BAC0 client."""
 
-        interface_key = device_obj.property_list.interface
-        ip = interface_key[0]
+        ip, port = device_obj.property_list.interface
+        if not isinstance(ip, IPv4Address):
+            raise ValueError(f"`IPv4Address` expected. Got `{type(ip)}`")
         ip_in_subnet = get_subnet_interface(ip=ip)
 
         if not ip_in_subnet:
@@ -52,7 +53,7 @@ class BACnetDevice(BasePollingDevice, BACnetCoderMixin):
             "Creating `BAC0` client",
             extra={"device_id": self.id, "ip_in_subnet": ip_in_subnet},
         )
-        client = Lite(ip=ip_in_subnet, port=device_obj.property_list.port)
+        client = Lite(ip=ip_in_subnet, port=port)
         return client
 
     async def connect_client(self, client: Any) -> bool:

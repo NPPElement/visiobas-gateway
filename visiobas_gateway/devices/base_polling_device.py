@@ -32,8 +32,8 @@ class BasePollingDevice(BaseDevice, ABC):
 
         self._scheduler: aiojobs.Scheduler = None  # type: ignore
 
-        # Key: period
-        self.object_groups: dict[float, dict[tuple[int, int], BACnetObj]] = {}
+        ObjectKey = tuple[int, int]  # obj_id, obj_type_id
+        self.object_groups: dict[float, dict[ObjectKey, BACnetObj]] = {}  # Key: period
 
     @staticmethod
     @abstractmethod

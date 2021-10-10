@@ -16,8 +16,8 @@ class TestBaseDevicePropertyList:
 
 
 class TestTcpIpDevicePropertyList:
-    def test_construct_happy(self, tcp_ip_device_property_list_factory):
-        tcp_ip_device_property_list = tcp_ip_device_property_list_factory(
+    def test_construct_happy(self, tcp_device_property_list_factory):
+        tcp_ip_device_property_list = tcp_device_property_list_factory(
             apduTimeout=10_000, numberOfApduRetries=2
         )
         assert tcp_ip_device_property_list.protocol == Protocol.BACNET
@@ -34,11 +34,9 @@ class TestTcpIpDevicePropertyList:
         "bad_protocol",
         ["ModbusRTU", "ModbusRTUoverTCP", "ModbusTCP", "SunAPI"],
     )
-    def test_construct_bad_protocol(
-        self, tcp_ip_device_property_list_factory, bad_protocol
-    ):
+    def test_construct_bad_protocol(self, tcp_device_property_list_factory, bad_protocol):
         with pytest.raises(pydantic.ValidationError):
-            tcp_ip_device_property_list_factory(protocol=bad_protocol)
+            tcp_device_property_list_factory(protocol=bad_protocol)
 
 
 class TestSerialDevicePropertyList:
@@ -67,8 +65,8 @@ class TestSerialDevicePropertyList:
 
 
 class TestTcpIpModbusDevicePropertyList:
-    def test_construct_happy(self, tcp_ip_modbus_device_property_list_factory):
-        tcp_ip_modbus_device_property_list = tcp_ip_modbus_device_property_list_factory(
+    def test_construct_happy(self, modbus_tcp_device_property_list_factory):
+        tcp_ip_modbus_device_property_list = modbus_tcp_device_property_list_factory(
             apduTimeout=10_000, numberOfApduRetries=2
         )
         assert tcp_ip_modbus_device_property_list.protocol == Protocol.MODBUS_TCP
@@ -88,7 +86,7 @@ class TestTcpIpModbusDevicePropertyList:
         ["ModbusRTU", "BACnet", "SunAPI"],
     )
     def test_construct_bad_protocol(
-        self, tcp_ip_modbus_device_property_list_factory, bad_protocol
+        self, modbus_tcp_device_property_list_factory, bad_protocol
     ):
         with pytest.raises(pydantic.ValidationError):
-            tcp_ip_modbus_device_property_list_factory(protocol=bad_protocol)
+            modbus_tcp_device_property_list_factory(protocol=bad_protocol)
