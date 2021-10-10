@@ -14,8 +14,6 @@ from ...schemas import (
     ModbusReadFunc,
     ModbusWriteFunc,
     Protocol,
-    SerialDevicePropertyList,
-    TcpIpModbusDevicePropertyList,
 )
 from ...utils import get_file_logger, log_exceptions
 from ..base_polling_device import BasePollingDevice
@@ -30,14 +28,6 @@ class ModbusDevice(BasePollingDevice, ModbusCoderMixin):
     Note: AsyncModbusDevice in `pymodbus` didn't work correctly. So support only Sync
         client.
     """
-
-    @staticmethod
-    def interface_name(device_obj: DeviceObj) -> str:
-        if isinstance(device_obj.property_list, TcpIpModbusDevicePropertyList):
-            return device_obj.property_list.address_port
-        if isinstance(device_obj.property_list, SerialDevicePropertyList):
-            return device_obj.property_list.rtu.port
-        raise NotImplementedError
 
     @log_exceptions(logger=_LOG)
     async def create_client(

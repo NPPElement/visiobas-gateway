@@ -1,13 +1,17 @@
+from __future__ import annotations
+
+from abc import ABC, abstractmethod
 from ipaddress import IPv4Address
 
 from pydantic import Field, validator
 
 from ..modbus.device_rtu_properties import DeviceModbusTcpIpProperties, DeviceRtuProperties
 from ..protocol import MODBUS_TCP_IP_PROTOCOLS, SERIAL_PROTOCOLS, TCP_IP_PROTOCOLS, Protocol
+from ..serial_port import SerialPort
 from .obj_property_list import BACnetObjPropertyList
 
 
-class BaseDevicePropertyList(BACnetObjPropertyList):
+class BaseDevicePropertyList(BACnetObjPropertyList, ABC):
     """Base class for PropertyList's (371) of device."""
 
     protocol: Protocol = Field(...)
@@ -47,6 +51,11 @@ class BaseDevicePropertyList(BACnetObjPropertyList):
         """Timeout in seconds."""
         return self.timeout / 1000
 
+    @property
+    @abstractmethod
+    def interface(self) -> tuple[IPv4Address, int] | SerialPort:
+        """Interface to interaction with device."""
+
 
 class TcpIpDevicePropertyList(BaseDevicePropertyList):
     """PropertyList for TCP/IP devices."""
@@ -62,13 +71,8 @@ class TcpIpDevicePropertyList(BaseDevicePropertyList):
         raise ValueError(f"Expected {TCP_IP_PROTOCOLS - MODBUS_TCP_IP_PROTOCOLS}")
 
     @property
-    def address_port(self) -> str:
-        return ":".join(
-            (
-                str(self.address),
-                str(self.port),  # type: ignore
-            )
-        )
+    def interface(self) -> tuple[IPv4Address, int]:
+        return self.address, self.port
 
 
 class TcpIpModbusDevicePropertyList(TcpIpDevicePropertyList):
@@ -96,3 +100,7 @@ class SerialDevicePropertyList(BaseDevicePropertyList):
         if value in SERIAL_PROTOCOLS:
             return value
         raise ValueError(f"Expected {SERIAL_PROTOCOLS}")
+
+    @property
+    def interface(self) -> SerialPort:
+        return self.rtu.port

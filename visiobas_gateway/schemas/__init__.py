@@ -37,6 +37,7 @@ from .modbus import (
     StopBits,
 )
 from .protocol import Protocol
+from .serial_port import SerialPort
 
 __all__ = [
     "Protocol",
@@ -75,4 +76,5 @@ __all__ = [
     "DeviceRtuProperties",
     "Bytesize",
     "Endian",
+    "SerialPort",
 ]
