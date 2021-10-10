@@ -53,7 +53,7 @@ class BACnetDevice(BasePollingDevice, BACnetCoderMixin):
             "Creating `BAC0` client",
             extra={"device_id": self.id, "ip_in_subnet": ip_in_subnet},
         )
-        client = Lite(ip=ip_in_subnet, port=port)
+        client = Lite(ip=str(ip_in_subnet), port=port)
         return client
 
     async def connect_client(self, client: Any) -> bool:
