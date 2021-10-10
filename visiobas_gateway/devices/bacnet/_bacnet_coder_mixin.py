@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Literal
+
 from bacpypes.basetypes import PriorityArray  # type: ignore
 
 from ...schemas import BACnetObj
@@ -17,7 +19,7 @@ class BACnetCoderMixin:
         return obj.object_type in BINARY_TYPES
 
     @staticmethod
-    def _encode_binary_present_value(value: int | float) -> str:
+    def _encode_binary_present_value(value: int | float) -> Literal["active", "inactive"]:
         return "active" if value else "inactive"
 
     # def _decode_response(self, resp: Any, prop: ObjProperty) -> Any:

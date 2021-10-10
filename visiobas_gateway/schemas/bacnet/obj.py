@@ -78,7 +78,7 @@ class BACnetObj(BaseBACnetObj):
 
     @validator("priority_array", pre=True)
     def set_default_priority_array_if_none(
-        cls, value: Optional[list[Optional[float]]]
+        cls, value: list[float | None] | None
     ) -> list[Optional[float]]:
         """None should be interpreted as default value 0.1 -- `pydantic` does not
         handle it.
@@ -228,7 +228,7 @@ class BACnetObj(BaseBACnetObj):
         return str_
 
     @staticmethod
-    def priority_array_to_http_str(priority_array: list[Optional[float]]) -> str:
+    def priority_array_to_http_str(priority_array: list[float | None]) -> str:
         """Convert priority array tuple to str.
 
         Result example: ,,,,,,,,40.5,,,,,,49.2,

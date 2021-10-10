@@ -1,6 +1,6 @@
 # from typing import Any
 #
-# from ...schemas.bacnet.device_property_list import TcpIpDevicePropertyList
+# from ...schemas.test_devices.device_property_list import TcpIpDevicePropertyList
 # from ..base_device import BaseDevice
 #
 #
