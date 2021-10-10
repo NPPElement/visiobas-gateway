@@ -1,11 +1,12 @@
 from __future__ import annotations
 
+from ipaddress import IPv4Address
 from typing import Any
 
 from BAC0.scripts.Lite import Lite  # type: ignore
 
-from ...schemas import BACnetDeviceObj, BACnetObj, ObjProperty
-from ...utils import camel_case, get_file_logger, get_subnet_interface, log_exceptions
+from ...schemas import BACnetDeviceObj, BACnetObj, ObjProperty, SerialPort
+from ...utils import camel_case, get_file_logger, get_subnet_interface, log_exceptions, ping
 from ..base_polling_device import BasePollingDevice
 from ._bacnet_coder_mixin import BACnetCoderMixin
 
@@ -30,6 +31,12 @@ class BACnetDevice(BasePollingDevice, BACnetCoderMixin):
     @property
     def is_client_connected(self) -> bool:
         return bool(self.interface.client)
+
+    @staticmethod
+    async def is_reachable(interface_key: tuple[IPv4Address, int] | SerialPort) -> bool:
+        if isinstance(interface_key, tuple) and isinstance(interface_key[0], IPv4Address):
+            return await ping(host=str(interface_key[0]), attempts=4)
+        raise ValueError
 
     @log_exceptions(logger=_LOG)
     async def create_client(self, device_obj: BACnetDeviceObj) -> Lite:

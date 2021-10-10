@@ -214,7 +214,7 @@ class Gateway:
         """Tries to download an object of device from server.
         Then gets polling objects and load them into device.
 
-        When device loaded, it may be accessed by `visiobas_gateway.devices[identifier]`.
+        When device loaded, it may be accessed by `gateway.devices[identifier]`.
 
         # TODO: If fails get objects from server - loads it from local.
         """

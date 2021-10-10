@@ -35,11 +35,10 @@ class BasePollingDevice(BaseDevice, ABC):
         # Key: period
         self.object_groups: dict[float, dict[tuple[int, int], BACnetObj]] = {}
 
-    # @staticmethod
-    # @abstractmethod
-    # def is_reachable(interface: Interface) -> bool:
-    #     """Check device interface is available to interaction."""
-    #     pass
+    @staticmethod
+    @abstractmethod
+    async def is_reachable(interface_key: tuple[IPv4Address, int] | SerialPort) -> bool:
+        """Check device interface is available to interaction."""
 
     @property
     def interface(self) -> Interface:
@@ -54,12 +53,12 @@ class BasePollingDevice(BaseDevice, ABC):
         """Creates instance of device. Handles client creation with lock or using
         existing.
         """
-        # if not cls.is_reachable()
-        #     raise EnvironmentError(f'{} is down.')
+        interface_key = device_obj.property_list.interface
+        if not await cls.is_reachable(interface_key=interface_key):
+            raise EnvironmentError(f"{interface_key} is unreachable.")
+
         device = cls(device_obj=device_obj, gateway=gateway)
         device._scheduler = await aiojobs.create_scheduler(close_timeout=60, limit=250)
-
-        interface_key = device._device_obj.property_list.interface
 
         if interface_key not in cls._interfaces:
             lock = asyncio.Lock(loop=gateway.loop)

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from ipaddress import IPv4Address
 from typing import Any, Callable
 
 from pymodbus.client.sync import ModbusSerialClient, ModbusTcpClient  # type: ignore
@@ -15,8 +16,9 @@ from ...schemas import (
     ModbusTCPDeviceObj,
     ModbusWriteFunc,
     Protocol,
+    SerialPort,
 )
-from ...utils import get_file_logger, log_exceptions
+from ...utils import get_file_logger, log_exceptions, ping, serial_port_exist
 from ..base_polling_device import BasePollingDevice
 from ._modbus_coder_mixin import ModbusCoderMixin
 
@@ -29,6 +31,14 @@ class ModbusDevice(BasePollingDevice, ModbusCoderMixin):
     Note: AsyncModbusDevice in `pymodbus` didn't work correctly. So support only Sync
         client.
     """
+
+    @staticmethod
+    async def is_reachable(interface_key: tuple[IPv4Address, int] | SerialPort) -> bool:
+        if isinstance(interface_key, SerialPort):
+            return serial_port_exist(serial_port=interface_key)
+        if isinstance(interface_key, tuple) and isinstance(interface_key[0], IPv4Address):
+            return await ping(host=str(interface_key[0]), attempts=4)
+        raise ValueError
 
     @log_exceptions(logger=_LOG)
     async def create_client(
