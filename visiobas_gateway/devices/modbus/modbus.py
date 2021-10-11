@@ -19,7 +19,7 @@ from ...schemas import (
     Protocol,
     SerialPort,
 )
-from ...utils import get_file_logger, log_exceptions, ping, serial_port_exist
+from ...utils import get_file_logger, log_exceptions, ping  # , serial_port_exist
 from .._interface import InterfaceKey
 from ..base_polling_device import BasePollingDevice
 from ._modbus_coder_mixin import ModbusCoderMixin
