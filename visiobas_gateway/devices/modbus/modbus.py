@@ -41,7 +41,7 @@ class ModbusDevice(BasePollingDevice, ModbusCoderMixin):
     @staticmethod
     async def is_reachable(interface_key: InterfaceKey) -> bool:
         if isinstance(interface_key, SerialPort):
-            return serial_port_exist(serial_port=interface_key)
+            return True  # serial_port_exist(serial_port=interface_key)
         if isinstance(interface_key, tuple) and isinstance(interface_key[0], IPv4Address):
             return await ping(host=str(interface_key[0]), attempts=4)
         raise ValueError
