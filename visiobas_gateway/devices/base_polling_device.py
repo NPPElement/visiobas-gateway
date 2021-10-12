@@ -53,8 +53,8 @@ class BasePollingDevice(BaseDevice, ABC):
     def interface_key(
         device_obj: DeviceObj,
     ) -> InterfaceKey:
-        """Hashable interface to interaction with device with lock.
-        Used as key in `dict`.
+        """Hashable interface key to interaction with device with lock.
+        Used as key in interfaces `dict`.
         """
 
     @classmethod
@@ -65,7 +65,7 @@ class BasePollingDevice(BaseDevice, ABC):
         """
         interface_key = cls.interface_key(device_obj=device_obj)
         if not await cls.is_reachable(interface_key=interface_key):
-            raise EnvironmentError(f"{interface_key} is unreachable.")
+            raise EnvironmentError(f"{interface_key} is unreachable")
 
         device = cls(device_obj=device_obj, gateway=gateway)
         device._scheduler = await aiojobs.create_scheduler(close_timeout=60, limit=250)
@@ -105,7 +105,7 @@ class BasePollingDevice(BaseDevice, ABC):
 
     @abstractmethod
     async def connect_client(self, client: Any) -> bool:
-        raise NotImplementedError
+        """Performs connect with client."""
 
     async def disconnect_client(self) -> None:
         interface = self.interface
@@ -114,12 +114,12 @@ class BasePollingDevice(BaseDevice, ABC):
 
     @abstractmethod
     async def _disconnect_client(self, client: Any) -> None:
-        raise NotImplementedError
+        """Performs disconnect with client."""
 
     @property
     @abstractmethod
     def is_client_connected(self) -> bool:
-        raise NotImplementedError
+        """Checks that client is connected."""
 
     async def _poll_objects(
         self, objs: Collection[BACnetObj], unreachable_threshold: int

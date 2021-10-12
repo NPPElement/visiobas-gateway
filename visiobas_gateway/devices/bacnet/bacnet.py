@@ -41,7 +41,6 @@ class BACnetDevice(BasePollingDevice, BACnetCoderMixin):
 
     @staticmethod
     async def is_reachable(interface_key: InterfaceKey) -> bool:
-        # FIXME!
         if isinstance(interface_key, IPv4Address):
             return await ping(host=str(interface_key), attempts=4)
         raise ValueError

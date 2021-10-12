@@ -2,16 +2,22 @@ import asyncio
 import logging
 import sys
 
+from visiobas_gateway.gateway import Gateway
+from visiobas_gateway.schemas.settings import (
+    ApiSettings,
+    GatewaySettings,
+    HTTPSettings,
+    LogSettings,
+    MQTTSettings,
+)
+from visiobas_gateway.utils import ExtraFormatter
+
 try:
     import uvloop  # type: ignore
 
     _UVLOOP_ENABLE = True
 except ImportError:
     _UVLOOP_ENABLE = False
-
-from visiobas_gateway.gateway import Gateway
-from visiobas_gateway.schemas.settings import GatewaySettings, LogSettings
-from visiobas_gateway.utils import ExtraFormatter
 
 
 def setup_logging(settings: LogSettings) -> None:
@@ -29,13 +35,17 @@ def setup_logging(settings: LogSettings) -> None:
 
 
 async def load_and_run() -> None:
-    gateway = await Gateway.create(settings=GatewaySettings())
+    gateway = await Gateway.create(
+        gateway_settings=GatewaySettings(),
+        api_settings=ApiSettings(),
+        mqtt_settings=MQTTSettings(),
+        http_settings=HTTPSettings(),
+    )
     await gateway.async_run()
 
 
 def main() -> None:
-    log_settings = LogSettings()
-    setup_logging(settings=log_settings)
+    setup_logging(settings=LogSettings())
 
     if _UVLOOP_ENABLE:
         uvloop.install()

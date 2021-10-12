@@ -32,41 +32,69 @@ else:
 _LOG = get_file_logger(name=__name__)
 
 Object = Union[BACnetObj, ModbusObj]
+ObjectType = Type[Object]
 
 
 class Gateway:
-    """VisioBAS IoT Gateway."""
+    """VisioBAS Gateway."""
 
     # pylint: disable=too-many-instance-attributes
 
-    def __init__(self, settings: GatewaySettings):
+    def __init__(
+        self,
+        gateway_settings: GatewaySettings,
+        mqtt_settings: MQTTSettings,
+        http_settings: HTTPSettings,
+        api_settings: ApiSettings,
+    ):
         """Note: `Gateway.create()` must be used for gateway Instance construction.
 
         Args:
-            settings:
+            gateway_settings:
         """
         self.loop: asyncio.AbstractEventLoop = asyncio.get_running_loop()
 
-        self.settings = settings
-
         self._stopped: asyncio.Event | None = None
-        self._upd_task: asyncio.Task | None = None
+        # self._upd_task: asyncio.Task | None = None
+        # todo: self.state
 
         self._scheduler: aiojobs.Scheduler = None  # type: ignore
-        self.http_client: HTTPClient | None = None
 
-        self._mqtt_settings = MQTTSettings()
+        self.settings = gateway_settings
+        self._mqtt_settings = mqtt_settings
+        self._http_settings = http_settings
+        self._api_settings = api_settings
+
+        self.http_client: HTTPClient | None = None
         self.mqtt_client: MQTTClient | None = None
         self.api: ApiServer | None = None
-        self.verifier = BACnetVerifier(override_threshold=settings.override_threshold)
+
+        self.verifier = BACnetVerifier(
+            override_threshold=gateway_settings.override_threshold
+        )
 
         self._devices: dict[int, Any] = {}
 
         # TODO: updating event to return msg in case controlling at update time.
 
     @classmethod
-    async def create(cls, settings: GatewaySettings) -> Gateway:
-        gateway = cls(settings=settings)
+    async def create(
+        cls,
+        gateway_settings: GatewaySettings,
+        mqtt_settings: MQTTSettings,
+        http_settings: HTTPSettings,
+        api_settings: ApiSettings,
+    ) -> Gateway:
+        """Creates `Gateway`.
+
+        Accepts same args as `Gateway`.
+        """
+        gateway = cls(
+            gateway_settings=gateway_settings,
+            mqtt_settings=mqtt_settings,
+            http_settings=http_settings,
+            api_settings=api_settings,
+        )
         gateway._scheduler = await aiojobs.create_scheduler(close_timeout=60, limit=100)
         return gateway
 
@@ -95,19 +123,37 @@ class Gateway:
         await self._stopped.wait()
 
     async def async_start(self) -> None:
-        await self.async_add_job(self.async_setup)
+        await self._scheduler.spawn(
+            self.async_setup(
+                http_settings=self._http_settings,
+                mqtt_settings=self._mqtt_settings,
+                api_settings=self._api_settings,
+            )
+        )
+        # await self.async_add_job(self.async_setup)
 
         # self.loop.run_forever()
 
-    async def async_setup(self) -> None:
+    async def async_setup(
+        self,
+        http_settings: HTTPSettings,
+        mqtt_settings: MQTTSettings,
+        api_settings: ApiSettings,
+    ) -> None:
         """Set up Gateway and spawn update task."""
-        self.http_client = HTTPClient(gateway=self, settings=HTTPSettings())
-        if self._mqtt_settings.enable:
-            self.mqtt_client = MQTTClient.create(gateway=self, settings=self._mqtt_settings)
+        await self.async_setup_clients(
+            http_settings=http_settings, mqtt_settings=mqtt_settings
+        )
 
-        self.api = await ApiServer.create(gateway=self, settings=ApiSettings())
+        self.api = await ApiServer.create(gateway=self, settings=api_settings)
         await self._scheduler.spawn(self.api.start())
         await self._scheduler.spawn(coro=self.periodic_update())
+
+    async def async_setup_clients(
+        self, http_settings: HTTPSettings, mqtt_settings: MQTTSettings
+    ) -> None:
+        self.http_client = HTTPClient(gateway=self, settings=http_settings)
+        self.mqtt_client = MQTTClient.create(gateway=self, settings=mqtt_settings)
 
     async def periodic_update(self) -> None:
         """Spawn periodic update task."""
@@ -375,7 +421,7 @@ class Gateway:
         }  # FIXME: hotfix
 
         protocol = dev_obj.property_list.protocol
-        cls: Type[Object]
+        cls: ObjectType
         if protocol in {
             Protocol.MODBUS_TCP,
             Protocol.MODBUS_RTU,
