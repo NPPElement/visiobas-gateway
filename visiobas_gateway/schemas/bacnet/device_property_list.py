@@ -17,7 +17,8 @@ class BaseDevicePropertyList(BACnetObjPropertyList, ABC):
     timeout: int = Field(
         default=6000,
         alias="apduTimeout",
-        gt=0,  # alias=ObjProperty.apduTimeout.id_str
+        gt=0,
+        le=10_000,  # alias=ObjProperty.apduTimeout.id_str
         description="""The amount of time in milliseconds between retransmissions of an
         APDU requiring acknowledgment for which no acknowledgment has been received.
         A suggested default value for this property is 6,000 milliseconds for devices that
@@ -29,6 +30,7 @@ class BaseDevicePropertyList(BACnetObjPropertyList, ABC):
         default=3,
         alias="numberOfApduRetries",
         ge=0,
+        le=3,
         # alias=ObjProperty.numberOfApduRetries.id_str
         description="""Indicates the maximum number of times that an APDU shall be
         retransmitted. A suggested default value for this property is 3. If this device
@@ -38,12 +40,12 @@ class BaseDevicePropertyList(BACnetObjPropertyList, ABC):
     )
     # fixme: add usage
     send_period: float = Field(
-        default=300, alias="sendPeriod", description="Period to internal object poll."
+        default=300, ge=0, alias="sendPeriod", description="Period to internal object poll."
     )
     # poll_period: float = Field(
     #     default=90, alias="pollPeriod", description="Period to send data to server."
     # )
-    reconnect_period: int = Field(default=300, alias="reconnectPeriod")
+    reconnect_period: int = Field(default=300, ge=0, alias="reconnectPeriod")
 
     @property
     def timeout_seconds(self) -> float:

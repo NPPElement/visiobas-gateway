@@ -1,21 +1,107 @@
 import pydantic
 import pytest
+from pydantic import ValidationError
 
 from visiobas_gateway.schemas import Protocol
+from visiobas_gateway.schemas.bacnet.device_property_list import BaseDevicePropertyList
 
 
 class TestBaseDevicePropertyList:
-    def test_construct_happy(self, device_base_property_list_factory):
-        base_device_property_list = device_base_property_list_factory()
-        assert base_device_property_list.protocol == Protocol.BACNET
-        assert base_device_property_list.timeout == 500
-        assert base_device_property_list.retries == 3
-        assert base_device_property_list.send_period == 300
-        assert base_device_property_list.poll_period == 90
-        assert base_device_property_list.reconnect_period == 300
+    @pytest.mark.parametrize(
+        "data, expected_protocol, expected_timeout, expected_retries, "
+        "expected_send_period, expected_reconnect_period",
+        [
+            ({}, Protocol.BACNET, 500, 3, 300, 300),
+            (
+                {
+                    "protocol": "ModbusTCP",
+                    "apduTimeout": 10_000,
+                    "numberOfApduRetries": 2,
+                    "sendPeriod": 60,
+                    "reconnectPeriod": 600,
+                },
+                Protocol.MODBUS_TCP,
+                10_000,
+                2,
+                60,
+                600,
+            ),
+        ],
+    )
+    def test_construct_happy(
+        self,
+        device_base_property_list_factory,
+        data,
+        expected_protocol,
+        expected_timeout,
+        expected_retries,
+        expected_send_period,
+        expected_reconnect_period,
+    ):
+        base_device_property_list = device_base_property_list_factory(**data)
+
+        assert isinstance(base_device_property_list, BaseDevicePropertyList)
+        assert base_device_property_list.protocol == expected_protocol
+        assert base_device_property_list.timeout == expected_timeout
+        assert base_device_property_list.retries == expected_retries
+        assert base_device_property_list.send_period == expected_send_period
+        # assert base_device_property_list.poll_period == 90
+        assert base_device_property_list.reconnect_period == expected_reconnect_period
+
+        expected_timeout_seconds = expected_timeout / 1000
+        assert base_device_property_list.timeout_seconds == expected_timeout_seconds
+
+        assert hasattr(base_device_property_list, "interface")
+
+    @pytest.mark.parametrize(
+        "data",
+        [
+            {"apduTimeout": "bad_timeout"},
+            {"apduTimeout": 0},
+            {"apduTimeout": "-1"},
+            {"apduTimeout": 60_000},
+        ],
+    )
+    def test_timeout_bad(self, device_base_property_list_factory, data):
+        with pytest.raises(ValidationError):
+            device_base_property_list_factory(**data)
+
+    @pytest.mark.parametrize(
+        "data",
+        [
+            {"numberOfApduRetries": "bad_timeout"},
+            {"numberOfApduRetries": "-1"},
+            {"numberOfApduRetries": 4},
+        ],
+    )
+    def test_retries_bad(self, device_base_property_list_factory, data):
+        with pytest.raises(ValidationError):
+            device_base_property_list_factory(**data)
+
+    @pytest.mark.parametrize(
+        "data",
+        [
+            {"sendPeriod": "bad_send_period"},
+            {"sendPeriod": "-1"},
+        ],
+    )
+    def test_send_period_bad(self, device_base_property_list_factory, data):
+        with pytest.raises(ValidationError):
+            device_base_property_list_factory(**data)
+
+    @pytest.mark.parametrize(
+        "data",
+        [
+            {"reconnectPeriod": "bad_reconnect_period"},
+            {"reconnectPeriod": -1},
+        ],
+    )
+    def test_reconnect_period_bad(self, device_base_property_list_factory, data):
+        with pytest.raises(ValidationError):
+            device_base_property_list_factory(**data)
 
 
-class TestTcpIpDevicePropertyList:
+class TestTcpDevicePropertyList:
     def test_construct_happy(self, tcp_device_property_list_factory):
         tcp_ip_device_property_list = tcp_device_property_list_factory(
             apduTimeout=10_000, numberOfApduRetries=2
@@ -64,7 +150,7 @@ class TestSerialDevicePropertyList:
             serial_device_property_list_factory(protocol=bad_protocol)
 
 
-class TestTcpIpModbusDevicePropertyList:
+class TestModbusTcpDevicePropertyList:
     def test_construct_happy(self, modbus_tcp_device_property_list_factory):
         tcp_ip_modbus_device_property_list = modbus_tcp_device_property_list_factory(
             apduTimeout=10_000, numberOfApduRetries=2
