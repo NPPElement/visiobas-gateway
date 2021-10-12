@@ -41,7 +41,7 @@ async def load_and_run() -> None:
         mqtt_settings=MQTTSettings(),
         http_settings=HTTPSettings(),
     )
-    await gateway.async_run()
+    await gateway.run()
 
 
 def main() -> None:
