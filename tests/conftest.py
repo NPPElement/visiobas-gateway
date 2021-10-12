@@ -16,6 +16,8 @@ from visiobas_gateway.schemas.modbus.modbus_properties import ModbusProperties
 from visiobas_gateway.schemas.bacnet.device_obj import DeviceObj
 from visiobas_gateway.schemas.bacnet.obj import BACnetObj
 from visiobas_gateway.api.jsonrpc.schemas import JsonRPCSetPointParams
+from visiobas_gateway.devices.base_device import BaseDevice
+from visiobas_gateway.gateway import Gateway
 
 import pytest
 
@@ -62,6 +64,8 @@ def device_base_property_list_factory() -> Callable[..., BaseDevicePropertyList]
     """
 
     class ForTestBaseDevicePropertyList(BaseDevicePropertyList):
+        """Class for inheriting from ABC + with abstract method implementation."""
+
         def interface(self) -> Any:
             pass
 
@@ -121,7 +125,7 @@ def serial_device_property_list_factory() -> Callable[..., SerialDevicePropertyL
 
 
 @pytest.fixture
-def tcp_device_factory() -> Callable[..., DeviceObj]:
+def tcp_device_obj_factory() -> Callable[..., DeviceObj]:
     """
     Produces `DeviceObj` with `TcpIpDevicePropertyList` for tests.
 
@@ -137,7 +141,7 @@ def tcp_device_factory() -> Callable[..., DeviceObj]:
 
 
 @pytest.fixture
-def modbus_tcp_device_factory() -> Callable[..., DeviceObj]:
+def modbus_tcp_device_obj_factory() -> Callable[..., DeviceObj]:
     """
     Produces `DeviceObj` with `TcpIpDevicePropertyList` for tests.
 
@@ -153,7 +157,7 @@ def modbus_tcp_device_factory() -> Callable[..., DeviceObj]:
 
 
 @pytest.fixture
-def serial_device_factory() -> Callable[..., DeviceObj]:
+def serial_device_obj_factory() -> Callable[..., DeviceObj]:
     """
     Produces `DeviceObj` with `SerialDevicePropertyList` for tests.
 
@@ -164,6 +168,38 @@ def serial_device_factory() -> Callable[..., DeviceObj]:
     def _factory(**kwargs):
         kwargs = _serial_device_obj_kwargs(kwargs)
         return DeviceObj(**kwargs)
+
+    return _factory
+
+
+@pytest.fixture
+def base_device_factory() -> Callable[..., BaseDevice]:
+    """
+    Produces `BaseDevice` with `DeviceObj` for tests.
+
+    You can pass the same params into this as the `BaseDevice` constructor to
+    override defaults.
+    """
+
+    def _factory(**kwargs):
+        kwargs = _base_device_kwargs(kwargs)
+        return BaseDevice(**kwargs)
+
+    return _factory
+
+
+@pytest.fixture
+async def gateway_factory() -> Callable[..., Gateway]:
+    """
+    Produces `Gateway` for tests.
+
+    You can pass the same params into this as the `Gateway` constructor to
+    override defaults.
+    """
+
+    def _factory(**kwargs):
+        kwargs = _gateway_kwargs(kwargs)
+        return Gateway(**kwargs)
 
     return _factory
 
@@ -216,6 +252,26 @@ def json_rpc_set_point_params_factory() -> Callable[..., JsonRPCSetPointParams]:
     return _factory
 
 
+def _base_device_kwargs(kwargs: dict[str, Any]) -> dict[str, Any]:
+    kwargs = {
+        "gateway": Gateway(**_gateway_kwargs({})),
+        "device_obj": DeviceObj(**_base_device_kwargs({})),
+        **kwargs,
+    }
+    return kwargs
+
+
+def _gateway_kwargs(kwargs: dict[str, Any]) -> dict[str, Any]:
+    kwargs = {
+        "gateway_settings": None,  # fixme
+        "api_settings": None,
+        "http_settings": None,
+        "mqtt_settings": None,
+        **kwargs,
+    }
+    return kwargs
+
+
 def _base_bacnet_obj_kwargs(kwargs: dict[str, Any]) -> dict[str, Any]:
     kwargs = {
         "75": 75,
@@ -247,7 +303,7 @@ def _device_rtu_properties_kwargs(kwargs: dict[str, Any]) -> dict[str, Any]:
     return kwargs
 
 
-def _device_tcp_ip_modbus_properties_kwargs(kwargs: dict[str, Any]) -> dict[str, Any]:
+def _device_modbus_tcp_properties_kwargs(kwargs: dict[str, Any]) -> dict[str, Any]:
     kwargs = {
         "unit": 1,
         **kwargs,
@@ -293,7 +349,7 @@ def _modbus_tcp_device_property_list_kwargs(kwargs: dict[str, Any]) -> dict[str,
         "protocol": "ModbusTCP",
         "timeout": 500,
         "retries": 3,
-        "rtu": _device_tcp_ip_modbus_properties_kwargs({}),
+        "rtu": _device_modbus_tcp_properties_kwargs({}),
         **kwargs,
     }
     return kwargs
