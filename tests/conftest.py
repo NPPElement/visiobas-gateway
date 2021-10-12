@@ -284,7 +284,7 @@ def _gateway_settings_kwargs(kwargs: dict[str, Any]) -> dict[str, Any]:
 def _base_device_kwargs(kwargs: dict[str, Any]) -> dict[str, Any]:
     kwargs = {
         "gateway": Gateway(**_gateway_kwargs({})),
-        "device_obj": DeviceObj(**_base_device_kwargs({})),
+        "device_obj": DeviceObj(**_serial_device_obj_kwargs({})),
         **kwargs,
     }
     return kwargs
@@ -292,8 +292,8 @@ def _base_device_kwargs(kwargs: dict[str, Any]) -> dict[str, Any]:
 
 def _gateway_kwargs(kwargs: dict[str, Any]) -> dict[str, Any]:
     kwargs = {
-        "gateway_settings": None,  # fixme
-        "api_settings": None,
+        "gateway_settings": GatewaySettings(**_gateway_settings_kwargs({})),
+        "api_settings": None,  # todo
         "http_settings": None,
         "mqtt_settings": None,
         **kwargs,
