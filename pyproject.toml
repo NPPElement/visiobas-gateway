@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "visiobas-gateway"
-version = "3.5.0-beta"
+version = "3.5.0-beta2"
 description = "Polling devices using various protocols and transmitting data to the VisioBAS system"
 repository = "https://github.com/NPPElement/visiobas-gateway"
 keywords = ["VisioBAS", "Gateway", "IoT", "BACnet", "Modbus"]
