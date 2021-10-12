@@ -5,6 +5,7 @@ from visiobas_gateway.schemas.modbus.device_rtu_properties import (
     DeviceRtuProperties,
     BaseDeviceModbusProperties,
 )
+from visiobas_gateway.schemas.serial_port import SerialPort
 from visiobas_gateway.schemas.modbus.device_property_list import SerialDevicePropertyList
 
 
@@ -42,6 +43,7 @@ class TestSerialDevicePropertyList:
         assert serial_device_property_list.timeout == 6_000
         assert serial_device_property_list.retries == 3
         assert serial_device_property_list.rtu.baudrate == 9_600
+        assert serial_device_property_list.interface == SerialPort("/dev/ttyS0")
 
     @pytest.mark.parametrize(
         "bad_protocol",

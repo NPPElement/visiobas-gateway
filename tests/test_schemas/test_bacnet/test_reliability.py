@@ -2,7 +2,7 @@ import pytest
 from visiobas_gateway.schemas.bacnet.reliability import Reliability
 
 
-class TestPriority:
+class TestReliability:
     @pytest.mark.parametrize(
         "value",
         [*{i for i in range(16)} - {11}],
