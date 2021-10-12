@@ -20,6 +20,7 @@ class TestObjType:
         with pytest.raises(ValueError):
             ObjType(id_)
 
+
 # @pytest.mark.parametrize(
 #     "obj_type, expected",
 #     [

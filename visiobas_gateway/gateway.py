@@ -41,11 +41,11 @@ class Gateway:
     # pylint: disable=too-many-instance-attributes
 
     def __init__(
-            self,
-            gateway_settings: GatewaySettings,
-            mqtt_settings: MQTTSettings,
-            http_settings: HTTPSettings,
-            api_settings: ApiSettings,
+        self,
+        gateway_settings: GatewaySettings,
+        mqtt_settings: MQTTSettings,
+        http_settings: HTTPSettings,
+        api_settings: ApiSettings,
     ):
         """Note: `Gateway.create()` must be used for gateway Instance construction.
 
@@ -77,11 +77,11 @@ class Gateway:
 
     @classmethod
     async def create(
-            cls,
-            gateway_settings: GatewaySettings,
-            mqtt_settings: MQTTSettings,
-            http_settings: HTTPSettings,
-            api_settings: ApiSettings,
+        cls,
+        gateway_settings: GatewaySettings,
+        mqtt_settings: MQTTSettings,
+        http_settings: HTTPSettings,
+        api_settings: ApiSettings,
     ) -> Gateway:
         """Creates `Gateway`.
 
@@ -117,9 +117,10 @@ class Gateway:
         # self.async_stop will set this instead of stopping the loop
         self._stopped = asyncio.Event()
         await self.start(
-            gateway=self, api_settings=self._api_settings,
+            gateway=self,
+            api_settings=self._api_settings,
             http_settings=self._http_settings,
-            mqtt_settings=self._mqtt_settings
+            mqtt_settings=self._mqtt_settings,
         )
 
         await self._stopped.wait()
@@ -133,10 +134,12 @@ class Gateway:
 
     @staticmethod
     async def start(
-            gateway: Gateway, mqtt_settings: MQTTSettings, http_settings:
-            HTTPSettings, api_settings: ApiSettings
+        gateway: Gateway,
+        mqtt_settings: MQTTSettings,
+        http_settings: HTTPSettings,
+        api_settings: ApiSettings,
     ) -> None:
-        await gateway._scheduler.spawn(
+        await gateway._scheduler.spawn(  # pylint: disable=protected-access
             gateway.async_setup(
                 gateway=gateway,
                 http_settings=http_settings,
@@ -150,29 +153,32 @@ class Gateway:
 
     @staticmethod
     async def async_setup(
-            gateway: Gateway,
-            http_settings: HTTPSettings,
-            mqtt_settings: MQTTSettings,
-            api_settings: ApiSettings,
+        gateway: Gateway,
+        http_settings: HTTPSettings,
+        mqtt_settings: MQTTSettings,
+        api_settings: ApiSettings,
     ) -> Gateway:
         """Sets up `gateway` and spawn update task."""
-        _ = await gateway._create_clients(
-            gateway=gateway,
-            http_settings=http_settings, mqtt_settings=mqtt_settings
+        _ = await gateway._create_clients(  # pylint: disable=protected-access
+            gateway=gateway, http_settings=http_settings, mqtt_settings=mqtt_settings
         )
         gateway.api = await ApiServer.create(gateway=gateway, settings=api_settings)
-        await gateway._scheduler.spawn(gateway.api.start())
-        await gateway._scheduler.spawn(
+        await gateway._scheduler.spawn(  # pylint: disable=protected-access
+            gateway.api.start()
+        )
+        await gateway._scheduler.spawn(  # pylint: disable=protected-access
             gateway.periodic_update(
-                gateway=gateway, settings=gateway.settings,
-                mqtt_settings=mqtt_settings, http_settings=http_settings
+                gateway=gateway,
+                settings=gateway.settings,
+                mqtt_settings=mqtt_settings,
+                http_settings=http_settings,
             )
         )
         return gateway
 
     @staticmethod
     async def _create_clients(
-            gateway: Gateway, http_settings: HTTPSettings, mqtt_settings: MQTTSettings
+        gateway: Gateway, http_settings: HTTPSettings, mqtt_settings: MQTTSettings
     ) -> Gateway:
         """Creates clients for `gateway`."""
         gateway.http_client = HTTPClient(gateway=gateway, settings=http_settings)
@@ -192,20 +198,30 @@ class Gateway:
 
     @staticmethod
     async def periodic_update(
-            gateway: Gateway, settings: GatewaySettings, http_settings:
-            HTTPSettings, mqtt_settings: MQTTSettings
+        gateway: Gateway,
+        settings: GatewaySettings,
+        http_settings: HTTPSettings,
+        mqtt_settings: MQTTSettings,
     ) -> None:
         """Spawn periodic update task."""
-        gateway = await gateway._startup_tasks(gateway=gateway, settings=settings,
-                                               mqtt_settings=mqtt_settings,
-                                               http_settings=http_settings)
+        gateway = await gateway._startup_tasks(  # pylint: disable=protected-access
+            gateway=gateway,
+            settings=settings,
+            mqtt_settings=mqtt_settings,
+            http_settings=http_settings,
+        )
         await asyncio.sleep(delay=settings.update_period)
-        gateway = await gateway._shutdown_tasks(gateway=gateway)
+        gateway = await gateway._shutdown_tasks(  # pylint: disable=protected-access
+            gateway=gateway
+        )
 
-        await gateway._scheduler.spawn(
-            gateway.periodic_update(gateway=gateway, settings=settings,
-                                    mqtt_settings=mqtt_settings,
-                                    http_settings=http_settings)
+        await gateway._scheduler.spawn(  # pylint: disable=protected-access
+            gateway.periodic_update(
+                gateway=gateway,
+                settings=settings,
+                mqtt_settings=mqtt_settings,
+                http_settings=http_settings,
+            )
         )
         # self._upd_task = self.loop.create_task(self.periodic_update())
 
@@ -245,19 +261,21 @@ class Gateway:
 
     @staticmethod
     async def _startup_tasks(
-            gateway: Gateway, settings: GatewaySettings, http_settings:
-            HTTPSettings, mqtt_settings: MQTTSettings) -> Gateway:
+        gateway: Gateway,
+        settings: GatewaySettings,
+        http_settings: HTTPSettings,
+        mqtt_settings: MQTTSettings,
+    ) -> Gateway:
         """Performs starting tasks."""
 
         # 0. Create clients.
-        gateway = await gateway._create_clients(gateway=gateway,
-                                                http_settings=http_settings,
-                                                mqtt_settings=mqtt_settings)
+        gateway = await gateway._create_clients(  # pylint: disable=protected-access
+            gateway=gateway, http_settings=http_settings, mqtt_settings=mqtt_settings
+        )
 
         # 1. Load devices tasks.
         load_device_tasks = [
-            gateway.download_device(device_id=dev_id)
-            for dev_id in settings.poll_device_ids
+            gateway.download_device(device_id=dev_id) for dev_id in settings.poll_device_ids
         ]
 
         # 2. Start devices polling.
@@ -275,11 +293,11 @@ class Gateway:
         """Shutdowns devices for `gateway`."""
         stop_device_polling_tasks = [
             dev.stop()
-            for dev in gateway._devices.values()
+            for dev in gateway._devices.values()  # pylint: disable=protected-access
             if dev.protocol in POLLING_PROTOCOLS
         ]
         await asyncio.gather(*stop_device_polling_tasks)
-        gateway._devices = {}
+        gateway._devices = {}  # pylint: disable=protected-access
 
         return gateway
 
@@ -288,12 +306,16 @@ class Gateway:
         """Performs stopping tasks for `gateway`."""
 
         # 0. Stop devices polling.
-        gateway = await gateway._shutdown_devices(gateway=gateway)
+        gateway = await gateway._shutdown_devices(  # pylint: disable=protected-access
+            gateway=gateway
+        )
 
         # 1. todo: save devices config to local
 
-        # 2.  Shutdown clients.
-        gateway = await gateway._shutdown_clients(gateway=gateway)
+        # 2. Shutdown clients.
+        gateway = await gateway._shutdown_clients(  # pylint: disable=protected-access
+            gateway=gateway
+        )
 
         _LOG.info("Stop tasks performed")
         return gateway
@@ -317,9 +339,9 @@ class Gateway:
 
         # todo: refactor
         if (
-                not isinstance(device_obj_data, list)
-                or not isinstance(device_obj_data[0], list)
-                or not device_obj_data[0]
+            not isinstance(device_obj_data, list)
+            or not isinstance(device_obj_data[0], list)
+            or not device_obj_data[0]
         ):
             _LOG.warning(
                 "Empty device object or exception",
@@ -345,7 +367,7 @@ class Gateway:
         return device
 
     async def download_objects(
-            self, device_obj: DeviceObj
+        self, device_obj: DeviceObj
     ) -> dict[float, dict[tuple[int, int], BACnetObj]]:
         # todo: use for extractions tasks asyncio.as_completed(tasks):
         if not isinstance(self.http_client, HTTPClient):
@@ -387,7 +409,7 @@ class Gateway:
         return dev_obj
 
     def _extract_objects(
-            self, data: tuple, dev_obj: DeviceObj
+        self, data: tuple, dev_obj: DeviceObj
     ) -> list[BACnetObj | ModbusObj]:
         """Parses and validate objects data from JSON.
 
@@ -451,7 +473,7 @@ class Gateway:
     @staticmethod
     @log_exceptions(logger=_LOG)
     def object_factory(
-            dev_obj: DeviceObj, obj_data: dict[str, Any]
+        dev_obj: DeviceObj, obj_data: dict[str, Any]
     ) -> ModbusObj | BACnetObj:
         """Creates object for provided protocol data.
 

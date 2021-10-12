@@ -12,10 +12,7 @@ class TestPriority:
 
     @pytest.mark.parametrize(
         "value",
-        [
-            'bad_value',
-            17, 0, -1, None, ''
-        ],
+        ["bad_value", 17, 0, -1, None, ""],
     )
     def test_bad_value(self, value):
         with pytest.raises(ValueError):

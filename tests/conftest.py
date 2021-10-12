@@ -273,9 +273,9 @@ def _gateway_settings_kwargs(kwargs: dict[str, Any]) -> dict[str, Any]:
     kwargs = {
         "update_period": 3600,
         "unreachable_reset_period": 1800,
-        'unreachable_threshold': 3,
-        'override_threshold': 8,
-        'poll_device_ids': [11, 22, 33],
+        "unreachable_threshold": 3,
+        "override_threshold": 8,
+        "poll_device_ids": [11, 22, 33],
         **kwargs,
     }
     return kwargs
