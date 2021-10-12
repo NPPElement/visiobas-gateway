@@ -5,7 +5,7 @@ from visiobas_gateway.schemas.modbus.data_type import ModbusDataType
 class TestModbusDataType:
     @pytest.mark.parametrize(
         "value",
-        ['bits', 'bool', 'int', 'uint', 'float'],
+        ["bits", "bool", "int", "uint", "float"],
     )
     def test_construct_happy(self, value):
         assert ModbusDataType(value).value == value

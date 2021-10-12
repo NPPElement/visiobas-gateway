@@ -1,8 +1,8 @@
-from enum import Enum, unique
+from enum import IntEnum, unique
 
 
 @unique
-class StopBits(int, Enum):
+class StopBits(IntEnum):
     """The number of bits sent after each character in a
     message to indicate the end of the byte.
     """

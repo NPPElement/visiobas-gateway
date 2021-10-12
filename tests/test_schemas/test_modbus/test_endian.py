@@ -6,9 +6,9 @@ class TestEndian:
     @pytest.mark.parametrize(
         "value, value_str",
         [
-            ('>', 'big'),
-            ('<', 'LITTle'),
-            ('@', 'AUTO'),
+            (">", "big"),
+            ("<", "LITTle"),
+            ("@", "AUTO"),
         ],
     )
     def test_construct_happy(self, value, value_str):
