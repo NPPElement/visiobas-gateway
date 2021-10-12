@@ -32,7 +32,7 @@ class BACnetDevice(BasePollingDevice, BACnetCoderMixin):
     @staticmethod
     def interface_key(device_obj: DeviceObj) -> IPv4Address:
         if isinstance(device_obj.property_list, TcpDevicePropertyList):
-            return device_obj.property_list.address
+            return device_obj.property_list.ip
         raise ValueError("`IPv4Address` expected. No address found.")
 
     @property

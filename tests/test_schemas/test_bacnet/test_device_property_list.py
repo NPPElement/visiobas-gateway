@@ -1,3 +1,5 @@
+from ipaddress import IPv4Address
+
 import pydantic
 import pytest
 from pydantic import ValidationError
@@ -102,19 +104,31 @@ class TestBaseDevicePropertyList:
 
 
 class TestTcpDevicePropertyList:
-    def test_construct_happy(self, tcp_device_property_list_factory):
-        tcp_ip_device_property_list = tcp_device_property_list_factory(
-            apduTimeout=10_000, numberOfApduRetries=2
-        )
-        assert tcp_ip_device_property_list.protocol == Protocol.BACNET
-        assert tcp_ip_device_property_list.timeout == 10_000
-        assert tcp_ip_device_property_list.retries == 2
-        assert tcp_ip_device_property_list.send_period == 300
-        assert tcp_ip_device_property_list.poll_period == 90
-        assert tcp_ip_device_property_list.reconnect_period == 300
-
-        assert str(tcp_ip_device_property_list.address) == "10.21.10.21"
-        assert tcp_ip_device_property_list.port == 47808
+    @pytest.mark.parametrize(
+        "data, expected_protocol, expected_ip, expected_port",
+        [
+            ({}, Protocol.BACNET, IPv4Address("10.21.10.21"), 47808),
+            (
+                {"port": 0xBAC2, "address": "10.21.10.13"},
+                Protocol.BACNET,
+                IPv4Address("10.21.10.13"),
+                47810,
+            ),
+        ],
+    )
+    def test_construct_happy(
+        self,
+        tcp_device_property_list_factory,
+        data,
+        expected_protocol,
+        expected_ip,
+        expected_port,
+    ):
+        tcp_device_property_list = tcp_device_property_list_factory(**data)
+        assert tcp_device_property_list.protocol == expected_protocol
+        assert tcp_device_property_list.ip == expected_ip
+        assert tcp_device_property_list.port == expected_port
+        assert tcp_device_property_list.interface == (expected_ip, expected_port)
 
     @pytest.mark.parametrize(
         "bad_protocol",
@@ -124,7 +138,16 @@ class TestTcpDevicePropertyList:
         with pytest.raises(pydantic.ValidationError):
             tcp_device_property_list_factory(protocol=bad_protocol)
 
+    @pytest.mark.parametrize(
+        "bad_port",
+        ["-1", "bad_port", 99_999],
+    )
+    def test_construct_bad_port(self, tcp_device_property_list_factory, bad_port):
+        with pytest.raises(pydantic.ValidationError):
+            tcp_device_property_list_factory(protocol=bad_port)
 
+
+# TODO: move to modbus + refactor (see example above)
 class TestSerialDevicePropertyList:
     def test_construct_happy(self, serial_device_property_list_factory):
         from visiobas_gateway.schemas.modbus.device_rtu_properties import (
@@ -162,7 +185,7 @@ class TestModbusTcpDevicePropertyList:
         assert tcp_ip_modbus_device_property_list.poll_period == 90
         assert tcp_ip_modbus_device_property_list.reconnect_period == 300
 
-        assert str(tcp_ip_modbus_device_property_list.address) == "10.21.10.21"
+        assert str(tcp_ip_modbus_device_property_list.ip) == "10.21.10.21"
         assert tcp_ip_modbus_device_property_list.port == 502
 
         assert tcp_ip_modbus_device_property_list.rtu.unit == 1

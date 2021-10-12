@@ -61,8 +61,8 @@ class BaseDevicePropertyList(BACnetObjPropertyList, ABC):
 class TcpDevicePropertyList(BaseDevicePropertyList):
     """PropertyList for TCP/IP devices."""
 
-    address: IPv4Address = Field(default=None)
-    port: int = Field(default=None)
+    ip: IPv4Address = Field(..., alias="address")
+    port: int = Field(..., ge=0, le=65535)
 
     @validator("protocol")
     def validate_protocol(cls, value: Protocol) -> Protocol:
@@ -73,4 +73,4 @@ class TcpDevicePropertyList(BaseDevicePropertyList):
 
     @property
     def interface(self) -> tuple[IPv4Address, int]:
-        return self.address, self.port
+        return self.ip, self.port

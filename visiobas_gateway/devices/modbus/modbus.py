@@ -66,7 +66,7 @@ class ModbusDevice(BasePollingDevice, ModbusCoderMixin):
             Protocol.MODBUS_RTU_OVER_TCP,
         }:
             client = ModbusTcpClient(
-                host=str(device_obj.property_list.address),  # type: ignore
+                host=str(device_obj.property_list.ip),  # type: ignore
                 port=device_obj.property_list.port,  # type: ignore
                 framer=framer,
                 retries=device_obj.property_list.retries,

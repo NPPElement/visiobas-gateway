@@ -359,7 +359,7 @@ def _tcp_device_property_list_kwargs(kwargs: dict[str, Any]) -> dict[str, Any]:
         "alias": "",
         "replace": {},
         "address": "10.21.10.21",
-        "port": 47808,
+        "port": 0xBAC0,
         "protocol": "BACnet",
         "timeout": 500,
         "retries": 3,
