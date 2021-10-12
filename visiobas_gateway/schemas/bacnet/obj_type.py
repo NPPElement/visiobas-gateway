@@ -1,10 +1,10 @@
-from enum import Enum, unique
+from enum import unique, IntEnum
 
 from .obj_property import ObjProperty
 
 
 @unique
-class ObjType(int, Enum):
+class ObjType(IntEnum):
     """Supported BACnet object types.
 
     Enumerated values 0-127 are reserved for definition by `ASHRAE`.
