@@ -17,6 +17,6 @@ class TestPriority:
             17, 0, -1, None, ''
         ],
     )
-    def test_construct_bad(self, value):
+    def test_bad_value(self, value):
         with pytest.raises(ValueError):
             Priority(value)
