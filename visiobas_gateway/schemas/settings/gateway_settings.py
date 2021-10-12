@@ -26,9 +26,9 @@ class GatewaySettings(BaseSettings):
     )
 
     @validator("poll_device_ids")
-    def drop_duplicated_ids(cls, value: list[PositiveInt]) -> list[PositiveInt]:
+    def remove_duplicated_ids(cls, value: list[PositiveInt]) -> list[PositiveInt]:
         # pylint: disable=no-self-argument
-        return list(set(value))
+        return sorted(list(set(value)))
 
     class Config:  # pylint: disable=missing-class-docstring
         env_prefix = "GTW_"

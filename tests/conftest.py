@@ -18,6 +18,7 @@ from visiobas_gateway.schemas.bacnet.obj import BACnetObj
 from visiobas_gateway.api.jsonrpc.schemas import JsonRPCSetPointParams
 from visiobas_gateway.devices.base_device import BaseDevice
 from visiobas_gateway.gateway import Gateway
+from visiobas_gateway.schemas.settings.gateway_settings import GatewaySettings
 
 import pytest
 
@@ -250,6 +251,34 @@ def json_rpc_set_point_params_factory() -> Callable[..., JsonRPCSetPointParams]:
         return JsonRPCSetPointParams(**kwargs)
 
     return _factory
+
+
+@pytest.fixture
+def gateway_settings_factory() -> Callable[..., GatewaySettings]:
+    """
+    Produces `GatewaySettings` for tests.
+
+    You can pass the same params into this as the `GatewaySettings` constructor to
+    override defaults.
+    """
+
+    def _factory(**kwargs):
+        kwargs = _gateway_settings_kwargs(kwargs)
+        return GatewaySettings(**kwargs)
+
+    return _factory
+
+
+def _gateway_settings_kwargs(kwargs: dict[str, Any]) -> dict[str, Any]:
+    kwargs = {
+        "update_period": 3600,
+        "unreachable_reset_period": 1800,
+        'unreachable_threshold': 3,
+        'override_threshold': 8,
+        'poll_device_ids': [11, 22, 33],
+        **kwargs,
+    }
+    return kwargs
 
 
 def _base_device_kwargs(kwargs: dict[str, Any]) -> dict[str, Any]:

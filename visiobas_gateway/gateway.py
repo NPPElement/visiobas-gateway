@@ -55,8 +55,8 @@ class Gateway:
         self.loop: asyncio.AbstractEventLoop = asyncio.get_running_loop()
 
         self._stopped: asyncio.Event | None = None
-        # self._upd_task: asyncio.Task | None = None
         # todo: self.state
+        # TODO: updating event to return msg in case controlling at update time.
 
         self._scheduler: aiojobs.Scheduler = None  # type: ignore
 
@@ -74,8 +74,6 @@ class Gateway:
         )
 
         self._devices: dict[int, Any] = {}
-
-        # TODO: updating event to return msg in case controlling at update time.
 
     @classmethod
     async def create(
@@ -336,7 +334,7 @@ class Gateway:
         device = await self.device_factory(dev_obj=device_obj, gateway=self)
 
         if not device:
-            raise ValueError("Device not constructed.")
+            raise ValueError("Device not constructed")
 
         if device.protocol in POLLING_PROTOCOLS:
             groups = await self.download_objects(device_obj=device_obj)
