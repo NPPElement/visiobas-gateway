@@ -302,8 +302,8 @@ def _gateway_settings_kwargs(kwargs: dict[str, Any]) -> dict[str, Any]:
 
 def _base_device_kwargs(kwargs: dict[str, Any]) -> dict[str, Any]:
     kwargs = {
-        "gateway": Gateway(**_gateway_kwargs({})),
-        "device_obj": DeviceObj(**_serial_device_obj_kwargs({})),
+        "gateway": Gateway(**_gateway_kwargs(kwargs)),
+        "device_obj": DeviceObj(**_serial_device_obj_kwargs(kwargs)),
         **kwargs,
     }
     return kwargs
@@ -311,7 +311,7 @@ def _base_device_kwargs(kwargs: dict[str, Any]) -> dict[str, Any]:
 
 def _gateway_kwargs(kwargs: dict[str, Any]) -> dict[str, Any]:
     kwargs = {
-        "gateway_settings": GatewaySettings(**_gateway_settings_kwargs({})),
+        "gateway_settings": GatewaySettings(**_gateway_settings_kwargs(kwargs)),
         "api_settings": None,  # todo
         "http_settings": None,
         "mqtt_settings": None,
@@ -397,7 +397,7 @@ def _modbus_tcp_device_property_list_kwargs(kwargs: dict[str, Any]) -> dict[str,
         "protocol": "ModbusTCP",
         "timeout": 500,
         "retries": 3,
-        "rtu": _base_device_modbus_properties_kwargs({}),
+        "rtu": _base_device_modbus_properties_kwargs(kwargs),
         **kwargs,
     }
     return kwargs
@@ -409,7 +409,7 @@ def _serial_device_property_list_kwargs(kwargs: dict[str, Any]) -> dict[str, Any
         "alias": "",
         "replace": {},
         "protocol": "ModbusRTU",
-        "rtu": _device_rtu_properties_kwargs({}),
+        "rtu": _device_rtu_properties_kwargs(kwargs),
         **kwargs,
     }
     return kwargs
@@ -418,7 +418,7 @@ def _serial_device_property_list_kwargs(kwargs: dict[str, Any]) -> dict[str, Any
 def _tcp_device_obj_kwargs(kwargs: dict[str, Any]) -> dict[str, Any]:
     kwargs = {
         **_base_bacnet_obj_kwargs({}),
-        "371": json.dumps(_tcp_device_property_list_kwargs({})),
+        "371": json.dumps(_tcp_device_property_list_kwargs(kwargs)),
         **kwargs,
     }
     return kwargs
@@ -427,7 +427,7 @@ def _tcp_device_obj_kwargs(kwargs: dict[str, Any]) -> dict[str, Any]:
 def _modbus_tcp_device_obj_kwargs(kwargs: dict[str, Any]) -> dict[str, Any]:
     kwargs = {
         **_base_bacnet_obj_kwargs({}),
-        "371": json.dumps(_modbus_tcp_device_property_list_kwargs({})),
+        "371": json.dumps(_modbus_tcp_device_property_list_kwargs(kwargs)),
         **kwargs,
     }
     return kwargs
@@ -435,8 +435,8 @@ def _modbus_tcp_device_obj_kwargs(kwargs: dict[str, Any]) -> dict[str, Any]:
 
 def _serial_device_obj_kwargs(kwargs: dict[str, Any]) -> dict[str, Any]:
     kwargs = {
-        **_base_bacnet_obj_kwargs({}),
-        "371": json.dumps(_serial_device_property_list_kwargs({})),
+        **_base_bacnet_obj_kwargs(kwargs),
+        "371": json.dumps(_serial_device_property_list_kwargs(kwargs)),
         **kwargs,
     }
     return kwargs
@@ -459,7 +459,7 @@ def _modbus_properties_kwargs(kwargs: dict[str, Any]) -> dict[str, Any]:
 
 def _bacnet_obj_kwargs(kwargs: dict[str, Any]) -> dict[str, Any]:
     kwargs = {
-        **_base_bacnet_obj_kwargs({}),
+        **_base_bacnet_obj_kwargs(kwargs),
         "103": "no-fault-detected",
         "106": None,
         "111": [False, False, False, False],

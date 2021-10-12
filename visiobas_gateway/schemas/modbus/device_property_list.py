@@ -10,7 +10,6 @@ class ModbusTcpDevicePropertyList(TcpDevicePropertyList):
     """PropertyList for TCP/IP Modbus devices."""
 
     rtu: BaseDeviceModbusProperties = Field(default=BaseDeviceModbusProperties(unit=1))
-
     # fixme: hotfix. Should be required. Not default!
 
     @validator("protocol")

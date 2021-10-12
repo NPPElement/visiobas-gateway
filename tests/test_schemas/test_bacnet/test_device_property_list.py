@@ -132,7 +132,7 @@ class TestTcpDevicePropertyList:
 
     @pytest.mark.parametrize(
         "bad_protocol",
-        ["ModbusRTU", "ModbusRTUoverTCP", "ModbusTCP", "SunAPI"],
+        ["ModbusRTU", "ModbusRTUoverTCP", "ModbusTCP"],
     )
     def test_construct_bad_protocol(self, tcp_device_property_list_factory, bad_protocol):
         with pytest.raises(pydantic.ValidationError):
