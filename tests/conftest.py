@@ -10,7 +10,10 @@ from visiobas_gateway.schemas.modbus.device_property_list import (
     SerialDevicePropertyList,
     ModbusTcpDevicePropertyList,
 )
-from visiobas_gateway.schemas.modbus.device_rtu_properties import DeviceRtuProperties
+from visiobas_gateway.schemas.modbus.device_rtu_properties import (
+    DeviceRtuProperties,
+    BaseDeviceModbusProperties,
+)
 from visiobas_gateway.schemas.modbus.modbus_properties import ModbusProperties
 
 from visiobas_gateway.schemas.bacnet.device_obj import DeviceObj
@@ -35,6 +38,22 @@ def base_bacnet_obj_factory() -> Callable[..., BaseBACnetObj]:
     def _factory(**kwargs):
         kwargs = _base_bacnet_obj_kwargs(kwargs)
         return BaseBACnetObj(**kwargs)
+
+    return _factory
+
+
+@pytest.fixture
+def base_device_modbus_properties() -> Callable[..., BaseDeviceModbusProperties]:
+    """
+    Produces `BaseDeviceModbusProperties` for tests.
+
+    You can pass the same params into this as the `BaseDeviceModbusProperties` constructor to
+    override defaults.
+    """
+
+    def _factory(**kwargs):
+        kwargs = _base_device_modbus_properties_kwargs(kwargs)
+        return BaseDeviceModbusProperties(**kwargs)
 
     return _factory
 
@@ -332,7 +351,7 @@ def _device_rtu_properties_kwargs(kwargs: dict[str, Any]) -> dict[str, Any]:
     return kwargs
 
 
-def _device_modbus_tcp_properties_kwargs(kwargs: dict[str, Any]) -> dict[str, Any]:
+def _base_device_modbus_properties_kwargs(kwargs: dict[str, Any]) -> dict[str, Any]:
     kwargs = {
         "unit": 1,
         **kwargs,
@@ -378,7 +397,7 @@ def _modbus_tcp_device_property_list_kwargs(kwargs: dict[str, Any]) -> dict[str,
         "protocol": "ModbusTCP",
         "timeout": 500,
         "retries": 3,
-        "rtu": _device_modbus_tcp_properties_kwargs({}),
+        "rtu": _base_device_modbus_properties_kwargs({}),
         **kwargs,
     }
     return kwargs

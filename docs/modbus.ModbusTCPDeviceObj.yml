@@ -1,15 +1,16 @@
 definitions:
-  DeviceModbusTcpIpProperties:
+  BaseDeviceModbusProperties:
     description: Represent RTU properties for Modbus TCP/IP devices.
     properties:
       unit:
-        description: Address of unit.
+        description: Address of serial device.
+        maximum: 255
         minimum: 0
         title: Unit
         type: integer
     required:
     - unit
-    title: DeviceModbusTcpIpProperties
+    title: BaseDeviceModbusProperties
     type: object
   ModbusTcpDevicePropertyList:
     description: PropertyList for TCP/IP Modbus devices.
@@ -62,7 +63,7 @@ definitions:
         type: integer
       rtu:
         allOf:
-        - $ref: '#/definitions/DeviceModbusTcpIpProperties'
+        - $ref: '#/definitions/BaseDeviceModbusProperties'
         default:
           unit: 1
         title: Rtu

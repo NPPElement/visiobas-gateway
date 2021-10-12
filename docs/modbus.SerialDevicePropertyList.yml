@@ -50,6 +50,7 @@ definitions:
         default: 1
       unit:
         description: Address of serial device.
+        maximum: 255
         minimum: 0
         title: Unit
         type: integer

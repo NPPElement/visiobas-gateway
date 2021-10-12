@@ -3,13 +3,13 @@ from pydantic import Field, validator
 from ..bacnet.device_property_list import BaseDevicePropertyList, TcpDevicePropertyList
 from ..protocol import MODBUS_TCP_IP_PROTOCOLS, SERIAL_PROTOCOLS, Protocol
 from ..serial_port import SerialPort
-from .device_rtu_properties import DeviceModbusTcpIpProperties, DeviceRtuProperties
+from .device_rtu_properties import BaseDeviceModbusProperties, DeviceRtuProperties
 
 
 class ModbusTcpDevicePropertyList(TcpDevicePropertyList):
     """PropertyList for TCP/IP Modbus devices."""
 
-    rtu: DeviceModbusTcpIpProperties = Field(default=DeviceModbusTcpIpProperties(unit=1))
+    rtu: BaseDeviceModbusProperties = Field(default=BaseDeviceModbusProperties(unit=1))
 
     # fixme: hotfix. Should be required. Not default!
 
