@@ -8,7 +8,7 @@ from pydantic import Field, validator
 from ...utils import snake_case
 from .base_obj import BaseBACnetObj
 from .obj_property import ObjProperty
-from .obj_property_list import BACnetObjPropertyList
+from .obj_property_list import BaseBACnetObjPropertyList
 from .obj_type import INPUT_PROPERTIES, INPUT_TYPES, OUTPUT_PROPERTIES, OUTPUT_TYPES
 from .reliability import Reliability
 from .status_flags import StatusFlags
@@ -112,7 +112,7 @@ class BACnetObj(BaseBACnetObj):
     segmentation_supported: bool = Field(
         default=False, alias=str(ObjProperty.SEGMENTATION_SUPPORTED.value)
     )
-    property_list: BACnetObjPropertyList = Field(  # type: ignore
+    property_list: BaseBACnetObjPropertyList = Field(  # type: ignore
         ...,
         alias=str(ObjProperty.PROPERTY_LIST.value),
         description="""This read-only property is a JSON of property identifiers, one

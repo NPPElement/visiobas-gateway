@@ -22,7 +22,7 @@ from visiobas_gateway.api.jsonrpc.schemas import JsonRPCSetPointParams
 from visiobas_gateway.devices.base_device import BaseDevice
 from visiobas_gateway.gateway import Gateway
 from visiobas_gateway.schemas.settings.gateway_settings import GatewaySettings
-
+from visiobas_gateway.schemas.bacnet.obj_property_list import BaseBACnetObjPropertyList
 import pytest
 
 
@@ -92,6 +92,25 @@ def device_base_property_list_factory() -> Callable[..., BaseDevicePropertyList]
     def _factory(**kwargs):
         kwargs = _base_device_property_list_kwargs(kwargs)
         return ForTestBaseDevicePropertyList(**kwargs)
+
+    return _factory
+
+
+@pytest.fixture
+def base_obj_property_list_factory() -> Callable[..., BaseBACnetObjPropertyList]:
+    """
+    Produces `BaseBACnetObjPropertyList` for tests.
+
+    You can pass the same params into this as the `BaseBACnetObjPropertyList` constructor to
+    override defaults.
+    """
+
+    class ForTestBaseBACnetObjPropertyList(BaseBACnetObjPropertyList):
+        """Class for inheriting from ABC."""
+
+    def _factory(**kwargs):
+        kwargs = _base_obj_property_list_kwargs(kwargs)
+        return ForTestBaseBACnetObjPropertyList(**kwargs)
 
     return _factory
 
@@ -367,6 +386,14 @@ def _base_device_property_list_kwargs(kwargs: dict[str, Any]) -> dict[str, Any]:
         "protocol": "BACnet",
         "apduTimeout": 500,
         "numberOfApduRetries": 3,
+        **kwargs,
+    }
+    return kwargs
+
+
+def _base_obj_property_list_kwargs(kwargs: dict[str, Any]) -> dict[str, Any]:
+    kwargs = {
+        "poll_period": 90,
         **kwargs,
     }
     return kwargs

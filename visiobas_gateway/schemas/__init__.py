@@ -1,7 +1,7 @@
 from .bacnet.base_obj import BaseBACnetObj
 from .bacnet.device_obj import DeviceObj, TcpDevicePropertyList
 from .bacnet.obj import BACnetObj
-from .bacnet.obj_property_list import BACnetObjPropertyList
+from .bacnet.obj_property_list import BaseBACnetObjPropertyList
 from .bacnet.obj_type import (
     ANALOG_TYPES,
     BINARY_TYPES,
@@ -46,7 +46,7 @@ __all__ = [
     "TcpDevicePropertyList",
     "BACnetObj",
     "ObjProperty",
-    "BACnetObjPropertyList",
+    "BaseBACnetObjPropertyList",
     "ObjType",
     "ANALOG_TYPES",
     "BINARY_TYPES",

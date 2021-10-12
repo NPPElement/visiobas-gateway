@@ -7,10 +7,10 @@ from pydantic import Field, validator
 
 from ..protocol import MODBUS_TCP_IP_PROTOCOLS, TCP_IP_PROTOCOLS, Protocol
 from ..serial_port import SerialPort
-from .obj_property_list import BACnetObjPropertyList
+from .obj_property_list import BaseBACnetObjPropertyList
 
 
-class BaseDevicePropertyList(BACnetObjPropertyList, ABC):
+class BaseDevicePropertyList(BaseBACnetObjPropertyList, ABC):
     """Base class for PropertyList's (371) of device."""
 
     protocol: Protocol = Field(...)
@@ -42,9 +42,6 @@ class BaseDevicePropertyList(BACnetObjPropertyList, ABC):
     send_period: float = Field(
         default=300, ge=0, alias="sendPeriod", description="Period to internal object poll."
     )
-    # poll_period: float = Field(
-    #     default=90, alias="pollPeriod", description="Period to send data to server."
-    # )
     reconnect_period: int = Field(default=300, ge=0, alias="reconnectPeriod")
 
     @property
