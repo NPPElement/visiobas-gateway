@@ -1,8 +1,8 @@
-from enum import Enum, unique
+from enum import IntEnum, unique
 
 
 @unique
-class Bytesize(int, Enum):
+class Bytesize(IntEnum):
     """The number of bits in a byte of serial data. This can be one of 5, 6, 7, or 8."""
 
     _5 = 5

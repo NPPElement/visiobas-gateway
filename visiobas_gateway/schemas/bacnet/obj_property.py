@@ -1,8 +1,8 @@
-from enum import Enum, unique
+from enum import IntEnum, unique
 
 
 @unique
-class ObjProperty(int, Enum):
+class ObjProperty(IntEnum):
     """Represent properties of BACnet object."""
 
     ACKED_TRANSITIONS = 0
