@@ -21,18 +21,6 @@ definitions:
     - 8
     title: Bytesize
     type: integer
-  DeviceModbusTcpIpProperties:
-    description: Represent RTU properties for Modbus TCP/IP devices.
-    properties:
-      unit:
-        description: Address of unit.
-        minimum: 0
-        title: Unit
-        type: integer
-    required:
-    - unit
-    title: DeviceModbusTcpIpProperties
-    type: object
   DeviceRtuProperties:
     description: Represent RTU properties for ModbusRTU devices.
     properties:
@@ -69,73 +57,6 @@ definitions:
     - unit
     - port
     title: DeviceRtuProperties
-    type: object
-  ModbusTcpDevicePropertyList:
-    description: PropertyList for TCP/IP Modbus devices.
-    properties:
-      address:
-        format: ipv4
-        title: Address
-        type: string
-      apduTimeout:
-        default: 6000
-        description: "The amount of time in milliseconds between retransmissions of\
-          \ an\n        APDU requiring acknowledgment for which no acknowledgment\
-          \ has been received.\n        A suggested default value for this property\
-          \ is 6,000 milliseconds for devices that\n        permit modification of\
-          \ this parameter. Otherwise, the default value shall be\n        10,000\
-          \ milliseconds. This value shall be non-zero if the Device object property\n\
-          \        named Number_Of_APDU_Retries is non-zero."
-        exclusiveMinimum: 0
-        maximum: 10000
-        title: Apdutimeout
-        type: integer
-      numberOfApduRetries:
-        default: 3
-        description: "Indicates the maximum number of times that an APDU shall be\n\
-          \        retransmitted. A suggested default value for this property is 3.\
-          \ If this device\n        does not perform retries, then this property shall\
-          \ be set to zero. If the value of\n        this property is greater than\
-          \ zero, a non-zero value shall be placed in the Device\n        object APDU_Timeout\
-          \ property."
-        maximum: 3
-        minimum: 0
-        title: Numberofapduretries
-        type: integer
-      pollPeriod:
-        default: 90
-        description: Period to send data to server.
-        title: Pollperiod
-        type: number
-      port:
-        maximum: 65535
-        minimum: 0
-        title: Port
-        type: integer
-      protocol:
-        $ref: '#/definitions/Protocol'
-      reconnectPeriod:
-        default: 300
-        minimum: 0
-        title: Reconnectperiod
-        type: integer
-      rtu:
-        allOf:
-        - $ref: '#/definitions/DeviceModbusTcpIpProperties'
-        default:
-          unit: 1
-        title: Rtu
-      sendPeriod:
-        default: 300
-        description: Period to internal object poll.
-        minimum: 0
-        title: Sendperiod
-        type: number
-    required:
-    - protocol
-    - address
-    - port
-    title: ModbusTcpDevicePropertyList
     type: object
   ObjType:
     description: 'Supported BACnet object types.
@@ -282,75 +203,10 @@ definitions:
     - 2
     title: StopBits
     type: integer
-  TcpDevicePropertyList:
-    description: PropertyList for TCP/IP devices.
-    properties:
-      address:
-        format: ipv4
-        title: Address
-        type: string
-      apduTimeout:
-        default: 6000
-        description: "The amount of time in milliseconds between retransmissions of\
-          \ an\n        APDU requiring acknowledgment for which no acknowledgment\
-          \ has been received.\n        A suggested default value for this property\
-          \ is 6,000 milliseconds for devices that\n        permit modification of\
-          \ this parameter. Otherwise, the default value shall be\n        10,000\
-          \ milliseconds. This value shall be non-zero if the Device object property\n\
-          \        named Number_Of_APDU_Retries is non-zero."
-        exclusiveMinimum: 0
-        maximum: 10000
-        title: Apdutimeout
-        type: integer
-      numberOfApduRetries:
-        default: 3
-        description: "Indicates the maximum number of times that an APDU shall be\n\
-          \        retransmitted. A suggested default value for this property is 3.\
-          \ If this device\n        does not perform retries, then this property shall\
-          \ be set to zero. If the value of\n        this property is greater than\
-          \ zero, a non-zero value shall be placed in the Device\n        object APDU_Timeout\
-          \ property."
-        maximum: 3
-        minimum: 0
-        title: Numberofapduretries
-        type: integer
-      pollPeriod:
-        default: 90
-        description: Period to send data to server.
-        title: Pollperiod
-        type: number
-      port:
-        maximum: 65535
-        minimum: 0
-        title: Port
-        type: integer
-      protocol:
-        $ref: '#/definitions/Protocol'
-      reconnectPeriod:
-        default: 300
-        minimum: 0
-        title: Reconnectperiod
-        type: integer
-      sendPeriod:
-        default: 300
-        description: Period to internal object poll.
-        minimum: 0
-        title: Sendperiod
-        type: number
-    required:
-    - protocol
-    - address
-    - port
-    title: TcpDevicePropertyList
-    type: object
-description: Represent device object.
+description: Device object for Modbus serial devices.
 properties:
   '371':
-    anyOf:
-    - $ref: '#/definitions/ModbusTcpDevicePropertyList'
-    - $ref: '#/definitions/TcpDevicePropertyList'
-    - $ref: '#/definitions/SerialDevicePropertyList'
-    title: '371'
+    $ref: '#/definitions/SerialDevicePropertyList'
   '75':
     description: "Is a numeric code that is used to identify the object.\n       \
       \ It shall be unique within the BACnet Device that maintains it."
@@ -379,5 +235,5 @@ required:
 - '75'
 - '77'
 - '371'
-title: DeviceObj
+title: ModbusSerialDeviceObj
 type: object
