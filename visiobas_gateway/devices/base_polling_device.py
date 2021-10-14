@@ -270,7 +270,7 @@ class BasePollingDevice(BaseDevice, ABC):
         await asyncio.sleep(delay=period - _t_delta.seconds)
         await self._scheduler.spawn(self.periodic_poll(objs=verified_objs, period=period))
 
-    async def _after_polling_tasks(self, objs: Collection[BACnetObj]) -> list[BACnetObj]:
+    async def _after_polling_tasks(self, objs: list[BACnetObj]) -> list[BACnetObj]:
         verified_objects = self._gtw.verifier.verify_objects(objs=objs)
         await self._scheduler.spawn(self._gtw.send_objects(objs=verified_objects))
         return verified_objects

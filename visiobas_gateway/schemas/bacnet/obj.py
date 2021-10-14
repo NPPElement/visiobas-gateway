@@ -14,7 +14,7 @@ from .reliability import Reliability
 from .status_flags import StatusFlags
 
 DEFAULT_RESOLUTION = 0.1
-DEFAULT_PRIORITY_ARRAY: list[Optional[float]] = [None] * 16
+DEFAULT_PRIORITY_ARRAY: list[float | None] = [None] * 16
 
 
 class BACnetObj(BaseBACnetObj):
@@ -79,7 +79,7 @@ class BACnetObj(BaseBACnetObj):
     @validator("priority_array", pre=True)
     def set_default_priority_array_if_none(
         cls, value: list[float | None] | None
-    ) -> list[Optional[float]]:
+    ) -> list[float | None]:
         """None should be interpreted as default value 0.1 -- `pydantic` does not
         handle it.
         """
