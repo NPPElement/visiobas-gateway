@@ -28,6 +28,7 @@ class MQTTSettings(BaseSettings):
     # todo: add security
 
     class Config:  # pylint: disable=missing-class-docstring
+        allow_mutation = False
         # arbitrary_types_allowed = True
         env_prefix = "GTW_MQTT_"
         env_file = ".env"

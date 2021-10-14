@@ -13,6 +13,7 @@ class HTTPSettings(BaseSettings):
     servers_post: list[HTTPServerConfig] = Field(..., min_items=1)
 
     class Config:  # pylint: disable=missing-class-docstring
+        allow_mutation = False
         arbitrary_types_allowed = True
         env_prefix = "GTW_HTTP_"
         env_file = ".env"
