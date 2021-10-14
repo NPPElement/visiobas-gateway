@@ -255,7 +255,6 @@ class BasePollingDevice(BaseDevice, ABC):
             objs=objs, unreachable_threshold=self._gtw.settings.unreachable_threshold
         )
         _t_delta = datetime.now() - _t0
-
         self._LOG.info(
             "Objects polled",
             extra={
@@ -265,7 +264,6 @@ class BasePollingDevice(BaseDevice, ABC):
                 "period": period,
             },
         )
-
         if _t_delta.seconds > period:
             self._LOG.warning("Polling period is too short!", extra={"device_id": self.id})
         verified_objs = await self._after_polling_tasks(objs=polled_objs)

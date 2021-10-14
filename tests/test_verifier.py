@@ -187,7 +187,9 @@ class TestBACnetVerifier:
         bacnet_obj = bacnet_obj_factory(**{"87": priority_array})
 
         verified_obj = verifier.verify_priority_array(
-            obj=bacnet_obj, priority_array=bacnet_obj.priority_array
+            obj=bacnet_obj,
+            priority_array=bacnet_obj.priority_array,
+            override_threshold=verifier.override_threshold,
         )
         assert id(verified_obj) == id(bacnet_obj)
         assert verified_obj.status_flags.flags == status_flags
