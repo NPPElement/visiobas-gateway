@@ -7,7 +7,6 @@ from BAC0.scripts.Lite import Lite  # type: ignore
 
 from ...schemas import BACnetObj, DeviceObj, ObjProperty, TcpDevicePropertyList
 from ...utils import camel_case, get_file_logger, get_subnet_interface, log_exceptions, ping
-from .._interface import InterfaceKey
 from ..base_polling_device import BasePollingDevice
 from ._bacnet_coder_mixin import BACnetCoderMixin
 
@@ -46,10 +45,12 @@ class BACnetDevice(BasePollingDevice, BACnetCoderMixin):
         return bool(self.interface.client)
 
     @staticmethod
-    async def is_reachable(interface_key: InterfaceKey) -> bool:
-        if isinstance(interface_key, IPv4Address):
-            return await ping(host=str(interface_key), attempts=4)
-        raise ValueError
+    async def is_reachable(device_obj: DeviceObj) -> bool:
+        if isinstance(device_obj.property_list, TcpDevicePropertyList):
+            return await ping(host=str(device_obj.property_list.ip), attempts=4)
+        raise ValueError(
+            f"`TcpDevicePropertyList` expected. Got {device_obj.property_list}."
+        )
 
     @log_exceptions(logger=_LOG)
     async def create_client(self, device_obj: DeviceObj) -> Lite:

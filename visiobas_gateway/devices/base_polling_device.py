@@ -38,7 +38,7 @@ class BasePollingDevice(BaseDevice, ABC):
 
     @staticmethod
     @abstractmethod
-    async def is_reachable(interface_key: InterfaceKey) -> bool:
+    async def is_reachable(device_obj: DeviceObj) -> bool:
         """Check device interface is available to interaction."""
 
     @property
@@ -64,7 +64,7 @@ class BasePollingDevice(BaseDevice, ABC):
         existing.
         """
         interface_key = cls.interface_key(device_obj=device_obj)
-        if not await cls.is_reachable(interface_key=interface_key):
+        if not await cls.is_reachable(device_obj=device_obj):
             raise EnvironmentError(f"{interface_key} is unreachable")
         _LOG.debug(
             "Interface reachable",

@@ -7,7 +7,11 @@ from typing import Any, Union
 
 from ..schemas.serial_port import SerialPort
 
-InterfaceKey = Union[IPv4Address, tuple[IPv4Address, int], SerialPort]
+InterfaceKey = Union[
+    IPv4Address,
+    tuple[IPv4Address, int],
+    SerialPort,
+]
 
 
 @dataclass

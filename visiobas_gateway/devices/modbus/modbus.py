@@ -39,7 +39,8 @@ class ModbusDevice(BasePollingDevice, ModbusCoderMixin):
         return device_obj.property_list.interface
 
     @staticmethod
-    async def is_reachable(interface_key: InterfaceKey) -> bool:
+    async def is_reachable(device_obj: DeviceObj) -> bool:
+        interface_key = device_obj.property_list.interface
         if isinstance(interface_key, SerialPort):
             return True  # serial_port_exist(serial_port=interface_key)
         if isinstance(interface_key, tuple) and isinstance(interface_key[0], IPv4Address):
