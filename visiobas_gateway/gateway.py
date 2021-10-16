@@ -159,7 +159,7 @@ class Gateway:
         api_settings: ApiSettings,
     ) -> Gateway:
         """Sets up `gateway` and spawn update task."""
-        _ = await gateway._create_clients(  # pylint: disable=protected-access
+        gateway = await gateway._create_clients(  # pylint: disable=protected-access
             gateway=gateway, http_settings=http_settings, mqtt_settings=mqtt_settings
         )
         gateway.api = await ApiServer.create(gateway=gateway, settings=api_settings)
