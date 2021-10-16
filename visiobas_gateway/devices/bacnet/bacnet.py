@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from functools import lru_cache
 from ipaddress import IPv4Address
 from typing import Any
 
@@ -7,6 +8,7 @@ from BAC0.scripts.Lite import Lite  # type: ignore
 
 from ...schemas import BACnetObj, DeviceObj, ObjProperty, TcpDevicePropertyList
 from ...utils import camel_case, get_file_logger, get_subnet_interface, log_exceptions, ping
+from .._interface import InterfaceKey
 from ..base_polling_device import BasePollingDevice
 from ._bacnet_coder_mixin import BACnetCoderMixin
 
@@ -29,7 +31,8 @@ class BACnetDevice(BasePollingDevice, BACnetCoderMixin):
     #     # todo: use COV subscribe
 
     @staticmethod
-    def interface_key(device_obj: DeviceObj) -> IPv4Address:
+    @lru_cache(maxsize=100)
+    def interface_key(device_obj: DeviceObj) -> InterfaceKey:
         if isinstance(device_obj.property_list, TcpDevicePropertyList):
             ip = device_obj.property_list.ip
             ip_in_subnet = get_subnet_interface(ip=ip)
