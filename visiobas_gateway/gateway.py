@@ -214,7 +214,6 @@ class Gateway:
         gateway = await gateway._shutdown_tasks(  # pylint: disable=protected-access
             gateway=gateway
         )
-
         await gateway._scheduler.spawn(  # pylint: disable=protected-access
             gateway.periodic_update(
                 gateway=gateway,
@@ -223,7 +222,6 @@ class Gateway:
                 http_settings=http_settings,
             )
         )
-        # self._upd_task = self.loop.create_task(self.periodic_update())
 
     def add_job(self, target: Callable, *args: Any) -> None:
         """Adds job to the executor pool.

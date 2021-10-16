@@ -66,9 +66,13 @@ class BasePollingDevice(BaseDevice, ABC):
         interface_key = cls.interface_key(device_obj=device_obj)
         if not await cls.is_reachable(interface_key=interface_key):
             raise EnvironmentError(f"{interface_key} is unreachable")
+        _LOG.debug(
+            "Interface reachable",
+            extra={"interface": interface_key, "used_interfaces": cls._interfaces},
+        )
 
         device = cls(device_obj=device_obj, gateway=gateway)
-        device._scheduler = await aiojobs.create_scheduler(close_timeout=60, limit=250)
+        device._scheduler = await aiojobs.create_scheduler(close_timeout=60, limit=100)
 
         if interface_key not in cls._interfaces:
             lock = asyncio.Lock(loop=gateway.loop)
@@ -214,7 +218,9 @@ class BasePollingDevice(BaseDevice, ABC):
                 extra={"device_id": self.id, "seconds_to_next_try": self.reconnect_period},
             )
             await asyncio.sleep(delay=self.reconnect_period)
-            await self._gtw.async_add_job(self.create_client, self._device_obj)
+            self.__class__._interfaces[  # pylint: disable=protected-access
+                self.interface_key(device_obj=self._device_obj)
+            ].client = await self.create_client(self._device_obj)
             await self._scheduler.spawn(self.start_periodic_polls())
 
     async def stop(self) -> None:
