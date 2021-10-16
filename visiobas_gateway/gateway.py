@@ -122,7 +122,6 @@ class Gateway:
             http_settings=self._http_settings,
             mqtt_settings=self._mqtt_settings,
         )
-
         await self._stopped.wait()
         await self._shutdown_tasks(gateway=self)
 
@@ -159,9 +158,9 @@ class Gateway:
         api_settings: ApiSettings,
     ) -> Gateway:
         """Sets up `gateway` and spawn update task."""
-        gateway = await gateway._create_clients(  # pylint: disable=protected-access
-            gateway=gateway, http_settings=http_settings, mqtt_settings=mqtt_settings
-        )
+        # gateway = await gateway._create_clients(  # pylint: disable=protected-access
+        #     gateway=gateway, http_settings=http_settings, mqtt_settings=mqtt_settings
+        # )
         gateway.api = await ApiServer.create(gateway=gateway, settings=api_settings)
         await gateway._scheduler.spawn(  # pylint: disable=protected-access
             gateway.api.start()
