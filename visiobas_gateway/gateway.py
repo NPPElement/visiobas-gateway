@@ -281,7 +281,9 @@ class Gateway:
         for ready_device in asyncio.as_completed(load_device_tasks, timeout=30):
             ready_device = await ready_device
             if isinstance(ready_device, BasePollingDevice):
-                await ready_device.start_periodic_polls()
+                await gateway._scheduler.spawn(  # pylint: disable=protected-access
+                    ready_device.start_periodic_polls()
+                )
             _LOG.warning("Device not started", extra={"device": ready_device})
 
         _LOG.info("Start tasks performed", extra={"gateway_settings": settings})
