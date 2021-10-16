@@ -181,6 +181,7 @@ class Gateway:
     ) -> Gateway:
         """Creates clients for `gateway`."""
         gateway.http_client = HTTPClient(gateway=gateway, settings=http_settings)
+        await gateway.http_client.startup_tasks()
         gateway.mqtt_client = MQTTClient.create(gateway=gateway, settings=mqtt_settings)
         return gateway
 
