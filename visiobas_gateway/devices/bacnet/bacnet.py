@@ -32,8 +32,14 @@ class BACnetDevice(BasePollingDevice, BACnetCoderMixin):
     @staticmethod
     def interface_key(device_obj: DeviceObj) -> IPv4Address:
         if isinstance(device_obj.property_list, TcpDevicePropertyList):
-            return device_obj.property_list.ip
-        raise ValueError("`IPv4Address` expected. No address found.")
+            ip = device_obj.property_list.ip
+            ip_in_subnet = get_subnet_interface(ip=ip)
+            if ip_in_subnet:
+                return ip_in_subnet
+            raise EnvironmentError(f"No IP in same subnet with {ip}")
+        raise ValueError(
+            f"`TcpDevicePropertyList` expected. Got {device_obj.property_list}."
+        )
 
     @property
     def is_client_connected(self) -> bool:
