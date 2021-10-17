@@ -184,8 +184,7 @@ class BACnetDevice(BasePollingDevice, BACnetCoderMixin):
 
         if wait:
             await self.interface.polling_event.wait()
-        loop = asyncio.get_running_loop()
-        polled_obj = await loop.run_in_executor(None, self.read_property, obj, prop)
+        polled_obj = self.read_property(obj=obj, prop=prop)
         return polled_obj
         # return await self._gtw.async_add_job(self.read_property, obj, prop)
 
