@@ -128,16 +128,20 @@ class BasePollingDevice(BaseDevice, ABC):
     async def _poll_objects(
         self, objs: Collection[BACnetObj], unreachable_threshold: int
     ) -> list[BACnetObj]:
-        polled_obj = []
-
-        for obj in objs:
-            if not obj.existing:
-                continue
-            if obj.unreachable_in_row >= unreachable_threshold:
-                continue
-            obj = await self.read(obj=obj)
-            polled_obj.append(obj)
-        return polled_obj
+        objs_polling_tasks = [
+            self.read(obj=obj)
+            for obj in objs
+            if obj.existing and obj.unreachable_in_row >= unreachable_threshold
+        ]
+        polled_objs = await asyncio.gather(*objs_polling_tasks)
+        # for obj in objs:
+        #     if not obj.existing:
+        #         continue
+        #     if obj.unreachable_in_row >= unreachable_threshold:
+        #         continue
+        #     obj = await self.read(obj=obj)
+        #     polled_obj.append(obj)
+        return list(polled_objs)
 
     @abstractmethod
     async def read(self, obj: BACnetObj, wait: bool = False, **kwargs: Any) -> BACnetObj:
