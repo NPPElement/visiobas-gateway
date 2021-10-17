@@ -4,7 +4,7 @@ import asyncio
 from abc import ABC, abstractmethod
 from datetime import datetime
 from functools import lru_cache
-from typing import TYPE_CHECKING, Any, Collection
+from typing import TYPE_CHECKING, Any, Collection, Iterable
 
 import aiojobs  # type: ignore
 
@@ -126,7 +126,7 @@ class BasePollingDevice(BaseDevice, ABC):
         """Checks that client is connected."""
 
     async def _poll_objects(
-        self, objs: Collection[BACnetObj], unreachable_threshold: int
+        self, objs: Iterable[BACnetObj], unreachable_threshold: int
     ) -> list[BACnetObj]:
         objs_polling_tasks = [
             self.read(obj=obj)

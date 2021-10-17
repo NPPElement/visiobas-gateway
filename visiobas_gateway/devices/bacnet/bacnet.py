@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 from functools import lru_cache
 from ipaddress import IPv4Address
 from typing import Any
@@ -81,11 +82,6 @@ class BACnetDevice(BasePollingDevice, BACnetCoderMixin):
 
     async def _disconnect_client(self, client: Lite) -> None:
         client.disconnect()
-
-    # async def _poll_objects(self, objs: Collection[BACnetObj]) -> None:
-    #     for obj in objs:
-    #         if obj.existing:
-    #             await self.simulate_rpm(obj=obj)
 
     # def poll(self) -> None:
     #     """ Poll all object from device.
@@ -188,7 +184,8 @@ class BACnetDevice(BasePollingDevice, BACnetCoderMixin):
 
         if wait:
             await self.interface.polling_event.wait()
-        polled_obj = self.read_property(obj=obj, prop=prop)
+        loop = asyncio.get_running_loop()
+        polled_obj = await loop.run_in_executor(None, self.read_property, obj, prop)
         return polled_obj
         # return await self._gtw.async_add_job(self.read_property, obj, prop)
 
