@@ -283,7 +283,11 @@ class Gateway:
                 await gateway._scheduler.spawn(  # pylint: disable=protected-access
                     ready_device.start_periodic_polls()
                 )
-            _LOG.warning("Device not started", extra={"device": ready_device})
+            else:
+                _LOG.warning(
+                    "Device not started. Expected device type `BasePollingDevice`",
+                    extra={"device": ready_device, "device_type": type(ready_device)},
+                )
 
         _LOG.info("Start tasks performed", extra={"gateway_settings": settings})
         return gateway
