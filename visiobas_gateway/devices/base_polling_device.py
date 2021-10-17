@@ -131,7 +131,7 @@ class BasePollingDevice(BaseDevice, ABC):
         objs_polling_tasks = [
             self.read(obj=obj)
             for obj in objs
-            if obj.existing and obj.unreachable_in_row >= unreachable_threshold
+            if obj.existing and obj.unreachable_in_row < unreachable_threshold
         ]
         polled_objs = await asyncio.gather(*objs_polling_tasks)
         # for obj in objs:
