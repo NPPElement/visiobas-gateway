@@ -258,7 +258,7 @@ class BasePollingDevice(BaseDevice, ABC):
 
         if _t_delta.seconds > period:
             self._LOG.warning("Polling period is too short!", extra={"device_id": self.id})
-        verified_objs = await self._scheduler.spawn(self._after_polling_tasks(objs=objs))
+        verified_objs = await self._after_polling_tasks(objs=objs)
         await asyncio.sleep(delay=period - _t_delta.seconds)
 
         # self._LOG.debug(f'Periodic polling task created',
