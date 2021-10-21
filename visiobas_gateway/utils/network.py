@@ -83,9 +83,11 @@ async def ping(host: str, attempts: int) -> bool:
     return ping_process.returncode == 0
 
 
-def serial_port_exist(serial_port: SerialPort) -> bool:
+def serial_port_connected(serial_port: SerialPort) -> bool:
 
-    serial_ports = serial.tools.list_ports.comports()
+    serial_ports = [
+        port.device for port in serial.tools.list_ports.comports() if port.location
+    ]
     return serial_port in serial_ports
 
 

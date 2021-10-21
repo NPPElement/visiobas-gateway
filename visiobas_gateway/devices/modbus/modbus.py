@@ -19,7 +19,7 @@ from ...schemas import (
     Protocol,
     SerialPort,
 )
-from ...utils import get_file_logger, log_exceptions, ping  # , serial_port_exist
+from ...utils import get_file_logger, log_exceptions, ping, serial_port_connected
 from .._interface import InterfaceKey
 from ..base_polling_device import BasePollingDevice
 from ._modbus_coder_mixin import ModbusCoderMixin
@@ -42,7 +42,7 @@ class ModbusDevice(BasePollingDevice, ModbusCoderMixin):
     async def is_reachable(device_obj: DeviceObj) -> bool:
         interface_key = device_obj.property_list.interface
         if isinstance(interface_key, SerialPort):
-            return True  # serial_port_exist(serial_port=interface_key)
+            return serial_port_connected(serial_port=interface_key)
         if isinstance(interface_key, tuple) and isinstance(interface_key[0], IPv4Address):
             return await ping(host=str(interface_key[0]), attempts=4)
         raise ValueError
