@@ -24,8 +24,8 @@ services:
       - /dev:/dev # [1]
 #    networks:
 #      - backend
-#    ports:
-#      - "7070:7070"
+    ports:
+      - "7070:7070"
     network_mode: host
     devices: # To detect devices connected via Serial port
       - "/dev/ttyS0:/dev/ttyS0"

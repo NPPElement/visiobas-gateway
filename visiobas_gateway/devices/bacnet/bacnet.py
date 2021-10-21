@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import asyncio
 from functools import lru_cache
 from ipaddress import IPv4Address
 from typing import Any
