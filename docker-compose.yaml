@@ -3,9 +3,9 @@ version: "3.7"
 services:
   vb_gateway:
     container_name: visiobas_gateway
-    build:
-      context: .
-      dockerfile: Dockerfile
+#    build:
+#      context: .
+#      dockerfile: Dockerfile
     image: visiobas-gateway:3.5.0-beta2
     logging:
       #driver: none

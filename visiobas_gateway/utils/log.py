@@ -18,8 +18,7 @@ class ExtraFormatter(logging.Formatter):
     """Formatter for display `extra` params.
 
     Adopted from:
-        <https://stackoverflow.com/questions/56559971/show-extra-fields-when
-    -logging-to-console-in-python>
+        <https://stackoverflow.com/questions/56559971/show-extra-fields-when-logging-to-console-in-python>
     """
 
     # Keys in `extra` must not have reserved names
@@ -94,19 +93,21 @@ def get_file_logger(name: str) -> logging.Logger:
 def log_exceptions(
     logger: logging.Logger,
     func: Callable | Callable[..., typing.Awaitable] = None,  # type: ignore
-    parameters_enable: bool = True,
+    *,
+    parameters_enabled: bool = True,
+    exc_info: bool = _EXC_INFO,
 ) -> Any:
     def _log_exceptions(func: Callable | Callable[..., typing.Awaitable]) -> Any:
         """Decorator, logging function signature and exception if it occur."""
 
         @wraps(func)
-        def wrapper(*args: Any, **kwargs: Any) -> Any:
-            if parameters_enable:
+        def sync_wrapper(*args: Any, **kwargs: Any) -> Any:
+            if parameters_enabled:
                 args_repr = [repr(a) for a in args]
                 kwargs_repr = [f"{k}={v!r}" for k, v in kwargs.items()]
                 signature = ", ".join(args_repr + kwargs_repr)
             else:
-                signature = "** PARAMETERS OMITTED **"
+                signature = "..."
 
             try:
                 value = func(*args, **kwargs)
@@ -118,7 +119,7 @@ def log_exceptions(
                     signature,
                     exc.__class__.__name__,
                     exc,
-                    exc_info=_EXC_INFO,
+                    exc_info=exc_info,
                 )
                 raise exc
 
@@ -145,7 +146,7 @@ def log_exceptions(
         return (
             async_wrapper
             if asyncio.iscoroutine(func) or asyncio.iscoroutinefunction(func)
-            else wrapper
+            else sync_wrapper
         )
 
     if func:

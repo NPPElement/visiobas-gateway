@@ -429,7 +429,7 @@ class Gateway:
         ]
         return objs
 
-    @log_exceptions(logger=_LOG, parameters_enable=False)
+    @log_exceptions(logger=_LOG, parameters_enabled=False)
     async def send_objects(self, objs: Collection[BACnetObj]) -> None:
         """Sends objects to server."""
         if not objs:

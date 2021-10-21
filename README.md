@@ -123,6 +123,20 @@ Scripts for common actions available:
 . run/update.sh  # Git pull + build + launch
 ```
 
+### Build and copy docker image
+```shell
+cd /opt/visiobas-gateway
+
+docker build -t visiobas-gateway .
+
+# docker save -o <path for generated tar file> <image name>
+docker save -o /opt/visiobas-gateway/image.tar.gz visiobas-gateway:latest
+
+# copy via scp here
+
+docker load -i <path to copied image file>
+```
+
 ## Develop
 
 ### Setting up a Dev Environment
