@@ -72,7 +72,7 @@ class BasePollingDevice(BaseDevice, ABC):
         )
 
         device = cls(device_obj=device_obj, gateway=gateway)
-        device._scheduler = await aiojobs.create_scheduler(close_timeout=60, limit=100)
+        device._scheduler = await aiojobs.create_scheduler(close_timeout=60, limit=None)
 
         if interface_key not in cls._interfaces:
             lock = asyncio.Lock(loop=gateway.loop)

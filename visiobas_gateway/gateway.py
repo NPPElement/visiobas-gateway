@@ -93,7 +93,7 @@ class Gateway:
             http_settings=http_settings,
             api_settings=api_settings,
         )
-        gateway._scheduler = await aiojobs.create_scheduler(close_timeout=60, limit=100)
+        gateway._scheduler = await aiojobs.create_scheduler(close_timeout=60, limit=None)
         return gateway
 
     def get_device(self, dev_id: int) -> BaseDevice | None:
@@ -258,6 +258,7 @@ class Gateway:
         return task
 
     @staticmethod
+    @log_exceptions(logger=_LOG)
     async def _startup_tasks(
         gateway: Gateway,
         settings: GatewaySettings,
@@ -277,7 +278,7 @@ class Gateway:
         ]
 
         # 2. Start devices polling.
-        for ready_device in asyncio.as_completed(load_device_tasks, timeout=30):
+        for ready_device in asyncio.as_completed(load_device_tasks, timeout=60):
             ready_device = await ready_device
             if isinstance(ready_device, BasePollingDevice):
                 await gateway._scheduler.spawn(  # pylint: disable=protected-access
