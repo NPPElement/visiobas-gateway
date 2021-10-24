@@ -50,7 +50,12 @@ class BACnetDevice(BasePollingDevice, BACnetCoderMixin):
     @staticmethod
     async def is_reachable(device_obj: DeviceObj) -> bool:
         if isinstance(device_obj.property_list, TcpDevicePropertyList):
-            return await ping(host=str(device_obj.property_list.ip), attempts=4)
+            ping_result = await ping(host=str(device_obj.property_list.ip), attempts=4)
+            _LOG.debug(
+                "Ping completed",
+                extra={"ping_result": ping_result, "device_obj": device_obj},
+            )
+            return ping_result
         raise ValueError(
             f"`TcpDevicePropertyList` expected. Got {device_obj.property_list}."
         )

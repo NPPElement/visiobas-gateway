@@ -65,7 +65,7 @@ class BasePollingDevice(BaseDevice, ABC):
         """
         interface_key = cls.interface_key(device_obj=device_obj)
         if not await cls.is_reachable(device_obj=device_obj):
-            raise EnvironmentError(f"{interface_key} is unreachable")
+            raise EnvironmentError(f"{device_obj.property_list.interface} is unreachable")
         _LOG.debug(
             "Interface reachable",
             extra={"interface": interface_key, "used_interfaces": cls._interfaces},

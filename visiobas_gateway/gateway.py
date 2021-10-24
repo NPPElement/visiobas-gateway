@@ -279,7 +279,10 @@ class Gateway:
 
         # 2. Start devices polling.
         for ready_device in asyncio.as_completed(load_device_tasks, timeout=60):
-            ready_device = await ready_device
+            try:
+                ready_device = await ready_device
+            except Exception as e:
+                ready_device = e
             if isinstance(ready_device, BasePollingDevice):
                 await gateway._scheduler.spawn(  # pylint: disable=protected-access
                     ready_device.start_periodic_polls()
