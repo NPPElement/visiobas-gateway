@@ -162,7 +162,7 @@ class BACnetDevice(BasePollingDevice, BACnetCoderMixin):
             value = self._encode_binary_present_value(value=value)  # type: ignore
 
         args = (
-            f"{self._device_obj.property_list.interface} "
+            f"{self._device_obj.property_list.interface[0]} "
             f"{camel_case(obj.object_type.name)} "
             f"{obj.object_id} "
             f"{camel_case(prop.name)} "
