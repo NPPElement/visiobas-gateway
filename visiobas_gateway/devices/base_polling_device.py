@@ -165,8 +165,7 @@ class BasePollingDevice(BaseDevice, ABC):
             **kwargs:
 
         Returns:
-            True - if write value and read value is consistent.
-            False - if they aren't consistent.
+            Verified object instance.
         """
         self.interface.polling_event.clear()
         await self.write(value=value, obj=obj, **kwargs)
