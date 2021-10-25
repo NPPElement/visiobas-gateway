@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import os
 import sys
 
 from visiobas_gateway.gateway import Gateway
@@ -45,6 +46,10 @@ async def load_and_run() -> None:
 
 
 def main() -> None:
+    # Check for root privileges
+    if not os.geteuid() == 0:
+        sys.exit("Gateway must be executed as root")
+
     setup_logging(settings=LogSettings())
 
     if _UVLOOP_ENABLE:
