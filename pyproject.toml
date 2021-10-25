@@ -81,6 +81,7 @@ skip = [".venv", "tests"]
 
 [tool.pylint.format]
 max-line-length = 92
+extension-pkg-allow-list = "netifaces"
 
 [tool.pylint.messages_control]
 disable = [
