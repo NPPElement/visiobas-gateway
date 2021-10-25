@@ -169,6 +169,7 @@ class BasePollingDevice(BaseDevice, ABC):
         """
         self.interface.polling_event.clear()
         await self.write(value=value, obj=obj, **kwargs)
+        await asyncio.sleep(1)
         polled_obj = await self.read(obj=obj, wait=False, **kwargs)
         self.interface.polling_event.set()
 
