@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import asyncio
 import platform
 from ipaddress import IPv4Address, IPv4Interface
 
@@ -8,6 +7,8 @@ import serial.tools.list_ports  # type: ignore
 
 from ..schemas.serial_port import SerialPort
 from .log import get_file_logger
+
+from .monitor import execute_cmd
 
 try:
     import netifaces  # type: ignore
@@ -75,20 +76,19 @@ async def ping(host: str, attempts: int) -> bool:
     Returns: Ping is successful.
     """
     current_os = platform.system().lower()
-    parameter = "n" if current_os == "windows" else "c"
-    ping_process = await asyncio.create_subprocess_shell(
-        f"ping -{parameter} {attempts} {host}"
-    )
-    await ping_process.wait()
-    return ping_process.returncode == 0
+    option = "n" if current_os == "windows" else "c"
+    cmd_info = await execute_cmd(cmd='ping', options=[f'-{option}'], parameters=[str(attempts), host])
+    return cmd_info.return_code == 0
 
 
-def serial_port_connected(serial_port: SerialPort) -> bool:
-
-    serial_ports = [
+def get_connected_serial_ports() -> list[str]:
+    return [
         port.device for port in serial.tools.list_ports.comports() if port.location
     ]
-    return serial_port in serial_ports
+
+
+def is_serial_port_connected(serial_port: SerialPort) -> bool:
+    return serial_port in get_connected_serial_ports()
 
 
 # def _get_ip_address() -> IPv4Interface:
