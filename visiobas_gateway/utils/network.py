@@ -3,9 +3,6 @@ from __future__ import annotations
 import platform
 from ipaddress import IPv4Address, IPv4Interface
 
-import serial.tools.list_ports  # type: ignore
-
-from ..schemas.serial_port import SerialPort
 from .log import get_file_logger
 
 from .monitor import execute_cmd
@@ -79,16 +76,6 @@ async def ping(host: str, attempts: int) -> bool:
     option = "n" if current_os == "windows" else "c"
     cmd_info = await execute_cmd(cmd='ping', options=[f'-{option}'], parameters=[str(attempts), host])
     return cmd_info.return_code == 0
-
-
-def get_connected_serial_ports() -> list[str]:
-    return [
-        port.device for port in serial.tools.list_ports.comports() if port.location
-    ]
-
-
-def is_serial_port_connected(serial_port: SerialPort) -> bool:
-    return serial_port in get_connected_serial_ports()
 
 
 # def _get_ip_address() -> IPv4Interface:
