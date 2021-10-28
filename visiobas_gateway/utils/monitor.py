@@ -16,7 +16,7 @@ _LOG = get_file_logger(__name__)
 
 _PID = os.getpid()
 
-MONITOR_CMD_DATA = (
+MONITOR_COMMANDS = (
     # (CMD description, cmd, options, parameters)
     ('Uptime', 'uptime', ['-a'], []),
     ('Kernel Information', 'uname', ['-a'], []),
@@ -67,7 +67,7 @@ def is_virtualenv() -> bool:
 async def get_cmd_results(
         cmds: tuple[str, str, list[str], list[str]]
 ) -> tuple[CmdInfo | Exception, ...]:
-    cmd_tasks = [execute_cmd(*cmd_data) for cmd_data in MONITOR_CMD_DATA]
+    cmd_tasks = [execute_cmd(*cmd_data) for cmd_data in MONITOR_COMMANDS]
     return await asyncio.gather(*cmd_tasks)
 
 

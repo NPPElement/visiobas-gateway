@@ -8,6 +8,7 @@ import aiojobs  # type: ignore
 from aiohttp.web import Application
 from aiohttp.web_runner import AppRunner, TCPSite
 
+from .rest.monitor import RESTMonitorView
 from ..schemas.settings import ApiSettings
 from ..utils import get_file_logger
 from .jsonrpc import JSON_RPC_HANDLERS
@@ -48,7 +49,7 @@ class ApiServer:
     def handlers(
         self,
     ) -> tuple:
-        return JSON_RPC_HANDLERS
+        return JSON_RPC_HANDLERS, RESTMonitorView
 
     @classmethod
     async def create(cls, gateway: Gateway, settings: ApiSettings) -> ApiServer:
