@@ -8,6 +8,7 @@ import resource
 from ..schemas.cmd_output import CmdInfo
 from .log import get_file_logger
 from .network import get_connected_serial_ports
+from visiobas_gateway import GATEWAY_VERSION
 
 _LOG = get_file_logger(__name__)
 
@@ -16,14 +17,13 @@ _PID = pid = os.getpid()
 MONITOR_CMDS = (
     # (Whats cmd doing, cmd, options, parameters)
     ('Uptime', 'uptime', ['-a'], []),
-    ('Uname', 'uname', ['-a'], []),
-    ('DF', 'df', ['-h'], []),
-    ('Free', 'free', ['-h'], []),
-    ('', 'dmesg', [], ['| tail -n 20']),
-    ('', 'ifconfig', ['-a'], []),
-    ('', 'pstree', [f'-p {_PID}'], []),
-    ('', 'top', ['-bH', '-n 1', f'-p {_PID}'], [])
-
+    ('Kernel Information', 'uname', ['-a'], []),
+    ('Disk Usage', 'df', ['-h'], []),
+    ('Memory', 'free', ['-h'], []),
+    ('Diagnostic Messages', 'dmesg', [], ['| tail -n 20']),
+    ('Network', 'ifconfig', ['-a'], []),
+    ('Processes', 'pstree', [f'-p {_PID}'], []),
+    ('Processes', 'top', ['-bH', '-n 1', f'-p {_PID}'], [])
 )
 
 
@@ -50,6 +50,7 @@ class Monitor:
     @staticmethod
     async def get_info():
         python_version = sys.version
+        gateway_version = GATEWAY_VERSION
         virtualenv = True if hasattr(sys, 'real_prefix') or sys.base_prefix != sys.prefix else False
 
         uptime = await execute_cmd(cmd='uptime', options=['-a'])
