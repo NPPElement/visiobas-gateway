@@ -4,13 +4,13 @@ import asyncio
 from abc import ABC, abstractmethod
 from datetime import datetime
 from functools import lru_cache
-from typing import TYPE_CHECKING, Any, Collection, Optional
+from typing import TYPE_CHECKING, Any, Collection, Iterable
 
 import aiojobs  # type: ignore
 
 from ..schemas import BACnetObj, DeviceObj
 from ..utils import get_file_logger, log_exceptions
-from ._interface import Interface
+from ._interface import Interface, InterfaceKey
 from .base_device import BaseDevice
 
 if TYPE_CHECKING:
@@ -18,34 +18,44 @@ if TYPE_CHECKING:
 else:
     Gateway = "Gateway"
 
+
+ObjectKey = tuple[int, int]  # obj_id, obj_type_id
+
 _LOG = get_file_logger(name=__name__)
 
 
 class BasePollingDevice(BaseDevice, ABC):
     """Base class for devices, that can be periodically polled for update sensors data."""
 
-    _interfaces: dict[str, Interface] = {}
+    _interfaces: dict[InterfaceKey, Interface] = {}
 
     def __init__(self, device_obj: DeviceObj, gateway: Gateway):
         super().__init__(device_obj, gateway)
 
         self._scheduler: aiojobs.Scheduler = None  # type: ignore
 
-        # Key: period
-        self.object_groups: dict[float, dict[tuple[int, int], BACnetObj]] = {}
-        # self._objects: dict[float, set[BACnetObj]] = {}
+        self.object_groups: dict[float, dict[ObjectKey, BACnetObj]] = {}  # Key: period
 
     @staticmethod
     @abstractmethod
-    def interface_name(device_obj: DeviceObj) -> Any:
-        """Interface name, used to get access to interface."""
+    async def is_reachable(device_obj: DeviceObj) -> bool:
+        """Check device interface is available to interaction."""
 
     @property
-    def interface(self) -> Any:
+    def interface(self) -> Interface:
         """Interface to interact with controller."""
-        return self.__class__._interfaces.get(  # pylint: disable=protected-access
-            self.interface_name(device_obj=self._device_obj)
-        )
+        return self.__class__._interfaces[  # pylint: disable=protected-access
+            self.interface_key(device_obj=self._device_obj)
+        ]
+
+    @staticmethod
+    @abstractmethod
+    def interface_key(
+        device_obj: DeviceObj,
+    ) -> InterfaceKey:
+        """Hashable interface key to interaction with device with lock.
+        Used as key in interfaces `dict`.
+        """
 
     @classmethod
     @log_exceptions(logger=_LOG)
@@ -53,38 +63,39 @@ class BasePollingDevice(BaseDevice, ABC):
         """Creates instance of device. Handles client creation with lock or using
         existing.
         """
+        interface_key = cls.interface_key(device_obj=device_obj)
+        if not await cls.is_reachable(device_obj=device_obj):
+            raise EnvironmentError(f"{device_obj.property_list.interface} is unreachable")
+        _LOG.debug(
+            "Interface reachable",
+            extra={"interface": interface_key, "used_interfaces": cls._interfaces},
+        )
+
         device = cls(device_obj=device_obj, gateway=gateway)
-        device._scheduler = await aiojobs.create_scheduler(close_timeout=60, limit=250)
+        device._scheduler = await aiojobs.create_scheduler(close_timeout=60, limit=None)
 
-        interface_name = device.interface_name(device_obj=device_obj)
-
-        if not cls._interfaces.get(interface_name):
+        if interface_key not in cls._interfaces:
             lock = asyncio.Lock(loop=gateway.loop)
             async with lock:  # pylint: disable=not-async-context-manager
                 client = await device.create_client(device_obj=device_obj)
                 client_connected = await device.connect_client(client=client)
             polling_event = asyncio.Event()
             interface = Interface(
-                name=interface_name,
+                interface_key=interface_key,
                 used_by={device.id},
                 client=client,
                 lock=lock,
                 polling_event=polling_event,
                 client_connected=client_connected,
             )
-            cls._interfaces[interface_name] = interface
+            cls._interfaces[interface_key] = interface
         else:
             # Using existing interface.
-            cls._interfaces[interface_name].used_by.add(device.id)
+            cls._interfaces[interface_key].used_by.add(device.id)
 
         device._LOG.debug(
             "Device created",
-            extra={
-                "device_id": device.id,
-                "protocol": device.protocol,
-                "device_interface": device.interface,
-                "interface_state": cls._interfaces.items(),
-            },
+            extra={"device": device, "used_interfaces": cls._interfaces.items()},
         )
         return device
 
@@ -98,28 +109,39 @@ class BasePollingDevice(BaseDevice, ABC):
 
     @abstractmethod
     async def connect_client(self, client: Any) -> bool:
-        raise NotImplementedError
+        """Performs connect with client."""
 
     async def disconnect_client(self) -> None:
-        if not self.interface.used_by:
-            await self._disconnect_client(client=self.interface.client)
+        interface = self.interface
+        if not interface.used_by:
+            await self._disconnect_client(client=interface.client)
 
     @abstractmethod
     async def _disconnect_client(self, client: Any) -> None:
-        raise NotImplementedError
+        """Performs disconnect with client."""
 
     @property
     @abstractmethod
     def is_client_connected(self) -> bool:
-        raise NotImplementedError
+        """Checks that client is connected."""
 
-    async def _poll_objects(self, objs: Collection[BACnetObj]) -> None:
-        for obj in objs:
-            if not obj.existing:
-                continue
-            if obj.unreachable_in_row >= self._gtw.settings.unreachable_threshold:
-                continue
-            await self.read(obj=obj)
+    async def _poll_objects(
+        self, objs: Iterable[BACnetObj], unreachable_threshold: int
+    ) -> list[BACnetObj]:
+        objs_polling_tasks = [
+            self.read(obj=obj)
+            for obj in objs
+            if obj.existing and obj.unreachable_in_row < unreachable_threshold
+        ]
+        polled_objs = await asyncio.gather(*objs_polling_tasks)
+        # for obj in objs:
+        #     if not obj.existing:
+        #         continue
+        #     if obj.unreachable_in_row >= unreachable_threshold:
+        #         continue
+        #     obj = await self.read(obj=obj)
+        #     polled_obj.append(obj)
+        return list(polled_objs)
 
     @abstractmethod
     async def read(self, obj: BACnetObj, wait: bool = False, **kwargs: Any) -> BACnetObj:
@@ -148,10 +170,11 @@ class BasePollingDevice(BaseDevice, ABC):
         """
         self.interface.polling_event.clear()
         await self.write(value=value, obj=obj, **kwargs)
-        obj = await self.read(obj=obj, wait=False, **kwargs)
+        await asyncio.sleep(1)
+        polled_obj = await self.read(obj=obj, wait=False, **kwargs)
         self.interface.polling_event.set()
 
-        verified_obj = self._gtw.verifier.verify(obj=obj)
+        verified_obj = self._gtw.verifier.verify(obj=polled_obj)
         self._LOG.debug(
             "Write with check called",
             extra={"object": verified_obj, "value_write": value},
@@ -159,7 +182,7 @@ class BasePollingDevice(BaseDevice, ABC):
         return verified_obj
 
     @lru_cache(maxsize=10)
-    def get_object(self, obj_id: int, obj_type_id: int) -> Optional[BACnetObj]:
+    def get_object(self, obj_id: int, obj_type_id: int) -> BACnetObj | None:
         """Cache last 10 object instances.
         Args:
             obj_id: Object identifier.
@@ -191,17 +214,18 @@ class BasePollingDevice(BaseDevice, ABC):
                 await self._scheduler.spawn(
                     self.periodic_poll(objs=objs_group.values(), period=period)
                 )
-            await self._scheduler.spawn(self._periodic_reset_unreachable())
+            await self._scheduler.spawn(
+                self._periodic_reset_unreachable(self.object_groups)
+            )
         else:
             self._LOG.info(
                 "Client is not connected. Sleeping to next try",
-                extra={
-                    "device_id": self.id,
-                    "seconds_to_next_try": self.reconnect_period,
-                },
+                extra={"device_id": self.id, "seconds_to_next_try": self.reconnect_period},
             )
             await asyncio.sleep(delay=self.reconnect_period)
-            await self._gtw.async_add_job(self.create_client, self._device_obj)
+            self.__class__._interfaces[  # pylint: disable=protected-access
+                self.interface_key(device_obj=self._device_obj)
+            ].client = await self.create_client(self._device_obj)
             await self._scheduler.spawn(self.start_periodic_polls())
 
     async def stop(self) -> None:
@@ -211,28 +235,23 @@ class BasePollingDevice(BaseDevice, ABC):
         self.interface.polling_event.clear()
         await self._scheduler.close()
         await self.disconnect_client()
-        self._LOG.info(
-            "Device stopped",
-            extra={
-                "device_id": self.id,
-            },
-        )
+        self._LOG.info("Device stopped", extra={"device_id": self.id})
 
-    async def _periodic_reset_unreachable(self) -> None:
+    async def _periodic_reset_unreachable(
+        self, object_groups: dict[float, dict[tuple[int, int], BACnetObj]]
+    ) -> None:
         await asyncio.sleep(self._gtw.settings.unreachable_reset_period)
 
-        for objs_group in self.object_groups.values():
+        for objs_group in object_groups.values():
             for obj in objs_group.values():
                 obj.unreachable_in_row = 0
 
-        self._LOG.debug(
-            "Reset unreachable objects",
-            extra={
-                "device_id": self.id,
-            },
+        self._LOG.debug("Reset unreachable objects", extra={"device_id": self.id})
+        await self._scheduler.spawn(
+            self._periodic_reset_unreachable(object_groups=object_groups)
         )
-        await self._scheduler.spawn(self._periodic_reset_unreachable())
 
+    @log_exceptions(logger=_LOG)
     async def periodic_poll(
         self,
         objs: Collection[BACnetObj],
@@ -243,32 +262,26 @@ class BasePollingDevice(BaseDevice, ABC):
             extra={"device_id": self.id, "period": period, "objects_number": len(objs)},
         )
         _t0 = datetime.now()
-        await self._poll_objects(objs=objs)
+        polled_objs = await self._poll_objects(
+            objs=objs, unreachable_threshold=self._gtw.settings.unreachable_threshold
+        )
         _t_delta = datetime.now() - _t0
-
         self._LOG.info(
             "Objects polled",
             extra={
                 "device_id": self.id,
                 "seconds_took": _t_delta.seconds,
-                "objects_number": len(objs),
+                "objects_quantity": len(polled_objs),
                 "period": period,
             },
         )
-
         if _t_delta.seconds > period:
             self._LOG.warning("Polling period is too short!", extra={"device_id": self.id})
-        verified_objs = await self._after_polling_tasks(objs=objs)
+        verified_objs = await self._after_polling_tasks(objs=polled_objs)
         await asyncio.sleep(delay=period - _t_delta.seconds)
-
-        # self._LOG.debug(f'Periodic polling task created',
-        #                 extra={'device_id': self.id, 'period': period,
-        #                        'jobs_active_count': self.scheduler.active_count,
-        #                        'jobs_pending_count': self.scheduler.pending_count, })
-
         await self._scheduler.spawn(self.periodic_poll(objs=verified_objs, period=period))
 
-    async def _after_polling_tasks(self, objs: Collection[BACnetObj]) -> list[BACnetObj]:
+    async def _after_polling_tasks(self, objs: list[BACnetObj]) -> list[BACnetObj]:
         verified_objects = self._gtw.verifier.verify_objects(objs=objs)
-        await self._gtw.send_objects(objs=verified_objects)
+        await self._scheduler.spawn(self._gtw.send_objects(objs=verified_objects))
         return verified_objects

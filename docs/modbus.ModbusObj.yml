@@ -80,6 +80,7 @@ definitions:
       modbus:
         $ref: '#/definitions/ModbusProperties'
       pollPeriod:
+        default: 90
         description: Period to send data to server.
         title: Pollperiod
         type: number
@@ -109,7 +110,7 @@ definitions:
     description: 'Supported BACnet object types.
 
 
-      Enumerated values 0-127 are reserved for definition by ASHRAE.
+      Enumerated values 0-127 are reserved for definition by `ASHRAE`.
 
       Enumerated values 128-1023 may be used by others subject to the procedures and
 
@@ -272,6 +273,23 @@ properties:
       \ is TRUE.\n        "
     title: '85'
   '87':
+    default:
+    - null
+    - null
+    - null
+    - null
+    - null
+    - null
+    - null
+    - null
+    - null
+    - null
+    - null
+    - null
+    - null
+    - null
+    - null
+    - null
     description: "Priority array. This property is a read-only array that contains\n\
       \        prioritized commands that are in effect for this object."
     items:

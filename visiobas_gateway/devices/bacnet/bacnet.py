@@ -1,19 +1,16 @@
 from __future__ import annotations
 
 from functools import lru_cache
-from typing import TYPE_CHECKING, Any, Optional
+from ipaddress import IPv4Address
+from typing import Any
 
 from BAC0.scripts.Lite import Lite  # type: ignore
 
-from ..schemas import BACnetObj, DeviceObj, ObjProperty, TcpIpDevicePropertyList
-from ..utils import camel_case, get_file_logger, get_subnet_interface, log_exceptions
+from ...schemas import BACnetObj, DeviceObj, ObjProperty, TcpDevicePropertyList
+from ...utils import camel_case, get_file_logger, get_subnet_interface, log_exceptions, ping
+from .._interface import InterfaceKey
+from ..base_polling_device import BasePollingDevice
 from ._bacnet_coder_mixin import BACnetCoderMixin
-from .base_polling_device import BasePollingDevice
-
-if TYPE_CHECKING:
-    from visiobas_gateway.gateway import Gateway
-else:
-    Gateway = "Gateway"
 
 _LOG = get_file_logger(name=__name__)
 
@@ -21,45 +18,65 @@ _LOG = get_file_logger(name=__name__)
 class BACnetDevice(BasePollingDevice, BACnetCoderMixin):
     """Implementation of BACnet device client."""
 
-    def __init__(self, device_obj: DeviceObj, gateway: Gateway):
-        super().__init__(device_obj, gateway)
-
-        self.support_rpm: set[BACnetObj] = set()
-        self.not_support_rpm: set[BACnetObj] = set()
-
-        # self.__objects_per_rpm = 25
-        # todo: Should we use one RPM for several objects?
-        # todo: use COV subscribe
+    # def __init__(self, device_obj: BACnetDeviceObj, gateway: Gateway):
+    #     super().__init__(device_obj, gateway)
+    #
+    #     self._device_obj: BACnetDeviceObj
+    #
+    #     self.support_rpm: set[BACnetObj] = set()
+    #     self.not_support_rpm: set[BACnetObj] = set()
+    #
+    #     # self.__objects_per_rpm = 25
+    #     # todo: Should we use one RPM for several objects?
+    #     # todo: use COV subscribe
 
     @staticmethod
-    @lru_cache(maxsize=10)
-    def interface_name(device_obj: DeviceObj) -> Optional[str]:
-        assert isinstance(device_obj.property_list, TcpIpDevicePropertyList)
-
-        ip_address = device_obj.property_list.address
-        interface = get_subnet_interface(ip=ip_address)
-
-        if interface:
-            return str(interface)
-        return None
+    @lru_cache(maxsize=100)
+    def interface_key(device_obj: DeviceObj) -> InterfaceKey:
+        if isinstance(device_obj.property_list, TcpDevicePropertyList):
+            ip = device_obj.property_list.ip
+            ip_in_subnet = get_subnet_interface(ip=ip)
+            if ip_in_subnet:
+                return ip_in_subnet
+            raise EnvironmentError(f"No IP in same subnet with {ip}")
+        raise ValueError(
+            f"`TcpDevicePropertyList` expected. Got {device_obj.property_list}."
+        )
 
     @property
     def is_client_connected(self) -> bool:
-        return self.interface.client is not None
+        return bool(self.interface.client)
+
+    @staticmethod
+    async def is_reachable(device_obj: DeviceObj) -> bool:
+        if isinstance(device_obj.property_list, TcpDevicePropertyList):
+            ping_result = await ping(host=str(device_obj.property_list.ip), attempts=4)
+            _LOG.debug(
+                "Ping completed",
+                extra={"ping_result": ping_result, "device_obj": device_obj},
+            )
+            return ping_result
+        raise ValueError(
+            f"`TcpDevicePropertyList` expected. Got {device_obj.property_list}."
+        )
 
     @log_exceptions(logger=_LOG)
     async def create_client(self, device_obj: DeviceObj) -> Lite:
         """Initializes BAC0 client."""
-        assert isinstance(device_obj.property_list, TcpIpDevicePropertyList)
 
-        interface = self.interface_name(device_obj=device_obj)
-        if not interface:
-            raise ConnectionError("No interface in same subnet.")
+        ip, port = device_obj.property_list.interface
+        if not isinstance(ip, IPv4Address):
+            raise ValueError(f"`IPv4Address` expected. Got `{type(ip)}`")
+
+        ip_in_subnet = get_subnet_interface(ip=ip)
+        if not ip_in_subnet:
+            raise EnvironmentError(f"No IP in same subnet with {ip}")
+
         self._LOG.debug(
-            "Creating BAC0 client",
-            extra={"device_id": self.id, "interface": interface},
+            "Creating `BAC0` client",
+            extra={"device_id": self.id, "ip_in_subnet": ip_in_subnet},
         )
-        client = Lite(ip=interface, port=device_obj.property_list.port)
+        client = Lite(ip=str(ip_in_subnet), port=port)
         return client
 
     async def connect_client(self, client: Any) -> bool:
@@ -69,11 +86,6 @@ class BACnetDevice(BasePollingDevice, BACnetCoderMixin):
 
     async def _disconnect_client(self, client: Lite) -> None:
         client.disconnect()
-
-    # async def _poll_objects(self, objs: Collection[BACnetObj]) -> None:
-    #     for obj in objs:
-    #         if obj.existing:
-    #             await self.simulate_rpm(obj=obj)
 
     # def poll(self) -> None:
     #     """ Poll all object from device.
@@ -134,7 +146,7 @@ class BACnetDevice(BasePollingDevice, BACnetCoderMixin):
     @log_exceptions(logger=_LOG)
     def write_property(
         self, value: int | float | str, obj: BACnetObj, prop: ObjProperty, priority: int
-    ) -> Optional[bool]:
+    ) -> bool | None:
         """Writes value to property value in object.
 
         Args:
@@ -146,51 +158,45 @@ class BACnetDevice(BasePollingDevice, BACnetCoderMixin):
         Returns:
             Write is successful.
         """
-        assert isinstance(self._device_obj.property_list, TcpIpDevicePropertyList)
-
         if self._is_binary_obj(obj=obj) and prop is ObjProperty.PRESENT_VALUE:
             value = self._encode_binary_present_value(value=value)  # type: ignore
 
         args = (
-            f"{self._device_obj.property_list.address_port} "
+            f"{self._device_obj.property_list.interface[0]} "
             f"{camel_case(obj.object_type.name)} "
             f"{obj.object_id} "
             f"{camel_case(prop.name)} "
             f"{value} "
             f"- {priority}"
         )
-        is_successful = self.interface.client.write(args=args)
+        success = self.interface.client.write(args=args)
         self._LOG.debug(
             "Write",
-            extra={
-                "device_id": self.id,
-                "object": obj,
-                "value": value,
-                "success": is_successful,
-            },
+            extra={"device_id": self.id, "object": obj, "value": value, "success": success},
         )
-        return is_successful
+        return success
 
     async def _read(
         self,
         obj: BACnetObj,
+        prop: ObjProperty,
         wait: bool = False,
-        # prop: ObjProperty
-        **kwargs: Any,
     ) -> BACnetObj:
-        prop = kwargs.get("prop")
+        # prop = kwargs.get("prop")
+        if not isinstance(prop, ObjProperty):
+            raise ValueError(f"`prop` must be `ObjProperty` instance. Got {type(prop)}")
 
         if wait:
             await self.interface.polling_event.wait()
-        return await self._gtw.async_add_job(self.read_property, obj, prop)
+        polled_obj = self.read_property(obj=obj, prop=prop)
+        return polled_obj
+        # return await self._gtw.async_add_job(self.read_property, obj, prop)
 
     # @log_exceptions
     def read_property(self, obj: BACnetObj, prop: ObjProperty) -> BACnetObj:
-        assert isinstance(self._device_obj.property_list, TcpIpDevicePropertyList)
-
         request = " ".join(
             (
-                self._device_obj.property_list.address_port,
+                ":".join([str(item) for item in self._device_obj.property_list.interface]),
                 camel_case(obj.object_type.name),
                 str(obj.object_id),
                 camel_case(prop.name),
@@ -202,8 +208,7 @@ class BACnetDevice(BasePollingDevice, BACnetCoderMixin):
             response = self._decode_priority_array(priority_array=response)
 
         self._LOG.debug(
-            "Read",
-            extra={"device_id": self.id, "object": obj, "response": response},
+            "Read", extra={"device_id": self.id, "object": obj, "response": response}
         )
         obj.set_property(value=response, prop=prop)
         return obj
@@ -238,7 +243,7 @@ class BACnetDevice(BasePollingDevice, BACnetCoderMixin):
     async def simulate_rpm(self, obj: BACnetObj) -> BACnetObj:
         for prop in obj.polling_properties:
             try:
-                await self._read(obj=obj, prop=prop)
+                obj = await self._read(obj=obj, prop=prop)
             except Exception as exc:  # pylint: disable=broad-except
                 self._LOG.warning(
                     "Read error", extra={"object": obj, "property": prop, "exception": exc}
@@ -246,9 +251,8 @@ class BACnetDevice(BasePollingDevice, BACnetCoderMixin):
         return obj
 
     async def read(self, obj: BACnetObj, wait: bool = False, **kwargs: Any) -> BACnetObj:
-        # if obj.segmentation_supported:# todo: implement RPM or RP
         if wait:
             await self.interface.polling_event.wait()
-
-        await self.simulate_rpm(obj=obj)
-        return obj
+        # if obj.segmentation_supported:# todo: implement RPM or RP
+        polled_obj = await self.simulate_rpm(obj=obj)
+        return polled_obj

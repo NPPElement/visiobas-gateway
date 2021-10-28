@@ -1,5 +1,6 @@
+from __future__ import annotations
+
 import uuid
-from typing import Optional
 
 import paho.mqtt.client as mqtt  # type: ignore
 from pydantic import AnyUrl, BaseSettings, Field, validator
@@ -21,13 +22,14 @@ class MQTTSettings(BaseSettings):
     client_id: str = Field(default=None)
 
     @validator("client_id", pre=True)
-    def create_client_id(cls, value: Optional[str]) -> str:
+    def create_client_id(cls, value: str | None) -> str:
         # pylint: disable=no-self-argument
         return value or mqtt.base62(uuid.uuid4().int, padding=22)
 
     # todo: add security
 
     class Config:  # pylint: disable=missing-class-docstring
+        allow_mutation = False
         # arbitrary_types_allowed = True
         env_prefix = "GTW_MQTT_"
         env_file = ".env"

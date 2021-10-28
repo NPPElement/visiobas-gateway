@@ -2,12 +2,12 @@ from typing import Union
 
 from pydantic import Field
 
-from .base_obj import BaseBACnetObj
-from .device_property_list import (
+from ..modbus.device_property_list import (
+    ModbusTcpDevicePropertyList,
     SerialDevicePropertyList,
-    TcpIpDevicePropertyList,
-    TcpIpModbusDevicePropertyList,
 )
+from .base_obj import BaseBACnetObj
+from .device_property_list import TcpDevicePropertyList
 from .obj_property import ObjProperty
 from .obj_type import ObjType
 
@@ -16,12 +16,20 @@ class DeviceObj(BaseBACnetObj):
     """Represent device object."""
 
     property_list: Union[
-        TcpIpModbusDevicePropertyList,
-        TcpIpDevicePropertyList,
+        ModbusTcpDevicePropertyList,
+        TcpDevicePropertyList,
         SerialDevicePropertyList,
     ] = Field(  # type: ignore
         ..., alias=str(ObjProperty.PROPERTY_LIST.value)
     )
+
+
+# class BACnetDeviceObj(DeviceObj):
+#     """Device object for BACnet devices."""
+#
+#     property_list: TcpDevicePropertyList = Field(
+#         ..., alias=str(ObjProperty.PROPERTY_LIST.value)
+#     )
 
 
 POLLING_TYPES = (

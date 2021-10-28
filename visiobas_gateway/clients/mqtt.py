@@ -1,6 +1,8 @@
+from __future__ import annotations
+
 import asyncio
 from json import JSONDecodeError, dumps, loads
-from typing import TYPE_CHECKING, Any, Optional, Sequence, Union
+from typing import TYPE_CHECKING, Any, Sequence
 
 import paho.mqtt.client as mqtt  # type: ignore
 
@@ -23,15 +25,15 @@ class MQTTClient:
         self._gtw = gateway
         self.settings = settings
 
-        self._client: Optional[mqtt.Client] = None
-        self._stopped: Optional[asyncio.Event] = None
+        self._client: mqtt.Client | None = None
+        self._stopped: asyncio.Event | None = None
         self._connected = False
         self._paho_lock = asyncio.Lock()
 
         self.setup()
 
     @classmethod
-    def create(cls, gateway: Gateway, settings: MQTTSettings) -> "MQTTClient":
+    def create(cls, gateway: Gateway, settings: MQTTSettings) -> MQTTClient:
         mqtt_client = cls(gateway=gateway, settings=settings)
         mqtt_client.setup()
         return mqtt_client
@@ -207,7 +209,7 @@ class MQTTClient:
         # elif result == mqtt.MQTT_ERR_NO_CONN:
         #     _log.warning(f'Not subscribed to topic: {topics} {result} {mid}')
 
-    async def unsubscribe(self, topics: Union[list[str], str]) -> None:
+    async def unsubscribe(self, topics: list[str] | str) -> None:
         """Perform an unsubscription."""
         async with self._paho_lock:
             if isinstance(self._client, mqtt.Client):
@@ -327,7 +329,7 @@ class MQTTClient:
         )
 
     @staticmethod
-    def _decode(msg: mqtt.MQTTMessage) -> Union[dict, str]:
+    def _decode(msg: mqtt.MQTTMessage) -> dict | str:
         try:
             if isinstance(msg.payload, bytes):
                 content = loads(msg.payload.decode("utf-8", "ignore"))

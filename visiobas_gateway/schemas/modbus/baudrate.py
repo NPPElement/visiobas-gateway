@@ -1,8 +1,8 @@
-from enum import Enum, unique
+from enum import IntEnum, unique
 
 
 @unique
-class BaudRate(int, Enum):
+class BaudRate(IntEnum):
     """Baudrate for The baud rate to use for the serial device."""
 
     _2400 = 2_400

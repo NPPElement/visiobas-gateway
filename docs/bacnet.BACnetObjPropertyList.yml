@@ -1,6 +1,7 @@
 description: Represent PropertyList (371) for BACnet objects.
 properties:
   pollPeriod:
+    default: 90
     description: Period to send data to server.
     title: Pollperiod
     type: number

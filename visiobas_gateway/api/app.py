@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import asyncio
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 import aiohttp_cors  # type: ignore
 import aiojobs  # type: ignore
@@ -38,7 +38,7 @@ class ApiServer:
     def __init__(self, gateway: Gateway, settings: ApiSettings):
         self._gateway = gateway
         self._settings = settings
-        self._app: Optional[Application] = None
+        self._app: Application | None = None
         self._stopped = asyncio.Event()
 
     # def __repr__(self) -> str:

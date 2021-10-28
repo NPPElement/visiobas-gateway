@@ -4,17 +4,25 @@ from typing import Callable, Any
 from visiobas_gateway.schemas.bacnet.base_obj import BaseBACnetObj
 from visiobas_gateway.schemas.bacnet.device_property_list import (
     BaseDevicePropertyList,
-    TcpIpDevicePropertyList,
-    SerialDevicePropertyList,
-    TcpIpModbusDevicePropertyList,
+    TcpDevicePropertyList,
 )
-from visiobas_gateway.schemas.modbus.device_rtu_properties import DeviceRtuProperties
+from visiobas_gateway.schemas.modbus.device_property_list import (
+    SerialDevicePropertyList,
+    ModbusTcpDevicePropertyList,
+)
+from visiobas_gateway.schemas.modbus.device_rtu_properties import (
+    DeviceRtuProperties,
+    BaseDeviceModbusProperties,
+)
 from visiobas_gateway.schemas.modbus.modbus_properties import ModbusProperties
 
 from visiobas_gateway.schemas.bacnet.device_obj import DeviceObj
 from visiobas_gateway.schemas.bacnet.obj import BACnetObj
 from visiobas_gateway.api.jsonrpc.schemas import JsonRPCSetPointParams
-
+from visiobas_gateway.devices.base_device import BaseDevice
+from visiobas_gateway.gateway import Gateway
+from visiobas_gateway.schemas.settings.gateway_settings import GatewaySettings
+from visiobas_gateway.schemas.bacnet.obj_property_list import BaseBACnetObjPropertyList
 import pytest
 
 
@@ -30,6 +38,22 @@ def base_bacnet_obj_factory() -> Callable[..., BaseBACnetObj]:
     def _factory(**kwargs):
         kwargs = _base_bacnet_obj_kwargs(kwargs)
         return BaseBACnetObj(**kwargs)
+
+    return _factory
+
+
+@pytest.fixture
+def base_device_modbus_properties() -> Callable[..., BaseDeviceModbusProperties]:
+    """
+    Produces `BaseDeviceModbusProperties` for tests.
+
+    You can pass the same params into this as the `BaseDeviceModbusProperties` constructor to
+    override defaults.
+    """
+
+    def _factory(**kwargs):
+        kwargs = _base_device_modbus_properties_kwargs(kwargs)
+        return BaseDeviceModbusProperties(**kwargs)
 
     return _factory
 
@@ -59,43 +83,66 @@ def device_base_property_list_factory() -> Callable[..., BaseDevicePropertyList]
     override defaults.
     """
 
+    class ForTestBaseDevicePropertyList(BaseDevicePropertyList):
+        """Class for inheriting from ABC + with abstract method implementation."""
+
+        def interface(self) -> Any:
+            pass
+
     def _factory(**kwargs):
         kwargs = _base_device_property_list_kwargs(kwargs)
-        return BaseDevicePropertyList(**kwargs)
+        return ForTestBaseDevicePropertyList(**kwargs)
 
     return _factory
 
 
 @pytest.fixture
-def tcp_ip_device_property_list_factory() -> Callable[..., TcpIpDevicePropertyList]:
+def base_obj_property_list_factory() -> Callable[..., BaseBACnetObjPropertyList]:
     """
-    Produces `TcpIpDevicePropertyList` for tests.
+    Produces `BaseBACnetObjPropertyList` for tests.
 
-    You can pass the same params into this as the `TcpIpDevicePropertyList` constructor to
+    You can pass the same params into this as the `BaseBACnetObjPropertyList` constructor to
     override defaults.
     """
 
+    class ForTestBaseBACnetObjPropertyList(BaseBACnetObjPropertyList):
+        """Class for inheriting from ABC."""
+
     def _factory(**kwargs):
-        kwargs = _tcp_ip_device_property_list_kwargs(kwargs)
-        return TcpIpDevicePropertyList(**kwargs)
+        kwargs = _base_obj_property_list_kwargs(kwargs)
+        return ForTestBaseBACnetObjPropertyList(**kwargs)
 
     return _factory
 
 
 @pytest.fixture
-def tcp_ip_modbus_device_property_list_factory() -> Callable[
-    ..., TcpIpModbusDevicePropertyList
-]:
+def tcp_device_property_list_factory() -> Callable[..., TcpDevicePropertyList]:
     """
-    Produces `TcpIpModbusDevicePropertyList` for tests.
+    Produces `TcpDevicePropertyList` for tests.
 
-    You can pass the same params into this as the `TcpIpModbusDevicePropertyList` constructor to
+    You can pass the same params into this as the `TcpDevicePropertyList` constructor to
     override defaults.
     """
 
     def _factory(**kwargs):
-        kwargs = _tcp_ip_modbus_device_property_list_kwargs(kwargs)
-        return TcpIpModbusDevicePropertyList(**kwargs)
+        kwargs = _tcp_device_property_list_kwargs(kwargs)
+        return TcpDevicePropertyList(**kwargs)
+
+    return _factory
+
+
+@pytest.fixture
+def modbus_tcp_device_property_list_factory() -> Callable[..., ModbusTcpDevicePropertyList]:
+    """
+    Produces `ModbusTcpDevicePropertyList` for tests.
+
+    You can pass the same params into this as the `ModbusTcpDevicePropertyList`
+    constructor to override defaults.
+    """
+
+    def _factory(**kwargs):
+        kwargs = _modbus_tcp_device_property_list_kwargs(kwargs)
+        return ModbusTcpDevicePropertyList(**kwargs)
 
     return _factory
 
@@ -117,7 +164,7 @@ def serial_device_property_list_factory() -> Callable[..., SerialDevicePropertyL
 
 
 @pytest.fixture
-def tcp_ip_device_factory() -> Callable[..., DeviceObj]:
+def tcp_device_obj_factory() -> Callable[..., DeviceObj]:
     """
     Produces `DeviceObj` with `TcpIpDevicePropertyList` for tests.
 
@@ -126,14 +173,14 @@ def tcp_ip_device_factory() -> Callable[..., DeviceObj]:
     """
 
     def _factory(**kwargs):
-        kwargs = _tcp_ip_device_obj_kwargs(kwargs)
+        kwargs = _tcp_device_obj_kwargs(kwargs)
         return DeviceObj(**kwargs)
 
     return _factory
 
 
 @pytest.fixture
-def tcp_ip_modbus_device_factory() -> Callable[..., DeviceObj]:
+def modbus_tcp_device_obj_factory() -> Callable[..., DeviceObj]:
     """
     Produces `DeviceObj` with `TcpIpDevicePropertyList` for tests.
 
@@ -142,14 +189,14 @@ def tcp_ip_modbus_device_factory() -> Callable[..., DeviceObj]:
     """
 
     def _factory(**kwargs):
-        kwargs = _tcp_ip_modbus_device_obj_kwargs(kwargs)
+        kwargs = _modbus_tcp_device_obj_kwargs(kwargs)
         return DeviceObj(**kwargs)
 
     return _factory
 
 
 @pytest.fixture
-def serial_device_factory() -> Callable[..., DeviceObj]:
+def serial_device_obj_factory() -> Callable[..., DeviceObj]:
     """
     Produces `DeviceObj` with `SerialDevicePropertyList` for tests.
 
@@ -160,6 +207,38 @@ def serial_device_factory() -> Callable[..., DeviceObj]:
     def _factory(**kwargs):
         kwargs = _serial_device_obj_kwargs(kwargs)
         return DeviceObj(**kwargs)
+
+    return _factory
+
+
+@pytest.fixture
+def base_device_factory() -> Callable[..., BaseDevice]:
+    """
+    Produces `BaseDevice` with `DeviceObj` for tests.
+
+    You can pass the same params into this as the `BaseDevice` constructor to
+    override defaults.
+    """
+
+    def _factory(**kwargs):
+        kwargs = _base_device_kwargs(kwargs)
+        return BaseDevice(**kwargs)
+
+    return _factory
+
+
+@pytest.fixture
+async def gateway_factory() -> Callable[..., Gateway]:
+    """
+    Produces `Gateway` for tests.
+
+    You can pass the same params into this as the `Gateway` constructor to
+    override defaults.
+    """
+
+    def _factory(**kwargs):
+        kwargs = _gateway_kwargs(kwargs)
+        return Gateway(**kwargs)
 
     return _factory
 
@@ -212,6 +291,54 @@ def json_rpc_set_point_params_factory() -> Callable[..., JsonRPCSetPointParams]:
     return _factory
 
 
+@pytest.fixture
+def gateway_settings_factory() -> Callable[..., GatewaySettings]:
+    """
+    Produces `GatewaySettings` for tests.
+
+    You can pass the same params into this as the `GatewaySettings` constructor to
+    override defaults.
+    """
+
+    def _factory(**kwargs):
+        kwargs = _gateway_settings_kwargs(kwargs)
+        return GatewaySettings(**kwargs)
+
+    return _factory
+
+
+def _gateway_settings_kwargs(kwargs: dict[str, Any]) -> dict[str, Any]:
+    kwargs = {
+        "update_period": 3600,
+        "unreachable_reset_period": 1800,
+        "unreachable_threshold": 3,
+        "override_threshold": 8,
+        "poll_device_ids": [11, 22, 33],
+        **kwargs,
+    }
+    return kwargs
+
+
+def _base_device_kwargs(kwargs: dict[str, Any]) -> dict[str, Any]:
+    kwargs = {
+        "gateway": Gateway(**_gateway_kwargs(kwargs)),
+        "device_obj": DeviceObj(**_serial_device_obj_kwargs(kwargs)),
+        **kwargs,
+    }
+    return kwargs
+
+
+def _gateway_kwargs(kwargs: dict[str, Any]) -> dict[str, Any]:
+    kwargs = {
+        "gateway_settings": GatewaySettings(**_gateway_settings_kwargs(kwargs)),
+        "api_settings": None,  # todo
+        "http_settings": None,
+        "mqtt_settings": None,
+        **kwargs,
+    }
+    return kwargs
+
+
 def _base_bacnet_obj_kwargs(kwargs: dict[str, Any]) -> dict[str, Any]:
     kwargs = {
         "75": 75,
@@ -243,7 +370,7 @@ def _device_rtu_properties_kwargs(kwargs: dict[str, Any]) -> dict[str, Any]:
     return kwargs
 
 
-def _device_tcp_ip_modbus_properties_kwargs(kwargs: dict[str, Any]) -> dict[str, Any]:
+def _base_device_modbus_properties_kwargs(kwargs: dict[str, Any]) -> dict[str, Any]:
     kwargs = {
         "unit": 1,
         **kwargs,
@@ -264,13 +391,21 @@ def _base_device_property_list_kwargs(kwargs: dict[str, Any]) -> dict[str, Any]:
     return kwargs
 
 
-def _tcp_ip_device_property_list_kwargs(kwargs: dict[str, Any]) -> dict[str, Any]:
+def _base_obj_property_list_kwargs(kwargs: dict[str, Any]) -> dict[str, Any]:
+    kwargs = {
+        "poll_period": 90,
+        **kwargs,
+    }
+    return kwargs
+
+
+def _tcp_device_property_list_kwargs(kwargs: dict[str, Any]) -> dict[str, Any]:
     kwargs = {
         "template": "",
         "alias": "",
         "replace": {},
         "address": "10.21.10.21",
-        "port": 47808,
+        "port": 0xBAC0,
         "protocol": "BACnet",
         "timeout": 500,
         "retries": 3,
@@ -279,7 +414,7 @@ def _tcp_ip_device_property_list_kwargs(kwargs: dict[str, Any]) -> dict[str, Any
     return kwargs
 
 
-def _tcp_ip_modbus_device_property_list_kwargs(kwargs: dict[str, Any]) -> dict[str, Any]:
+def _modbus_tcp_device_property_list_kwargs(kwargs: dict[str, Any]) -> dict[str, Any]:
     kwargs = {
         "template": "",
         "alias": "",
@@ -289,7 +424,7 @@ def _tcp_ip_modbus_device_property_list_kwargs(kwargs: dict[str, Any]) -> dict[s
         "protocol": "ModbusTCP",
         "timeout": 500,
         "retries": 3,
-        "rtu": _device_tcp_ip_modbus_properties_kwargs({}),
+        "rtu": _base_device_modbus_properties_kwargs(kwargs),
         **kwargs,
     }
     return kwargs
@@ -301,25 +436,25 @@ def _serial_device_property_list_kwargs(kwargs: dict[str, Any]) -> dict[str, Any
         "alias": "",
         "replace": {},
         "protocol": "ModbusRTU",
-        "rtu": _device_rtu_properties_kwargs({}),
+        "rtu": _device_rtu_properties_kwargs(kwargs),
         **kwargs,
     }
     return kwargs
 
 
-def _tcp_ip_device_obj_kwargs(kwargs: dict[str, Any]) -> dict[str, Any]:
+def _tcp_device_obj_kwargs(kwargs: dict[str, Any]) -> dict[str, Any]:
     kwargs = {
         **_base_bacnet_obj_kwargs({}),
-        "371": json.dumps(_tcp_ip_device_property_list_kwargs({})),
+        "371": json.dumps(_tcp_device_property_list_kwargs(kwargs)),
         **kwargs,
     }
     return kwargs
 
 
-def _tcp_ip_modbus_device_obj_kwargs(kwargs: dict[str, Any]) -> dict[str, Any]:
+def _modbus_tcp_device_obj_kwargs(kwargs: dict[str, Any]) -> dict[str, Any]:
     kwargs = {
         **_base_bacnet_obj_kwargs({}),
-        "371": json.dumps(_tcp_ip_modbus_device_property_list_kwargs({})),
+        "371": json.dumps(_modbus_tcp_device_property_list_kwargs(kwargs)),
         **kwargs,
     }
     return kwargs
@@ -327,8 +462,8 @@ def _tcp_ip_modbus_device_obj_kwargs(kwargs: dict[str, Any]) -> dict[str, Any]:
 
 def _serial_device_obj_kwargs(kwargs: dict[str, Any]) -> dict[str, Any]:
     kwargs = {
-        **_base_bacnet_obj_kwargs({}),
-        "371": json.dumps(_serial_device_property_list_kwargs({})),
+        **_base_bacnet_obj_kwargs(kwargs),
+        "371": json.dumps(_serial_device_property_list_kwargs(kwargs)),
         **kwargs,
     }
     return kwargs
@@ -351,7 +486,7 @@ def _modbus_properties_kwargs(kwargs: dict[str, Any]) -> dict[str, Any]:
 
 def _bacnet_obj_kwargs(kwargs: dict[str, Any]) -> dict[str, Any]:
     kwargs = {
-        **_base_bacnet_obj_kwargs({}),
+        **_base_bacnet_obj_kwargs(kwargs),
         "103": "no-fault-detected",
         "106": None,
         "111": [False, False, False, False],

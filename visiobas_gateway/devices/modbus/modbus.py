@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from ipaddress import IPv4Address
 from typing import Any, Callable
 
 from pymodbus.client.sync import ModbusSerialClient, ModbusTcpClient  # type: ignore
@@ -7,19 +8,21 @@ from pymodbus.exceptions import ModbusException, ModbusIOException  # type: igno
 from pymodbus.framer.rtu_framer import ModbusRtuFramer  # type: ignore
 from pymodbus.framer.socket_framer import ModbusSocketFramer  # type: ignore
 
-from ..schemas import (
+from ...schemas import (
     BACnetObj,
     DeviceObj,
     ModbusObj,
     ModbusReadFunc,
+    ModbusSerialDeviceObj,
+    ModbusTCPDeviceObj,
     ModbusWriteFunc,
     Protocol,
-    SerialDevicePropertyList,
-    TcpIpModbusDevicePropertyList,
+    SerialPort,
 )
-from ..utils import get_file_logger, log_exceptions
+from ...utils import get_file_logger, log_exceptions, ping, serial_port_connected
+from .._interface import InterfaceKey
+from ..base_polling_device import BasePollingDevice
 from ._modbus_coder_mixin import ModbusCoderMixin
-from .base_polling_device import BasePollingDevice
 
 _LOG = get_file_logger(name=__name__)
 
@@ -32,16 +35,21 @@ class ModbusDevice(BasePollingDevice, ModbusCoderMixin):
     """
 
     @staticmethod
-    def interface_name(device_obj: DeviceObj) -> str:
-        if isinstance(device_obj.property_list, TcpIpModbusDevicePropertyList):
-            return device_obj.property_list.address_port
-        if isinstance(device_obj.property_list, SerialDevicePropertyList):
-            return device_obj.property_list.rtu.port
-        raise NotImplementedError
+    def interface_key(device_obj: DeviceObj) -> InterfaceKey:
+        return device_obj.property_list.interface
+
+    @staticmethod
+    async def is_reachable(device_obj: DeviceObj) -> bool:
+        interface_key = device_obj.property_list.interface
+        if isinstance(interface_key, SerialPort):
+            return serial_port_connected(serial_port=interface_key)
+        if isinstance(interface_key, tuple) and isinstance(interface_key[0], IPv4Address):
+            return await ping(host=str(interface_key[0]), attempts=4)
+        raise ValueError
 
     @log_exceptions(logger=_LOG)
     async def create_client(
-        self, device_obj: DeviceObj
+        self, device_obj: ModbusSerialDeviceObj | ModbusTCPDeviceObj
     ) -> ModbusTcpClient | ModbusSerialClient:
         """Initializes synchronous modbus client."""
 
@@ -59,7 +67,7 @@ class ModbusDevice(BasePollingDevice, ModbusCoderMixin):
             Protocol.MODBUS_RTU_OVER_TCP,
         }:
             client = ModbusTcpClient(
-                host=str(device_obj.property_list.address),  # type: ignore
+                host=str(device_obj.property_list.ip),  # type: ignore
                 port=device_obj.property_list.port,  # type: ignore
                 framer=framer,
                 retries=device_obj.property_list.retries,
@@ -114,9 +122,13 @@ class ModbusDevice(BasePollingDevice, ModbusCoderMixin):
         }
 
     async def read(self, obj: BACnetObj, wait: bool = False, **kwargs: Any) -> BACnetObj:
+        if not isinstance(obj, ModbusObj):
+            raise ValueError(f"`obj` must be `ModbusObj`. Got {type(obj)}")
         if wait:
             await self.interface.polling_event.wait()
-        return await self._gtw.async_add_job(self.sync_read, obj)
+        polled_obj = self.sync_read(obj=obj)
+        return polled_obj
+        # return await self._gtw.async_add_job(self.sync_read, obj)
 
     @log_exceptions(logger=_LOG)
     def sync_read(self, obj: ModbusObj) -> ModbusObj:
@@ -139,7 +151,10 @@ class ModbusDevice(BasePollingDevice, ModbusCoderMixin):
     async def write(
         self, value: int | float | str, obj: BACnetObj, wait: bool = False, **kwargs: Any
     ) -> None:
-        await self._gtw.async_add_job(self.sync_write, value, obj)
+        if not isinstance(obj, ModbusObj):
+            raise ValueError(f"`obj` must be `ModbusObj`. Got {type(obj)}")
+        self.sync_write(value=value, obj=obj)
+        # await self._gtw.async_add_job(self.sync_write, value, obj)
 
     def sync_write(self, value: int | float | str, obj: ModbusObj) -> None:
         """Write value to Modbus object.
@@ -151,7 +166,7 @@ class ModbusDevice(BasePollingDevice, ModbusCoderMixin):
         if obj.func_write is None:
             raise ModbusException("Object cannot be overwritten")
         if isinstance(value, str):
-            raise NotImplementedError('Modbus expected numbers to write. Got "str".')
+            raise NotImplementedError("Modbus expected numbers to write. Got `str`.")
 
         payload = self._build_payload(value=value, obj=obj)
 
@@ -167,19 +182,4 @@ class ModbusDevice(BasePollingDevice, ModbusCoderMixin):
         )
         if request.isError():
             raise ModbusIOException("0x80")  # todo: resp.string
-        self._LOG.debug(
-            "Successfully write",
-            extra={
-                "device_id": self.id,
-                "object_id": obj.object_id,
-                "object_type": obj.object_type,
-                "address": obj.address,
-                "value": value,
-            },
-        )
-
-    # async def _poll_objects(self, objs: Collection[BACnetObj]) -> None:
-    #
-    #     for obj in objs:
-    #         if obj.existing:
-    #             await self.read(obj=obj)
+        self._LOG.debug("Successfully write", extra={"object": obj, "value": value})

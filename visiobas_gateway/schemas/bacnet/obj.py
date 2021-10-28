@@ -8,13 +8,13 @@ from pydantic import Field, validator
 from ...utils import snake_case
 from .base_obj import BaseBACnetObj
 from .obj_property import ObjProperty
-from .obj_property_list import BACnetObjPropertyList
+from .obj_property_list import BaseBACnetObjPropertyList
 from .obj_type import INPUT_PROPERTIES, INPUT_TYPES, OUTPUT_PROPERTIES, OUTPUT_TYPES
 from .reliability import Reliability
 from .status_flags import StatusFlags
 
 DEFAULT_RESOLUTION = 0.1
-DEFAULT_PRIORITY_ARRAY: list[Optional[float]] = [None] * 16
+DEFAULT_PRIORITY_ARRAY: list[float | None] = [None] * 16
 
 
 class BACnetObj(BaseBACnetObj):
@@ -78,8 +78,8 @@ class BACnetObj(BaseBACnetObj):
 
     @validator("priority_array", pre=True)
     def set_default_priority_array_if_none(
-        cls, value: Optional[list[Optional[float]]]
-    ) -> list[Optional[float]]:
+        cls, value: list[float | None] | None
+    ) -> list[float | None]:
         """None should be interpreted as default value 0.1 -- `pydantic` does not
         handle it.
         """
@@ -112,7 +112,7 @@ class BACnetObj(BaseBACnetObj):
     segmentation_supported: bool = Field(
         default=False, alias=str(ObjProperty.SEGMENTATION_SUPPORTED.value)
     )
-    property_list: BACnetObjPropertyList = Field(  # type: ignore
+    property_list: BaseBACnetObjPropertyList = Field(  # type: ignore
         ...,
         alias=str(ObjProperty.PROPERTY_LIST.value),
         description="""This read-only property is a JSON of property identifiers, one
@@ -228,7 +228,7 @@ class BACnetObj(BaseBACnetObj):
         return str_
 
     @staticmethod
-    def priority_array_to_http_str(priority_array: list[Optional[float]]) -> str:
+    def priority_array_to_http_str(priority_array: list[float | None]) -> str:
         """Convert priority array tuple to str.
 
         Result example: ,,,,,,,,40.5,,,,,,49.2,

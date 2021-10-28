@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 import asyncio
-from typing import TYPE_CHECKING, Any, Collection, Union
+from typing import TYPE_CHECKING, Any, Collection
 
 import aiohttp
 
@@ -58,7 +60,7 @@ class HTTPClient:
 
     async def get_objects(
         self, dev_id: int, obj_types: Collection[ObjType]
-    ) -> tuple[Union[Any, Exception], ...]:
+    ) -> tuple[Any | Exception, ...]:
         """Requests objects of provided type.
 
         If one of requests failed - return error with responses.
@@ -303,7 +305,7 @@ class HTTPClient:
         extract_data: bool = False,
         extract_text: bool = True,
         **kwargs: Any,
-    ) -> Union[aiohttp.ClientResponse, dict, list, str]:
+    ) -> aiohttp.ClientResponse | dict | list | str:
         """Performs HTTP request.
         Args:
             Accept same parameters as aiohttp.ClientSession.request()
@@ -334,7 +336,7 @@ class HTTPClient:
 
     async def async_extract_response_data(
         self, resp: aiohttp.ClientResponse
-    ) -> Union[list, dict]:
+    ) -> list | dict:
         # self.__doc__ = self._extract_response_data.__doc__
 
         return await self._gtw.async_add_job(self._extract_response_data, resp)
@@ -342,7 +344,7 @@ class HTTPClient:
     @staticmethod
     async def _extract_response_data(
         resp: aiohttp.ClientResponse,
-    ) -> Union[list, dict]:
+    ) -> list | dict:
         """Checks the correctness of the response.
 
         Args:

@@ -1,9 +1,9 @@
-from typing import Union
+from __future__ import annotations
 
 _FLOAT_FORMAT = ".10f"
 
 
-def round_with_resolution(value: Union[float, int], resolution: Union[int, float]) -> float:
+def round_with_resolution(value: float | int, resolution: int | float) -> float:
     if not isinstance(resolution, (int, float)):
         raise ValueError("`resolution` must be number.")
     if resolution <= 0:

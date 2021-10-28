@@ -14,6 +14,7 @@ class ApiSettings(BaseSettings):
     )
 
     class Config:  # pylint: disable=missing-class-docstring
+        allow_mutation = False
         env_prefix = "GTW_API_"
         env_file = ".env"
         env_file_encoding = "utf-8"

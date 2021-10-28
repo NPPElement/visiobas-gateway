@@ -1,12 +1,12 @@
 from __future__ import annotations
 
-from typing import Optional
+from typing import Literal
 
 from bacpypes.basetypes import PriorityArray  # type: ignore
 
-from ..schemas import BACnetObj
-from ..schemas.bacnet.obj_type import BINARY_TYPES
-from ..utils import get_file_logger
+from ...schemas import BACnetObj
+from ...schemas.bacnet.obj_type import BINARY_TYPES
+from ...utils import get_file_logger
 
 _LOG = get_file_logger(name=__name__)
 
@@ -19,7 +19,7 @@ class BACnetCoderMixin:
         return obj.object_type in BINARY_TYPES
 
     @staticmethod
-    def _encode_binary_present_value(value: int | float) -> str:
+    def _encode_binary_present_value(value: int | float) -> Literal["active", "inactive"]:
         return "active" if value else "inactive"
 
     # def _decode_response(self, resp: Any, prop: ObjProperty) -> Any:
@@ -29,7 +29,7 @@ class BACnetCoderMixin:
     #         return resp
 
     @staticmethod
-    def _decode_priority_array(priority_array: PriorityArray) -> list[Optional[float]]:
+    def _decode_priority_array(priority_array: PriorityArray) -> list[float | None]:
         """Converts `bacpypes.PriorityArray` to list."""
         priority_array = [
             v[0] if k[0] != "null" else None

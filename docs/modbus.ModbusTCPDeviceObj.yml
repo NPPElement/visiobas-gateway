@@ -1,0 +1,191 @@
+definitions:
+  BaseDeviceModbusProperties:
+    description: Represent RTU properties for Modbus TCP/IP devices.
+    properties:
+      unit:
+        description: Address of serial device.
+        maximum: 255
+        minimum: 0
+        title: Unit
+        type: integer
+    required:
+    - unit
+    title: BaseDeviceModbusProperties
+    type: object
+  ModbusTcpDevicePropertyList:
+    description: PropertyList for TCP/IP Modbus devices.
+    properties:
+      address:
+        format: ipv4
+        title: Address
+        type: string
+      apduTimeout:
+        default: 6000
+        description: "The amount of time in milliseconds between retransmissions of\
+          \ an\n        APDU requiring acknowledgment for which no acknowledgment\
+          \ has been received.\n        A suggested default value for this property\
+          \ is 6,000 milliseconds for devices that\n        permit modification of\
+          \ this parameter. Otherwise, the default value shall be\n        10,000\
+          \ milliseconds. This value shall be non-zero if the Device object property\n\
+          \        named Number_Of_APDU_Retries is non-zero."
+        exclusiveMinimum: 0
+        maximum: 10000
+        title: Apdutimeout
+        type: integer
+      numberOfApduRetries:
+        default: 3
+        description: "Indicates the maximum number of times that an APDU shall be\n\
+          \        retransmitted. A suggested default value for this property is 3.\
+          \ If this device\n        does not perform retries, then this property shall\
+          \ be set to zero. If the value of\n        this property is greater than\
+          \ zero, a non-zero value shall be placed in the Device\n        object APDU_Timeout\
+          \ property."
+        maximum: 3
+        minimum: 0
+        title: Numberofapduretries
+        type: integer
+      pollPeriod:
+        default: 90
+        description: Period to send data to server.
+        title: Pollperiod
+        type: number
+      port:
+        maximum: 65535
+        minimum: 0
+        title: Port
+        type: integer
+      protocol:
+        $ref: '#/definitions/Protocol'
+      reconnectPeriod:
+        default: 300
+        minimum: 0
+        title: Reconnectperiod
+        type: integer
+      rtu:
+        allOf:
+        - $ref: '#/definitions/BaseDeviceModbusProperties'
+        default:
+          unit: 1
+        title: Rtu
+      sendPeriod:
+        default: 300
+        description: Period to internal object poll.
+        minimum: 0
+        title: Sendperiod
+        type: number
+    required:
+    - protocol
+    - address
+    - port
+    title: ModbusTcpDevicePropertyList
+    type: object
+  ObjType:
+    description: 'Supported BACnet object types.
+
+
+      Enumerated values 0-127 are reserved for definition by `ASHRAE`.
+
+      Enumerated values 128-1023 may be used by others subject to the procedures and
+
+      constraints'
+    enum:
+    - 0
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+    - 11
+    - 12
+    - 13
+    - 14
+    - 15
+    - 16
+    - 17
+    - 18
+    - 19
+    - 20
+    - 21
+    - 22
+    - 23
+    - 24
+    - 25
+    - 26
+    - 27
+    - 28
+    - 29
+    - 30
+    - 32
+    - 33
+    - 34
+    - 35
+    - 36
+    - 37
+    - 38
+    - 39
+    - 40
+    - 41
+    - 42
+    - 43
+    - 44
+    - 45
+    - 46
+    - 47
+    - 48
+    - 49
+    - 50
+    - 51
+    - 52
+    - 53
+    - 54
+    title: ObjType
+    type: integer
+  Protocol:
+    description: Supported devices protocols.
+    enum:
+    - BACnet
+    - ModbusTCP
+    - ModbusRTU
+    - ModbusRTUoverTCP
+    - SUNAPI
+    title: Protocol
+    type: string
+description: Device object for Modbus over TCP devices.
+properties:
+  '371':
+    $ref: '#/definitions/ModbusTcpDevicePropertyList'
+  '75':
+    description: "Is a numeric code that is used to identify the object.\n       \
+      \ It shall be unique within the BACnet Device that maintains it."
+    minimum: 0
+    title: '75'
+    type: integer
+  '77':
+    description: "Represent a name for the object that is unique within the\n    \
+      \    BACnet Device that maintains it. The minimum length of the string shall\
+      \ be one\n        character. The set of characters used in the Object_Name shall\
+      \ be restricted to\n        printable characters."
+    minLength: 1
+    title: '77'
+    type: string
+  '79':
+    allOf:
+    - $ref: '#/definitions/ObjType'
+    description: Indicates membership in a particular object type class.
+  '846':
+    exclusiveMinimum: 0
+    title: '846'
+    type: integer
+required:
+- '79'
+- '846'
+- '75'
+- '77'
+- '371'
+title: ModbusTCPDeviceObj
+type: object

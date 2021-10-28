@@ -1,4 +1,6 @@
-from typing import Collection, Optional, Union
+from __future__ import annotations
+
+from typing import Collection
 
 from .schemas import (
     ANALOG_TYPES,
@@ -42,7 +44,11 @@ class BACnetVerifier:
 
         obj = self.verify_status_flags(obj=obj, status_flags=obj.status_flags)
         if obj.priority_array:
-            obj = self.verify_priority_array(obj=obj, priority_array=obj.priority_array)
+            obj = self.verify_priority_array(
+                obj=obj,
+                priority_array=obj.priority_array,
+                override_threshold=self.override_threshold,
+            )
         return obj
 
     @staticmethod
@@ -106,7 +112,7 @@ class BACnetVerifier:
 
     @staticmethod
     def verify_present_value(
-        obj: BACnetObj, value: Optional[Union[str, int, float, bool]]
+        obj: BACnetObj, value: str | int | float | bool | None
     ) -> BACnetObj:
         # pylint: disable=too-many-return-statements
         if not value.__hash__ or value in {None, "null"}:
@@ -150,14 +156,15 @@ class BACnetVerifier:
         obj.verified_present_value = "null"
         return obj
 
+    @staticmethod
     def verify_priority_array(
-        self, obj: BACnetObj, priority_array: list[Optional[float]]
+        override_threshold: Priority, obj: BACnetObj, priority_array: list[float | None]
     ) -> BACnetObj:
         """Sets OVERRIDE status flag if priority array contains override priority."""
         for i, priority in enumerate(priority_array):
             if priority is None:
                 continue
-            if i >= int(self.override_threshold):
+            if i >= override_threshold.value:
                 obj.status_flags.enable(flag=StatusFlag.OVERRIDEN)
 
         obj.priority_array = priority_array

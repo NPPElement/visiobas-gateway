@@ -1,21 +1,26 @@
 from visiobas_gateway.schemas.bacnet.device_property_list import (
-    TcpIpDevicePropertyList,
+    TcpDevicePropertyList,
+)
+from visiobas_gateway.schemas.modbus.device_property_list import (
     SerialDevicePropertyList,
-    TcpIpModbusDevicePropertyList,
+    ModbusTcpDevicePropertyList,
 )
 
 
 class TestDeviceObj:
     def test_construct_happy(
-        self, tcp_ip_device_factory, serial_device_factory, tcp_ip_modbus_device_factory
+        self,
+        tcp_device_obj_factory,
+        serial_device_obj_factory,
+        modbus_tcp_device_obj_factory,
     ):
-        tcp_ip_device_obj = tcp_ip_device_factory()
-        assert isinstance(tcp_ip_device_obj.property_list, TcpIpDevicePropertyList)
+        tcp_ip_device_obj = tcp_device_obj_factory()
+        assert isinstance(tcp_ip_device_obj.property_list, TcpDevicePropertyList)
 
-        serial_device_obj = serial_device_factory()
+        serial_device_obj = serial_device_obj_factory()
         assert isinstance(serial_device_obj.property_list, SerialDevicePropertyList)
 
-        tcp_ip_modbus_device_obj = tcp_ip_modbus_device_factory()
+        tcp_ip_modbus_device_obj = modbus_tcp_device_obj_factory()
         assert isinstance(
-            tcp_ip_modbus_device_obj.property_list, TcpIpModbusDevicePropertyList
+            tcp_ip_modbus_device_obj.property_list, ModbusTcpDevicePropertyList
         )

@@ -3,10 +3,7 @@ version: "3.7"
 services:
   vb_gateway:
     container_name: visiobas_gateway
-    build:
-      context: .
-      dockerfile: Dockerfile
-    image: visiobas-gateway:0.3.4-beta
+    image: visiobas-gateway:develop
     logging:
       #driver: none
       driver: "json-file"
@@ -23,16 +20,16 @@ services:
       # Logging
       - PYTHONASYNCIODEBUG=0
     volumes:
-      #- /opt/visiobas-visiobas_gateway/logs:/usr/share/python3/gtw/visiobas_gateway/logs
       - /opt/visiobas-gateway/.gtw_logs:/.gtw_logs
       - /dev:/dev # [1]
 #    networks:
 #      - backend
-#    ports:
-#      - "7070:7070"
+    ports:
+      - "7070:7070"
     network_mode: host
     devices: # To detect devices connected via Serial port
       - "/dev/ttyS0:/dev/ttyS0"
+      - "/dev/ttyS1:/dev/ttyS1"
       - "/dev/ttyUSB0:/dev/ttyUSB0"
       - "/dev/ttyUSB1:/dev/ttyUSB1"
 

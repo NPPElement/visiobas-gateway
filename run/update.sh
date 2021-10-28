@@ -4,8 +4,7 @@ cd /opt/visiobas-gateway || { echo "Directory '/opt/visiobas-gateway' not found"
 
 sudo docker-compose down
 
-sudo git pull || { echo "Uncommitted changes found. Please, commit them or use 'git stash'
-."; exit 1; }
+sudo git pull || { echo "Uncommitted changes found. Please, commit them or use 'git stash'."; exit 1; }
 
 ## Remove previous source distribution if exists
 #sudo rm -r dist/

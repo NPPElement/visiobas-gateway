@@ -53,7 +53,11 @@ properties:
     - $ref: '#/definitions/Parity'
     default: N
   port:
-    description: Interface for serial devices
+    description: Interface for serial device.
+    examples:
+    - /dev/ttyS0
+    - /dev/ttyUSB1
+    pattern: /dev/tty(S\d{1,2}|USB\d)
     title: Port
     type: string
   stopbits:
@@ -61,7 +65,8 @@ properties:
     - $ref: '#/definitions/StopBits'
     default: 1
   unit:
-    description: Address of serial device
+    description: Address of serial device.
+    maximum: 255
     minimum: 0
     title: Unit
     type: integer
