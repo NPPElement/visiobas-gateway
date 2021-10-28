@@ -30,7 +30,6 @@ else:
     BaseDevice = "BaseDevice"
 
 
-
 _LOG = get_file_logger(name=__name__)
 
 Object = Union[BACnetObj, ModbusObj]

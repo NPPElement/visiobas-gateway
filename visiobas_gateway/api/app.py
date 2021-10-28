@@ -8,10 +8,10 @@ import aiojobs  # type: ignore
 from aiohttp.web import Application
 from aiohttp.web_runner import AppRunner, TCPSite
 
-from .rest.monitor import RESTMonitorView
 from ..schemas.settings import ApiSettings
 from ..utils import get_file_logger
 from .jsonrpc import JSON_RPC_HANDLERS
+from .rest.monitor import RESTMonitorView
 
 if TYPE_CHECKING:
     from ..gateway import Gateway

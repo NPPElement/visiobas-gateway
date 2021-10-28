@@ -4,7 +4,6 @@ import platform
 from ipaddress import IPv4Address, IPv4Interface
 
 from .log import get_file_logger
-
 from .monitor import execute_cmd
 
 try:
@@ -74,7 +73,9 @@ async def ping(host: str, attempts: int) -> bool:
     """
     current_os = platform.system().lower()
     option = "n" if current_os == "windows" else "c"
-    cmd_info = await execute_cmd(cmd='ping', options=[f'-{option}'], parameters=[str(attempts), host])
+    cmd_info = await execute_cmd(
+        cmd="ping", options=[f"-{option}"], parameters=[str(attempts), host]
+    )
     return cmd_info.return_code == 0
 
 
