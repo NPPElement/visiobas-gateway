@@ -27,8 +27,6 @@ pydantic = "^1.8.2"
 pymodbus = "^2.5.2"
 BAC0 = "^21.2.25"
 netifaces = "*"  # can be replaced with parsing of `ifconfig -a`
-jinja2 ="*"
-aiohttp_jinja2 = "*"
 
 
 [tool.poetry.scripts]
