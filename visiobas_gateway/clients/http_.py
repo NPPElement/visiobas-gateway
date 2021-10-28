@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 import asyncio
-from typing import TYPE_CHECKING, Any, Collection
+from functools import wraps
+from typing import TYPE_CHECKING, Any, Collection, Callable, Awaitable
 
 import aiohttp
 
@@ -356,6 +357,8 @@ class HTTPClient:
         Raises:
             aiohttp.ClientResponseError: if response status >= 400.
             aiohttp.ClientPayloadError: if failure result of the request.
+
+            #TODO: refactor for process HTTP statuses!
         """
         resp.raise_for_status()
 
@@ -369,3 +372,22 @@ class HTTPClient:
             )
             return json.get("data", {})
         raise aiohttp.ClientPayloadError(f"Failure server result: {resp.url} {json}")
+
+
+def process_timeout(func: Callable[..., Awaitable]) -> Any:
+    @wraps(func)
+    async def wrapper(*args: Any, **kwargs: Any) -> Any:
+        try:
+            return await func(*args, **kwargs)
+        except asyncio.exceptions.TimeoutError:
+            _LOG.warning('Timeout')
+    return wrapper
+
+# def relogin_on_401(func: Callable | Callable[..., Awaitable]) -> Any:
+#     @wraps(func)
+#     async def wrapper(*args: Any, **kwargs: Any) -> Any:
+#         try:
+#             return await func(*args, **kwargs)
+#         except aiohttp.ClientError as exc:
+#
+#     return wrapper
