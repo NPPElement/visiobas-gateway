@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import asyncio
 from functools import wraps
-from typing import TYPE_CHECKING, Any, Collection, Callable, Awaitable
+from typing import TYPE_CHECKING, Any, Awaitable, Callable, Collection
 
 import aiohttp
 
@@ -380,8 +380,10 @@ def process_timeout(func: Callable[..., Awaitable]) -> Any:
         try:
             return await func(*args, **kwargs)
         except asyncio.exceptions.TimeoutError:
-            _LOG.warning('Timeout')
+            _LOG.warning("Timeout")
+
     return wrapper
+
 
 # def relogin_on_401(func: Callable | Callable[..., Awaitable]) -> Any:
 #     @wraps(func)

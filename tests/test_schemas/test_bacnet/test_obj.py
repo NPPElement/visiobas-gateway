@@ -2,7 +2,7 @@ import asyncio
 
 import pytest
 
-from visiobas_gateway.schemas import ObjType
+from visiobas_gateway.schemas import ObjType, StatusFlags
 from visiobas_gateway.schemas.bacnet.obj_property import ObjProperty
 from visiobas_gateway.schemas.bacnet.reliability import Reliability
 from visiobas_gateway.schemas.bacnet.obj import DEFAULT_PRIORITY_ARRAY
@@ -59,30 +59,43 @@ class TestBACnetObj:
         )
 
     @pytest.mark.parametrize(
-        "data, expected, verified_expected",
+        "data, disabled_flags, expected, verified_expected",
         [
             (
                 {"103": "", "111": 8, "85": 6.666, "79": 0},
+                StatusFlags(flags=0b1101),
                 "75 0 6.666 0 0;",
                 "75 0 6.7 0 0;",
             ),
             (
                 {"103": Reliability.OVER_RANGE, "79": ObjType.BINARY_OUTPUT},
+                StatusFlags(flags=0b1101),
                 "75 4 85.8585 ,,,,,,,,,,,,,,, 0 2;",
                 "75 4 85.8585 ,,,,,,,,,,,,,,, 0 0;",  # only fault flag pass in http
             ),
             (
                 {"103": Reliability.OVER_RANGE, "85": asyncio.TimeoutError()},
+                StatusFlags(flags=0b1101),
                 "75 0  0 2;",  # unverified presentValue(85)
                 "75 0 null 2 timeout;",  # only fault flag pass in http
             ),
         ],
     )
-    def test_to_http_str(self, bacnet_obj_factory, data, expected, verified_expected):
+    def test_to_http_str(
+        self, bacnet_obj_factory, data, disabled_flags, expected, verified_expected
+    ):
         from visiobas_gateway.verifier import BACnetVerifier
 
         bacnet_obj = bacnet_obj_factory(**data)
-        assert bacnet_obj.to_http_str(obj=bacnet_obj) == expected
+        assert (
+            bacnet_obj.to_http_str(obj=bacnet_obj, disabled_flags=disabled_flags)
+            == expected
+        )
 
         verified_bacnet_obj = BACnetVerifier().verify(obj=bacnet_obj)
-        assert verified_bacnet_obj.to_http_str(obj=verified_bacnet_obj) == verified_expected
+        assert (
+            verified_bacnet_obj.to_http_str(
+                obj=verified_bacnet_obj, disabled_flags=disabled_flags
+            )
+            == verified_expected
+        )
