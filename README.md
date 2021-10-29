@@ -130,9 +130,10 @@ cd /opt/visiobas-gateway
 docker build -t visiobas-gateway .
 
 # docker save -o <path for generated tar file> <image name>
-docker save -o /opt/visiobas-gateway/image.tar.gz visiobas-gateway:latest
+docker save -o /opt/gtw-latest-image.tar.gz visiobas-gateway:latest
 
-# copy via scp here
+# Copy via scp here
+# Example: scp /opt/gtw-latest-image.tar.gz user@10.21.80.240:/opt
 
 docker load -i <path to copied image file>
 ```

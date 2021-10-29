@@ -22,15 +22,17 @@ class TestStatusFlag:
 
 class TestStatusFlags:
     @pytest.mark.parametrize(
-        "before, after",
+        "before, expected",
         [
             *[(i, flags) for i, flags in enumerate(range(16))],
             ([1, 1, 1, 1], 15),
             ([0, 1, 0, 0], 4),
+            ("0110", 6),
+            ([False, True, None, "1"], 5),
         ],
     )
-    def test_construct_happy(self, before, after):
-        assert StatusFlags(flags=before).flags == after
+    def test_construct_happy(self, before, expected):
+        assert StatusFlags(flags=before).flags == expected
 
     @pytest.mark.parametrize(
         "flags",
@@ -89,8 +91,16 @@ class TestStatusFlags:
             StatusFlags(flags=0b1111).check(flag=3)
 
     @pytest.mark.parametrize(
-        "before, after",
-        [(0b1111, 0b0010), (0b0101, 0b0000)],
+        "before, disabled_flags, expected",
+        [
+            (0b1111, 0b1101, 0b0010),
+            (0b0101, 0b1001, 0b0100),
+            (0b0000, 0b1111, 0b0000),
+            (0b1111, 0b1111, 0b0000),
+            (0b1111, 0b0011, 0b1100),
+        ],
     )
-    def test_for_http(self, before, after):
-        assert StatusFlags(flags=before).for_http.flags == after
+    def test_get_flags_with_disabled(self, before, disabled_flags, expected):
+        sf = StatusFlags(flags=before)
+        with_disabled_flags = sf.get_flags_with_disabled(disabled_flags=disabled_flags)
+        assert with_disabled_flags.flags == expected
