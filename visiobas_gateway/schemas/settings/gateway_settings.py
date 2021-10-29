@@ -1,5 +1,6 @@
 from pydantic import BaseSettings, Field, PositiveInt, validator
 
+from ..bacnet.status_flags import StatusFlags
 from ..bacnet.priority import Priority
 
 
@@ -29,6 +30,11 @@ class GatewaySettings(BaseSettings):
     def remove_duplicated_ids(cls, value: list[PositiveInt]) -> list[PositiveInt]:
         # pylint: disable=no-self-argument
         return sorted(list(set(value)))
+
+    disabled_status_flags: StatusFlags = Field(
+        default=StatusFlags(flags=0b0000),
+        description=("Status flags to disable when send data to the servers."),
+    )
 
     class Config:  # pylint: disable=missing-class-docstring
         allow_mutation = False
