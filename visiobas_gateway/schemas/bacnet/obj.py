@@ -119,7 +119,6 @@ class BACnetObj(BaseBACnetObj):
         property identifier  for each property that exists within the object. The standard
         properties are not included in the JSON.""",
     )
-
     present_value: Any = Field(
         default=None,
         alias=str(ObjProperty.PRESENT_VALUE.value),
@@ -206,14 +205,17 @@ class BACnetObj(BaseBACnetObj):
         )
 
     @staticmethod
-    def to_http_str(obj: BACnetObj) -> str:
+    def to_http_str(obj: BACnetObj, disabled_flags: StatusFlags) -> str:
         str_ = f"{obj.object_id} {obj.object_type.value} {obj.present_value}"
 
         if obj.object_type in OUTPUT_TYPES and obj.priority_array:
             pa_str = obj.priority_array_to_http_str(priority_array=obj.priority_array)
             str_ += " " + pa_str
 
-        str_ += " " + str(obj.status_flags.for_http.flags)  # SF with disabled flags!
+        status_flags_with_disabled = obj.status_flags.get_flags_with_disabled(
+            disabled_flags=disabled_flags.flags
+        )
+        str_ += " " + str(status_flags_with_disabled.flags)
 
         reliability = obj.reliability
 
