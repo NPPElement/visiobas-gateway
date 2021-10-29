@@ -84,7 +84,7 @@ class BaseView(View):
         Raises:
             Exception: if object not found.
         """
-        obj = device.get_object(obj_id=obj_id, obj_type_id=obj_type_id)
+        obj = device.get_object(object_id=obj_id, object_type_id=obj_type_id)
 
         if isinstance(obj, BACnetObj):
             return obj

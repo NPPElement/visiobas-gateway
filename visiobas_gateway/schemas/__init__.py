@@ -9,6 +9,7 @@ from .bacnet.obj_type import (
     INPUT_TYPES,
     MULTI_STATE_TYPES,
     OUTPUT_TYPES,
+    STRICT_OUTPUT_TYPES,
     ObjProperty,
     ObjType,
 )
@@ -53,6 +54,7 @@ __all__ = [
     "DISCRETE_TYPES",
     "INPUT_TYPES",
     "OUTPUT_TYPES",
+    "STRICT_OUTPUT_TYPES",
     "MULTI_STATE_TYPES",
     "StatusFlag",
     "StatusFlags",

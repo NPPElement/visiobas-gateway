@@ -52,24 +52,25 @@ class JsonRPCView(handler.JSONRPCView, BaseView, CorsViewMixin):
         obj = self.get_obj(
             device=device, obj_type_id=params.object_type.value, obj_id=params.object_id
         )
-        obj = await device.write_with_check(
+        output_obj, input_obj = await device.write_with_check(
             value="null",
             prop=ObjProperty.PRESENT_VALUE,
             priority=params.priority.value,
-            obj=obj,
+            output_obj=obj,
             device=device,
         )
-        await self._scheduler.spawn(self._gateway.send_objects(objs=[obj]))
-
-        success = obj.priority_array[params.priority.value - 1] is None
+        await self._scheduler.spawn(
+            self._gateway.send_objects(objs=[obj for obj in (output_obj, input_obj) if obj])
+        )
+        success = output_obj, input_obj.priority_array[params.priority.value - 1] is None
         if success:
             return {"success": success}
         return {
             "success": success,
-            "msg": "Priority not `null`.",
+            "msg": "Priority not `null`",
             "debug": {
                 "priority": params.priority.value,
-                "priorityArray": obj.priority_array,
+                "priorityArray": output_obj.priority_array,
             },
         }
 
@@ -80,19 +81,20 @@ class JsonRPCView(handler.JSONRPCView, BaseView, CorsViewMixin):
         _LOG.debug(
             "Call params", extra={"args_": args, "kwargs_": kwargs, "params": params}
         )
-
         device = self.get_polling_device(device_id=params.device_id)
         obj = self.get_obj(
             device=device, obj_type_id=params.object_type.value, obj_id=params.object_id
         )
-        obj = await device.write_with_check(
-            value=params.value,
+        output_obj, input_obj = await device.write_with_check(
+            value="null",
             prop=ObjProperty.PRESENT_VALUE,
             priority=params.priority.value,
-            obj=obj,
+            output_obj=obj,
             device=device,
         )
-        await self._scheduler.spawn(self._gateway.send_objects(objs=[obj]))
+        await self._scheduler.spawn(
+            self._gateway.send_objects(objs=[obj for obj in (output_obj, input_obj) if obj])
+        )
 
         success = params.value == obj.present_value
 
