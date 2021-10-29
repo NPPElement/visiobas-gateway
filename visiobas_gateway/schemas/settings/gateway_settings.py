@@ -1,6 +1,5 @@
 from pydantic import BaseSettings, Field, PositiveInt, validator
 
-from ..bacnet.status_flags import StatusFlags
 from ..bacnet.priority import Priority
 from ..bacnet.status_flags import StatusFlags
 
@@ -28,7 +27,7 @@ class GatewaySettings(BaseSettings):
     )
     disabled_flags: StatusFlags = Field(
         default=StatusFlags(flags=0b0000),
-        description=("Status flags to disable when send data to the servers."),
+        description="Status flags to disable when send data to the servers.",
     )
 
     @validator("poll_device_ids")
