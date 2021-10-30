@@ -29,3 +29,5 @@ class Interface:
 
     # IMPORTANT: `clear()` that event to change the objects (load or priority write).
     # `wait()` that event in polling to provide priority access to write_with_check.
+
+    # todo: lock via context manager

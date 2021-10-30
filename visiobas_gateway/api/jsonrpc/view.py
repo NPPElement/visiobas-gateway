@@ -62,7 +62,7 @@ class JsonRPCView(handler.JSONRPCView, BaseView, CorsViewMixin):
         await self._scheduler.spawn(
             self._gateway.send_objects(objs=[obj for obj in (output_obj, input_obj) if obj])
         )
-        success = output_obj, input_obj.priority_array[params.priority.value - 1] is None
+        success = output_obj.priority_array[params.priority.value - 1] is None
         if success:
             return {"success": success}
         return {
@@ -95,15 +95,13 @@ class JsonRPCView(handler.JSONRPCView, BaseView, CorsViewMixin):
         await self._scheduler.spawn(
             self._gateway.send_objects(objs=[obj for obj in (output_obj, input_obj) if obj])
         )
-
-        success = params.value == obj.present_value
-
+        success = params.value == output_obj.present_value
         if success:
             return {"success": success}
         return {
             "success": success,
             "msg": "The written value does not match the read.",
-            "debug": {"written_value": params.value, "read_value": obj.present_value},
+            "debug": {"written_value": params.value, "read_value": output_obj.present_value},
         }
 
     # async def rpc_ptz(self, *args: Any, **kwargs: Any) -> dict:

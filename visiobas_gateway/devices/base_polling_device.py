@@ -186,7 +186,11 @@ class BasePollingDevice(BaseDevice, ABC):
 
         self.interface.polling_event.clear()
         await self.write(value=value, obj=output_obj, **kwargs)
-        await asyncio.sleep(1)
+
+        # Several devices process write requests with delay.
+        # Wait processing on device side to get actual data.
+        await asyncio.sleep(0.5)
+
         polled_output_obj = await self.read(obj=output_obj, wait=False, **kwargs)
         polled_input_obj = (
             await self.read(obj=input_obj, wait=False, **kwargs) if input_obj else None
@@ -216,6 +220,8 @@ class BasePollingDevice(BaseDevice, ABC):
 
         Returns:
             Object instance.
+
+        fixme: use dict
         """
         for obj_group in self.object_groups.values():
             if (object_id, object_type_id) in obj_group:
