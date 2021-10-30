@@ -25,10 +25,6 @@ class GatewaySettings(BaseSettings):
     poll_device_ids: list[PositiveInt] = Field(
         ..., min_items=1, description="List of polling device ids"
     )
-    disabled_flags: StatusFlags = Field(
-        default=StatusFlags(flags=0b0000),
-        description="Status flags to disable when send data to the servers.",
-    )
 
     @validator("poll_device_ids")
     def remove_duplicated_ids(cls, value: list[PositiveInt]) -> list[PositiveInt]:
@@ -36,7 +32,7 @@ class GatewaySettings(BaseSettings):
         return sorted(list(set(value)))
 
     disabled_status_flags: StatusFlags = Field(
-        default=StatusFlags(flags=0b0000),
+        default=StatusFlags(flags=0b1101),
         description=("Status flags to disable when send data to the servers."),
     )
 

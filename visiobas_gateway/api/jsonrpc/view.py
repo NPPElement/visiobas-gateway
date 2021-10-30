@@ -101,7 +101,10 @@ class JsonRPCView(handler.JSONRPCView, BaseView, CorsViewMixin):
         return {
             "success": success,
             "msg": "The written value does not match the read.",
-            "debug": {"written_value": params.value, "read_value": output_obj.present_value},
+            "debug": {
+                "written_value": params.value,
+                "read_value": output_obj.present_value,
+            },
         }
 
     # async def rpc_ptz(self, *args: Any, **kwargs: Any) -> dict:

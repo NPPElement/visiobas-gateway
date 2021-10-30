@@ -47,6 +47,7 @@ definitions:
       pollPeriod:
         default: 90
         description: Period to send data to server.
+        minimum: 0
         title: Pollperiod
         type: number
       port:
@@ -152,7 +153,6 @@ definitions:
     - ModbusTCP
     - ModbusRTU
     - ModbusRTUoverTCP
-    - SUNAPI
     title: Protocol
     type: string
 description: Device object for Modbus over TCP devices.
