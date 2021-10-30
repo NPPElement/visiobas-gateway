@@ -19,7 +19,6 @@ definitions:
     - ModbusTCP
     - ModbusRTU
     - ModbusRTUoverTCP
-    - SUNAPI
     title: Protocol
     type: string
 description: PropertyList for TCP/IP Modbus devices.
@@ -55,6 +54,7 @@ properties:
   pollPeriod:
     default: 90
     description: Period to send data to server.
+    minimum: 0
     title: Pollperiod
     type: number
   port:
