@@ -25,6 +25,7 @@ class GatewaySettings(BaseSettings):
     poll_device_ids: list[PositiveInt] = Field(
         ..., min_items=1, description="List of polling device ids"
     )
+
     @validator("poll_device_ids")
     def remove_duplicated_ids(cls, value: list[PositiveInt]) -> list[PositiveInt]:
         # pylint: disable=no-self-argument

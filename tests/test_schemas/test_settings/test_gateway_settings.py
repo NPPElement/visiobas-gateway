@@ -1,5 +1,5 @@
 from visiobas_gateway.schemas.settings import GatewaySettings
-from visiobas_gateway.schemas.bacnet.priority import Priority
+from visiobas_gateway.schemas import Priority, StatusFlags
 from visiobas_gateway import BASE_DIR
 import pytest
 from pydantic import ValidationError
@@ -9,7 +9,7 @@ class TestGatewaySettings:
     @pytest.mark.parametrize(
         "data, expected_update_period, expected_unreachable_reset_period, "
         "expected_unreachable_threshold, expected_override_threshold, "
-        "expected_poll_device_ids",
+        "expected_poll_device_ids, expected_disabled_status_flags",
         [
             (
                 {
@@ -18,12 +18,14 @@ class TestGatewaySettings:
                     "unreachable_threshold": 2,
                     "override_threshold": 10,
                     "poll_device_ids": [11, 22],
+                    "disabled_status_flags": {"flags": "0101"},
                 },
                 4444,
                 999,
                 2,
                 Priority.GCL_PLUS,
                 [11, 22],
+                StatusFlags(flags=0b0101),
             ),
             (
                 {"poll_device_ids": [12, 13]},
@@ -32,6 +34,7 @@ class TestGatewaySettings:
                 3,
                 Priority.MANUAL_OPERATOR,
                 [12, 13],
+                StatusFlags(flags=0b1101),
             ),
         ],
     )
@@ -44,6 +47,7 @@ class TestGatewaySettings:
         expected_unreachable_threshold,
         expected_override_threshold,
         expected_poll_device_ids,
+        expected_disabled_status_flags,
     ):
         gateway_settings = gateway_settings_factory(**data)
 
@@ -55,6 +59,7 @@ class TestGatewaySettings:
         assert gateway_settings.unreachable_threshold == expected_unreachable_threshold
         assert gateway_settings.override_threshold == expected_override_threshold
         assert gateway_settings.poll_device_ids == expected_poll_device_ids
+        assert gateway_settings.disabled_status_flags == expected_disabled_status_flags
 
     @pytest.mark.parametrize(
         "data, expected_poll_device_ids",
@@ -126,6 +131,6 @@ class TestGatewaySettings:
         """Tests that template is actual."""
         from dotenv import load_dotenv
 
-        template_path = BASE_DIR.parent / 'config/template.env'
+        template_path = BASE_DIR.parent / "config/template.env"
         load_dotenv(dotenv_path=template_path)
         isinstance(GatewaySettings(), GatewaySettings)
