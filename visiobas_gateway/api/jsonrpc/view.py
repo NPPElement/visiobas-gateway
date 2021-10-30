@@ -86,7 +86,7 @@ class JsonRPCView(handler.JSONRPCView, BaseView, CorsViewMixin):
             device=device, obj_type_id=params.object_type.value, obj_id=params.object_id
         )
         output_obj, input_obj = await device.write_with_check(
-            value="null",
+            value=params.value,
             prop=ObjProperty.PRESENT_VALUE,
             priority=params.priority.value,
             output_obj=obj,
