@@ -1,5 +1,6 @@
 from visiobas_gateway.schemas.settings import GatewaySettings
 from visiobas_gateway.schemas.bacnet.priority import Priority
+from visiobas_gateway import BASE_DIR
 import pytest
 from pydantic import ValidationError
 
@@ -120,3 +121,11 @@ class TestGatewaySettings:
     def test_poll_device_ids_bad(self, gateway_settings_factory, data):
         with pytest.raises(ValidationError):
             gateway_settings_factory(**data)
+
+    def test_load_template_env(self):
+        """Tests that template is actual."""
+        from dotenv import load_dotenv
+
+        template_path = BASE_DIR.parent / 'config/template.env'
+        load_dotenv(dotenv_path=template_path)
+        isinstance(GatewaySettings(), GatewaySettings)
