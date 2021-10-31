@@ -46,9 +46,6 @@ class MQTTClient:
 
         await self.connect(host=self._host, port=self._port)
 
-    def __repr__(self) -> str:
-        return self.__class__.__name__
-
     @property
     def _host(self) -> str:
         return self.settings.url.host
@@ -70,7 +67,7 @@ class MQTTClient:
 
     @property
     def _qos(self) -> int:
-        return int(self.settings.qos)
+        return self.settings.qos.value
 
     @property
     def _retain(self) -> bool:
@@ -314,9 +311,7 @@ class MQTTClient:
             return text
         _LOG.warning(
             "Failed JSON-RPC 2.0 over HTTP",
-            extra={
-                "http_response": text,
-            },
+            extra={"http_response": text},
         )
         return dumps(
             {

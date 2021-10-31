@@ -19,7 +19,7 @@ _LOG = get_file_logger(name=__name__)
 
 
 class HTTPClient:
-    """HTTP client of visiobas_gateway."""
+    """HTTP client of gateway."""
 
     # TODO: add decorator re-login on 401
     # TODO: refactor
@@ -39,9 +39,6 @@ class HTTPClient:
         self._session = aiohttp.ClientSession(timeout=self._timeout)
 
         self._authorized = False
-
-    def __repr__(self) -> str:
-        return self.__class__.__name__
 
     @property
     def server_get(self) -> HTTPServerConfig:
