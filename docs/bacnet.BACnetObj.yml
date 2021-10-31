@@ -1,13 +1,14 @@
 definitions:
-  BACnetObjPropertyList:
+  BaseBACnetObjPropertyList:
     description: Represent PropertyList (371) for BACnet objects.
     properties:
       pollPeriod:
         default: 90
         description: Period to send data to server.
+        minimum: 0
         title: Pollperiod
         type: number
-    title: BACnetObjPropertyList
+    title: BaseBACnetObjPropertyList
     type: object
   ObjType:
     description: 'Supported BACnet object types.
@@ -145,7 +146,7 @@ properties:
     title: '111'
   '371':
     allOf:
-    - $ref: '#/definitions/BACnetObjPropertyList'
+    - $ref: '#/definitions/BaseBACnetObjPropertyList'
     description: "This read-only property is a JSON of property identifiers, one\n\
       \        property identifier  for each property that exists within the object.\
       \ The standard\n        properties are not included in the JSON."
