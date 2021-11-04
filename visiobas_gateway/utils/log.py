@@ -5,7 +5,7 @@ import logging
 import typing
 from functools import wraps
 from logging.handlers import RotatingFileHandler
-from typing import Any, Callable
+from typing import Any, Awaitable, Callable
 
 from ..schemas.settings.log_settings import log_settings
 
@@ -97,7 +97,7 @@ def log_exceptions(
     parameters_enabled: bool = True,
     exc_info: bool = _EXC_INFO,
 ) -> Any:
-    def _log_exceptions(func: Callable | Callable[..., typing.Awaitable]) -> Any:
+    def _log_exceptions(func: Callable | Callable[..., Awaitable]) -> Any:
         """Decorator, logging function signature and exception if it occur."""
 
         @wraps(func)

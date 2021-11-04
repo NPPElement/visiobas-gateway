@@ -21,11 +21,11 @@ _LOG = get_file_logger(name=__name__)
 
 _AIOHTTP_LOGGERS = [
     "aiohttp.access",
-    "aiohttp.client",
-    "aiohttp.internal",
-    "aiohttp.server",
-    "aiohttp.web",
-    "aiohttp.websocket",
+    # "aiohttp.client",
+    # "aiohttp.internal",
+    # "aiohttp.server",
+    # "aiohttp.web",
+    # "aiohttp.websocket",
 ]
 
 for aiohttp_logger in [*_AIOHTTP_LOGGERS]:

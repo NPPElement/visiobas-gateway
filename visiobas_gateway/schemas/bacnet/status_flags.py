@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-from copy import deepcopy
 from enum import Enum, unique
-from typing import Union
 
 from pydantic import BaseModel, Field, validator
 
@@ -11,10 +9,10 @@ from pydantic import BaseModel, Field, validator
 class StatusFlag(int, Enum):
     """StatusFlag representation by int."""
 
-    # changed 10000
+    # CHANGED = 0b10000
     OUT_OF_SERVICE = 0b1000  # does server receive data?
-    OVERRIDEN = 0b0100
-    FAULT = 0b0010
+    FAULT = 0b0100
+    OVERRIDEN = 0b0010
     IN_ALARM = 0b0001  # выход за границы приемлемых значений
 
 
@@ -24,19 +22,17 @@ class StatusFlags(BaseModel):
     flags: int = Field(default=0b0000, ge=0, le=15)
 
     @validator("flags", pre=True)
-    def validate_flags(cls, value: Union[int, list[StatusFlag]]) -> int:
+    def validate_flags(cls, value: int | str | list[StatusFlag]) -> int:
         # pylint: disable=no-self-argument
+        if isinstance(value, str):
+            return int(value, base=2)
         if isinstance(value, int):
             return value
-        if isinstance(value, (list, tuple)):
+        if isinstance(value, (list, tuple)) and len(value) == len(StatusFlag):
             sf_int = 0b0000
             for i, flag in enumerate(value):
-                if flag == 1:
+                if flag:
                     sf_int |= 1 << len(value) - 1 - i
-                elif flag == 0:
-                    continue
-                else:
-                    raise ValueError(f"flags must be 0 | 1. Got {flag}")
             return sf_int
         raise ValueError("Expected StatusFlags")
 
@@ -75,20 +71,15 @@ class StatusFlags(BaseModel):
             return bool(self.flags & flag.value)
         raise ValueError("StatusFlag expected")
 
-    @property
-    def for_http(self) -> StatusFlags:
+    def get_flags_with_disabled(self, disabled_flags: int) -> StatusFlags:
         """
+        Args:
+            disabled_flags: Status flags to disable.
+
         Returns:
-            Copy of StatusFlags, with disabled flags:
-                - OUT_OF_SERVICE
-                - OVERRIDEN
-                - IN_ALARM
+            New instance of `StatusFlags`, with disabled flags.
         """
-        sf_copy = deepcopy(self)
-        sf_copy.disable(flag=StatusFlag.OUT_OF_SERVICE)
-        sf_copy.disable(flag=StatusFlag.OVERRIDEN)
-        sf_copy.disable(flag=StatusFlag.IN_ALARM)
-        return sf_copy
+        return StatusFlags(flags=self.flags & ~disabled_flags)
 
 
 StatusFlags.update_forward_refs()

@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, Any, Collection, Iterable
 
 import aiojobs  # type: ignore
 
-from ..schemas import BACnetObj, DeviceObj
+from ..schemas import OUTPUT_TYPES, STRICT_OUTPUT_TYPES, BACnetObj, DeviceObj
 from ..utils import get_file_logger, log_exceptions
 from ._interface import Interface, InterfaceKey
 from .base_device import BaseDevice
@@ -17,7 +17,6 @@ if TYPE_CHECKING:
     from ..gateway import Gateway
 else:
     Gateway = "Gateway"
-
 
 ObjectKey = tuple[int, int]  # obj_id, obj_type_id
 
@@ -155,45 +154,78 @@ class BasePollingDevice(BaseDevice, ABC):
 
     @log_exceptions(logger=_LOG)
     async def write_with_check(
-        self, value: int | float | str, obj: BACnetObj, **kwargs: Any
-    ) -> BACnetObj:
+        self, value: int | float | str, output_obj: BACnetObj, **kwargs: Any
+    ) -> tuple[BACnetObj, BACnetObj | None]:
         """Writes value to object at controller and check it by read.
 
         Args:
             value: Value to write.
-            obj: Objects instance.
+            output_obj: ...Output | ...Value object instance.
             **kwargs:
 
         Returns:
-            True - if write value and read value is consistent.
-            False - if they aren't consistent.
+            Verified output object instance | tuple of two verified object instances:
+            output and mapped input.
         """
+        if output_obj.object_type not in OUTPUT_TYPES:
+            raise ValueError(
+                f"Expected object with type one of: {OUTPUT_TYPES}. "
+                f"Got {output_obj.object_type}"
+            )
+
+        need_synchronize = output_obj.object_type in STRICT_OUTPUT_TYPES
+
+        input_obj = (
+            self.get_object(
+                object_id=output_obj.object_id,
+                object_type_id=output_obj.object_type.value - 1,
+            )
+            if need_synchronize
+            else None
+        )
+
         self.interface.polling_event.clear()
-        await self.write(value=value, obj=obj, **kwargs)
-        await asyncio.sleep(1)
-        polled_obj = await self.read(obj=obj, wait=False, **kwargs)
+        await self.write(value=value, obj=output_obj, **kwargs)
+
+        # Several devices process write requests with delay.
+        # Wait processing on device side to get actual data.
+        await asyncio.sleep(0.5)
+
+        polled_output_obj = await self.read(obj=output_obj, wait=False, **kwargs)
+        polled_input_obj = (
+            await self.read(obj=input_obj, wait=False, **kwargs) if input_obj else None
+        )
         self.interface.polling_event.set()
 
-        verified_obj = self._gtw.verifier.verify(obj=polled_obj)
+        verified_output_obj = self._gtw.verifier.verify(obj=polled_output_obj)
+        verified_input_obj = (
+            self._gtw.verifier.verify(obj=polled_input_obj) if polled_input_obj else None
+        )
         self._LOG.debug(
             "Write with check called",
-            extra={"object": verified_obj, "value_write": value},
+            extra={
+                "output_object": verified_output_obj,
+                "input_object": verified_input_obj,
+                "value_write": value,
+            },
         )
-        return verified_obj
+        return verified_output_obj, verified_input_obj
 
     @lru_cache(maxsize=10)
-    def get_object(self, obj_id: int, obj_type_id: int) -> BACnetObj | None:
+    def get_object(self, object_id: int, object_type_id: int) -> BACnetObj | None:
         """Cache last 10 object instances.
         Args:
-            obj_id: Object identifier.
-            obj_type_id: Object type identifier.
+            object_id: Object identifier.
+            object_type_id: Object type identifier.
 
         Returns:
             Object instance.
+
+        fixme: use dict
         """
         for obj_group in self.object_groups.values():
-            if (obj_id, obj_type_id) in obj_group:
-                return obj_group[(obj_id, obj_type_id)]
+            if (object_id, object_type_id) in obj_group:
+                return obj_group[(object_id, object_type_id)]
         return None
 
     @log_exceptions(logger=_LOG)
