@@ -24,7 +24,7 @@ class TestBACnetVerifier:
             obj=bacnet_obj, exc=bacnet_obj.present_value
         )
         assert verified_obj.present_value == "null"
-        assert verified_obj.status_flags.flags == 0b0010
+        assert verified_obj.status_flags.flags == 0b0100
         assert verified_obj.reliability == "timeout"
         assert verified_obj.unreachable_in_row == 1
         assert verified_obj.existing is True
@@ -36,7 +36,7 @@ class TestBACnetVerifier:
             obj=verified_obj, exc=verified_obj.present_value
         )
         assert verified_obj_2.present_value == "null"
-        assert verified_obj_2.status_flags.flags == 0b0010
+        assert verified_obj_2.status_flags.flags == 0b0100
         assert verified_obj_2.reliability == Reliability.NO_SENSOR
         assert verified_obj_2.unreachable_in_row == 2
         assert verified_obj_2.existing is False
@@ -46,7 +46,7 @@ class TestBACnetVerifier:
             obj=verified_obj_2, exc=verified_obj_2.present_value
         )
         assert verified_obj_3.present_value == "null"
-        assert verified_obj_3.status_flags.flags == 0b0010
+        assert verified_obj_3.status_flags.flags == 0b0100
         assert verified_obj_3.reliability == "decode-error"
         assert verified_obj_3.unreachable_in_row == 3
 
@@ -55,7 +55,7 @@ class TestBACnetVerifier:
             obj=verified_obj_3, exc=verified_obj_3.present_value
         )
         assert verified_obj_4.present_value == "null"
-        assert verified_obj_4.status_flags.flags == 0b0010
+        assert verified_obj_4.status_flags.flags == 0b0100
         assert verified_obj_4.reliability == "AttributeError"
         assert verified_obj_4.unreachable_in_row == 4
 
@@ -114,7 +114,7 @@ class TestBACnetVerifier:
             obj=bacnet_obj, status_flags=bacnet_obj.status_flags
         )
         assert id(verified_obj) == id(bacnet_obj)
-        assert verified_obj.status_flags.flags == 0b1010
+        assert verified_obj.status_flags.flags == 0b1100
         assert verified_obj.reliability == "reliability"
 
     @pytest.mark.parametrize(
@@ -170,17 +170,17 @@ class TestBACnetVerifier:
         assert verified_obj.reliability == reliability
 
     @pytest.mark.parametrize(
-        "priority_array, status_flags",
+        "priority_array, expected_status_flags",
         [
             (
                 [*[None] * 8, 3.3, *[None] * 7],
-                0b0100,
+                0b0010,
             ),
             ([None] * 16, 0b0000),
         ],
     )
     def test_verify_priority_array_happy(
-        self, bacnet_obj_factory, priority_array, status_flags
+        self, bacnet_obj_factory, priority_array, expected_status_flags
     ):
         verifier = BACnetVerifier(override_threshold=Priority.MANUAL_OPERATOR)
 
@@ -192,7 +192,7 @@ class TestBACnetVerifier:
             override_threshold=verifier.override_threshold,
         )
         assert id(verified_obj) == id(bacnet_obj)
-        assert verified_obj.status_flags.flags == status_flags
+        assert verified_obj.status_flags.flags == expected_status_flags
 
     def test_verify_exception(self, bacnet_obj_factory):
         verifier = BACnetVerifier(override_threshold=Priority.MANUAL_OPERATOR)
@@ -200,7 +200,7 @@ class TestBACnetVerifier:
 
         verified_obj = verifier.verify(obj=bacnet_obj)
         assert id(verified_obj) == id(bacnet_obj)
-        assert verified_obj.status_flags.flags == 0b0010
+        assert verified_obj.status_flags.flags == 0b0100
 
     @pytest.mark.parametrize(
         "data, expected_reliability",

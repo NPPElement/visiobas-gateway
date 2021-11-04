@@ -63,21 +63,21 @@ class TestBACnetObj:
         [
             (
                 {"103": "", "111": 8, "85": 6.666, "79": 0},
-                StatusFlags(flags=0b1101),
+                StatusFlags(flags=0b1011),
                 "75 0 6.666 0 0;",
                 "75 0 6.7 0 0;",
             ),
             (
                 {"103": Reliability.OVER_RANGE, "79": ObjType.BINARY_OUTPUT},
-                StatusFlags(flags=0b1101),
+                StatusFlags(flags=0b1011),
                 "75 4 85.8585 ,,,,,,,,,,,,,,, 0 2;",
                 "75 4 85.8585 ,,,,,,,,,,,,,,, 0 0;",  # only fault flag pass in http
             ),
             (
                 {"103": Reliability.OVER_RANGE, "85": asyncio.TimeoutError()},
-                StatusFlags(flags=0b1101),
+                StatusFlags(flags=0b1011),
                 "75 0  0 2;",  # unverified presentValue(85)
-                "75 0 null 2 timeout;",  # only fault flag pass in http
+                "75 0 null 4 timeout;",  # only fault flag pass in http
             ),
         ],
     )
