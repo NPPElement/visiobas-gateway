@@ -21,7 +21,7 @@ class HTTPServerConfig(BaseModel):
     current_url: AnyHttpUrl = None  # type: ignore
 
     @validator("urls")
-    def check_data(cls, value: list[AnyHttpUrl]) -> list[AnyHttpUrl]:
+    def check_required(cls, value: list[AnyHttpUrl]) -> list[AnyHttpUrl]:
         # pylint: disable=no-self-argument
         for url in value:
             if url.password:
