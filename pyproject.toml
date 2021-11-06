@@ -45,6 +45,7 @@ types-PyYAML = "^5.4.10"
 safety = "*"
 pytest-cov = "*"
 pytest_aiohttp = "*"
+dotenv = "*"
 
 [tool.taskipy.tasks]
 check = """
