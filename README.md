@@ -1,3 +1,4 @@
+![GitHub tag (latest SemVer)](https://img.shields.io/github/v/tag/NPPElement/visiobas-gateway)
 [![Run Checks](https://github.com/NPPElement/visiobas-gateway/actions/workflows/checks.yml/badge.svg)](/actions/workflows/checks.yml)
 [![Checked with mypy](http://www.mypy-lang.org/static/mypy_badge.svg)](http://mypy-lang.org/)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/ambv/black)
