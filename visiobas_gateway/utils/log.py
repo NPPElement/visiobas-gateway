@@ -152,6 +152,4 @@ def log_exceptions(
             else sync_wrapper
         )
 
-    if func:
-        return _log_exceptions(func=func)
-    return _log_exceptions
+    return _log_exceptions(func=func) if func else _log_exceptions
