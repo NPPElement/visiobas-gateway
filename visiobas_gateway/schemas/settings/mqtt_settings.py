@@ -1,8 +1,5 @@
 from __future__ import annotations
 
-import uuid
-
-import paho.mqtt.client as mqtt  # type: ignore
 from pydantic import AnyUrl, BaseSettings, Field, validator
 
 from ..mqtt import Qos
