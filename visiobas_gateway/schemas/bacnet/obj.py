@@ -198,10 +198,11 @@ class BACnetObj(BaseBACnetObj):
         property_name = snake_case(prop.name)
         setattr(self, property_name, value)
 
-    def to_mqtt_str(self) -> str:
+    @staticmethod
+    def to_mqtt_str(obj: BACnetObj) -> str:
         return (
-            f"{self.device_id} {self.object_id} {self.object_type.value} "
-            f"{self.present_value} {self.status_flags}"
+            f"{obj.device_id} {obj.object_id} {obj.object_type.value} "
+            f"{obj.present_value} {obj.status_flags}"
         )
 
     @staticmethod
