@@ -2,23 +2,19 @@ from __future__ import annotations
 
 import asyncio
 from functools import wraps
-from typing import TYPE_CHECKING, Any, Awaitable, Callable, Collection
+from typing import Any, Awaitable, Callable, Iterable
 
 import aiohttp
 
 from ..schemas import ObjType
 from ..schemas.settings import HTTPServerConfig, HTTPSettings
 from ..utils import get_file_logger, kebab_case, log_exceptions
-
-if TYPE_CHECKING:
-    from ..gateway import Gateway
-else:
-    Gateway = "Gateway"
+from .base_client import AbstractBaseClient
 
 _LOG = get_file_logger(name=__name__)
 
 
-class HTTPClient:
+class HTTPClient(AbstractBaseClient):
     """HTTP client of gateway."""
 
     # TODO: add decorator re-login on 401
@@ -32,13 +28,23 @@ class HTTPClient:
         "{base_url}/vbas/arm/saveObjectParam/{property_id}/{replaced_object_name}"
     )
 
-    def __init__(self, gateway: Gateway, settings: HTTPSettings):
-        self._gtw = gateway
-        self._settings = settings
+    @staticmethod
+    def relogin_on_401(func: Callable | Callable[..., Awaitable]) -> Any:
+        @wraps(func)
+        async def wrapper(self, *args: Any, **kwargs: Any) -> Any:
+            try:
+                return await func(*args, **kwargs)
+            except aiohttp.ClientResponseError as exc:
+                if exc.status == 401:
+                    await self.wait_login()
+                    return await func(*args, **kwargs)
+
+        return wrapper
+
+    async def init_client(self, settings: HTTPSettings) -> None:
         self._timeout = aiohttp.ClientTimeout(total=settings.timeout)
         self._session = aiohttp.ClientSession(timeout=self._timeout)
-
-        self._authorized = False
+        self._authorized = False  # todo: deprecate
 
     @property
     def server_get(self) -> HTTPServerConfig:
@@ -48,16 +54,16 @@ class HTTPClient:
     def servers_post(self) -> list[HTTPServerConfig]:
         return self._settings.servers_post
 
-    async def startup_tasks(self) -> None:
+    async def _startup_tasks(self) -> None:
         """Wait for authorization."""
         await self.wait_login(next_attempt=self._settings.next_attempt)
 
-    async def shutdown_tasks(self) -> None:
+    async def _shutdown_tasks(self) -> None:
         """Perform logout."""
         await self.logout(servers=[self.server_get, *self.servers_post])
 
     async def get_objects(
-        self, dev_id: int, obj_types: Collection[ObjType]
+        self, dev_id: int, obj_types: Iterable[ObjType]
     ) -> tuple[Any | Exception, ...]:
         """Requests objects of provided type.
 
@@ -88,15 +94,11 @@ class HTTPClient:
         return extracted_data
 
     @log_exceptions(logger=_LOG)
-    async def logout(self, servers: list[HTTPServerConfig]) -> None:
+    async def logout(self, servers: Iterable[HTTPServerConfig]) -> None:
         """Performs log out from servers.
 
         Args:
             servers: Servers to perform logout.
-
-        Returns:
-            True: Successful logout
-            False: Failed logout
         """
 
         _LOG.debug("Logging out", extra={"servers": servers})
@@ -113,19 +115,13 @@ class HTTPClient:
         ]
         await asyncio.gather(*logout_tasks)
 
-        # Clear auth data.
         for server in servers:
             server.clear_auth_data()
         self._authorized = False
 
-        _LOG.info(
-            "Logged out",
-            extra={
-                "servers": servers,
-            },
-        )
+        _LOG.info("Logged out", extra={"servers": servers})
 
-    async def wait_login(self, next_attempt: int) -> None:
+    async def wait_login(self, next_attempt: int | None = None) -> None:
         """Ensures the authorization.
 
         # TODO: add backoff
@@ -138,7 +134,7 @@ class HTTPClient:
                 get_server=self.server_get, post_servers=self.servers_post
             )
             if not self._authorized:
-                await asyncio.sleep(delay=next_attempt)
+                await asyncio.sleep(delay=next_attempt or self._settings.next_attempt)
 
     async def login(
         self, get_server: HTTPServerConfig, post_servers: list[HTTPServerConfig]
@@ -153,9 +149,6 @@ class HTTPClient:
             True: Can continue with current authorizations.
             False: Otherwise.
         """
-
-        # if get_server in post_servers:
-        #     post_servers.remove(get_server)
         _LOG.debug(
             "Logging in to servers",
             extra={"server_get": get_server, "servers_post": post_servers},
@@ -203,26 +196,17 @@ class HTTPClient:
                     server.set_auth_data(**auth_data)
                     _LOG.info(
                         "Successfully authorized",
-                        extra={
-                            "server": server.current_url,
-                        },
+                        extra={"server": server},
                     )
-
                     return True
             except (aiohttp.ClientError, asyncio.TimeoutError, OSError) as exc:
-                _LOG.warning(
-                    "Failed authorization",
-                    extra={
-                        "server": server,
-                        "exc": exc,
-                    },
-                )
+                _LOG.warning("Failed authorization", extra={"server": server, "exc": exc})
                 continue
         return False
 
     @log_exceptions(logger=_LOG)
     async def post_device(
-        self, servers: Collection[HTTPServerConfig], dev_id: int, data: str
+        self, servers: Iterable[HTTPServerConfig], dev_id: int, data: str
     ) -> None:
         """Performs POST requests with data to servers.
 
@@ -249,11 +233,7 @@ class HTTPClient:
         ]
         await asyncio.gather(*post_tasks)
         _LOG.debug(
-            "Successfully sent data",
-            extra={
-                "device_id": dev_id,
-                "servers": servers,
-            },
+            "Successfully sent data", extra={"device_id": dev_id, "servers": servers}
         )
         # TODO: What we should do with failed data?
         # failed_data = [
@@ -295,13 +275,14 @@ class HTTPClient:
     #         },
     #     )
 
+    @relogin_on_401
     async def request(
         self,
         method: str,
         url: str,
         *,
         extract_data: bool = False,
-        extract_text: bool = True,
+        extract_text: bool = False,
         **kwargs: Any,
     ) -> aiohttp.ClientResponse | dict | list | str:
         """Performs HTTP request.
@@ -311,64 +292,41 @@ class HTTPClient:
             extract_data: If True - returns extracted data
             extract_text: If True - returns extracted text
 
-        # TODO: return rest + data
         Returns:
             Response instance.
         """
         _LOG.debug(
             "Perform request",
-            extra={
-                "method": method,
-                "url": url,
-                "data": kwargs.get("data"),
-            },
+            extra={"method": method, "url": url, "data": kwargs.get("data")},
         )
         async with self._session.request(
             method=method, url=url, timeout=self._timeout, **kwargs
         ) as resp:
+            resp.raise_for_status()
+
             if extract_data:
-                return await self.async_extract_response_data(resp=resp)
+                return await self._extract_response_data(resp=resp)
             if extract_text:
                 return await resp.text()
             return resp
-
-    async def async_extract_response_data(
-        self, resp: aiohttp.ClientResponse
-    ) -> list | dict:
-        # self.__doc__ = self._extract_response_data.__doc__
-
-        return await self._gtw.async_add_job(self._extract_response_data, resp)
 
     @staticmethod
     async def _extract_response_data(
         resp: aiohttp.ClientResponse,
     ) -> list | dict:
-        """Checks the correctness of the response.
+        """Checks the correctness of the response from server.
 
         Args:
             resp: Response instance.
 
         Returns:
             resp['data'] field if expected data.
-
-        Raises:
-            aiohttp.ClientResponseError: if response status >= 400.
-            aiohttp.ClientPayloadError: if failure result of the request.
-
-            #TODO: refactor for process HTTP statuses!
         """
-        resp.raise_for_status()
-
         json = await resp.json()
         if json.get("success"):
-            _LOG.debug(
-                "Successfully response",
-                extra={
-                    "url": resp.url,
-                },
-            )
+            _LOG.debug("Successful response", extra={"url": resp.url})
             return json.get("data", {})
-        raise aiohttp.ClientPayloadError(f"Failure server result: {resp.url} {json}")
+        _LOG.warning("Failure response", extra={"url": resp.url, "json": json})
 
 
 def process_timeout(func: Callable[..., Awaitable]) -> Any:
@@ -380,13 +338,3 @@ def process_timeout(func: Callable[..., Awaitable]) -> Any:
             _LOG.warning("Timeout")
 
     return wrapper
-
-
-# def relogin_on_401(func: Callable | Callable[..., Awaitable]) -> Any:
-#     @wraps(func)
-#     async def wrapper(*args: Any, **kwargs: Any) -> Any:
-#         try:
-#             return await func(*args, **kwargs)
-#         except aiohttp.ClientError as exc:
-#
-#     return wrapper
