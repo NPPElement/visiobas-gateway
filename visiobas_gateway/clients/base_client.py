@@ -1,10 +1,11 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from abc import ABC, abstractmethod
+from typing import TYPE_CHECKING, Any, Iterable
 
 import aiojobs
 from pydantic import BaseSettings
-from abc import ABC, abstractmethod
+from schemas import BACnetObj
 from utils import get_file_logger
 
 if TYPE_CHECKING:
@@ -16,22 +17,21 @@ _LOG = get_file_logger(name=__name__)
 
 
 class AbstractBaseClient(ABC):
-
     def __init__(self, gateway: Gateway, settings: BaseSettings):
         self._gtw = gateway
-        self._settings = settings
+        self._settings: BaseSettings | Any = settings
         self._client: Any = None
         self._scheduler: aiojobs.Scheduler = None  # type: ignore
 
     def __repr__(self) -> str:
-        return f'{self.__class__.__name__}({self._settings})'
+        return f"{self.__class__.__name__}({self._settings})"
 
     @classmethod
     async def create(cls, gateway: Gateway, settings: BaseSettings) -> AbstractBaseClient:
         """Client factory. Use it to create the client."""
         client = cls(gateway=gateway, settings=settings)
         await client.init_client(settings=settings)
-        _LOG.info('Client created', extra={'client': cls.__name__, 'settings': settings})
+        _LOG.info("Client created", extra={"client": cls.__name__, "settings": settings})
         return client
 
     @abstractmethod
@@ -46,17 +46,28 @@ class AbstractBaseClient(ABC):
     async def _shutdown_tasks(self) -> None:
         """ """
 
+    @staticmethod
+    @abstractmethod
+    def objects_to_message(objs: Iterable[BACnetObj]) -> str:
+        """Formats objects to message for sending."""
+
+    @abstractmethod
+    async def send_objects(self, objs: Iterable[BACnetObj]) -> None:
+        """ """
+
     async def start(self) -> None:
         """ """
-        _LOG.debug('Starting client', extra={'client': self.__class__.__name__})
+        _LOG.debug("Starting client", extra={"client": self.__class__.__name__})
         self._scheduler = await aiojobs.create_scheduler(close_timeout=5, limit=None)
         await self._startup_tasks()
-        _LOG.info('Client started', extra={'client': self.__class__.__name__, 'settings':
-            repr(self._settings)})
+        _LOG.info(
+            "Client started",
+            extra={"client": self.__class__.__name__, "settings": repr(self._settings)},
+        )
 
     async def stop(self) -> None:
         """ """
-        _LOG.debug('Stopping client', extra={'client': self.__class__.__name__})
+        _LOG.debug("Stopping client", extra={"client": self.__class__.__name__})
         await self._shutdown_tasks()
         await self._scheduler.close()
-        _LOG.info('Client stopped', extra={'client': self.__class__.__name__})
+        _LOG.info("Client stopped", extra={"client": self.__class__.__name__})
