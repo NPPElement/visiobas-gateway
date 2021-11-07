@@ -54,12 +54,6 @@ class HTTPServerConfig(BaseModel):
             }
         return {}
 
-    # def __str__(self) -> str:
-    #     return ":".join((self.current_url.host, self.current_url.port))  # type: ignore
-    #
-    # def __repr__(self) -> str:
-    #     return str(self)
-
     def set_auth_data(self, **kwargs: Any) -> None:
         self.auth_data = AuthData(**kwargs)
 
