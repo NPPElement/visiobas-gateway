@@ -267,6 +267,7 @@ class BasePollingDevice(BaseDevice, ABC):
         self.interface.polling_event.clear()
         await self._scheduler.close()
         await self.disconnect_client()
+        self._gtw._devices.pop(self.id)
         self._LOG.info("Device stopped", extra={"device_id": self.id})
 
     async def _periodic_reset_unreachable(
