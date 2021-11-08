@@ -1,15 +1,14 @@
 from __future__ import annotations
 
-import asyncio
 import sys
-from json import JSONDecodeError, dumps, loads
-from typing import Iterable, Sequence
-
-from paho.mqtt.client import MQTTMessage
+from json import JSONDecodeError, loads  # dumps,
+from typing import Iterable
 
 import asyncio_mqtt
-from schemas import BACnetObj
+from paho.mqtt.client import MQTTMessage  # type: ignore
 
+from ..schemas import BACnetObj
+from ..schemas.send_methods import SendMethod
 from ..schemas.settings import MQTTSettings
 from ..utils import get_file_logger
 from .base_client import AbstractBaseClient
@@ -22,10 +21,14 @@ _MQTT_DEFAULT_PORT = 1883
 class MQTTClient(AbstractBaseClient):
     """MQTT client."""
 
+    @property
+    def send_method(self) -> SendMethod:
+        return SendMethod.MQTT
+
     async def init_client(self, settings: MQTTSettings) -> None:
         self._client = asyncio_mqtt.Client(
             hostname=settings.url.host,
-            port=settings.url.port or _MQTT_DEFAULT_PORT,
+            port=int(settings.url.port) or _MQTT_DEFAULT_PORT,
             username=settings.url.user,
             password=settings.url.password,
             client_id=settings.client_id,
@@ -44,27 +47,31 @@ class MQTTClient(AbstractBaseClient):
         await self._client.unsubscribe(self._settings.topics_sub_with_qos)
         await self._client.__aexit__(*sys.exc_info())
 
-    @staticmethod
-    def objects_to_message(objs: Iterable[BACnetObj]) -> str:
-        return "".join([obj.to_mqtt_str(obj=obj) for obj in objs])
+    def objects_to_message(self, objs: Iterable[BACnetObj]) -> str:
+        return "".join(
+            [
+                obj.to_mqtt_str(obj=obj)
+                for obj in objs
+                if self.send_method in obj.property_list.send_methods
+            ]
+        )
 
-    async def send_objects(self, objs: Sequence[BACnetObj]) -> None:
+    async def send_objects(self, objs: Iterable[BACnetObj]) -> None:
         msg = self.objects_to_message(objs=objs).encode()
         topic = ...  # fixme: create
-        await self._scheduler.spawn(
-            self._client.publish(topic, msg, self._settings.qos, self._settings.retain)
-        )
+        await self._client.publish(topic, msg, self._settings.qos, self._settings.retain)
 
     async def process_messages(self) -> None:
         async with self._client.unfiltered_messages() as messages:
             async for msg in messages:
                 await self.process_message(message=msg)
 
-    async def process_message(self, message: MQTTMessage):
+    async def process_message(self, message: MQTTMessage) -> None:
         _LOG.debug("Received message", extra={"topic": message.topic, "message": message})
-        decoded_payload = self._decode_payload(message=message)
+        # decoded_payload = self._decode_payload(message=message)
+        ...  # todo
 
-    # def _on_message_cb(self, client: Any, userdata: Any, message: mqtt.MQTTMessage) -> None:
+    # def _on_message_cb(self, client: Any, userdata, message: mqtt.MQTTMessage) -> None:
 
     #     decoded_msg = self._decode(msg=message)
     #
@@ -98,7 +105,8 @@ class MQTTClient(AbstractBaseClient):
     #     if isinstance(text, str):
     #         return text
     #     _LOG.warning("Failed JSON-RPC 2.0 over HTTP", extra={"http_response": text})
-    #     return dumps({"jsonrpc": "2.0", "result": {"success": False, "http_status": text}})
+    #     return dumps(
+    #     {"jsonrpc": "2.0", "result": {"success": False, "http_status": text}})
 
     @staticmethod
     def _decode_payload(message: MQTTMessage) -> dict | str:
