@@ -18,7 +18,7 @@ from visiobas_gateway.schemas.modbus.modbus_properties import ModbusProperties
 
 from visiobas_gateway.schemas.bacnet.device_obj import DeviceObj
 from visiobas_gateway.schemas.bacnet.obj import BACnetObj
-from visiobas_gateway.api.jsonrpc.schemas import JsonRPCSetPointParams
+from visiobas_gateway.api.jsonrpc.schemas import RPCSetPointParams
 from visiobas_gateway.devices.base_device import BaseDevice
 from visiobas_gateway.gateway import Gateway
 from visiobas_gateway.schemas.settings.gateway_settings import GatewaySettings
@@ -276,7 +276,7 @@ def bacnet_obj_factory() -> Callable[..., BACnetObj]:
 
 
 @pytest.fixture
-def json_rpc_set_point_params_factory() -> Callable[..., JsonRPCSetPointParams]:
+def json_rpc_set_point_params_factory() -> Callable[..., RPCSetPointParams]:
     """
     Produces `JsonRPCSetPointParams` for tests.
 
@@ -286,7 +286,7 @@ def json_rpc_set_point_params_factory() -> Callable[..., JsonRPCSetPointParams]:
 
     def _factory(**kwargs):
         kwargs = _jsonrpc_set_point_params(kwargs)
-        return JsonRPCSetPointParams(**kwargs)
+        return RPCSetPointParams(**kwargs)
 
     return _factory
 

@@ -7,7 +7,7 @@ from ...devices import BACnetDevice
 from ...schemas import ObjProperty
 from ...utils import get_file_logger, log_exceptions
 from ..base_view import BaseView
-from .schemas import JsonRPCSetPointParams
+from .schemas import RPCSetPointParams
 
 _LOG = get_file_logger(name=__name__)
 
@@ -37,7 +37,7 @@ class JsonRPCView(handler.JSONRPCView, BaseView, CorsViewMixin):
     @log_exceptions(logger=_LOG)
     async def rpc_resetSetPoint(self, *args: Any, **kwargs: Any) -> dict:
         """Resets priorityArray value in BACnet device."""
-        params = JsonRPCSetPointParams(**kwargs)
+        params = RPCSetPointParams(**kwargs)
         _LOG.debug(
             "Call params", extra={"args_": args, "kwargs_": kwargs, "params": params}
         )
@@ -77,7 +77,7 @@ class JsonRPCView(handler.JSONRPCView, BaseView, CorsViewMixin):
     @log_exceptions(logger=_LOG)
     async def rpc_writeSetPoint(self, *args: Any, **kwargs: Any) -> dict:
         """Writes value to any polling device."""
-        params = JsonRPCSetPointParams(**kwargs)
+        params = RPCSetPointParams(**kwargs)
         _LOG.debug(
             "Call params", extra={"args_": args, "kwargs_": kwargs, "params": params}
         )

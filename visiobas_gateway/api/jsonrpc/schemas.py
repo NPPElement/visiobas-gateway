@@ -7,7 +7,7 @@ from pydantic import Field, validator
 from ...schemas import BaseBACnetObj, ObjProperty, Priority
 
 
-class JsonRPCSetPointParams(BaseBACnetObj):
+class RPCSetPointParams(BaseBACnetObj):
     """Common parameters for JSON-RPC methods."""
 
     name: str = Field(default="")

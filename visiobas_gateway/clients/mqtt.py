@@ -5,6 +5,8 @@ import sys
 from json import JSONDecodeError, dumps, loads
 from typing import Iterable, Sequence
 
+from paho.mqtt.client import MQTTMessage
+
 import asyncio_mqtt
 from schemas import BACnetObj
 
@@ -36,6 +38,7 @@ class MQTTClient(AbstractBaseClient):
     async def _startup_tasks(self) -> None:
         await self._client.connect()
         await self._client.subscribe(self._settings.topics_sub_with_qos)
+        await self._scheduler.spawn(self.process_messages())
 
     async def _shutdown_tasks(self) -> None:
         await self._client.unsubscribe(self._settings.topics_sub_with_qos)
@@ -52,59 +55,61 @@ class MQTTClient(AbstractBaseClient):
             self._client.publish(topic, msg, self._settings.qos, self._settings.retain)
         )
 
+    async def process_messages(self) -> None:
+        async with self._client.unfiltered_messages() as messages:
+            async for msg in messages:
+                await self.process_message(message=msg)
+
+    async def process_message(self, message: MQTTMessage):
+        _LOG.debug("Received message", extra={"topic": message.topic, "message": message})
+        decoded_payload = self._decode_payload(message=message)
+
     # def _on_message_cb(self, client: Any, userdata: Any, message: mqtt.MQTTMessage) -> None:
-    #     # todo: type hints
-    #     _LOG.debug(
-    #         "Received message",
-    #         extra={
-    #             "topic": message.topic,
-    #             "message": message,
-    #         },
-    #     )
+
     #     decoded_msg = self._decode(msg=message)
     #
     #     if isinstance(decoded_msg, dict) and decoded_msg.get("jsonrpc") == 2.0:
     #         rpc_task = self._gtw.async_add_job(self.jsonrpc_over_http, decoded_msg)
     #         self._gtw.add_job(self._publish_rpc_response, rpc_task, message.topic)
 
-    async def _publish_rpc_response(self, rpc_task: asyncio.Task, topic: str) -> None:
-        rpc_result = await rpc_task
-        await self.publish(topic=topic, payload=rpc_result)
+    # async def _publish_rpc_response(self, rpc_task: asyncio.Task, topic: str) -> None:
+    #     rpc_result = await rpc_task
+    #     await self.publish(topic=topic, payload=rpc_result)
 
-    async def jsonrpc_over_http(self, payload: dict) -> str:
-        """Performs JSON-RPC over HTTP.
+    # async def jsonrpc_over_http(self, payload: dict) -> str:
+    #     """Performs JSON-RPC over HTTP.
+    #
+    #     Args:
+    #         payload:
+    #
+    #     Returns:
+    #         RPC Response is successful.
+    #     """
+    #     if self._gtw.http_client is None:
+    #         raise ValueError("HTTP client required")
+    #
+    #     text = await self._gtw.http_client.request(
+    #         method="POST",
+    #         url="http://127.0.0.1:7070/json-rpc",
+    #         json=payload,
+    #         headers="application/json",
+    #         extract_text=True,
+    #     )
+    #     if isinstance(text, str):
+    #         return text
+    #     _LOG.warning("Failed JSON-RPC 2.0 over HTTP", extra={"http_response": text})
+    #     return dumps({"jsonrpc": "2.0", "result": {"success": False, "http_status": text}})
 
-        Args:
-            payload:
-
-        Returns:
-            RPC Response is successful.
-        """
-        if self._gtw.http_client is None:
-            raise ValueError("HTTP client required")
-
-        text = await self._gtw.http_client.request(
-            method="POST",
-            url="http://127.0.0.1:7070/json-rpc",
-            json=payload,
-            headers="application/json",
-            extract_text=True,
-        )
-        if isinstance(text, str):
-            return text
-        _LOG.warning("Failed JSON-RPC 2.0 over HTTP", extra={"http_response": text})
-        return dumps({"jsonrpc": "2.0", "result": {"success": False, "http_status": text}})
-
-    # @staticmethod
-    # def _decode(msg: mqtt.MQTTMessage) -> dict | str:
-    #     try:
-    #         if isinstance(msg.payload, bytes):
-    #             content = loads(msg.payload.decode("utf-8", "ignore"))
-    #         else:
-    #             content = loads(msg.payload)
-    #     except JSONDecodeError:
-    #         if isinstance(msg.payload, bytes):
-    #             content = msg.payload.decode("utf-8", "ignore")
-    #         else:
-    #             content = msg.payload
-    #     return content
+    @staticmethod
+    def _decode_payload(message: MQTTMessage) -> dict | str:
+        try:
+            if isinstance(message.payload, bytes):
+                content = loads(message.payload.decode("utf-8", "ignore"))
+            else:
+                content = loads(message.payload)
+        except JSONDecodeError:
+            if isinstance(message.payload, bytes):
+                content = message.payload.decode("utf-8", "ignore")
+            else:
+                content = message.payload
+        return content
