@@ -1,7 +1,9 @@
 from hashlib import md5
-from typing import Any, Optional
+from typing import Any, Optional, Union
 
 from pydantic import AnyHttpUrl, BaseModel, Field, SecretStr, validator
+
+from ..secret_url import SecretUrl, cast_to_secret_urls
 
 
 class AuthData(BaseModel):
@@ -15,35 +17,22 @@ class AuthData(BaseModel):
 class HTTPServerConfig(BaseModel):
     """Config of HTTP Server for GET or POST data."""
 
-    urls: list[AnyHttpUrl] = Field(..., min_items=1)
+    urls: list[Union[AnyHttpUrl, SecretUrl]] = Field(..., min_items=1)
+
+    _cast_to_secret_urls = validator("urls", allow_reuse=True)(cast_to_secret_urls)
 
     auth_data: Optional[AuthData] = None
-    current_url: AnyHttpUrl = None  # type: ignore
-
-    @validator("urls")
-    def check_required(cls, value: list[AnyHttpUrl]) -> list[AnyHttpUrl]:
-        # pylint: disable=no-self-argument
-        for url in value:
-            if url.password:
-                url.password = cls._get_hash(password=url.password)
-            else:
-                raise ValueError("Password required.")
-
-            if not url.user:
-                raise ValueError("User required.")
-            if not url.port:
-                raise ValueError("Port required.")
-        return value
+    current_url: SecretUrl = None  # type: ignore
 
     @staticmethod
-    def get_url_str(url: AnyHttpUrl) -> str:
+    def get_url_str(url: SecretUrl) -> str:
         return f"{url.scheme}://{url.host}:{url.port}"
 
     @property
     def auth_payload(self) -> dict[str, str]:
         return {
-            "login": self.current_url.user,  # type: ignore
-            "password": self.current_url.password,  # type: ignore
+            "login": self.current_url.user.get_secret_value(),
+            "password": self.current_url.password.get_secret_value(),
         }
 
     @property
@@ -61,5 +50,5 @@ class HTTPServerConfig(BaseModel):
         self.auth_data = None
 
     @staticmethod
-    def _get_hash(password: str) -> str:
-        return md5(password.encode()).hexdigest()
+    def _get_hash(password: SecretStr) -> str:
+        return md5(password.get_secret_value().encode()).hexdigest()

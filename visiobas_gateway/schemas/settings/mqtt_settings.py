@@ -1,22 +1,20 @@
 from __future__ import annotations
 
+from typing import Union
+
 from pydantic import AnyUrl, BaseSettings, Field, validator
 
 from ..mqtt import Qos
+from ..secret_url import SecretUrl, cast_to_secret_url
 
 
 class MQTTSettings(BaseSettings):
     """Settings of MQTT client."""
 
-    enable: bool = Field(default=False, description="Flag for MQTT client activation.")
-    url: AnyUrl = Field(...)
+    # enable: bool = Field(default=False, description="Flag for MQTT client activation.")
+    url: Union[AnyUrl, SecretUrl] = Field(...)
 
-    @validator("url")
-    def check_required(cls, value: AnyUrl) -> AnyUrl:
-        # pylint: disable=no-self-argument
-        if not value.port:
-            raise ValueError("Port required.")
-        return value
+    _cast_to_secret_url = validator("url", allow_reuse=True)(cast_to_secret_url)
 
     qos: Qos = Field(default=Qos.AT_MOST_ONCE_DELIVERY)
     retain: bool = Field(default=True)
