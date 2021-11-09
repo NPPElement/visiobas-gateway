@@ -38,8 +38,7 @@ async def load_and_run() -> None:
     gateway = await Gateway.create(
         gateway_settings=GatewaySettings(),
         api_settings=ApiSettings(),
-        mqtt_settings=MQTTSettings(),
-        http_settings=HTTPSettings(),
+        clients_settings=[MQTTSettings(), HTTPSettings()],
     )
     await gateway.run()
 

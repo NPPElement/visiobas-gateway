@@ -18,7 +18,7 @@ from visiobas_gateway.schemas.modbus.modbus_properties import ModbusProperties
 
 from visiobas_gateway.schemas.bacnet.device_obj import DeviceObj
 from visiobas_gateway.schemas.bacnet.obj import BACnetObj
-from visiobas_gateway.api.jsonrpc.schemas import JsonRPCSetPointParams
+from visiobas_gateway.api.jsonrpc.schemas import RPCSetPointParams
 from visiobas_gateway.devices.base_device import BaseDevice
 from visiobas_gateway.gateway import Gateway
 from visiobas_gateway.schemas.settings.gateway_settings import GatewaySettings
@@ -276,7 +276,7 @@ def bacnet_obj_factory() -> Callable[..., BACnetObj]:
 
 
 @pytest.fixture
-def json_rpc_set_point_params_factory() -> Callable[..., JsonRPCSetPointParams]:
+def json_rpc_set_point_params_factory() -> Callable[..., RPCSetPointParams]:
     """
     Produces `JsonRPCSetPointParams` for tests.
 
@@ -286,7 +286,23 @@ def json_rpc_set_point_params_factory() -> Callable[..., JsonRPCSetPointParams]:
 
     def _factory(**kwargs):
         kwargs = _jsonrpc_set_point_params(kwargs)
-        return JsonRPCSetPointParams(**kwargs)
+        return RPCSetPointParams(**kwargs)
+
+    return _factory
+
+
+@pytest.fixture
+def gateway_settings_factory() -> Callable[..., GatewaySettings]:
+    """
+    Produces `GatewaySettings` for tests.
+
+    You can pass the same params into this as the `GatewaySettings` constructor to
+    override defaults.
+    """
+
+    def _factory(**kwargs):
+        kwargs = _gateway_settings_kwargs(kwargs)
+        return GatewaySettings(**kwargs)
 
     return _factory
 
@@ -332,8 +348,7 @@ def _gateway_kwargs(kwargs: dict[str, Any]) -> dict[str, Any]:
     kwargs = {
         "gateway_settings": GatewaySettings(**_gateway_settings_kwargs(kwargs)),
         "api_settings": None,  # todo
-        "http_settings": None,
-        "mqtt_settings": None,
+        "clients_settings": [None],
         **kwargs,
     }
     return kwargs

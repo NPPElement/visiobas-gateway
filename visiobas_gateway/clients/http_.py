@@ -2,46 +2,63 @@ from __future__ import annotations
 
 import asyncio
 from functools import wraps
-from typing import TYPE_CHECKING, Any, Awaitable, Callable, Collection
+from typing import TYPE_CHECKING, Any, Awaitable, Callable, Iterable
 
 import aiohttp
 
-from ..schemas import ObjType
+from ..schemas import BACnetObj, ObjType
+from ..schemas.send_methods import SendMethod
 from ..schemas.settings import HTTPServerConfig, HTTPSettings
 from ..utils import get_file_logger, kebab_case, log_exceptions
+from .base_client import AbstractBaseClient
+
+_LOG = get_file_logger(name=__name__)
 
 if TYPE_CHECKING:
     from ..gateway import Gateway
 else:
-    Gateway = "Gateway"
-
-_LOG = get_file_logger(name=__name__)
+    Gateway = Any
 
 
-class HTTPClient:
-    """HTTP client of visiobas_gateway."""
+class HTTPClient(AbstractBaseClient):
+    """HTTP client of gateway."""
 
     # TODO: add decorator re-login on 401
     # TODO: refactor
 
     _URL_LOGIN = "{base_url}/auth/rest/login"
     _URL_LOGOUT = "{base_url}/auth/secure/logout"
-    _URL_GET = "{base_url}/vbas/gate/get/{device_id}/{object_type_kebab}"
+    _URL_GET_DEVICE_TYPE = "{base_url}/vbas/gate/get/{device_id}/{object_type_kebab}"
     _URL_POST_LIGHT = "{base_url}/vbas/gate/light/{device_id}"
     _URL_POST_PROPERTY = (
         "{base_url}/vbas/arm/saveObjectParam/{property_id}/{replaced_object_name}"
     )
 
     def __init__(self, gateway: Gateway, settings: HTTPSettings):
-        self._gtw = gateway
-        self._settings = settings
+        super().__init__(gateway, settings)
+
+        self._authorized = False
         self._timeout = aiohttp.ClientTimeout(total=settings.timeout)
         self._session = aiohttp.ClientSession(timeout=self._timeout)
 
-        self._authorized = False
+    def get_send_method(self) -> SendMethod:
+        return SendMethod.HTTP
 
-    def __repr__(self) -> str:
-        return self.__class__.__name__
+    @staticmethod
+    def relogin_on_401(func: Callable | Callable[..., Awaitable]) -> Any:
+        @wraps(func)
+        async def wrapper(self: Any, *args: Any, **kwargs: Any) -> Any:
+            try:
+                return await func(*args, **kwargs)
+            except aiohttp.ClientResponseError as exc:
+                if exc.status == 401:
+                    await self.wait_login()
+                    return await func(*args, **kwargs)
+
+        return wrapper
+
+    async def async_init_client(self, settings: HTTPSettings) -> None:
+        pass
 
     @property
     def server_get(self) -> HTTPServerConfig:
@@ -51,16 +68,16 @@ class HTTPClient:
     def servers_post(self) -> list[HTTPServerConfig]:
         return self._settings.servers_post
 
-    async def startup_tasks(self) -> None:
+    async def _startup_tasks(self) -> None:
         """Wait for authorization."""
         await self.wait_login(next_attempt=self._settings.next_attempt)
 
-    async def shutdown_tasks(self) -> None:
+    async def _shutdown_tasks(self) -> None:
         """Perform logout."""
         await self.logout(servers=[self.server_get, *self.servers_post])
 
     async def get_objects(
-        self, dev_id: int, obj_types: Collection[ObjType]
+        self, dev_id: int, obj_types: Iterable[ObjType]
     ) -> tuple[Any | Exception, ...]:
         """Requests objects of provided type.
 
@@ -76,13 +93,13 @@ class HTTPClient:
         get_tasks = [
             self.request(
                 method="GET",
-                url=self._URL_GET.format(
+                url=self._URL_GET_DEVICE_TYPE.format(
                     base_url=self.server_get.get_url_str(url=self.server_get.current_url),
                     device_id=str(dev_id),
                     object_type_kebab=kebab_case(obj_type.name),
                 ),
                 headers=self.server_get.auth_headers,
-                extract_data=True,
+                extract_json=True,
             )
             for obj_type in obj_types
         ]
@@ -91,17 +108,12 @@ class HTTPClient:
         return extracted_data
 
     @log_exceptions(logger=_LOG)
-    async def logout(self, servers: list[HTTPServerConfig]) -> None:
+    async def logout(self, servers: Iterable[HTTPServerConfig]) -> None:
         """Performs log out from servers.
 
         Args:
             servers: Servers to perform logout.
-
-        Returns:
-            True: Successful logout
-            False: Failed logout
         """
-
         _LOG.debug("Logging out", extra={"servers": servers})
         logout_tasks = [
             self.request(
@@ -116,19 +128,12 @@ class HTTPClient:
         ]
         await asyncio.gather(*logout_tasks)
 
-        # Clear auth data.
         for server in servers:
             server.clear_auth_data()
         self._authorized = False
+        _LOG.info("Logged out", extra={"servers": servers})
 
-        _LOG.info(
-            "Logged out",
-            extra={
-                "servers": servers,
-            },
-        )
-
-    async def wait_login(self, next_attempt: int) -> None:
+    async def wait_login(self, next_attempt: int | None = None) -> None:
         """Ensures the authorization.
 
         # TODO: add backoff
@@ -141,7 +146,7 @@ class HTTPClient:
                 get_server=self.server_get, post_servers=self.servers_post
             )
             if not self._authorized:
-                await asyncio.sleep(delay=next_attempt)
+                await asyncio.sleep(delay=next_attempt or self._settings.next_attempt)
 
     async def login(
         self, get_server: HTTPServerConfig, post_servers: list[HTTPServerConfig]
@@ -156,9 +161,6 @@ class HTTPClient:
             True: Can continue with current authorizations.
             False: Otherwise.
         """
-
-        # if get_server in post_servers:
-        #     post_servers.remove(get_server)
         _LOG.debug(
             "Logging in to servers",
             extra={"server_get": get_server, "servers_post": post_servers},
@@ -193,45 +195,53 @@ class HTTPClient:
         """
         _LOG.debug("Perform authorization", extra={"server": server})
         for url in server.urls:
-            server.current_url = url
+            # Ignore types because always used SecretUrl
+            server.current_url = url  # type: ignore
             try:
-                url_str = server.get_url_str(url=url)
+                url_str = server.get_url_str(url=url)  # type: ignore
                 auth_data = await self.request(
                     method="POST",
                     url=self._URL_LOGIN.format(base_url=url_str),
                     json=server.auth_payload,
-                    extract_data=True,
+                    extract_json=True,
                 )
                 if isinstance(auth_data, dict):
                     server.set_auth_data(**auth_data)
                     _LOG.info(
                         "Successfully authorized",
-                        extra={
-                            "server": server.current_url,
-                        },
+                        extra={"server": server},
                     )
-
                     return True
             except (aiohttp.ClientError, asyncio.TimeoutError, OSError) as exc:
-                _LOG.warning(
-                    "Failed authorization",
-                    extra={
-                        "server": server,
-                        "exc": exc,
-                    },
-                )
+                _LOG.warning("Failed authorization", extra={"server": server, "exc": exc})
                 continue
         return False
 
+    def objects_to_message(self, objs: Iterable[BACnetObj]) -> str:
+        return "".join(
+            [
+                obj.to_http_str(
+                    obj=obj, disabled_flags=self._settings.disabled_status_flags
+                )
+                for obj in objs
+                if self.get_send_method() in obj.property_list.send_methods
+            ]
+        )
+
+    async def send_objects(self, objs: Iterable[BACnetObj]) -> None:
+        device_id = list(objs)[0].device_id
+        msg = self.objects_to_message(objs=objs)
+        await self.post_device(servers=self.servers_post, device_id=device_id, data=msg)
+
     @log_exceptions(logger=_LOG)
     async def post_device(
-        self, servers: Collection[HTTPServerConfig], dev_id: int, data: str
+        self, servers: Iterable[HTTPServerConfig], device_id: int, data: str
     ) -> None:
         """Performs POST requests with data to servers.
 
         Args:
             servers: servers to send POST requests to
-            dev_id: device identifier
+            device_id: device identifier
             data: body of POST request
 
         Returns:
@@ -242,21 +252,17 @@ class HTTPClient:
                 method="POST",
                 url=self._URL_POST_LIGHT.format(
                     base_url=server.get_url_str(url=server.current_url),
-                    device_id=str(dev_id),
+                    device_id=str(device_id),
                 ),
                 headers=server.auth_headers,
                 data=data,
-                extract_data=True,
+                extract_json=True,
             )
             for server in servers
         ]
         await asyncio.gather(*post_tasks)
         _LOG.debug(
-            "Successfully sent data",
-            extra={
-                "device_id": dev_id,
-                "servers": servers,
-            },
+            "Successfully sent data", extra={"device_id": device_id, "servers": servers}
         )
         # TODO: What we should do with failed data?
         # failed_data = [
@@ -298,80 +304,58 @@ class HTTPClient:
     #         },
     #     )
 
+    @relogin_on_401.__func__  # type: ignore
     async def request(
         self,
         method: str,
         url: str,
         *,
-        extract_data: bool = False,
-        extract_text: bool = True,
+        extract_json: bool = False,
+        extract_text: bool = False,
         **kwargs: Any,
     ) -> aiohttp.ClientResponse | dict | list | str:
         """Performs HTTP request.
         Args:
             Accept same parameters as aiohttp.ClientSession.request()
             +
-            extract_data: If True - returns extracted data
+            extract_json: If True - returns extracted data
             extract_text: If True - returns extracted text
 
-        # TODO: return rest + data
         Returns:
             Response instance.
         """
         _LOG.debug(
             "Perform request",
-            extra={
-                "method": method,
-                "url": url,
-                "data": kwargs.get("data"),
-            },
+            extra={"method": method, "url": url, "data": kwargs.get("data")},
         )
         async with self._session.request(
             method=method, url=url, timeout=self._timeout, **kwargs
         ) as resp:
-            if extract_data:
-                return await self.async_extract_response_data(resp=resp)
+            resp.raise_for_status()
+
+            if extract_json:
+                return await self._extract_response_data(resp=resp)
             if extract_text:
                 return await resp.text()
             return resp
-
-    async def async_extract_response_data(
-        self, resp: aiohttp.ClientResponse
-    ) -> list | dict:
-        # self.__doc__ = self._extract_response_data.__doc__
-
-        return await self._gtw.async_add_job(self._extract_response_data, resp)
 
     @staticmethod
     async def _extract_response_data(
         resp: aiohttp.ClientResponse,
     ) -> list | dict:
-        """Checks the correctness of the response.
+        """Checks the correctness of the response from server.
 
         Args:
             resp: Response instance.
 
         Returns:
             resp['data'] field if expected data.
-
-        Raises:
-            aiohttp.ClientResponseError: if response status >= 400.
-            aiohttp.ClientPayloadError: if failure result of the request.
-
-            #TODO: refactor for process HTTP statuses!
         """
-        resp.raise_for_status()
-
         json = await resp.json()
         if json.get("success"):
-            _LOG.debug(
-                "Successfully response",
-                extra={
-                    "url": resp.url,
-                },
-            )
+            _LOG.debug("Successful response", extra={"url": resp.url})
             return json.get("data", {})
-        raise aiohttp.ClientPayloadError(f"Failure server result: {resp.url} {json}")
+        raise aiohttp.ClientPayloadError(f"Failure response URL:{resp.url} json:{json}")
 
 
 def process_timeout(func: Callable[..., Awaitable]) -> Any:
@@ -383,13 +367,3 @@ def process_timeout(func: Callable[..., Awaitable]) -> Any:
             _LOG.warning("Timeout")
 
     return wrapper
-
-
-# def relogin_on_401(func: Callable | Callable[..., Awaitable]) -> Any:
-#     @wraps(func)
-#     async def wrapper(*args: Any, **kwargs: Any) -> Any:
-#         try:
-#             return await func(*args, **kwargs)
-#         except aiohttp.ClientError as exc:
-#
-#     return wrapper

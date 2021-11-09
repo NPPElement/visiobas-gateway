@@ -1,13 +1,24 @@
 from __future__ import annotations
 
 import asyncio
-from typing import TYPE_CHECKING, Any, Awaitable, Callable, Collection, Type, Union
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Awaitable,
+    Callable,
+    Collection,
+    Iterable,
+    Type,
+    Union,
+)
 
 import aiohttp
 import aiojobs  # type: ignore
+from pydantic import BaseSettings
 
 from visiobas_gateway.api import ApiServer
 from visiobas_gateway.clients import HTTPClient, MQTTClient
+from visiobas_gateway.clients.base_client import AbstractBaseClient
 from visiobas_gateway.devices import BACnetDevice, ModbusDevice
 from visiobas_gateway.devices.base_polling_device import BasePollingDevice
 from visiobas_gateway.schemas import BACnetObj, DeviceObj, ObjType
@@ -15,6 +26,7 @@ from visiobas_gateway.schemas.bacnet.device_obj import POLLING_TYPES
 from visiobas_gateway.schemas.bacnet.obj import group_by_period
 from visiobas_gateway.schemas.modbus.obj import ModbusObj
 from visiobas_gateway.schemas.protocol import POLLING_PROTOCOLS, Protocol
+from visiobas_gateway.schemas.send_methods import SendMethod
 from visiobas_gateway.schemas.settings import (
     ApiSettings,
     GatewaySettings,
@@ -38,20 +50,15 @@ ObjectType = Type[Object]
 class Gateway:
     """VisioBAS Gateway."""
 
-    # pylint: disable=too-many-instance-attributes
+    # pylint:disable=too-many-instance-attributes
 
     def __init__(
         self,
         gateway_settings: GatewaySettings,
-        mqtt_settings: MQTTSettings,
-        http_settings: HTTPSettings,
+        clients_settings: Iterable[BaseSettings],
         api_settings: ApiSettings,
     ):
-        """Note: `Gateway.create()` must be used for gateway Instance construction.
-
-        Args:
-            gateway_settings:
-        """
+        """Note: `Gateway.create()` must be used for gateway Instance construction."""
         self.loop: asyncio.AbstractEventLoop = asyncio.get_running_loop()
 
         self._stopped: asyncio.Event | None = None
@@ -61,26 +68,21 @@ class Gateway:
         self._scheduler: aiojobs.Scheduler = None  # type: ignore
 
         self.settings = gateway_settings
-        self._mqtt_settings = mqtt_settings
-        self._http_settings = http_settings
+        self._clients_settings = clients_settings
         self._api_settings = api_settings
 
-        self.http_client: HTTPClient | None = None
-        self.mqtt_client: MQTTClient | None = None
+        self.clients: dict[SendMethod, AbstractBaseClient] = {}
         self.api: ApiServer | None = None
-
         self.verifier = BACnetVerifier(
             override_threshold=gateway_settings.override_threshold
         )
-
-        self._devices: dict[int, Any] = {}
+        self.devices: dict[int, Any] = {}
 
     @classmethod
     async def create(
         cls,
         gateway_settings: GatewaySettings,
-        mqtt_settings: MQTTSettings,
-        http_settings: HTTPSettings,
+        clients_settings: Iterable[BaseSettings],
         api_settings: ApiSettings,
     ) -> Gateway:
         """Creates `Gateway`.
@@ -89,12 +91,49 @@ class Gateway:
         """
         gateway = cls(
             gateway_settings=gateway_settings,
-            mqtt_settings=mqtt_settings,
-            http_settings=http_settings,
+            clients_settings=clients_settings,
             api_settings=api_settings,
         )
         gateway._scheduler = await aiojobs.create_scheduler(close_timeout=60, limit=None)
+        await gateway._create_clients(settings=clients_settings)
         return gateway
+
+    async def _create_clients(self, settings: Iterable[BaseSettings]) -> None:
+        """Creates clients for gateway."""
+        tasks = []
+        for client_settings in settings:
+            try:
+                client_cls: Any
+                if isinstance(client_settings, HTTPSettings):
+                    client_cls = HTTPClient
+                elif isinstance(client_settings, MQTTSettings):
+                    client_cls = MQTTClient
+                else:
+                    raise ValueError(
+                        f"Client for {type(client_settings)} not implemented yet"
+                    )
+                tasks.append(client_cls.create(gateway=self, settings=client_settings))
+            except Exception as exc:  # pylint:disable=broad-except
+                _LOG.warning(
+                    "Cannot create client",
+                    extra={
+                        "settings_type": type(client_settings),
+                        "settings": client_settings,
+                        "exception": exc,
+                    },
+                )
+        clients = await asyncio.gather(*tasks)
+        for client in clients:
+            if isinstance(client, AbstractBaseClient):
+                self.clients[client.get_send_method()] = client
+
+    async def _start_clients(self) -> None:
+        tasks = [client.start() for client in self.clients.values()]
+        await asyncio.gather(*tasks)
+
+    async def _stop_clients(self) -> None:
+        tasks = [client.stop() for client in self.clients.values()]
+        await asyncio.gather(*tasks)
 
     def get_device(self, dev_id: int) -> BaseDevice | None:
         """
@@ -104,7 +143,7 @@ class Gateway:
         Returns:
             Device instance.
         """
-        return self._devices.get(dev_id)
+        return self.devices.get(dev_id)
 
     # def run(self) -> None:
     #     # if need, set event loop policy here
@@ -116,14 +155,9 @@ class Gateway:
         """
         # self.async_stop will set this instead of stopping the loop
         self._stopped = asyncio.Event()
-        await self.start(
-            gateway=self,
-            api_settings=self._api_settings,
-            http_settings=self._http_settings,
-            mqtt_settings=self._mqtt_settings,
-        )
+        await self.start()
         await self._stopped.wait()
-        await self._shutdown_tasks(gateway=self)
+        await self._shutdown_tasks()
 
     async def stop(self) -> None:
         """Stops Gateway and closes scheduler."""
@@ -131,108 +165,35 @@ class Gateway:
             self._stopped.set()
         await self._scheduler.close()
 
-    @staticmethod
-    async def start(
-        gateway: Gateway,
-        mqtt_settings: MQTTSettings,
-        http_settings: HTTPSettings,
-        api_settings: ApiSettings,
-    ) -> None:
-        await gateway._scheduler.spawn(  # pylint: disable=protected-access
-            gateway.async_setup(
-                gateway=gateway,
-                http_settings=http_settings,
-                mqtt_settings=mqtt_settings,
-                api_settings=api_settings,
-            )
-        )
-        # await self.async_add_job(self.async_setup)
+    async def start(self) -> None:
+        await self._scheduler.spawn(self.async_setup())
 
-        # self.loop.run_forever()
-
-    @staticmethod
-    async def async_setup(
-        gateway: Gateway,
-        http_settings: HTTPSettings,
-        mqtt_settings: MQTTSettings,
-        api_settings: ApiSettings,
-    ) -> Gateway:
-        """Sets up `gateway` and spawn update task."""
+    async def async_setup(self) -> None:
+        """Sets up gateway and spawn update task."""
         # gateway = await gateway._create_clients(  # pylint: disable=protected-access
         #     gateway=gateway, http_settings=http_settings, mqtt_settings=mqtt_settings
         # )
-        gateway.api = await ApiServer.create(gateway=gateway, settings=api_settings)
-        await gateway._scheduler.spawn(  # pylint: disable=protected-access
-            gateway.api.start()
-        )
-        await gateway._scheduler.spawn(  # pylint: disable=protected-access
-            gateway.periodic_update(
-                gateway=gateway,
-                settings=gateway.settings,
-                mqtt_settings=mqtt_settings,
-                http_settings=http_settings,
-            )
-        )
-        return gateway
+        self.api = await ApiServer.create(gateway=self, settings=self._api_settings)
+        await self._scheduler.spawn(self.api.start())
+        await self._scheduler.spawn(self.periodic_update(settings=self.settings))
 
-    @staticmethod
-    async def _create_clients(
-        gateway: Gateway, http_settings: HTTPSettings, mqtt_settings: MQTTSettings
-    ) -> Gateway:
-        """Creates clients for `gateway`."""
-        gateway.http_client = HTTPClient(gateway=gateway, settings=http_settings)
-        await gateway.http_client.startup_tasks()
-        gateway.mqtt_client = MQTTClient.create(gateway=gateway, settings=mqtt_settings)
-        return gateway
-
-    @staticmethod
-    async def _shutdown_clients(gateway: Gateway) -> Gateway:
-        """Shutdowns clients for `gateway`."""
-        if isinstance(gateway.mqtt_client, MQTTClient):
-            await gateway.mqtt_client.async_disconnect()
-            gateway.mqtt_client = None
-        if isinstance(gateway.http_client, HTTPClient):
-            await gateway.http_client.shutdown_tasks()
-            gateway.http_client = None
-        return gateway
-
-    @staticmethod
-    async def periodic_update(
-        gateway: Gateway,
-        settings: GatewaySettings,
-        http_settings: HTTPSettings,
-        mqtt_settings: MQTTSettings,
-    ) -> None:
+    async def periodic_update(self, settings: GatewaySettings) -> None:
         """Spawn periodic update task."""
-        gateway = await gateway._startup_tasks(  # pylint: disable=protected-access
-            gateway=gateway,
-            settings=settings,
-            mqtt_settings=mqtt_settings,
-            http_settings=http_settings,
-        )
+        await self._startup_tasks(settings=settings)
         await asyncio.sleep(delay=settings.update_period)
-        gateway = await gateway._shutdown_tasks(  # pylint: disable=protected-access
-            gateway=gateway
-        )
-        await gateway._scheduler.spawn(  # pylint: disable=protected-access
-            gateway.periodic_update(
-                gateway=gateway,
-                settings=settings,
-                mqtt_settings=mqtt_settings,
-                http_settings=http_settings,
-            )
-        )
+        await self._shutdown_tasks()
+        await self._scheduler.spawn(self.periodic_update(settings=settings))
 
-    def add_job(self, target: Callable, *args: Any) -> None:
-        """Adds job to the executor pool.
-
-        Args:
-            target: target to call.
-            args: parameters for target to call.
-        """
-        if target is None:
-            raise ValueError("`None` not allowed")
-        self.loop.call_soon_threadsafe(self.async_add_job, target, *args)
+    # def add_job(self, target: Callable, *args: Any) -> None:
+    #     """Adds job to the executor pool.
+    #
+    #     Args:
+    #         target: target to call.
+    #         args: parameters for target to call.
+    #     """
+    #     if target is None:
+    #         raise ValueError("`None` not allowed")
+    #     self.loop.call_soon_threadsafe(self.async_add_job, target, *args)
 
     def async_add_job(self, target: Callable, *args: Any) -> Awaitable | asyncio.Task:
         """Adds a job from within the event loop.
@@ -257,24 +218,15 @@ class Gateway:
         task = self.loop.run_in_executor(None, target, *args)
         return task
 
-    @staticmethod
     @log_exceptions(logger=_LOG)
-    async def _startup_tasks(
-        gateway: Gateway,
-        settings: GatewaySettings,
-        http_settings: HTTPSettings,
-        mqtt_settings: MQTTSettings,
-    ) -> Gateway:
+    async def _startup_tasks(self, settings: GatewaySettings) -> None:
         """Performs starting tasks."""
 
-        # 0. Create clients.
-        gateway = await gateway._create_clients(  # pylint: disable=protected-access
-            gateway=gateway, http_settings=http_settings, mqtt_settings=mqtt_settings
-        )
+        # 0. Create clients. OUTDATED: will be removed soon
 
         # 1. Load devices tasks.
         load_device_tasks = [
-            gateway.download_device(device_id=dev_id) for dev_id in settings.poll_device_ids
+            self.download_device(device_id=dev_id) for dev_id in settings.poll_device_ids
         ]
 
         # 2. Start devices polling.
@@ -284,7 +236,7 @@ class Gateway:
             except (OSError, Exception) as e:  # pylint: disable=broad-except
                 ready_device = e  # type: ignore
             if isinstance(ready_device, BasePollingDevice):
-                await gateway._scheduler.spawn(  # pylint: disable=protected-access
+                await self._scheduler.spawn(  # pylint: disable=protected-access
                     ready_device.start_periodic_polls()
                 )
             else:
@@ -292,41 +244,29 @@ class Gateway:
                     "Device not started. Expected device type `BasePollingDevice`",
                     extra={"device": ready_device, "device_type": type(ready_device)},
                 )
-
         _LOG.info("Start tasks performed", extra={"gateway_settings": settings})
-        return gateway
 
-    @staticmethod
-    async def _shutdown_devices(gateway: Gateway) -> Gateway:
-        """Shutdowns devices for `gateway`."""
+    async def _stop_devices(self, device_ids: Iterable[int]) -> None:
+        """Shutdowns devices for gateway."""
         stop_device_polling_tasks = [
-            dev.stop()
-            for dev in gateway._devices.values()  # pylint: disable=protected-access
-            if dev.protocol in POLLING_PROTOCOLS
+            device.stop()
+            for device_id, device in self.devices.items()
+            if device.protocol in POLLING_PROTOCOLS and device_id in device_ids
         ]
         await asyncio.gather(*stop_device_polling_tasks)
-        gateway._devices = {}  # pylint: disable=protected-access
 
-        return gateway
-
-    @staticmethod
-    async def _shutdown_tasks(gateway: Gateway) -> Gateway:
+    async def _shutdown_tasks(self) -> None:
         """Performs stopping tasks for `gateway`."""
 
         # 0. Stop devices polling.
-        gateway = await gateway._shutdown_devices(  # pylint: disable=protected-access
-            gateway=gateway
-        )
+        await self._stop_devices(device_ids=self.devices.keys())
 
         # 1. todo: save devices config to local
 
-        # 2. Shutdown clients.
-        gateway = await gateway._shutdown_clients(  # pylint: disable=protected-access
-            gateway=gateway
-        )
+        # 2. Shutdown clients. OUTDATED: will be removed soon
+        # gateway = await self._shutdown_clients()
 
-        _LOG.info("Stop tasks performed")
-        return gateway
+        _LOG.info("Shutdown tasks performed")
 
     @log_exceptions(logger=_LOG)
     async def download_device(self, device_id: int) -> BaseDevice | None:
@@ -337,10 +277,12 @@ class Gateway:
 
         # TODO: If fails get objects from server - loads it from local.
         """
-        if not isinstance(self.http_client, HTTPClient):
+        http_client = self.clients.get(SendMethod.HTTP)
+
+        if not isinstance(http_client, HTTPClient):
             raise NotImplementedError
 
-        device_obj_data = await self.http_client.get_objects(
+        device_obj_data = await http_client.get_objects(
             dev_id=device_id, obj_types=(ObjType.DEVICE,)
         )
         _LOG.debug("Device object downloaded", extra={"device_id": device_id})
@@ -370,18 +312,21 @@ class Gateway:
             groups = await self.download_objects(device_obj=device_obj)
             device.object_groups = groups
 
-        self._devices.update({device.id: device})
+        self.devices.update({device.id: device})
         _LOG.info("Device loaded", extra={"device": device})
         return device
 
     async def download_objects(
         self, device_obj: DeviceObj
     ) -> dict[float, dict[tuple[int, int], BACnetObj]]:
+
+        http_client = self.clients.get(SendMethod.HTTP)
+
         # todo: use for extractions tasks asyncio.as_completed(tasks):
-        if not isinstance(self.http_client, HTTPClient):
+        if not isinstance(http_client, HTTPClient):
             raise NotImplementedError
 
-        objs_data = await self.http_client.get_objects(
+        objs_data = await http_client.get_objects(
             dev_id=device_obj.object_id, obj_types=POLLING_TYPES
         )
         _LOG.debug("Polling objects downloaded", extra={"device_id": device_obj.object_id})
@@ -438,22 +383,8 @@ class Gateway:
         """Sends objects to server."""
         if not objs:
             return None
-
-        dev_id = list(objs)[0].device_id
-        str_ = "".join(
-            [
-                obj.to_http_str(obj=obj, disabled_flags=self.settings.disabled_status_flags)
-                for obj in objs
-            ]
-        )
-        if isinstance(self.http_client, HTTPClient):
-            try:
-                await self.http_client.post_device(
-                    servers=self.http_client.servers_post, dev_id=dev_id, data=str_
-                )
-            except aiohttp.ClientError:
-                pass
-        # if self._is_mqtt_enabled:  # todo
+        tasks = [client.send_objects(objs=objs) for client in self.clients.values()]
+        await asyncio.gather(*tasks)
 
     @staticmethod
     @log_exceptions(_LOG)

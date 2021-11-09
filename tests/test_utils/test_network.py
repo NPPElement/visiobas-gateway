@@ -6,7 +6,7 @@ from visiobas_gateway.utils.network import ping
     "host, expected",
     [
         ("localhost", True),
-        # ("google.com", True),
+        ("google.com", True),
         ("10.21.10.66", False),
         ("10.21.10.21", False),
     ],
