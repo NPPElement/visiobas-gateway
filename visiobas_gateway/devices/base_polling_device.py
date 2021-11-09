@@ -189,7 +189,7 @@ class BasePollingDevice(BaseDevice, ABC):
 
         # Several devices process write requests with delay.
         # Wait processing on device side to get actual data.
-        await asyncio.sleep(0.5)
+        await asyncio.sleep(1)
 
         polled_output_obj = await self.read(obj=output_obj, wait=False, **kwargs)
         polled_input_obj = (
