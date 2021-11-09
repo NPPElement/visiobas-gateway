@@ -140,7 +140,7 @@ class BACnetDevice(BasePollingDevice, BACnetCoderMixin):
     ) -> None:
         prop = kwargs.get("prop")
         priority = kwargs.get("priority")
-        await self._gtw.async_add_job(self.write_property, value, obj, prop, priority)
+        await self._gateway.async_add_job(self.write_property, value, obj, prop, priority)
         return None
 
     @log_exceptions(logger=_LOG)

@@ -332,8 +332,7 @@ def _gateway_kwargs(kwargs: dict[str, Any]) -> dict[str, Any]:
     kwargs = {
         "gateway_settings": GatewaySettings(**_gateway_settings_kwargs(kwargs)),
         "api_settings": None,  # todo
-        "http_settings": None,
-        "mqtt_settings": None,
+        "clients_settings": [None],
         **kwargs,
     }
     return kwargs

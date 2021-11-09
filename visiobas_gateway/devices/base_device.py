@@ -15,7 +15,7 @@ class BaseDevice(ABC):
     """Base class for all devices."""
 
     def __init__(self, device_obj: DeviceObj, gateway: Gateway):
-        self._gtw = gateway
+        self._gateway = gateway
         self._device_obj = device_obj
         self._LOG = get_file_logger(name="_".join(("device", str(self.id))))
 

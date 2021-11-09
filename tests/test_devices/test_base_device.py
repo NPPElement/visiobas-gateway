@@ -10,7 +10,7 @@ class TestBaseDevice:
         base_device = base_device_factory()
 
         assert isinstance(base_device, BaseDevice)
-        assert isinstance(base_device._gtw, Gateway)
+        assert isinstance(base_device._gateway, Gateway)
         assert isinstance(base_device._device_obj, DeviceObj)
 
         assert base_device.id == 75
