@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import asyncio
 from functools import wraps
-from typing import Any, Awaitable, Callable, Iterable
+from typing import TYPE_CHECKING, Any, Awaitable, Callable, Iterable
 
 import aiohttp
 
@@ -13,6 +13,11 @@ from ..utils import get_file_logger, kebab_case, log_exceptions
 from .base_client import AbstractBaseClient
 
 _LOG = get_file_logger(name=__name__)
+
+if TYPE_CHECKING:
+    from ..gateway import Gateway
+else:
+    Gateway = Any
 
 
 class HTTPClient(AbstractBaseClient):
@@ -29,8 +34,14 @@ class HTTPClient(AbstractBaseClient):
         "{base_url}/vbas/arm/saveObjectParam/{property_id}/{replaced_object_name}"
     )
 
-    @property
-    def send_method(self) -> SendMethod:
+    def __init__(self, gateway: Gateway, settings: HTTPSettings):
+        super().__init__(gateway, settings)
+
+        self._authorized = False
+        self._timeout = aiohttp.ClientTimeout(total=settings.timeout)
+        self._session = aiohttp.ClientSession(timeout=self._timeout)
+
+    def get_send_method(self) -> SendMethod:
         return SendMethod.HTTP
 
     @staticmethod
@@ -46,10 +57,8 @@ class HTTPClient(AbstractBaseClient):
 
         return wrapper
 
-    async def init_client(self, settings: HTTPSettings) -> None:
-        self._timeout = aiohttp.ClientTimeout(total=settings.timeout)
-        self._session = aiohttp.ClientSession(timeout=self._timeout)
-        self._authorized = False
+    async def async_init_client(self, settings: HTTPSettings) -> None:
+        pass
 
     @property
     def server_get(self) -> HTTPServerConfig:
@@ -186,9 +195,10 @@ class HTTPClient(AbstractBaseClient):
         """
         _LOG.debug("Perform authorization", extra={"server": server})
         for url in server.urls:
-            server.current_url = url
+            # Ignore types because always used SecretUrl
+            server.current_url = url  # type: ignore
             try:
-                url_str = server.get_url_str(url=url)
+                url_str = server.get_url_str(url=url)  # type: ignore
                 auth_data = await self.request(
                     method="POST",
                     url=self._URL_LOGIN.format(base_url=url_str),
@@ -214,7 +224,7 @@ class HTTPClient(AbstractBaseClient):
                     obj=obj, disabled_flags=self._settings.disabled_status_flags
                 )
                 for obj in objs
-                if self.send_method in obj.property_list.send_methods
+                if self.get_send_method() in obj.property_list.send_methods
             ]
         )
 
@@ -294,7 +304,7 @@ class HTTPClient(AbstractBaseClient):
     #         },
     #     )
 
-    @relogin_on_401
+    @relogin_on_401.__func__  # type: ignore
     async def request(
         self,
         method: str,

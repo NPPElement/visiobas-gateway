@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import sys
 from json import JSONDecodeError, loads  # dumps,
-from typing import Iterable
+from typing import TYPE_CHECKING, Any, Iterable
 
 import asyncio_mqtt
 from paho.mqtt.client import MQTTMessage  # type: ignore
@@ -13,6 +13,11 @@ from ..schemas.settings import MQTTSettings
 from ..utils import get_file_logger
 from .base_client import AbstractBaseClient
 
+if TYPE_CHECKING:
+    from ..gateway import Gateway
+else:
+    Gateway = Any
+
 _LOG = get_file_logger(name=__name__)
 
 _MQTT_DEFAULT_PORT = 1883
@@ -21,22 +26,26 @@ _MQTT_DEFAULT_PORT = 1883
 class MQTTClient(AbstractBaseClient):
     """MQTT client."""
 
-    @property
-    def send_method(self) -> SendMethod:
-        return SendMethod.MQTT
-
-    async def init_client(self, settings: MQTTSettings) -> None:
+    def __init__(self, gateway: Gateway, settings: MQTTSettings):
+        super().__init__(gateway, settings)
+        # Ignore types because always used SecretUrl schema in MQTTSettings
         self._client = asyncio_mqtt.Client(
             hostname=settings.url.host,
-            port=int(settings.url.port) or _MQTT_DEFAULT_PORT,
-            username=settings.url.user,
-            password=settings.url.password,
+            port=settings.url.port,  # type: ignore
+            username=settings.url.user.get_secret_value(),  # type: ignore
+            password=settings.url.password.get_secret_value(),  # type: ignore
             client_id=settings.client_id,
             protocol=asyncio_mqtt.ProtocolVersion.V311,
             transport="tcp",
             keepalive=settings.keepalive
             # todo security
         )
+
+    def get_send_method(self) -> SendMethod:
+        return SendMethod.MQTT
+
+    async def async_init_client(self, settings: MQTTSettings) -> None:
+        pass
 
     async def _startup_tasks(self) -> None:
         await self._client.connect()
@@ -52,7 +61,7 @@ class MQTTClient(AbstractBaseClient):
             [
                 obj.to_mqtt_str(obj=obj)
                 for obj in objs
-                if self.send_method in obj.property_list.send_methods
+                if self.get_send_method() in obj.property_list.send_methods
             ]
         )
 
