@@ -9,10 +9,10 @@ from pydantic import BaseModel, Field, validator
 class StatusFlag(int, Enum):
     """StatusFlag representation by int."""
 
-    # changed 10000
+    # CHANGED = 0b10000
     OUT_OF_SERVICE = 0b1000  # does server receive data?
-    OVERRIDEN = 0b0100
-    FAULT = 0b0010
+    FAULT = 0b0100
+    OVERRIDEN = 0b0010
     IN_ALARM = 0b0001  # выход за границы приемлемых значений
 
 

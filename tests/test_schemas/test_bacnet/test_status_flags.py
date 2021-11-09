@@ -46,8 +46,8 @@ class TestStatusFlags:
         "enable_flag, after",
         [
             (StatusFlag.OUT_OF_SERVICE, 7),
-            (StatusFlag.OVERRIDEN, 11),
-            (StatusFlag.FAULT, 13),
+            (StatusFlag.OVERRIDEN, 13),
+            (StatusFlag.FAULT, 11),
             (StatusFlag.IN_ALARM, 14),
         ],
     )
@@ -62,8 +62,8 @@ class TestStatusFlags:
         "enable_flag, after",
         [
             (StatusFlag.OUT_OF_SERVICE, 8),
-            (StatusFlag.OVERRIDEN, 4),
-            (StatusFlag.FAULT, 2),
+            (StatusFlag.OVERRIDEN, 2),
+            (StatusFlag.FAULT, 4),
             (StatusFlag.IN_ALARM, 1),
         ],
     )
@@ -78,8 +78,8 @@ class TestStatusFlags:
         "flag_check, expected",
         [
             (StatusFlag.OUT_OF_SERVICE, True),
-            (StatusFlag.OVERRIDEN, False),
-            (StatusFlag.FAULT, True),
+            (StatusFlag.OVERRIDEN, True),
+            (StatusFlag.FAULT, False),
             (StatusFlag.IN_ALARM, False),
         ],
     )

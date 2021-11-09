@@ -197,11 +197,9 @@ class BasePollingDevice(BaseDevice, ABC):
         )
         self.interface.polling_event.set()
 
-        verified_output_obj = self._gateway.verifier.verify(obj=polled_output_obj)
+        verified_output_obj = self._gtw.verifier.verify(obj=polled_output_obj)
         verified_input_obj = (
-            self._gateway.verifier.verify(obj=polled_input_obj)
-            if polled_input_obj
-            else None
+            self._gtw.verifier.verify(obj=polled_input_obj) if polled_input_obj else None
         )
         self._LOG.debug(
             "Write with check called",
@@ -269,13 +267,12 @@ class BasePollingDevice(BaseDevice, ABC):
         self.interface.polling_event.clear()
         await self._scheduler.close()
         await self.disconnect_client()
-        self._gateway.devices.pop(self.id)
         self._LOG.info("Device stopped", extra={"device_id": self.id})
 
     async def _periodic_reset_unreachable(
         self, object_groups: dict[float, dict[tuple[int, int], BACnetObj]]
     ) -> None:
-        await asyncio.sleep(self._gateway.settings.unreachable_reset_period)
+        await asyncio.sleep(self._gtw.settings.unreachable_reset_period)
 
         for objs_group in object_groups.values():
             for obj in objs_group.values():
@@ -298,7 +295,7 @@ class BasePollingDevice(BaseDevice, ABC):
         )
         _t0 = datetime.now()
         polled_objs = await self._poll_objects(
-            objs=objs, unreachable_threshold=self._gateway.settings.unreachable_threshold
+            objs=objs, unreachable_threshold=self._gtw.settings.unreachable_threshold
         )
         _t_delta = datetime.now() - _t0
         self._LOG.info(
@@ -317,6 +314,6 @@ class BasePollingDevice(BaseDevice, ABC):
         await self._scheduler.spawn(self.periodic_poll(objs=verified_objs, period=period))
 
     async def _after_polling_tasks(self, objs: list[BACnetObj]) -> list[BACnetObj]:
-        verified_objects = self._gateway.verifier.verify_objects(objs=objs)
-        await self._scheduler.spawn(self._gateway.send_objects(objs=verified_objects))
+        verified_objects = self._gtw.verifier.verify_objects(objs=objs)
+        await self._scheduler.spawn(self._gtw.send_objects(objs=verified_objects))
         return verified_objects

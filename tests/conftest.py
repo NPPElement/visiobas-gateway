@@ -307,6 +307,22 @@ def gateway_settings_factory() -> Callable[..., GatewaySettings]:
     return _factory
 
 
+@pytest.fixture
+def gateway_settings_factory() -> Callable[..., GatewaySettings]:
+    """
+    Produces `GatewaySettings` for tests.
+
+    You can pass the same params into this as the `GatewaySettings` constructor to
+    override defaults.
+    """
+
+    def _factory(**kwargs):
+        kwargs = _gateway_settings_kwargs(kwargs)
+        return GatewaySettings(**kwargs)
+
+    return _factory
+
+
 def _gateway_settings_kwargs(kwargs: dict[str, Any]) -> dict[str, Any]:
     kwargs = {
         "update_period": 3600,
