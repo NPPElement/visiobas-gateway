@@ -20,7 +20,7 @@ from visiobas_gateway.api import ApiServer
 from visiobas_gateway.clients import HTTPClient, MQTTClient
 from visiobas_gateway.clients.base_client import AbstractBaseClient
 from visiobas_gateway.devices import BACnetDevice, ModbusDevice
-from visiobas_gateway.devices.base_polling_device import BasePollingDevice
+from visiobas_gateway.devices.base_polling_device import AbstractBasePollingDevice
 from visiobas_gateway.schemas import BACnetObj, DeviceObj, ObjType
 from visiobas_gateway.schemas.bacnet.device_obj import POLLING_TYPES
 from visiobas_gateway.schemas.bacnet.obj import group_by_period
@@ -235,7 +235,7 @@ class Gateway:
                 ready_device = await ready_device
             except (OSError, Exception) as e:  # pylint: disable=broad-except
                 ready_device = e  # type: ignore
-            if isinstance(ready_device, BasePollingDevice):
+            if isinstance(ready_device, AbstractBasePollingDevice):
                 await self._scheduler.spawn(  # pylint: disable=protected-access
                     ready_device.start_periodic_polls()
                 )

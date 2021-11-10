@@ -110,7 +110,7 @@ class BACnetObj(BaseBACnetObj):
             return value
 
     segmentation_supported: bool = Field(
-        default=False, alias=str(ObjProperty.SEGMENTATION_SUPPORTED.value)
+        default=True, alias=str(ObjProperty.SEGMENTATION_SUPPORTED.value)
     )
     property_list: BaseBACnetObjPropertyList = Field(  # type: ignore
         ...,

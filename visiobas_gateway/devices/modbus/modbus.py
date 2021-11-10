@@ -21,13 +21,13 @@ from ...schemas import (
 )
 from ...utils import get_file_logger, log_exceptions, ping, serial_port_connected
 from .._interface import InterfaceKey
-from ..base_polling_device import BasePollingDevice
+from ..base_polling_device import AbstractBasePollingDevice
 from ._modbus_coder_mixin import ModbusCoderMixin
 
 _LOG = get_file_logger(name=__name__)
 
 
-class ModbusDevice(BasePollingDevice, ModbusCoderMixin):
+class ModbusDevice(AbstractBasePollingDevice, ModbusCoderMixin):
     """Sync Modbus Device.
 
     Note: AsyncModbusDevice in `pymodbus` didn't work correctly. So support only Sync

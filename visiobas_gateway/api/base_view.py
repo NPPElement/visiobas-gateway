@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 import aiojobs  # type: ignore
 from aiohttp.web_urldispatcher import View
 
-from ..devices import BaseDevice, BasePollingDevice
+from ..devices import BaseDevice, AbstractBasePollingDevice
 from ..schemas import BACnetObj
 from ..utils import get_file_logger
 
@@ -50,7 +50,7 @@ class BaseView(View):
             return device
         raise Exception(f"Device {device_id} not found.")
 
-    def get_polling_device(self, device_id: int) -> BasePollingDevice:
+    def get_polling_device(self, device_id: int) -> AbstractBasePollingDevice:
         """
         Args:
             device_id: Device identifier.
@@ -62,7 +62,7 @@ class BaseView(View):
             Exception: if device not subclass of `BasePollingDevice`.
         """
         device = self._get_device(device_id=device_id)
-        if isinstance(device, BasePollingDevice):
+        if isinstance(device, AbstractBasePollingDevice):
             return device
         raise Exception(
             f"Device protocol must be polling. "
@@ -71,7 +71,7 @@ class BaseView(View):
         )
 
     @staticmethod
-    def get_obj(obj_id: int, obj_type_id: int, device: BasePollingDevice) -> BACnetObj:
+    def get_obj(obj_id: int, obj_type_id: int, device: AbstractBasePollingDevice) -> BACnetObj:
         """
         Args:
             device: Device instance.
