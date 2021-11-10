@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 import aiojobs  # type: ignore
 from aiohttp.web_urldispatcher import View
 
-from ..devices import BaseDevice, AbstractBasePollingDevice
+from ..devices import AbstractBasePollingDevice, BaseDevice
 from ..schemas import BACnetObj
 from ..utils import get_file_logger
 
@@ -71,7 +71,9 @@ class BaseView(View):
         )
 
     @staticmethod
-    def get_obj(obj_id: int, obj_type_id: int, device: AbstractBasePollingDevice) -> BACnetObj:
+    def get_obj(
+        obj_id: int, obj_type_id: int, device: AbstractBasePollingDevice
+    ) -> BACnetObj:
         """
         Args:
             device: Device instance.

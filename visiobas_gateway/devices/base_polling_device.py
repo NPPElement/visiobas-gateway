@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import asyncio
 from abc import ABC, abstractmethod
-from datetime import datetime
 from functools import lru_cache
+from time import time
 from typing import TYPE_CHECKING, Any, Collection, Iterable
 
 import aiojobs  # type: ignore
@@ -23,7 +23,7 @@ ObjectKey = tuple[int, int]  # obj_id, obj_type_id
 _LOG = get_file_logger(name=__name__)
 
 
-class BasePollingDevice(BaseDevice, ABC):
+class AbstractBasePollingDevice(BaseDevice, ABC):
     """Base class for devices, that can be periodically polled for update sensors data."""
 
     _interfaces: dict[InterfaceKey, Interface] = {}
@@ -32,7 +32,6 @@ class BasePollingDevice(BaseDevice, ABC):
         super().__init__(device_obj, gateway)
 
         self._scheduler: aiojobs.Scheduler = None  # type: ignore
-
         self.object_groups: dict[float, dict[ObjectKey, BACnetObj]] = {}  # Key: period
 
     @staticmethod
@@ -58,7 +57,9 @@ class BasePollingDevice(BaseDevice, ABC):
 
     @classmethod
     @log_exceptions(logger=_LOG)
-    async def create(cls, device_obj: DeviceObj, gateway: Gateway) -> BasePollingDevice:
+    async def create(
+        cls, device_obj: DeviceObj, gateway: Gateway
+    ) -> AbstractBasePollingDevice:
         """Creates instance of device. Handles client creation with lock or using
         existing.
         """
@@ -133,13 +134,6 @@ class BasePollingDevice(BaseDevice, ABC):
             if obj.existing and obj.unreachable_in_row < unreachable_threshold
         ]
         polled_objs = await asyncio.gather(*objs_polling_tasks)
-        # for obj in objs:
-        #     if not obj.existing:
-        #         continue
-        #     if obj.unreachable_in_row >= unreachable_threshold:
-        #         continue
-        #     obj = await self.read(obj=obj)
-        #     polled_obj.append(obj)
         return list(polled_objs)
 
     @abstractmethod
@@ -166,6 +160,8 @@ class BasePollingDevice(BaseDevice, ABC):
         Returns:
             Verified output object instance | tuple of two verified object instances:
             output and mapped input.
+
+        # todo: refactor?
         """
         if output_obj.object_type not in OUTPUT_TYPES:
             raise ValueError(
@@ -295,24 +291,24 @@ class BasePollingDevice(BaseDevice, ABC):
             "Polling started",
             extra={"device_id": self.id, "period": period, "objects_number": len(objs)},
         )
-        _t0 = datetime.now()
+        _t0 = int(time())
         polled_objs = await self._poll_objects(
             objs=objs, unreachable_threshold=self._gateway.settings.unreachable_threshold
         )
-        _t_delta = datetime.now() - _t0
+        _t_delta = int(time()) - _t0
         self._LOG.info(
             "Objects polled",
             extra={
                 "device_id": self.id,
-                "seconds_took": _t_delta.seconds,
+                "seconds_took": _t_delta,
                 "objects_quantity": len(polled_objs),
                 "period": period,
             },
         )
-        if _t_delta.seconds > period:
+        if _t_delta > period:
             self._LOG.warning("Polling period is too short!", extra={"device_id": self.id})
         verified_objs = await self._after_polling_tasks(objs=polled_objs)
-        await asyncio.sleep(delay=period - _t_delta.seconds)
+        await asyncio.sleep(delay=period - _t_delta)
         await self._scheduler.spawn(self.periodic_poll(objs=verified_objs, period=period))
 
     async def _after_polling_tasks(self, objs: list[BACnetObj]) -> list[BACnetObj]:

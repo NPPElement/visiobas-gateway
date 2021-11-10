@@ -4,18 +4,19 @@ from functools import lru_cache
 from ipaddress import IPv4Address
 from typing import Any
 
+from BAC0.core.io.IOExceptions import ReadPropertyMultipleException  # type: ignore
 from BAC0.scripts.Lite import Lite  # type: ignore
 
 from ...schemas import BACnetObj, DeviceObj, ObjProperty, TcpDevicePropertyList
 from ...utils import camel_case, get_file_logger, get_subnet_interface, log_exceptions, ping
 from .._interface import InterfaceKey
-from ..base_polling_device import BasePollingDevice
+from ..base_polling_device import AbstractBasePollingDevice
 from ._bacnet_coder_mixin import BACnetCoderMixin
 
 _LOG = get_file_logger(name=__name__)
 
 
-class BACnetDevice(BasePollingDevice, BACnetCoderMixin):
+class BACnetDevice(AbstractBasePollingDevice, BACnetCoderMixin):
     """Implementation of BACnet device client."""
 
     # def __init__(self, device_obj: BACnetDeviceObj, gateway: Gateway):
@@ -138,8 +139,8 @@ class BACnetDevice(BasePollingDevice, BACnetCoderMixin):
         wait: bool = False,
         **kwargs: Any,
     ) -> None:
-        prop = kwargs.get("prop")
-        priority = kwargs.get("priority")
+        prop = kwargs["prop"]
+        priority = kwargs["priority"]
         await self._gateway.async_add_job(self.write_property, value, obj, prop, priority)
         return None
 
@@ -171,28 +172,23 @@ class BACnetDevice(BasePollingDevice, BACnetCoderMixin):
         )
         success = self.interface.client.write(args=args)
         self._LOG.debug(
-            "Write",
+            "Write property",
             extra={"device_id": self.id, "object": obj, "value": value, "success": success},
         )
         return success
 
-    async def _read(
+    async def _wait_read_property(
         self,
         obj: BACnetObj,
         prop: ObjProperty,
         wait: bool = False,
     ) -> BACnetObj:
-        # prop = kwargs.get("prop")
-        if not isinstance(prop, ObjProperty):
-            raise ValueError(f"`prop` must be `ObjProperty` instance. Got {type(prop)}")
-
+        """Waits for read property. Used to provide priority to write requests."""
         if wait:
             await self.interface.polling_event.wait()
         polled_obj = self.read_property(obj=obj, prop=prop)
         return polled_obj
-        # return await self._gtw.async_add_job(self.read_property, obj, prop)
 
-    # @log_exceptions
     def read_property(self, obj: BACnetObj, prop: ObjProperty) -> BACnetObj:
         request = " ".join(
             (
@@ -203,47 +199,60 @@ class BACnetDevice(BasePollingDevice, BACnetCoderMixin):
             )
         )
         response = self.interface.client.read(request)
-
+        self._LOG.debug(
+            "Read property",
+            extra={"device_id": self.id, "object": obj, "response": response},
+        )
         if prop is ObjProperty.PRIORITY_ARRAY:
             response = self._decode_priority_array(priority_array=response)
 
-        self._LOG.debug(
-            "Read", extra={"device_id": self.id, "object": obj, "response": response}
-        )
         obj.set_property(value=response, prop=prop)
         return obj
 
-    # def read_property_multiple(self, obj: BACnetObj,
-    #                            properties: tuple[ObjProperty]) -> dict:
-    #     try:
-    #         request = ' '.join([
-    #             self.address,
-    #             obj.type.name,
-    #             str(obj.id),
-    #             *[prop.name for prop in properties]
-    #         ])
-    #         response = self._client.readMultiple(request)
-    #
-    #         # check values for None and empty strings
-    #         values = {properties[i]: value for i, value in enumerate(response)
-    #                   if value is not None and str(value).strip()}
-    #         for prop, val in values.items():
-    #
-    #
-    #     except Exception as e:
-    #         self._LOG.exception('Unhandled ReadPropertyMultiple error',
-    #                             extra={'device_id': self.id, 'object_id': obj.id,
-    #                                    'object_type': obj.type, 'exc': e, })
-    #     # else:
-    #     #     if values is not None:
-    #     #         return values
-    #     #     else:
-    #     #         raise ReadPropertyMultipleException('Response is None')
+    async def _wait_read_property_multiple(
+        self, obj: BACnetObj, wait: bool = False
+    ) -> BACnetObj:
+        if wait:
+            await self.interface.polling_event.wait()
+        polled_obj = self.read_property_multiple(obj=obj, properties=obj.polling_properties)
+        return polled_obj
 
-    async def simulate_rpm(self, obj: BACnetObj) -> BACnetObj:
+    def read_property_multiple(
+        self, obj: BACnetObj, properties: tuple[ObjProperty, ...]
+    ) -> BACnetObj:
+        request = " ".join(
+            (
+                ":".join([str(item) for item in self._device_obj.property_list.interface]),
+                camel_case(obj.object_type.name),
+                str(obj.object_id),
+                *[prop.name for prop in properties],
+            )
+        )
+        response = self.interface.client.readMultiple(request)
+        self._LOG.debug(
+            "Read property multiple",
+            extra={"device_id": self.id, "object": obj, "response": response},
+        )
+        # Check values for None and empty strings
+        values = {
+            properties[i]: value
+            for i, value in enumerate(response)
+            if value is not None and str(value).strip()
+        }
+        for prop, val in values.items():
+            if prop is ObjProperty.PRIORITY_ARRAY:
+                val = self._decode_priority_array(priority_array=val)
+            obj.set_property(value=val, prop=prop)
+        return obj
+
+    async def _wait_read_property_multiple_simulation(self, obj: BACnetObj) -> BACnetObj:
+        """Simulates `read_property_multiple` with `read_property` by sending requests
+        for each property separately. It works slowly. Used for devices not
+        supported `read_property_multiple`.
+        """
         for prop in obj.polling_properties:
             try:
-                obj = await self._read(obj=obj, prop=prop)
+                obj = await self._wait_read_property(obj=obj, prop=prop)
             except Exception as exc:  # pylint: disable=broad-except
                 self._LOG.warning(
                     "Read error", extra={"object": obj, "property": prop, "exception": exc}
@@ -251,8 +260,13 @@ class BACnetDevice(BasePollingDevice, BACnetCoderMixin):
         return obj
 
     async def read(self, obj: BACnetObj, wait: bool = False, **kwargs: Any) -> BACnetObj:
-        if wait:
-            await self.interface.polling_event.wait()
-        # if obj.segmentation_supported:# todo: implement RPM or RP
-        polled_obj = await self.simulate_rpm(obj=obj)
+        if obj.segmentation_supported:
+            try:
+                polled_obj = await self._wait_read_property_multiple(obj=obj)
+                return polled_obj
+            except ReadPropertyMultipleException:
+                obj.segmentation_supported = False
+                _LOG.debug("Segmentation not supported", extra={"object": obj})
+
+        polled_obj = await self._wait_read_property_multiple_simulation(obj=obj)
         return polled_obj
