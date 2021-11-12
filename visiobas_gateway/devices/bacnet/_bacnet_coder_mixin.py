@@ -1,9 +1,10 @@
 from __future__ import annotations
 
-from typing import Literal
+from typing import Literal, Iterable
 
 from bacpypes.basetypes import PriorityArray  # type: ignore
 
+from ...utils import camel_case
 from ...schemas import BACnetObj
 from ...schemas.bacnet.obj_type import BINARY_TYPES
 from ...utils import get_file_logger
@@ -17,6 +18,21 @@ class BACnetCoderMixin:
     @staticmethod
     def _is_binary_obj(obj: BACnetObj) -> bool:
         return obj.object_type in BINARY_TYPES
+
+    @staticmethod
+    def _get_object_rpm_dict(obj: BACnetObj) -> dict[str, list]:
+        """Returns object as dict for composing Read Property Multiple request."""
+        _object_key = ":".join((camel_case(obj.object_type.name), str(obj.object_id)))
+        return {
+            _object_key: [camel_case(prop.name) for prop in obj.polling_properties]
+        }
+
+    @staticmethod
+    def _get_objects_rpm_dict(objs: Iterable[BACnetObj]) -> dict[str, list]:
+        objects_dict = {}
+        for obj in objs:
+            objects_dict.update(BACnetCoderMixin._get_object_rpm_dict(obj=obj))
+        return objects_dict
 
     @staticmethod
     def _encode_binary_present_value(value: int | float) -> Literal["active", "inactive"]:
