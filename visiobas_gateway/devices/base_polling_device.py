@@ -139,7 +139,9 @@ class AbstractBasePollingDevice(BaseDevice, ABC):
         return list(polled_objs)
 
     @abstractmethod
-    async def read_single_object(self, obj: BACnetObj, **kwargs: Any) -> BACnetObj:
+    async def read_single_object(
+            self, obj: BACnetObj, wait: bool = True, **kwargs: Any
+    ) -> BACnetObj:
         """ """
 
     @abstractmethod
@@ -150,14 +152,14 @@ class AbstractBasePollingDevice(BaseDevice, ABC):
 
     @abstractmethod
     async def read_objects(
-        self, objs: Collection[BACnetObj], **kwargs: Any
+        self, objs: Collection[BACnetObj], wait: bool = True, **kwargs: Any
     ) -> Collection[BACnetObj]:
         """ """
 
     @abstractmethod
     async def write_objects(
         self, values: list[int | float | str], objs: Collection[BACnetObj]
-    ):
+    ) -> None:
         """ """
 
     @log_exceptions(logger=_LOG)
@@ -201,13 +203,15 @@ class AbstractBasePollingDevice(BaseDevice, ABC):
         # Wait processing on device side to get actual data.
         await asyncio.sleep(1)
 
-        polled_output_obj = await self.read_objects(obj=output_obj, wait=False, **kwargs)
+        polled_output_obj = await self.read_single_object(obj=output_obj, **kwargs)
         polled_input_obj = (
-            await self.read_objects(obj=input_obj, wait=False, **kwargs)
+            await self.read_objects(obj=input_obj, **kwargs)
             if input_obj
             else None
         )
         self.interface.polling_event.set()
+
+        # todo: use after polling tasks
 
         verified_output_obj = self._gateway.verifier.verify(obj=polled_output_obj)
         verified_input_obj = (
@@ -338,7 +342,21 @@ class AbstractBasePollingDevice(BaseDevice, ABC):
         async def wrapper(
             self: AbstractBasePollingDevice, *args: Any, **kwargs: Any
         ) -> Any:
-            await self.interface.polling_event.wait()
+            if kwargs.get('wait'):
+                await self.interface.polling_event.wait()
             return func(*args, **kwargs)
+
+        return wrapper
+
+    @staticmethod
+    def priority_access(func: Callable | Callable[..., Awaitable]) -> Any:
+        @wraps(func)
+        async def wrapper(
+                self: AbstractBasePollingDevice, *args: Any, **kwargs: Any
+        ) -> Any:
+            self.interface.polling_event.clear()
+            result = func(*args, **kwargs)
+            self.interface.polling_event.set()
+            return result
 
         return wrapper

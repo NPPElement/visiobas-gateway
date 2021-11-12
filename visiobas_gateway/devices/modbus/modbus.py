@@ -121,17 +121,14 @@ class ModbusDevice(AbstractBasePollingDevice, ModbusCoderMixin):
             ModbusWriteFunc.WRITE_REGISTERS: client.write_registers,
         }
 
-    async def read(self, obj: BACnetObj, wait: bool = False, **kwargs: Any) -> BACnetObj:
+    async def read_single_object(self, obj: BACnetObj, **kwargs: Any) -> BACnetObj:
         if not isinstance(obj, ModbusObj):
             raise ValueError(f"`obj` must be `ModbusObj`. Got {type(obj)}")
-        if wait:
-            await self.interface.polling_event.wait()
-        polled_obj = self.sync_read(obj=obj)
-        return polled_obj
-        # return await self._gtw.async_add_job(self.sync_read, obj)
+        # return self.sync_read(obj=obj)
+        return await self._gateway.async_add_job(self._sync_read, obj)
 
-    @log_exceptions(logger=_LOG)
-    def sync_read(self, obj: ModbusObj) -> ModbusObj:
+    @AbstractBasePollingDevice.wait_access.__func__  # type: ignore
+    def _sync_read(self, obj: ModbusObj) -> ModbusObj:
         """Read data from Modbus object.
 
         Updates object and return value.
@@ -148,13 +145,13 @@ class ModbusDevice(AbstractBasePollingDevice, ModbusCoderMixin):
             obj.set_property(value=value)
         return obj
 
-    async def write(
-        self, value: int | float | str, obj: BACnetObj, wait: bool = False, **kwargs: Any
+    async def write_single_object(
+        self, value: int | float | str, obj: BACnetObj, **kwargs: Any
     ) -> None:
         if not isinstance(obj, ModbusObj):
             raise ValueError(f"`obj` must be `ModbusObj`. Got {type(obj)}")
-        self.sync_write(value=value, obj=obj)
-        # await self._gtw.async_add_job(self.sync_write, value, obj)
+        # self.sync_write(value=value, obj=obj)
+        await self._gateway.async_add_job(self.sync_write, value, obj)
 
     def sync_write(self, value: int | float | str, obj: ModbusObj) -> None:
         """Write value to Modbus object.
