@@ -30,7 +30,7 @@ _LOG = get_file_logger(name=__name__)
 class ModbusDevice(AbstractBasePollingDevice, ModbusCoderMixin):
     """Sync Modbus Device.
 
-    Note: AsyncModbusDevice in `pymodbus` didn't work correctly. So support only Sync
+    Note: `AsyncModbusDevice` in `pymodbus` didn't work correctly. So support only Sync
         client.
     """
 
