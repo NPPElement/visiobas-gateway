@@ -13,7 +13,7 @@ from ..utils import get_file_logger
 if TYPE_CHECKING:
     from ..gateway import Gateway
 else:
-    Gateway = "Gateway"
+    Gateway = Any
 
 _LOG = get_file_logger(name=__name__)
 
@@ -46,6 +46,8 @@ class AbstractBaseClient(ABC):
     async def async_init_client(self, settings: Any) -> None:
         """If client initialization requires async operations -
         they should be called here.
+
+        If no async calls in client initialization needed - you may override it with `pass`.
         """
 
     @abstractmethod

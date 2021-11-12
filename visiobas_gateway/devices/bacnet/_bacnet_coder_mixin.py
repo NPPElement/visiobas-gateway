@@ -1,13 +1,12 @@
 from __future__ import annotations
 
-from typing import Literal, Iterable
+from typing import Iterable, Literal
 
 from bacpypes.basetypes import PriorityArray  # type: ignore
 
-from ...utils import camel_case
 from ...schemas import BACnetObj
 from ...schemas.bacnet.obj_type import BINARY_TYPES
-from ...utils import get_file_logger
+from ...utils import camel_case, get_file_logger
 
 _LOG = get_file_logger(name=__name__)
 
@@ -23,9 +22,7 @@ class BACnetCoderMixin:
     def _get_object_rpm_dict(obj: BACnetObj) -> dict[str, list]:
         """Returns object as dict for composing Read Property Multiple request."""
         _object_key = ":".join((camel_case(obj.object_type.name), str(obj.object_id)))
-        return {
-            _object_key: [camel_case(prop.name) for prop in obj.polling_properties]
-        }
+        return {_object_key: [camel_case(prop.name) for prop in obj.polling_properties]}
 
     @staticmethod
     def _get_objects_rpm_dict(objs: Iterable[BACnetObj]) -> dict[str, list]:

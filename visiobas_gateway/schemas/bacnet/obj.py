@@ -110,8 +110,9 @@ class BACnetObj(BaseBACnetObj):
             return value
 
     segmentation_supported: bool = Field(
-        default=True, alias=str(ObjProperty.SEGMENTATION_SUPPORTED.value),
-        description='Indicate availability of usage Read Property Multiple requests.'
+        default=True,
+        alias=str(ObjProperty.SEGMENTATION_SUPPORTED.value),
+        description="Indicate availability of usage Read Property Multiple requests.",
     )
     property_list: BaseBACnetObjPropertyList = Field(  # type: ignore
         ...,

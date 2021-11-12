@@ -47,7 +47,7 @@ class HTTPClient(AbstractBaseClient):
     @staticmethod
     def relogin_on_401(func: Callable | Callable[..., Awaitable]) -> Any:
         @wraps(func)
-        async def wrapper(self: Any, *args: Any, **kwargs: Any) -> Any:
+        async def wrapper(self: HTTPClient, *args: Any, **kwargs: Any) -> Any:
             try:
                 return await func(*args, **kwargs)
             except aiohttp.ClientResponseError as exc:
