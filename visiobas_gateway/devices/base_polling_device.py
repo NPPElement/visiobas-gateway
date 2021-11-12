@@ -2,9 +2,9 @@ from __future__ import annotations
 
 import asyncio
 from abc import ABC, abstractmethod
-from functools import lru_cache
+from functools import lru_cache, wraps
 from time import time
-from typing import TYPE_CHECKING, Any, Collection, Iterable
+from typing import TYPE_CHECKING, Any, Awaitable, Callable, Collection, Iterable
 
 import aiojobs  # type: ignore
 
@@ -49,7 +49,7 @@ class AbstractBasePollingDevice(BaseDevice, ABC):
     @staticmethod
     @abstractmethod
     def interface_key(
-            device_obj: DeviceObj,
+        device_obj: DeviceObj,
     ) -> InterfaceKey:
         """Hashable interface key to interaction with device with lock.
         Used as key in interfaces `dict`.
@@ -58,7 +58,7 @@ class AbstractBasePollingDevice(BaseDevice, ABC):
     @classmethod
     @log_exceptions(logger=_LOG)
     async def create(
-            cls, device_obj: DeviceObj, gateway: Gateway
+        cls, device_obj: DeviceObj, gateway: Gateway
     ) -> AbstractBasePollingDevice:
         """Creates instance of device. Handles client creation with lock or using
         existing.
@@ -126,33 +126,43 @@ class AbstractBasePollingDevice(BaseDevice, ABC):
         """Checks that client is connected."""
 
     async def poll_objects(
-            self, objs: Iterable[BACnetObj], unreachable_threshold: int
+        self, objs: Iterable[BACnetObj], unreachable_threshold: int
     ) -> list[BACnetObj]:
         """Sorts actual objects and polls them."""
         actual_objs = [
-            obj for obj in objs
+            obj
+            for obj in objs
             if obj.existing and obj.unreachable_in_row < unreachable_threshold
         ]
-        objs_polling_tasks = [self.read(objs=actual_objs)]
+        objs_polling_tasks = [self.read_objects(objs=actual_objs)]
         polled_objs = await asyncio.gather(*objs_polling_tasks)
         return list(polled_objs)
 
     @abstractmethod
-    async def read(
-            self, objs: Collection[BACnetObj], wait: bool = False, **kwargs: Any
-    ) -> Collection[BACnetObj]:
-        """You should implement async read method for your device."""
+    async def read_single_object(self, obj: BACnetObj, **kwargs: Any) -> BACnetObj:
+        """ """
 
     @abstractmethod
-    async def write(
-            self, value: int | float | str, obj: BACnetObj, wait: bool = False,
-            **kwargs: Any
+    async def write_single_object(
+        self, value: int | float | str, obj: BACnetObj, **kwargs: Any
     ) -> None:
-        """You should implement async write method for your device."""
+        """ """
+
+    @abstractmethod
+    async def read_objects(
+        self, objs: Collection[BACnetObj], **kwargs: Any
+    ) -> Collection[BACnetObj]:
+        """ """
+
+    @abstractmethod
+    async def write_objects(
+        self, values: list[int | float | str], objs: Collection[BACnetObj]
+    ):
+        """ """
 
     @log_exceptions(logger=_LOG)
     async def write_with_check(
-            self, value: int | float | str, output_obj: BACnetObj, **kwargs: Any
+        self, value: int | float | str, output_obj: BACnetObj, **kwargs: Any
     ) -> tuple[BACnetObj, BACnetObj | None]:
         """Writes value to object at controller and check it by read.
 
@@ -185,15 +195,17 @@ class AbstractBasePollingDevice(BaseDevice, ABC):
         )
 
         self.interface.polling_event.clear()
-        await self.write(value=value, obj=output_obj, **kwargs)
+        await self.write_single_object(value=value, obj=output_obj, **kwargs)
 
         # Several devices process write requests with delay.
         # Wait processing on device side to get actual data.
         await asyncio.sleep(1)
 
-        polled_output_obj = await self.read(obj=output_obj, wait=False, **kwargs)
+        polled_output_obj = await self.read_objects(obj=output_obj, wait=False, **kwargs)
         polled_input_obj = (
-            await self.read(obj=input_obj, wait=False, **kwargs) if input_obj else None
+            await self.read_objects(obj=input_obj, wait=False, **kwargs)
+            if input_obj
+            else None
         )
         self.interface.polling_event.set()
 
@@ -272,7 +284,7 @@ class AbstractBasePollingDevice(BaseDevice, ABC):
         self._LOG.info("Device stopped", extra={"device_id": self.id})
 
     async def _periodic_reset_unreachable(
-            self, object_groups: dict[float, dict[tuple[int, int], BACnetObj]]
+        self, object_groups: dict[float, dict[tuple[int, int], BACnetObj]]
     ) -> None:
         await asyncio.sleep(self._gateway.settings.unreachable_reset_period)
 
@@ -287,19 +299,19 @@ class AbstractBasePollingDevice(BaseDevice, ABC):
 
     @log_exceptions(logger=_LOG)
     async def periodic_poll(
-            self,
-            objs: Collection[BACnetObj],
-            period: float,
+        self,
+        objs: Collection[BACnetObj],
+        period: float,
     ) -> None:
         self._LOG.debug(
             "Polling started",
             extra={"device_id": self.id, "period": period, "objects_number": len(objs)},
         )
-        _t0 = int(time())
+        _t0 = time()
         polled_objs = await self.poll_objects(
             objs=objs, unreachable_threshold=self._gateway.settings.unreachable_threshold
         )
-        _t_delta = int(time()) - _t0
+        _t_delta = int(time() - _t0)
         self._LOG.info(
             "Objects polled",
             extra={
@@ -319,3 +331,14 @@ class AbstractBasePollingDevice(BaseDevice, ABC):
         verified_objects = self._gateway.verifier.verify_objects(objs=objs)
         await self._scheduler.spawn(self._gateway.send_objects(objs=verified_objects))
         return verified_objects
+
+    @staticmethod
+    def wait_access(func: Callable | Callable[..., Awaitable]) -> Any:
+        @wraps(func)
+        async def wrapper(
+            self: AbstractBasePollingDevice, *args: Any, **kwargs: Any
+        ) -> Any:
+            await self.interface.polling_event.wait()
+            return func(*args, **kwargs)
+
+        return wrapper
