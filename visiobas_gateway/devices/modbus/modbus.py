@@ -121,13 +121,12 @@ class ModbusDevice(AbstractBasePollingDevice, ModbusCoderMixin):
             ModbusWriteFunc.WRITE_REGISTERS: client.write_registers,
         }
 
-    async def read_single_object(self, obj: BACnetObj, **kwargs: Any) -> BACnetObj:
+    async def read_single_object(self, *, obj: BACnetObj, **kwargs: Any) -> BACnetObj:
         if not isinstance(obj, ModbusObj):
             raise ValueError(f"`obj` must be `ModbusObj`. Got {type(obj)}")
         # return self.sync_read(obj=obj)
         return await self._gateway.async_add_job(self._sync_read, obj)
 
-    @AbstractBasePollingDevice.wait_access.__func__  # type: ignore
     def _sync_read(self, obj: ModbusObj) -> ModbusObj:
         """Read data from Modbus object.
 
