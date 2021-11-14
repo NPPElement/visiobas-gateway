@@ -1,8 +1,9 @@
 from __future__ import annotations
 
+import asyncio
 from functools import lru_cache
 from ipaddress import IPv4Address
-from typing import Any, Iterable, Iterator, Sequence
+from typing import Any, Collection, Iterator, Sequence
 
 from BAC0.core.io.IOExceptions import (  # type: ignore
     ReadPropertyMultipleException,
@@ -77,10 +78,14 @@ class BACnetDevice(AbstractBasePollingDevice, BACnetCoderMixin):
         )
         client = Lite(ip=str(ip_in_subnet), port=port)
 
-        client.write = AbstractBasePollingDevice.priority_access(client.write)
-        client.writeMultiple = AbstractBasePollingDevice.priority_access(
+        # Decorating write methods for priority access.
+        client.write = AbstractBasePollingDevice._acquire_access(client.write)
+        client.writeMultiple = AbstractBasePollingDevice._acquire_access(
             client.writeMultiple
         )
+        # Read methods must execute after write requests.
+        client.read = AbstractBasePollingDevice._wait_access(client.read)
+        client.readMultiple = AbstractBasePollingDevice._wait_access(client.readMultiple)
         return client
 
     async def connect_client(self, client: Any) -> bool:
@@ -90,50 +95,6 @@ class BACnetDevice(AbstractBasePollingDevice, BACnetCoderMixin):
 
     async def _disconnect_client(self, client: Lite) -> None:
         client.disconnect()
-
-    # def poll(self) -> None:
-    #     """ Poll all object from device.
-    #         Send each object into verifier after answer.
-    #         When all objects polled, send device_id into verifier as finish signal
-    #     """
-    #     for obj in self.support_rpm:
-    #         assert isinstance(obj, BACnetObject)
-    #
-    #         self.__logger.debug(f'Polling supporting PRM {obj} ...')
-    #         try:
-    #             values = self.rpm(obj=obj)
-    #             self.__logger.debug(f'{obj} values: {values}')
-    #         except ReadPropertyMultipleException as e:
-    #             self.__logger.warning(f'{obj} rpm error: {e}\n'
-    #                                   f'{obj} Marking as not supporting RPM ...')
-    #             self.not_support_rpm.add(obj)
-    #             # self.support_rpm.discard(obj)
-    #
-    #         except Exception as e:
-    #             self.__logger.error(f'{obj} polling error: {e}', exc_info=True)
-    #         else:
-    #             self.__logger.debug(f'From {obj} read: {values}. Sending to verifier ...')
-    #             self.__put_data_into_verifier(properties=values)
-    #
-    #     self.support_rpm.difference_update(self.not_support_rpm)
-    #
-    #     for obj in self.not_support_rpm:
-    #         assert isinstance(obj, BACnetObject)
-    #
-    #         self.__logger.debug(f'Polling not supporting PRM {obj} ...')
-    #         try:
-    #             values = self.simulate_rpm(obj=obj)
-    #         except UnknownObjectError as e:
-    #             self.__logger.error(f'{obj} is unknown: {e}')
-    #         except Exception as e:
-    #             self.__logger.error(f'{obj} polling error: {e}', exc_info=True)
-    #         else:
-    #             self.__logger.debug(f'From {obj} read: {values}. Sending to verifier ...')
-    #             self.__put_data_into_verifier(properties=values)
-    #
-    #     # notify verifier, that device polled and should send collected objects via HTTP
-    #     self.__logger.debug('All objects were polled. Send device_id to verifier')
-    #     self.__put_device_end_to_verifier()
 
     @log_exceptions(logger=_LOG)
     def _write_property(
@@ -168,10 +129,7 @@ class BACnetDevice(AbstractBasePollingDevice, BACnetCoderMixin):
         )
         return success
 
-    @AbstractBasePollingDevice.wait_access.__func__  # type: ignore
-    def _read_property(
-            self, obj: BACnetObj, prop: ObjProperty, *, wait: bool = True
-    ) -> BACnetObj:
+    def _read_property(self, obj: BACnetObj, prop: ObjProperty) -> BACnetObj:
         request = " ".join(
             (
                 self.device_address,
@@ -191,17 +149,18 @@ class BACnetDevice(AbstractBasePollingDevice, BACnetCoderMixin):
         obj.set_property(value=response, prop=prop)
         return obj
 
-    @AbstractBasePollingDevice.wait_access.__func__  # type: ignore
     def _read_property_multiple(self, objs: Sequence[BACnetObj]) -> Sequence[BACnetObj]:
         """ """
         if len(objs) > _READ_PROPERTY_MULTIPLE_CHUNK_SIZE:
             _LOG.warning(
-                "Large number of objects in RPM request can lead to request segmentation",
+                "Large number of objects in RPM request can lead to request segmentation. "
+                "It leads to slow execution.",
                 extra={
                     "object_count": len(objs),
                     "optimal_rpm_chunk_size": _READ_PROPERTY_MULTIPLE_CHUNK_SIZE,
                 },
             )
+
         request_dict = {
             "address": self.device_address,
             "objects": {self._get_objects_rpm_dict(objs=objs)},
@@ -217,12 +176,13 @@ class BACnetDevice(AbstractBasePollingDevice, BACnetCoderMixin):
             for v, prop in zip(values, obj.polling_properties):
                 # v example: ('presentValue', 4.233697891235352),
                 if prop is ObjProperty.PRIORITY_ARRAY:
-                    v = self._decode_priority_array(priority_array=v[1])
+                    v = self._decode_priority_array(priority_array=v[1])  # type: ignore
+                    # fixme: issue with type
                 obj.set_property(value=v, prop=prop)
 
         return objs
 
-    def _simulate_read_property_multiple(self, obj: BACnetObj) -> BACnetObj:
+    def _read_all_properties(self, obj: BACnetObj) -> BACnetObj:
         """Simulates `read_property_multiple` with `read_property` by sending requests
         for each property separately. It works slowly. Used for devices not
         supported `read_property_multiple`.
@@ -231,18 +191,24 @@ class BACnetDevice(AbstractBasePollingDevice, BACnetCoderMixin):
         """
         for prop in obj.polling_properties:
             try:
-                obj = self._read_property(self._read_property, obj, prop)
+                obj = self._read_property(obj=obj, prop=prop)
             except Exception as exc:  # pylint: disable=broad-except
+                # obj.set_property(value=exc)
                 self._LOG.warning(
                     "Read error", extra={"object": obj, "property": prop, "exception": exc}
                 )
         return obj
 
-    async def read_single_object(self, obj: BACnetObj, **kwargs: Any) -> BACnetObj:
+    async def read_single_object(self, *, obj: BACnetObj, **kwargs: Any) -> BACnetObj:
         if obj.segmentation_supported:
             # Polling only one object, so just use [0] index.
-            return (self._read_property_multiple(objs=[obj]))[0]
-        return self._simulate_read_property_multiple(obj=obj)
+            try:
+                return (self._read_property_multiple(objs=[obj]))[0]
+            except (SegmentationNotSupported, ReadPropertyMultipleException):
+                obj.segmentation_supported = False
+                _LOG.debug("Segmentation not supported", extra={"object": obj})
+
+        return self._read_all_properties(obj=obj)
 
     async def write_single_object(
         self,
@@ -250,47 +216,34 @@ class BACnetDevice(AbstractBasePollingDevice, BACnetCoderMixin):
         obj: BACnetObj,
         **kwargs: Any,
     ) -> None:
+        self._check_write_object_type(output_obj=obj)
+
         prop = kwargs["prop"]
         priority = kwargs["priority"]
         await self._gateway.async_add_job(self._write_property, value, obj, prop, priority)
 
-    async def read_objects(
-        self, objs: Iterable[BACnetObj], **kwargs: Any
-    ) -> list[BACnetObj]:
-        polled_objs: list[BACnetObj] = []
-        objs_supported_rpm: list[BACnetObj] = []
-        objs_not_supported_rpm: list[BACnetObj] = []
-        for obj in objs:
-            if obj.segmentation_supported:
-                objs_supported_rpm.append(obj)
-            else:
-                objs_not_supported_rpm.append(obj)
+    async def read_multiple_objects(
+        self, objs: Sequence[BACnetObj], **kwargs: Any
+    ) -> Sequence[BACnetObj]:
+        try:
+            return self._read_property_multiple(objs=objs)
+        except (SegmentationNotSupported, ReadPropertyMultipleException):
+            read_single_tasks = [self.read_single_object(obj=obj) for obj in objs]
+            polled_objs = await asyncio.gather(*read_single_tasks)
+            polled_objs = [obj for obj in polled_objs if isinstance(obj, BACnetObj)]
+            return polled_objs
 
-        for objs_per_rpm in self._batch_objects(objs=objs_supported_rpm):
-            try:
-                _big_rpm_polled_objs = self._read_property_multiple(objs=objs_per_rpm)
-                polled_objs.append(*_big_rpm_polled_objs)
-            except (SegmentationNotSupported, ReadPropertyMultipleException):
-                for obj in objs_per_rpm:
-                    try:
-                        _single_rpm_polled_obj = self._read_property_multiple(
-                            objs=objs_per_rpm
-                        )
-                        polled_objs.append(*_single_rpm_polled_obj)
-                    except (SegmentationNotSupported, ReadPropertyMultipleException):
-                        obj.segmentation_supported = False
-                        _LOG.debug("Segmentation not supported", extra={"object": obj})
-                        polled_obj = self._simulate_read_property_multiple(obj=obj)
-                        polled_objs.append(polled_obj)
-        return polled_objs
+    async def write_multiple_objects(
+        self, values: list[int | float | str], objs: Collection[BACnetObj]
+    ) -> None:
+        """Not used now."""
+        raise NotImplementedError
 
     @staticmethod
-    def _batch_objects(
-        objs: Sequence[BACnetObj],
-        objs_per_request: int = _READ_PROPERTY_MULTIPLE_CHUNK_SIZE,
-    ) -> Iterator:
-        for i in range(0, len(objs), objs_per_request):
-            yield objs[i : i + objs_per_request]  # noqa
+    def _get_chunk_for_multiple(objs: Sequence[BACnetObj]) -> Iterator:
+
+        for i in range(0, len(objs), _READ_PROPERTY_MULTIPLE_CHUNK_SIZE):
+            yield objs[i : i + _READ_PROPERTY_MULTIPLE_CHUNK_SIZE]  # noqa
 
     @property
     def device_address(self) -> str:
