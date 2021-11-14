@@ -5,13 +5,15 @@ from typing import Any, Optional, Union
 
 from pydantic import Field, validator
 
-from ...utils import snake_case
+from ...utils import get_file_logger, snake_case
 from .base_obj import BaseBACnetObj
 from .obj_property import ObjProperty
 from .obj_property_list import BaseBACnetObjPropertyList
 from .obj_type import INPUT_PROPERTIES, INPUT_TYPES, OUTPUT_PROPERTIES, OUTPUT_TYPES
 from .reliability import Reliability
 from .status_flags import StatusFlags
+
+_LOG = get_file_logger(__name__)
 
 DEFAULT_RESOLUTION = 0.1
 DEFAULT_PRIORITY_ARRAY: list[float | None] = [None] * 16
@@ -145,22 +147,6 @@ class BACnetObj(BaseBACnetObj):
     class Config:  # pylint: disable=missing-class-docstring
         arbitrary_types_allowed = True
 
-    # # FIXME: hotfix
-    # @validator("default_poll_period")
-    # def set_default_poll_period(cls, value: float, values: dict) -> None:
-    #     # pylint: disable=no-self-argument
-    #     """Set default value to nested model."""
-    #     if values["property_list"].poll_period is None:
-    #         values["property_list"].poll_period = value
-    #
-    # # FIXME: hotfix
-    # @validator("default_send_period")
-    # def set_default_send_period(cls, value: int, values: dict) -> None:
-    #     # pylint: disable=no-self-argument
-    #     """Set default value to nested model."""
-    #     if values["property_list"].send_period is None:
-    #         values["property_list"].send_period = value
-
     @property
     def polling_properties(self) -> tuple[ObjProperty, ...]:
         if self.object_type in INPUT_TYPES:
@@ -190,15 +176,17 @@ class BACnetObj(BaseBACnetObj):
         """
         if not isinstance(prop, ObjProperty):
             raise ValueError("Invalid property")
+        if prop is ObjProperty.PRIORITY_ARRAY and isinstance(value, Exception):
+            _LOG.warning("Several objects not have %s", prop, extra={"object": self})
+            return None
 
-        self.updated = datetime.now()
+        self.updated = datetime.now()  # todo: use time.time()?
 
-        # if prop is ObjProperty.priorityArray:
-        #     value = self.convert_priority_array(priority_array=value)
         if prop is ObjProperty.STATUS_FLAGS:
             value = StatusFlags(flags=value)
         property_name = snake_case(prop.name)
         setattr(self, property_name, value)
+        return None
 
     @staticmethod
     def to_mqtt_str(obj: BACnetObj) -> str:
