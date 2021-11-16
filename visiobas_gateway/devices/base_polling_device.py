@@ -39,7 +39,6 @@ class AbstractBasePollingDevice(BaseDevice, ABC):
 
     # FIXME: issue with set exceptions to objects
     # FIXME: issue with objects check (write - only output types)
-    # FIXME: adopt priority decorators for funcs and for coros.
 
     def __init__(self, device_obj: DeviceObj, gateway: Gateway):
         super().__init__(device_obj, gateway)
@@ -401,28 +400,44 @@ class AbstractBasePollingDevice(BaseDevice, ABC):
         return verified_objects
 
     @staticmethod
-    def _wait_access(func: Callable | Callable[..., Awaitable]) -> Any:
-        # fixme: process funcs and coros
+    def _wait_access(func: Callable | Callable[..., Awaitable]) -> Callable[..., Awaitable]:
         @wraps(func)
         async def wrapper(
             self: AbstractBasePollingDevice, *args: Any, **kwargs: Any
         ) -> Any:
             await self.interface.polling_event.wait()
+            if asyncio.iscoroutine(func) or asyncio.iscoroutinefunction(func):
+                return await func(*args, **kwargs)
             return func(*args, **kwargs)
 
         return wrapper
 
     @staticmethod
-    def _acquire_access(func: Callable | Callable[..., Awaitable]) -> Any:
-        # fixme: process funcs and coros
+    def _acquire_access(
+        func: Callable | Callable[..., Awaitable]
+    ) -> Callable | Callable[..., Awaitable]:
+
+        if asyncio.iscoroutine(func) or asyncio.iscoroutinefunction(func):
+
+            @wraps(func)
+            async def async_wrapper(
+                self: AbstractBasePollingDevice, *args: Any, **kwargs: Any
+            ) -> Any:
+                self.interface.polling_event.clear()
+                result = await func(*args, **kwargs)
+                self.interface.polling_event.set()
+                return result
+
+            return async_wrapper
+
         @wraps(func)
-        def wrapper(self: AbstractBasePollingDevice, *args: Any, **kwargs: Any) -> Any:
+        def sync_wrapper(self: AbstractBasePollingDevice, *args: Any, **kwargs: Any) -> Any:
             self.interface.polling_event.clear()
             result = func(*args, **kwargs)
             self.interface.polling_event.set()
             return result
 
-        return wrapper
+        return sync_wrapper
 
     # @staticmethod
     # def _set_exception(func: Callable[..., Awaitable]) -> Any:
