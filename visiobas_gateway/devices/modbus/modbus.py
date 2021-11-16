@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from ipaddress import IPv4Address
-from typing import Any, Callable
+from typing import Any, Callable, Sequence
 
 from pymodbus.client.sync import ModbusSerialClient, ModbusTcpClient  # type: ignore
 from pymodbus.exceptions import ModbusException, ModbusIOException  # type: ignore
@@ -25,6 +25,9 @@ from ..base_polling_device import AbstractBasePollingDevice
 from ._modbus_coder_mixin import ModbusCoderMixin
 
 _LOG = get_file_logger(name=__name__)
+
+# Max registers per requests
+_MAX_REGISTERS_IN_ONE_REQUEST = 125
 
 
 class ModbusDevice(AbstractBasePollingDevice, ModbusCoderMixin):
@@ -124,8 +127,8 @@ class ModbusDevice(AbstractBasePollingDevice, ModbusCoderMixin):
     async def read_single_object(self, *, obj: BACnetObj, **kwargs: Any) -> BACnetObj:
         if not isinstance(obj, ModbusObj):
             raise ValueError(f"`obj` must be `ModbusObj`. Got {type(obj)}")
-        # return self.sync_read(obj=obj)
-        return await self._gateway.async_add_job(self._sync_read, obj)
+        return self._sync_read(obj=obj)
+        # return await self._gateway.async_add_job(self._sync_read, obj)
 
     def _sync_read(self, obj: ModbusObj) -> ModbusObj:
         """Read data from Modbus object.
@@ -138,7 +141,7 @@ class ModbusDevice(AbstractBasePollingDevice, ModbusCoderMixin):
             unit=self._device_obj.property_list.rtu.unit,  # type: ignore
         )
         if resp.isError():
-            obj.set_property(value=ModbusIOException(str(resp)))
+            raise ModbusIOException(resp.string)
         else:
             value = self._decode_response(resp=resp, obj=obj)
             obj.set_property(value=value)
@@ -149,10 +152,10 @@ class ModbusDevice(AbstractBasePollingDevice, ModbusCoderMixin):
     ) -> None:
         if not isinstance(obj, ModbusObj):
             raise ValueError(f"`obj` must be `ModbusObj`. Got {type(obj)}")
-        # self.sync_write(value=value, obj=obj)
-        await self._gateway.async_add_job(self.sync_write, value, obj)
+        self._sync_write(value=value, obj=obj)
+        # await self._gateway.async_add_job(self._sync_write, value, obj)
 
-    def sync_write(self, value: int | float | str, obj: ModbusObj) -> None:
+    def _sync_write(self, value: int | float | str, obj: ModbusObj) -> None:
         """Write value to Modbus object.
 
         Args:
@@ -166,16 +169,16 @@ class ModbusDevice(AbstractBasePollingDevice, ModbusCoderMixin):
 
         payload = self._build_payload(value=value, obj=obj)
 
-        if obj.func_write is ModbusWriteFunc.WRITE_REGISTER and isinstance(payload, list):
-            # FIXME: hotfix
-            assert len(payload) == 1
+        if obj.func_write is ModbusWriteFunc.WRITE_REGISTER and isinstance(payload,
+                                                                           Sequence):
+            assert len(payload) == 1  # FIXME: hotfix
             payload = payload[0]  # type: ignore
 
-        request = self.write_funcs[obj.func_write](
+        resp = self.write_funcs[obj.func_write](
             obj.address,
             payload,
             unit=self._device_obj.property_list.rtu.unit,  # type: ignore
         )
-        if request.isError():
-            raise ModbusIOException("0x80")  # todo: resp.string
+        if resp.isError():
+            raise ModbusIOException(resp.string)
         self._LOG.debug("Successfully write", extra={"object": obj, "value": value})

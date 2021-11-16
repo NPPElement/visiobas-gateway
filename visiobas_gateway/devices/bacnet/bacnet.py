@@ -19,7 +19,7 @@ from ._bacnet_coder_mixin import BACnetCoderMixin
 
 _LOG = get_file_logger(name=__name__)
 
-# Objects per RPM requests
+# Optimal objects per RPM requests
 _READ_PROPERTY_MULTIPLE_CHUNK_SIZE = 25
 
 
