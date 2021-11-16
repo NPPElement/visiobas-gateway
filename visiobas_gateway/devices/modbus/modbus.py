@@ -145,7 +145,7 @@ class ModbusDevice(AbstractBasePollingDevice, ModbusCoderMixin):
         return obj
 
     async def write_single_object(
-        self, value: int | float | str, obj: BACnetObj, **kwargs: Any
+        self, value: int | float | str, *, obj: BACnetObj, **kwargs: Any
     ) -> None:
         if not isinstance(obj, ModbusObj):
             raise ValueError(f"`obj` must be `ModbusObj`. Got {type(obj)}")

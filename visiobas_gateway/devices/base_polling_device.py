@@ -46,6 +46,15 @@ class AbstractBasePollingDevice(BaseDevice, ABC):
         self._scheduler: aiojobs.Scheduler = None  # type: ignore
         self.object_groups: dict[float, dict[ObjectKey, BACnetObj]] = {}  # Key: period
 
+        # Decorated `read_single_object` to set exception to object.
+        setattr(self, "read_single_object", self._set_exception(self.read_single_object))
+        # Decorated `write_single_object` to check object type.
+        setattr(
+            self,
+            "write_single_object",
+            self._check_output_object_type(self.write_single_object),
+        )
+
         # todo: Refactor: use priority queue?
         # Decorated read methods with priority.
         # They should be executed after write in `write_with_check` method without delays.
@@ -192,30 +201,13 @@ class AbstractBasePollingDevice(BaseDevice, ABC):
                 polled_objs.extend(list(result))
         return polled_objs
 
-    @staticmethod
-    def _check_write_object_type(output_obj: BACnetObj) -> None:
-        """
-        Raises:
-            ValueError: If object cannot be writen.
-
-        Note: Should be used in write methods.
-
-        # fixme: Put in to only `BasePollingDevice`.
-        """
-        if output_obj.object_type not in OUTPUT_TYPES:
-            raise ValueError(
-                "Cannot write object. "
-                f"Expected object type one of: {OUTPUT_TYPES}. "
-                f"Got `{output_obj.object_type}`"
-            )
-
     @abstractmethod
     async def read_single_object(self, *, obj: BACnetObj, **kwargs: Any) -> BACnetObj:
         """Reads properties of single object."""
 
     @abstractmethod
     async def write_single_object(
-        self, value: int | float | str, obj: BACnetObj, **kwargs: Any
+        self, value: int | float | str, *, obj: BACnetObj, **kwargs: Any
     ) -> None:
         """Writes property to single object."""
 
@@ -254,11 +246,7 @@ class AbstractBasePollingDevice(BaseDevice, ABC):
         Returns:
             Verified output object instance | tuple of two verified object instances:
             output and mapped input.
-
-        Raises:
-            Please, see possible exceptions at `self._check_write_object_type`.
         """
-        self._check_write_object_type(output_obj=output_obj)
 
         await self.write_single_object(value=value, obj=output_obj, **kwargs)
         # Several devices process write requests with delay.
@@ -400,6 +388,45 @@ class AbstractBasePollingDevice(BaseDevice, ABC):
         return verified_objects
 
     @staticmethod
+    def _set_exception(func: Callable[..., Awaitable]) -> Callable[..., Awaitable]:
+        """Decorated read methods to set exceptions to object if they occurs."""
+
+        @wraps(func)
+        async def async_wrapper(*args: Any, **kwargs: Any) -> Any:
+            try:
+                return await func(*args, **kwargs)
+            except Exception as exc:  # pylint: disable=broad-except
+                obj: BACnetObj = kwargs["obj"]
+                obj.set_property(value=exc)
+
+        return async_wrapper
+
+    @staticmethod
+    def _check_output_object_type(
+        func: Callable[..., Awaitable]
+    ) -> Callable[..., Awaitable]:
+        """
+        Raises:
+            ValueError: If object cannot be writen.
+
+        Note: Should be used in write methods.
+
+        # fixme: Put in to only `BasePollingDevice`.
+        """
+
+        @wraps(func)
+        async def async_wrapper(*args: Any, **kwargs: Any) -> Any:
+            # pylint: disable=unused-argument
+            obj = kwargs["obj"]
+            if obj.object_type not in OUTPUT_TYPES:
+                raise ValueError(
+                    f"Cannot write object. Expected object type one of: {OUTPUT_TYPES}. "
+                    f"Got `{obj.object_type}`"
+                )
+
+        return async_wrapper
+
+    @staticmethod
     def _wait_access(func: Callable | Callable[..., Awaitable]) -> Callable[..., Awaitable]:
         @wraps(func)
         async def wrapper(
@@ -438,17 +465,3 @@ class AbstractBasePollingDevice(BaseDevice, ABC):
             return result
 
         return sync_wrapper
-
-    # @staticmethod
-    # def _set_exception(func: Callable[..., Awaitable]) -> Any:
-    #     """Decorated read methods to set exceptions to object if they occurs."""
-    #
-    #     @wraps(func)
-    #     async def wrapper(*args: Any, **kwargs: Any) -> Any:
-    #         try:
-    #             return await func(*args, **kwargs)
-    #         except Exception as exc:  # pylint: disable=broad-except
-    #             obj: BACnetObj = kwargs["obj"]
-    #             obj.set_property(value=exc)
-    #
-    #     return wrapper

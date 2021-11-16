@@ -213,11 +213,10 @@ class BACnetDevice(AbstractBasePollingDevice, BACnetCoderMixin):
     async def write_single_object(
         self,
         value: int | float | str,
+        *,
         obj: BACnetObj,
         **kwargs: Any,
     ) -> None:
-        self._check_write_object_type(output_obj=obj)
-
         prop = kwargs["prop"]
         priority = kwargs["priority"]
         await self._gateway.async_add_job(self._write_property, value, obj, prop, priority)
