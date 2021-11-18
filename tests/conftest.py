@@ -1,6 +1,7 @@
 import json
 from typing import Callable, Any
 
+from visiobas_gateway.schemas import ModbusObj
 from visiobas_gateway.schemas.bacnet.base_obj import BaseBACnetObj
 from visiobas_gateway.schemas.bacnet.device_property_list import (
     BaseDevicePropertyList,
@@ -253,7 +254,7 @@ def modbus_properties_factory() -> Callable[..., ModbusProperties]:
     """
 
     def _factory(**kwargs):
-        kwargs = _modbus_properties_kwargs(kwargs)
+        kwargs = _modbus_obj_properties_kwargs(kwargs)
         return ModbusProperties(**kwargs)
 
     return _factory
@@ -271,6 +272,22 @@ def bacnet_obj_factory() -> Callable[..., BACnetObj]:
     def _factory(**kwargs):
         kwargs = _bacnet_obj_kwargs(kwargs)
         return BACnetObj(**kwargs)
+
+    return _factory
+
+
+@pytest.fixture
+def modbus_obj_factory() -> Callable[..., ModbusObj]:
+    """
+    Produces `ModbusObj` for tests.
+
+    You can pass the same params into this as the `ModbusObj` constructor to
+    override defaults.
+    """
+
+    def _factory(**kwargs):
+        kwargs = _modbus_obj_kwargs(kwargs)
+        return ModbusObj(**kwargs)
 
     return _factory
 
@@ -484,7 +501,7 @@ def _serial_device_obj_kwargs(kwargs: dict[str, Any]) -> dict[str, Any]:
     return kwargs
 
 
-def _modbus_properties_kwargs(kwargs: dict[str, Any]) -> dict[str, Any]:
+def _modbus_obj_properties_kwargs(kwargs: dict[str, Any]) -> dict[str, Any]:
     kwargs = {
         "address": 11,
         "quantity": 2,
@@ -502,6 +519,20 @@ def _modbus_properties_kwargs(kwargs: dict[str, Any]) -> dict[str, Any]:
 def _bacnet_obj_kwargs(kwargs: dict[str, Any]) -> dict[str, Any]:
     kwargs = {
         **_base_bacnet_obj_kwargs(kwargs),
+        "103": "no-fault-detected",
+        "106": None,
+        "111": [False, False, False, False],
+        "85": 85.8585,
+        "timestamp": "2011-11-11 11:11:11",
+        **kwargs,
+    }
+    return kwargs
+
+
+def _modbus_obj_kwargs(kwargs: dict[str, Any]) -> dict[str, Any]:
+    kwargs = {
+        **_base_bacnet_obj_kwargs(kwargs),
+        "371": json.dumps({'modbus': _modbus_obj_properties_kwargs(kwargs)}),
         "103": "no-fault-detected",
         "106": None,
         "111": [False, False, False, False],
