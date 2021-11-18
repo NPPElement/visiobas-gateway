@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from ipaddress import IPv4Address
-from typing import Any, Callable, Sequence
+from typing import Any, Callable, Iterator, Sequence
 
 from pymodbus.client.sync import ModbusSerialClient, ModbusTcpClient  # type: ignore
 from pymodbus.exceptions import ModbusException, ModbusIOException  # type: ignore
@@ -147,6 +147,9 @@ class ModbusDevice(AbstractBasePollingDevice, ModbusCoderMixin):
         obj.set_property(value=value)
         return obj
 
+    def _sync_read_multiple(self, objs: Sequence[ModbusObj]):
+        pass
+
     async def write_single_object(
         self, value: int | float | str, *, obj: BACnetObj, **kwargs: Any
     ) -> None:
@@ -183,3 +186,32 @@ class ModbusDevice(AbstractBasePollingDevice, ModbusCoderMixin):
         if resp.isError():
             raise ModbusIOException(resp.string)
         self._LOG.debug("Successfully write", extra={"object": obj, "value": value})
+
+    @staticmethod
+    def _get_chunk_for_multiple(objs: Sequence[BACnetObj]) -> Iterator:
+        # Sorting Modbus objects by register address
+        objs = sorted(objs, key=lambda x: x.address)
+
+        obj_per_request = []
+        next_register: int | None = None
+        register_counter = 0
+
+        for obj in objs:
+            obj: ModbusObj
+
+            is_oversize = (register_counter + obj.quantity) > _MAX_REGISTERS_IN_ONE_REQUEST
+            has_next = next_register is None or next_register == obj.address
+
+            if is_oversize or not has_next:
+                yield obj_per_request
+                next_register = None
+                register_counter = 0
+                obj_per_request = []
+            else:
+                next_register = obj.address + obj.quantity
+                register_counter += obj.quantity
+                obj_per_request.append(obj)
+
+
+
+
