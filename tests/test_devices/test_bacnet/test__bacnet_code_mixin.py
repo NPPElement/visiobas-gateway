@@ -4,7 +4,6 @@ from bacpypes.basetypes import PriorityArray, PriorityValue
 from bacpypes.primitivedata import Null
 
 from visiobas_gateway.devices.bacnet._bacnet_coder_mixin import BACnetCoderMixin
-from visiobas_gateway.schemas import BACnetObj
 
 
 class TestBACnetCoderMixin:
