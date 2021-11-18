@@ -142,9 +142,9 @@ class ModbusDevice(AbstractBasePollingDevice, ModbusCoderMixin):
         )
         if resp.isError():
             raise ModbusIOException(resp.string)
-        else:
-            value = self._decode_response(resp=resp, obj=obj)
-            obj.set_property(value=value)
+
+        value = self._decode_response(resp=resp, obj=obj)
+        obj.set_property(value=value)
         return obj
 
     async def write_single_object(
@@ -169,8 +169,9 @@ class ModbusDevice(AbstractBasePollingDevice, ModbusCoderMixin):
 
         payload = self._build_payload(value=value, obj=obj)
 
-        if obj.func_write is ModbusWriteFunc.WRITE_REGISTER and isinstance(payload,
-                                                                           Sequence):
+        if obj.func_write is ModbusWriteFunc.WRITE_REGISTER and isinstance(
+            payload, Sequence
+        ):
             assert len(payload) == 1  # FIXME: hotfix
             payload = payload[0]  # type: ignore
 
