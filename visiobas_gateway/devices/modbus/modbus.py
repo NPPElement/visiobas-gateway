@@ -147,7 +147,7 @@ class ModbusDevice(AbstractBasePollingDevice, ModbusCoderMixin):
         obj.set_property(value=value)
         return obj
 
-    def _sync_read_multiple(self, objs: Sequence[ModbusObj]):
+    def _sync_read_multiple(self, objs: Sequence[ModbusObj]) -> Sequence[ModbusObj]:
         pass
 
     async def write_single_object(
@@ -190,14 +190,16 @@ class ModbusDevice(AbstractBasePollingDevice, ModbusCoderMixin):
     @staticmethod
     def _get_chunk_for_multiple(objs: Sequence[BACnetObj]) -> Iterator:
         # Sorting Modbus objects by register address
-        objs = sorted(objs, key=lambda x: x.address)
 
-        obj_per_request = []
+        objs = sorted(objs, key=lambda x: x.address)  # type: ignore
+
+        obj_per_request: list[ModbusObj] = []
         next_register: int | None = None
         register_counter = 0
 
         for obj in objs:
-            obj: ModbusObj
+            if not isinstance(obj, ModbusObj):
+                raise ValueError(f"`obj` must be `ModbusObj`. Got {type(obj)}")
 
             is_oversize = (register_counter + obj.quantity) > _MAX_REGISTERS_IN_ONE_REQUEST
             has_next = next_register is None or next_register == obj.address
@@ -211,7 +213,3 @@ class ModbusDevice(AbstractBasePollingDevice, ModbusCoderMixin):
                 next_register = obj.address + obj.quantity
                 register_counter += obj.quantity
                 obj_per_request.append(obj)
-
-
-
-

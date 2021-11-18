@@ -11,10 +11,11 @@ class TestModbusDevice:
         ],
     )
     def test__get_chunk_for_multiple(
-            self, modbus_obj_factory, register_sequence, quantity, objs_per_chunks
+        self, modbus_obj_factory, register_sequence, quantity, objs_per_chunks
     ):
         objs = [
-            modbus_obj_factory(address=register, quantity=quantity) for register in register_sequence
+            modbus_obj_factory(address=register, quantity=quantity)
+            for register in register_sequence
         ]
         for chunk, chunk_len in zip(
             ModbusDevice._get_chunk_for_multiple(objs=objs), objs_per_chunks

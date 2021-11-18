@@ -532,7 +532,7 @@ def _bacnet_obj_kwargs(kwargs: dict[str, Any]) -> dict[str, Any]:
 def _modbus_obj_kwargs(kwargs: dict[str, Any]) -> dict[str, Any]:
     kwargs = {
         **_base_bacnet_obj_kwargs(kwargs),
-        "371": json.dumps({'modbus': _modbus_obj_properties_kwargs(kwargs)}),
+        "371": json.dumps({"modbus": _modbus_obj_properties_kwargs(kwargs)}),
         "103": "no-fault-detected",
         "106": None,
         "111": [False, False, False, False],
