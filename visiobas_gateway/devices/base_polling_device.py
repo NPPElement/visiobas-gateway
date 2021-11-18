@@ -183,21 +183,25 @@ class AbstractBasePollingDevice(BaseDevice, ABC):
             else:
                 single_objs.append(obj)
 
-        group_multiple = [
-            self.read_multiple_objects(objs=objs)
-            for objs in self._get_chunk_for_multiple(objs=multiple_objs)
-        ]
+        chunked_objs: list[Sequence[BACnetObj]] = []
+        for chunk in self._get_chunk_for_multiple(objs=multiple_objs):
+            if len(chunk) == 1:
+                single_objs.append(chunk[0])
+            else:
+                chunked_objs.append(chunk)
+
         group_single = [self.read_single_object(obj=obj) for obj in single_objs]
+        group_multiple = [self.read_multiple_objects(objs=objs) for objs in chunked_objs]
 
         results = await asyncio.gather(*group_multiple, *group_single)
 
         polled_objs: list[BACnetObj] = []
         for result in results:
-            if isinstance(result, BaseException):
-                pass
-            elif isinstance(result, BACnetObj):
+            # if isinstance(result, BaseException):
+            #     continue
+            if isinstance(result, BACnetObj):
                 polled_objs.append(result)
-            else:
+            elif isinstance(result, Sequence):
                 polled_objs.extend(list(result))
         return polled_objs
 
