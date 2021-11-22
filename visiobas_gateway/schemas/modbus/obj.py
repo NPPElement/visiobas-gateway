@@ -6,7 +6,7 @@ from ..bacnet.obj import BACnetObj
 from ..bacnet.obj_property import ObjProperty
 from .data_type import ModbusDataType
 from .endian import Endian
-from .func_code import READ_COIL_FUNCS, READ_REGISTER_FUNCS, ModbusReadFunc, ModbusWriteFunc
+from .func_code import READ_BITS_FUNCS, READ_REGISTER_FUNCS, ModbusReadFunc, ModbusWriteFunc
 from .obj_property_list import ModbusPropertyList
 
 
@@ -57,7 +57,7 @@ class ModbusObj(BACnetObj):
 
     @property
     def is_coil(self) -> bool:
-        return self.func_read in READ_COIL_FUNCS
+        return self.func_read in READ_BITS_FUNCS
 
     @property
     def func_read(self) -> ModbusReadFunc:
