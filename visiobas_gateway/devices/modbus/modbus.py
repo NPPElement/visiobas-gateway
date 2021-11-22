@@ -206,10 +206,11 @@ class ModbusDevice(AbstractBasePollingDevice, ModbusCoderMixin):
 
             if is_oversize or not has_next:
                 yield obj_per_request
-                next_register = None
-                register_counter = 0
-                obj_per_request = []
+                next_register = obj.address + obj.quantity
+                register_counter = obj.quantity
+                obj_per_request = [obj]
             else:
                 next_register = obj.address + obj.quantity
                 register_counter += obj.quantity
                 obj_per_request.append(obj)
+        yield obj_per_request
