@@ -17,7 +17,7 @@ READ_REGISTER_FUNCS = {
     ModbusReadFunc.READ_HOLDING_REGISTERS,
     ModbusReadFunc.READ_INPUT_REGISTERS,
 }
-READ_COIL_FUNCS = {
+READ_BITS_FUNCS = {
     ModbusReadFunc.READ_COILS,
     ModbusReadFunc.READ_DISCRETE_INPUTS,
 }
@@ -37,7 +37,7 @@ WRITE_REGISTER_FUNCS = {
     ModbusWriteFunc.WRITE_REGISTER,
     ModbusWriteFunc.WRITE_REGISTERS,
 }
-WRITE_COIL_FUNCS = {
+WRITE_BITS_FUNCS = {
     ModbusWriteFunc.WRITE_COIL,
     ModbusWriteFunc.WRITE_COILS,
 }
