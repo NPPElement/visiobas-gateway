@@ -143,12 +143,34 @@ class ModbusDevice(AbstractBasePollingDevice, ModbusCoderMixin):
         if resp.isError():
             raise ModbusIOException(resp.string)
 
-        value = self._decode_response(resp=resp, obj=obj)
+        value = self._decode_response(response=resp, objs=obj)
         obj.set_property(value=value)
         return obj
 
+    async def read_multiple_objects(
+        self, objs: Sequence[BACnetObj], **kwargs: Any
+    ) -> Sequence[BACnetObj]:
+        return self._sync_read_multiple(objs=objs)  # type: ignore
+
     def _sync_read_multiple(self, objs: Sequence[ModbusObj]) -> Sequence[ModbusObj]:
-        pass
+        if not objs:
+            raise ValueError("Expected objects to poll.")
+
+        count = sum([obj.quantity for obj in objs])
+        start_obj = objs[0]
+
+        resp = self.read_funcs[start_obj.func_read](
+            address=start_obj.address,
+            count=count,
+            unit=self._device_obj.property_list.rtu.unit,  # type: ignore
+        )
+        if resp.isError():
+            raise ModbusIOException(resp.string)
+
+        values = self._decode_response(response=resp, objs=objs)
+        for obj, value in zip(objs, values):
+            obj.set_property(value=value)
+        return objs
 
     async def write_single_object(
         self, value: int | float | str, *, obj: BACnetObj, **kwargs: Any
@@ -187,6 +209,11 @@ class ModbusDevice(AbstractBasePollingDevice, ModbusCoderMixin):
             raise ModbusIOException(resp.string)
         self._LOG.debug("Successfully write", extra={"object": obj, "value": value})
 
+    async def write_multiple_objects(
+        self, values: list[int | float | str], objs: Sequence[BACnetObj]
+    ) -> None:
+        raise NotImplementedError  # not used now
+
     @staticmethod
     def _get_chunk_for_multiple(objs: Sequence[BACnetObj]) -> Iterator:
         # Sorting Modbus objects by register address
@@ -195,7 +222,8 @@ class ModbusDevice(AbstractBasePollingDevice, ModbusCoderMixin):
 
         obj_per_request: list[ModbusObj] = []
         next_register: int | None = None
-        register_counter = 0
+        register_counter: int = 0
+        current_modbus_func: ModbusReadFunc | None = None
 
         for obj in objs:
             if not isinstance(obj, ModbusObj):
@@ -203,13 +231,16 @@ class ModbusDevice(AbstractBasePollingDevice, ModbusCoderMixin):
 
             is_oversize = (register_counter + obj.quantity) > _MAX_REGISTERS_IN_ONE_REQUEST
             has_next = next_register is None or next_register == obj.address
+            same_func = current_modbus_func is None or current_modbus_func == obj.func_read
 
-            if is_oversize or not has_next:
+            if is_oversize or not has_next or not same_func:
                 yield obj_per_request
+                current_modbus_func = None
                 next_register = obj.address + obj.quantity
                 register_counter = obj.quantity
                 obj_per_request = [obj]
             else:
+                current_modbus_func = obj.func_read
                 next_register = obj.address + obj.quantity
                 register_counter += obj.quantity
                 obj_per_request.append(obj)
