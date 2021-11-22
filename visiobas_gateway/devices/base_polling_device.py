@@ -414,8 +414,6 @@ class AbstractBasePollingDevice(BaseDevice, ABC):
             ValueError: If object cannot be writen.
 
         Note: Should be used in write methods.
-
-        # fixme: Put in to only `BasePollingDevice`.
         """
 
         @wraps(func)

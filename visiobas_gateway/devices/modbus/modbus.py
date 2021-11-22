@@ -78,8 +78,7 @@ class ModbusDevice(AbstractBasePollingDevice, ModbusCoderMixin):
                 retry_on_invalid=True,
                 timeout=device_obj.property_list.timeout_seconds,
             )
-            return client
-        if device_obj.property_list.protocol is Protocol.MODBUS_RTU:
+        elif device_obj.property_list.protocol is Protocol.MODBUS_RTU:
             client = ModbusSerialClient(
                 method="rtu",
                 port=device_obj.property_list.rtu.port,  # type: ignore
@@ -89,8 +88,20 @@ class ModbusDevice(AbstractBasePollingDevice, ModbusCoderMixin):
                 stopbits=device_obj.property_list.rtu.stopbits,  # type: ignore
                 timeout=device_obj.property_list.timeout_seconds,
             )
-            return client
-        raise NotImplementedError("Other Modbus variants not supported yet")
+        else:
+            raise NotImplementedError("Other Modbus variants not supported yet")
+
+        # Setting client for using properties `read_funcs`, `write_funcs`.
+        self.interface.client = client
+
+        # Decorating write methods for priority access.
+        for write_method in self.read_funcs.values():
+            client = AbstractBasePollingDevice._acquire_access(write_method)
+        # Read methods must execute after write requests.
+        for read_method in self.write_funcs.values():
+            client = AbstractBasePollingDevice._wait_access(read_method)
+
+        return client
 
     @property
     def is_client_connected(self) -> bool:
