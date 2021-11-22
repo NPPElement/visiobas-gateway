@@ -1,4 +1,4 @@
-# FIXME: Outdated script! Will be updated soon.
+#!/bin/bash
 
 # Updates packages
 sudo apt --assume-yes update
@@ -6,7 +6,7 @@ sudo apt --assume-yes upgrade
 
 # Install required applications
 sudo apt --assume-yes install docker docker.io
-sudo apt --assume-yes install htop mc curl
+sudo apt --assume-yes install curl
 sudo apt --assume-yes install git
 sudo apt --assume-yes install python3
 sudo apt --assume-yes install python3-pip
