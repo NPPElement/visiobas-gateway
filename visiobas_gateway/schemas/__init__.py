@@ -27,9 +27,9 @@ from .modbus.device_property_list import (
 from .modbus.device_rtu_properties import DeviceRtuProperties
 from .modbus.endian import Endian
 from .modbus.func_code import (
-    READ_COIL_FUNCS,
+    READ_BITS_FUNCS,
     READ_REGISTER_FUNCS,
-    WRITE_COIL_FUNCS,
+    WRITE_BITS_FUNCS,
     WRITE_REGISTER_FUNCS,
     ModbusReadFunc,
     ModbusWriteFunc,
@@ -68,10 +68,10 @@ __all__ = [
     "ModbusSerialDeviceObj",
     "ModbusReadFunc",
     "ModbusWriteFunc",
-    "WRITE_COIL_FUNCS",
+    "WRITE_BITS_FUNCS",
     "WRITE_REGISTER_FUNCS",
     "READ_REGISTER_FUNCS",
-    "READ_COIL_FUNCS",
+    "READ_BITS_FUNCS",
     "ModbusObj",
     "ModbusDataType",
     "Parity",
