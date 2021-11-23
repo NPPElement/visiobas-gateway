@@ -3,7 +3,7 @@ version: "3.7"
 services:
   vb_gateway:
     container_name: visiobas_gateway
-    image: visiobas-gateway:develop
+    image: mtovts/visiobas-gateway:latest
     logging:
       #driver: none
       driver: "json-file"
