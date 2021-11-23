@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # To install visiobas-gateway run:
-# curl -sSL https://github.com/NPPElement/visiobas-gateway/tree/main/run/install.sh | bash -
+# curl -sSL https://raw.githubusercontent.com/NPPElement/visiobas-gateway/feat/install-script/run/install.sh | bash -
 
 if [ "$EUID" -ne 0 ]; then
     printf "Must be run as root\n"
@@ -14,7 +14,7 @@ apt-get install -y python3 python3-dev python3-setuptools libssl-dev curl
 /usr/lib/python3/dist-packages/easy_install.py pip
 python3 -m pip install --upgrade pip
 
-curl -sSL https://github.com/NPPElement/visiobas-gateway/tree/main/run/install.py | python3 -
+curl -sSL https://raw.githubusercontent.com/NPPElement/visiobas-gateway/feat/install-script/run/install.py | python3 -
 
 
 # Updates packages
