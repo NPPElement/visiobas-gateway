@@ -4,9 +4,10 @@ import os
 from pathlib import Path
 import requests
 import pip
+import subprocess
 
-UNAME_TYPE = os.system('uname -m')
-MACHINE_TYPE = os.system('dpkg --print-architecture')
+UNAME_TYPE = subprocess.run(['uname', '-m'], capture_output=True).stdout.decode().strip('\n')
+MACHINE_TYPE = subprocess.run(['dpkg', '--print-architecture'], capture_output=True).stdout.decode().strip('\n')
 
 INSTALL_DIRECTORY = Path('/opt/visiobas-gateway')
 INSTALL_DIRECTORY.mkdir(exist_ok=True)
