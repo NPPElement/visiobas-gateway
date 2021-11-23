@@ -120,11 +120,11 @@ if __name__ == '__main__':
 
         print('\nDownloading `%s`\n' % DOCKER_COMPOSE_YAML_PATH)
         installer.download_file(
-            url="https://github.com/NPPElement/visiobas-gateway/tree/main/docker-compose.yaml",
+            url="https://raw.githubusercontent.com/NPPElement/visiobas-gateway/main/docker-compose.yaml",
             path=DOCKER_COMPOSE_YAML_PATH
         )
 
-        print('\nPulling docker image\n'.upper())
+        print('\nPulling docker image\n')
         installer.run_cmd_with_check('docker pull mtovts/visiobas-gateway:latest')
 
         print('\nDownloading `%s`\n' % ENV_CONFIG_PATH)
