@@ -1,4 +1,4 @@
-FROM python:3.9
+FROM balenalib/raspberry-pi-debian-python:latest
 
 WORKDIR /visiobas_gateway/
 
