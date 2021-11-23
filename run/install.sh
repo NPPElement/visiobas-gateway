@@ -9,7 +9,7 @@ if [ "$EUID" -ne 0 ]; then
 fi
 
 apt-get update -y
-apt-get install -y python3 python3-dev python3-setuptools libssl-dev
+apt-get install -y python3 python3-dev python3-setuptools libssl-dev curl
 
 /usr/lib/python3/dist-packages/easy_install.py pip
 python3 -m pip install --upgrade pip
