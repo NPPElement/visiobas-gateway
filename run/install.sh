@@ -4,7 +4,7 @@
 # curl -sSL https://raw.githubusercontent.com/NPPElement/visiobas-gateway/feat/install-script/run/install.sh | bash -
 
 if [ "$EUID" -ne 0 ]; then
-    printf "Must be run as root\n"
+    printf "Must be run as root.\n"
     exit 1
 fi
 
@@ -13,6 +13,7 @@ apt-get install -y python3 python3-dev python3-setuptools libssl-dev curl
 
 /usr/lib/python3/dist-packages/easy_install.py pip
 python3 -m pip install --upgrade pip
+python3 -m pip install requests
 
 curl -sSL https://raw.githubusercontent.com/NPPElement/visiobas-gateway/feat/install-script/run/install.py | python3 -
 

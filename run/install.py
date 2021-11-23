@@ -101,7 +101,7 @@ class Installer:
 
 if __name__ == '__main__':
     if os.geteuid() != 0:
-        exit("Please run as root.")
+        exit("Must be run as root.\n")
 
     installer = Installer()
 
