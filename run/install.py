@@ -110,26 +110,26 @@ if __name__ == '__main__':
 
         installer.run_cmd_with_check('apt-get update -y')
 
-        print('Installing Docker engine')
+        print('\nInstalling Docker engine\n'.upper())
         installer.install_docker_engine()
 
-        print('Installing docker-compose')
+        print('\nInstalling docker-compose\n'.upper())
         installer.install_docker_compose()
 
-        print('All dependencies installed.')
+        print('\nAll dependencies installed\n')
 
-        print('Downloading `%s`' % DOCKER_COMPOSE_YAML_PATH)
+        print('\nDownloading `%s`\n' % DOCKER_COMPOSE_YAML_PATH)
         installer.download_file(
             url="https://github.com/NPPElement/visiobas-gateway/tree/main/docker-compose.yaml",
             path=DOCKER_COMPOSE_YAML_PATH
         )
 
-        print('Pulling docker image')
+        print('\nPulling docker image\n'.upper())
         installer.run_cmd_with_check('docker pull mtovts/visiobas-gateway:latest')
 
-        print('Downloading `%s`' % ENV_CONFIG_PATH)
+        print('\nDownloading `%s`\n' % ENV_CONFIG_PATH)
         installer.download_file(
-            url="https://github.com/NPPElement/visiobas-gateway/tree/main/config/template.env",
+            url="https://raw.githubusercontent.com/NPPElement/visiobas-gateway/main/config/template.env",
             path=ENV_CONFIG_PATH
         )
 
@@ -137,8 +137,8 @@ if __name__ == '__main__':
             '''
             INSTALLATION COMPLETE
             ---------------------
-            Please, configure gateway in` %s`
-            Then run `docker-compose up`
+            Please, configure gateway in `%s`
+            Then run `docker-compose up` from /opt/visiobas-gateway
             ''' % CONFIG_DIRECTORY
         )
     except Exception as exc:

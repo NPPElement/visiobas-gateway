@@ -46,19 +46,8 @@ curl --header "Content-Type: application/json" \
 
 ## Installation
 
-### a. [Install Docker](https://docs.docker.com/engine/install/)
-
-### b. [Install Docker Compose](https://docs.docker.com/compose/install/)
-
-### c. Install VisioBAS Gateway
-
 ```shell
-cd /opt
-sudo git clone https://github.com/NPPElement/visiobas-gateway
-cd /opt/visiobas-gateway
-
-# Configure visiobas_gateway now. Then:
-. run/install.sh
+curl -sSL https://raw.githubusercontent.com/NPPElement/visiobas-gateway/main/run/install.sh | bash -
 ```
 
 ## Setting
@@ -75,9 +64,7 @@ Configuration can be changed in file:
 
 ### Objects configuration
 
-[/docs](/docs) contains JSON-schema definitions for used `pydantic` models. 
-
-[~~/docs/properties.md~~](/docs/properties.md) (Outdated & will be removed soon).
+[/docs](/docs) contains JSON-schema definitions for used `pydantic` models.
 
 ### Setting Serial ports
 
@@ -101,7 +88,7 @@ id username # check user\group info
 
 To launch on the same machine
 with [VisioBAS system](https://github.com/NPPElement/visiobas-broker) - add
-in `docker-compose.yaml` the following network settings (commented now):
+in `docker-compose.yaml` the following network settings:
 
 ```yml
     networks:
