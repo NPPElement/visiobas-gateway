@@ -1,4 +1,4 @@
-FROM balenalib/raspberry-pi-debian-python:latest
+FROM python:3.9
 
 WORKDIR /visiobas_gateway/
 
@@ -6,7 +6,7 @@ WORKDIR /visiobas_gateway/
 RUN apt-get update && apt-get install -y iputils-ping
 
 # Install Poetry
-RUN curl -sSL https://install.python-poetry.org | python -
+RUN curl -sSL https://install.python-poetry.org | python3 -
 
 
 # Copy poetry.lock* in case it doesn't exist in the repo
