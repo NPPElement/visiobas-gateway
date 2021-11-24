@@ -54,20 +54,20 @@ UNAME_TYPE = run_cmd_with_output(["uname", "-m"])
 MACHINE_TYPE = run_cmd_with_output(["dpkg", "--print-architecture"])
 
 # PATHS
+DOCKER_COMPOSE_NAME = "docker-compose.yaml"
 INSTALL_DIRECTORY = Path("/opt/visiobas-gateway")
 INSTALL_DIRECTORY.mkdir(exist_ok=True)
 
 CONFIG_DIRECTORY = INSTALL_DIRECTORY / "config"
 CONFIG_DIRECTORY.mkdir(exist_ok=True)
 
-DOCKER_COMPOSE_YAML_PATH = INSTALL_DIRECTORY / "docker-compose.yaml"
+DOCKER_COMPOSE_YAML_PATH = INSTALL_DIRECTORY / DOCKER_COMPOSE_NAME
 DOCKER_COMPOSE_YAML_ORIGINAL_PATH = INSTALL_DIRECTORY / "docker-compose-original.yaml"
 ENV_CONFIG_PATH = CONFIG_DIRECTORY / ".env"
 
 DOCKER_IMAGE = "mtovts/visiobas-gateway:latest"
 DOCKER_COMPOSE_GATEWAY_ALIAS = "vb_gateway"
 BUILD_CONTEXT = INSTALL_DIRECTORY
-DOCKERFILE_NAME = "DOCKERFILE"
 
 
 class Installer:
@@ -80,6 +80,9 @@ class Installer:
     ]
 
     def install(self):
+        ...  # todo
+
+    def install_with_docker(self):
         try:
             run_cmd_with_check("apt-get update -y")
 
@@ -132,16 +135,16 @@ class Installer:
             yaml.dump(docker_compose_dict, file)
 
         service_section = docker_compose_dict["services"][DOCKER_COMPOSE_GATEWAY_ALIAS]
-        service_section.pop("image")
+        service_section.pop("image")  # Removing image
         service_section["build"] = {
             "context": str(BUILD_CONTEXT),
-            "dockerfile": str(DOCKERFILE_NAME),
-        }
+            "dockerfile": "Dockerfile",
+        }  # Add build
         docker_compose_dict["services"][DOCKER_COMPOSE_GATEWAY_ALIAS] = service_section
 
         print("\nWriting `%s` for build\n" % DOCKER_COMPOSE_YAML_PATH)
         with open(DOCKER_COMPOSE_YAML_PATH, "w") as file:
-            yaml.dump(docker_compose_dict, file)
+            yaml.dump(docker_compose_dict, file, encoding="UTF-8")
 
     def build_gateway_docker_image(self):
         print("\nClone repository to `%s`\n" % INSTALL_DIRECTORY)
@@ -151,6 +154,7 @@ class Installer:
                 "git clone %s %s" % (GATEWAY_REPOSITORY_URL, INSTALL_DIRECTORY)
             )
         except RuntimeError:
+            print("\nRemoving existing `%s`\n" % INSTALL_DIRECTORY)
             run_cmd_with_check("rm -r %s" % INSTALL_DIRECTORY)
             run_cmd_with_check(
                 "git clone %s %s" % (GATEWAY_REPOSITORY_URL, INSTALL_DIRECTORY)
@@ -168,7 +172,7 @@ class Installer:
             Please, configure gateway in `%s`. Then run: 
             `python3 /opt/gtw_installer.py -run`
             """
-            % CONFIG_DIRECTORY
+            % ENV_CONFIG_PATH
         )
 
         # print("\nBuilding image for VisioBAS Gateway.\n")
@@ -237,31 +241,34 @@ class Installer:
 if __name__ == "__main__":
     check_root()
 
+    ARGS = (
+        ("-install", "Installs VisioBAS Gateway without Docker."),
+        (
+            "-install-with-docker",
+            "Installs Docker Engine, docker-compose, VisioBAS " "Gateway.",
+        ),
+        ("-build", "Builds VisioBAS Gateway docker image."),
+        ("-run", "Runs VisioBAS Gateway."),
+    )
     parser = argparse.ArgumentParser(description="VisioBAS Gateway Installer.")
-    parser.add_argument(
-        "-install",
-        help="Installs Docker Engine, docker-compose, VisioBAS Gateway.",
-        action="store_true",  # Default: False
-    )
-    parser.add_argument(
-        "-build",
-        help="Builds VisioBAS Gateway docker image.",
-        action="store_true",  # Default: False
-    )
-    parser.add_argument(
-        "-run",
-        help="Runs VisioBAS Gateway.",
-        action="store_true",  # Default: False
-    )
+    for arg, description in ARGS:
+        parser.add_argument(
+            arg,
+            help=description,
+            action="store_true",  # Default: False
+        )
     args = parser.parse_args()
 
     installer = Installer()
 
     if args.install:
-        installer.install()
+        raise NotImplementedError
+    elif args.install_with_docker:
+        installer.install_with_docker()
     elif args.build:
         installer.build_gateway_docker_image()
     elif args.run:
         installer.run_gateway(docker_compose_path=DOCKER_COMPOSE_YAML_PATH)
     else:
-        exit("Please provide command to run: `-install` | `-build` | `-run`.")
+        available_commands = " | ".join(("`%s`" % cmd for cmd, _ in ARGS))
+        exit("Please provide command to run: %s." % available_commands)
