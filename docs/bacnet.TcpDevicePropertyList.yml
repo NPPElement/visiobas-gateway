@@ -1,3 +1,10 @@
+
+#
+# NOTE: THIS SCHEME IS GENERATED VIA `task docs`
+#
+# PLEASE DO NOT EDIT IT DIRECTLY.
+#
+
 definitions:
   Protocol:
     description: Supported devices protocols.

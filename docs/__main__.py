@@ -7,6 +7,16 @@ import yaml
 from pydantic.main import ModelMetaclass
 
 
+_NOTE_MSG = '''
+#
+# NOTE: THIS SCHEME IS GENERATED VIA `task docs`
+#
+# PLEASE DO NOT EDIT IT DIRECTLY.
+#
+
+'''
+
+
 def _get_pydantic_classes(package_name: str) -> Iterable[ModelMetaclass]:
     """
     Args:
@@ -51,16 +61,13 @@ def _generate_json_schemas(
     for cls in classes:
         if hasattr(cls, "schema_json"):
             file_path = output_dir / (
-                cls.__module__.removeprefix(package_name + ".").rsplit(sep=".", maxsplit=1)[
-                    0
-                ]
-                + "."
-                + cls.__name__
-                + ".yml"
+                cls.__module__.removeprefix(
+                    package_name + "."
+                ).rsplit(sep=".", maxsplit=1)[0] + "." + cls.__name__ + ".yml"
             )
-
             data = json.loads(cls.schema_json())
             with open(file_path, "w") as file:
+                file.write(_NOTE_MSG)
                 yaml.dump(data, file)
 
 

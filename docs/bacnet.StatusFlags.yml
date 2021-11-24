@@ -1,3 +1,10 @@
+
+#
+# NOTE: THIS SCHEME IS GENERATED VIA `task docs`
+#
+# PLEASE DO NOT EDIT IT DIRECTLY.
+#
+
 description: Represent Combination of 4 `StatusFlag`.
 properties:
   flags:
