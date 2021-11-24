@@ -15,8 +15,9 @@ apt-get install -y python3 python3-dev python3-setuptools libffi-dev libssl-dev 
 # /usr/lib/python3/dist-packages/easy_install.py pip
 python3 -m pip install --upgrade pip
 
-export PYTHONPATH=/opt/visiobas-gateway/run/.
-curl -sSL https://raw.githubusercontent.com/NPPElement/visiobas-gateway/main/run/install.py | python3 -
+curl -sSL https://raw.githubusercontent.com/NPPElement/visiobas-gateway/main/run/gtw_installer.py -o /opt/gtw_installer.py
+python3 /opt/gtw_installer.py install
+
 
 # Install docker-compose from VisioBAS Cloud
 #DESTINATION=/usr/bin/docker-compose
@@ -28,8 +29,7 @@ curl -sSL https://raw.githubusercontent.com/NPPElement/visiobas-gateway/main/run
 #docker-compose --version
 
 # Install Poetry
-#sudo curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry
-#.py | python3 -
+# OUTDATED CMD HAS BEEN REMOVED
 
 # Install visiobas_gateway
 #cd /opt/visiobas-gateway

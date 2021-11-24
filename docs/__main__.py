@@ -52,10 +52,8 @@ def _generate_json_schemas(
     output_dir: Path, classes: Iterable[ModelMetaclass], package_name: str
 ) -> None:
     """Writes JSON-schemas for classes in YAML."""
-    try:
-        output_dir.mkdir()
-    except FileExistsError:
-        pass
+    # FIXME: remove existing schemas
+    output_dir.mkdir(exist_ok=True)
 
     for cls in classes:
         if hasattr(cls, "schema_json"):
