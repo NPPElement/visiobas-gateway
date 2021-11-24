@@ -220,19 +220,16 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="VisioBAS Gateway Installer.")
     parser.add_argument(
         "install",
-        type=bool,
         help="Installs Docker Engine, docker-compose, VisioBAS Gateway.",
         action="store_true",  # Default: False
     )
     parser.add_argument(
         "build",
-        type=bool,
         help="Builds VisioBAS Gateway docker image.",
         action="store_true",  # Default: False
     )
     parser.add_argument(
         "run",
-        type=bool,
         help="Runs VisioBAS Gateway.",
         action="store_true",  # Default: False
     )
