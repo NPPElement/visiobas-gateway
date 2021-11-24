@@ -104,7 +104,7 @@ class Installer:
                 INSTALLATION COMPLETE
                 ---------------------
                 Please, configure gateway in `%s`. Then run: 
-                `python3 /opt/gtw_installer.py run`
+                `python3 /opt/gtw_installer.py -run`
                 """
                 % CONFIG_DIRECTORY
             )
@@ -144,8 +144,18 @@ class Installer:
             yaml.dump(docker_compose_dict, file)
 
     def build_gateway_docker_image(self):
+        print('\nClone repository to `%s`\n' % INSTALL_DIRECTORY)
         run_cmd_with_check("apt-get install -y git")
-        run_cmd_with_check("git clone %s" % GATEWAY_REPOSITORY_URL)
+        try:
+            run_cmd_with_check(
+                "git clone %s %s" % (GATEWAY_REPOSITORY_URL, INSTALL_DIRECTORY)
+            )
+        except RuntimeError:
+            run_cmd_with_check("rm -r %s" % INSTALL_DIRECTORY)
+            run_cmd_with_check(
+                "git clone %s %s" % (GATEWAY_REPOSITORY_URL, INSTALL_DIRECTORY)
+            )
+
         pip.main(["install", "pyyaml"])
 
         print("\nModifying `%s` for build.\n" % DOCKER_COMPOSE_YAML_PATH)
@@ -157,17 +167,17 @@ class Installer:
     @staticmethod
     def run_gateway(docker_compose_path: Path):
         try:
-            run_cmd_with_check("docker-compose up %s" % docker_compose_path)
+            run_cmd_with_check("docker-compose -f %s up" % docker_compose_path)
         except RuntimeError:
             message(
                 """
                 RUN FAILED
                 ----------
                 Please, try to build docker image with command:
-                `python3 /opt/gtw_installer.py build`
+                `python3 /opt/gtw_installer.py -build`
                 
                 Then run again:
-                `python3 /opt/gtw_installer.py run`
+                `python3 /opt/gtw_installer.py -run`
                 """
             )
 
@@ -219,17 +229,17 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="VisioBAS Gateway Installer.")
     parser.add_argument(
-        "install",
+        "-install",
         help="Installs Docker Engine, docker-compose, VisioBAS Gateway.",
         action="store_true",  # Default: False
     )
     parser.add_argument(
-        "build",
+        "-build",
         help="Builds VisioBAS Gateway docker image.",
         action="store_true",  # Default: False
     )
     parser.add_argument(
-        "run",
+        "-run",
         help="Runs VisioBAS Gateway.",
         action="store_true",  # Default: False
     )
@@ -244,4 +254,4 @@ if __name__ == "__main__":
     elif args.run:
         installer.run_gateway(docker_compose_path=DOCKER_COMPOSE_YAML_PATH)
     else:
-        exit("Please provide command to run: `install` | `build` | `run`.")
+        exit("Please provide command to run: `-install` | `-build` | `-run`.")

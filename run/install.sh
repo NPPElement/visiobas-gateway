@@ -16,7 +16,7 @@ apt-get install -y python3 python3-dev python3-setuptools libffi-dev libssl-dev 
 python3 -m pip install --upgrade pip
 
 curl -sSL https://raw.githubusercontent.com/NPPElement/visiobas-gateway/main/run/gtw_installer.py -o /opt/gtw_installer.py
-python3 /opt/gtw_installer.py install
+python3 /opt/gtw_installer.py -install
 
 
 # Install docker-compose from VisioBAS Cloud
