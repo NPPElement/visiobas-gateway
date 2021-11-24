@@ -144,7 +144,7 @@ class Installer:
             yaml.dump(docker_compose_dict, file)
 
     def build_gateway_docker_image(self):
-        print('\nClone repository to `%s`\n' % INSTALL_DIRECTORY)
+        print("\nClone repository to `%s`\n" % INSTALL_DIRECTORY)
         run_cmd_with_check("apt-get install -y git")
         try:
             run_cmd_with_check(
@@ -162,7 +162,7 @@ class Installer:
         self.modify_docker_compose_for_build()
 
         print("\nBuilding image for VisioBAS Gateway.\n")
-        run_cmd_with_check("docker-compose build %s" % DOCKER_COMPOSE_YAML_PATH)
+        run_cmd_with_check("docker-compose -f %s build" % DOCKER_COMPOSE_YAML_PATH)
 
     @staticmethod
     def run_gateway(docker_compose_path: Path):
