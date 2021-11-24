@@ -12,9 +12,12 @@ apt-get update -y
 apt-get upgrade -y
 apt-get install -y python3 python3-dev python3-setuptools libffi-dev libssl-dev curl
 
-/usr/lib/python3/dist-packages/easy_install.py pip
+# /usr/lib/python3/dist-packages/easy_install.py pip
 python3 -m pip install --upgrade pip
 
+mkdir "/opt/visiobas-gateway"
+cd /opt/visiobas-gateway || exit
+export PYTHONPATH=.
 curl -sSL https://raw.githubusercontent.com/NPPElement/visiobas-gateway/main/run/install.py | python3 -
 
 # Install docker-compose from VisioBAS Cloud
