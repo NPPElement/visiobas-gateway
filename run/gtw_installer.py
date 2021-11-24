@@ -132,10 +132,10 @@ class Installer:
             yaml.dump(docker_compose_dict, file)
 
         service_section = docker_compose_dict["services"][DOCKER_COMPOSE_GATEWAY_ALIAS]
-        service_section.pop(["image"])
+        service_section.pop("image")
         service_section["build"] = {
-            "context": BUILD_CONTEXT,
-            "dockerfile": DOCKERFILE_NAME,
+            "context": str(BUILD_CONTEXT),
+            "dockerfile": str(DOCKERFILE_NAME),
         }
         docker_compose_dict["services"][DOCKER_COMPOSE_GATEWAY_ALIAS] = service_section
 
@@ -161,13 +161,23 @@ class Installer:
         print("\nModifying `%s` for build.\n" % DOCKER_COMPOSE_YAML_PATH)
         self.modify_docker_compose_for_build()
 
-        print("\nBuilding image for VisioBAS Gateway.\n")
-        run_cmd_with_check("docker-compose -f %s build" % DOCKER_COMPOSE_YAML_PATH)
+        message(
+            """
+            `docker-compose` MODIFIED
+            -------------------------
+            Please, configure gateway in `%s`. Then run: 
+            `python3 /opt/gtw_installer.py -run`
+            """
+            % CONFIG_DIRECTORY
+        )
+
+        # print("\nBuilding image for VisioBAS Gateway.\n")
+        # run_cmd_with_check("docker-compose -f %s build" % DOCKER_COMPOSE_YAML_PATH)
 
     @staticmethod
     def run_gateway(docker_compose_path: Path):
         try:
-            run_cmd_with_check("docker-compose -f %s up" % docker_compose_path)
+            run_cmd_with_check("docker-compose -f %s up --build" % docker_compose_path)
         except RuntimeError:
             message(
                 """
