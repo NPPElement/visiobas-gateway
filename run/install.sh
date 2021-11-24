@@ -9,26 +9,13 @@ if [ "$EUID" -ne 0 ]; then
 fi
 
 apt-get update -y
+apt-get upgrade -y
 apt-get install -y python3 python3-dev python3-setuptools libffi-dev libssl-dev curl
 
 /usr/lib/python3/dist-packages/easy_install.py pip
 python3 -m pip install --upgrade pip
-python3 -m pip install requests
 
 curl -sSL https://raw.githubusercontent.com/NPPElement/visiobas-gateway/main/run/install.py | python3 -
-
-
-# Updates packages
-#sudo apt --assume-yes update
-#sudo apt --assume-yes upgrade
-
-# Install required applications
-#sudo apt --assume-yes install docker docker.io
-#sudo apt --assume-yes install curl
-#sudo apt --assume-yes install git
-#sudo apt --assume-yes install python3
-#sudo apt --assume-yes install python3-pip
-#sudo pip3 install setuptools
 
 # Install docker-compose from VisioBAS Cloud
 #DESTINATION=/usr/bin/docker-compose
@@ -59,9 +46,4 @@ curl -sSL https://raw.githubusercontent.com/NPPElement/visiobas-gateway/main/run
 #sudo cp /opt/visiobas-gateway/config/templates/api.env /opt/visiobas-visiobas_gateway/config/api.env
 
 # Run container
-#sudo docker-compose up --build -d
-#
-#echo '************************************'
-#echo '     VisioBAS Gateway started!'
-#echo '************************************'
-
+# sudo docker-compose up --build -d

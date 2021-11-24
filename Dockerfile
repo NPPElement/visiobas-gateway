@@ -1,4 +1,4 @@
-FROM python:3.9
+FROM python:3.9.9-slim-buster
 
 WORKDIR /visiobas_gateway/
 
@@ -7,7 +7,6 @@ RUN apt-get update && apt-get install -y iputils-ping
 
 # Install Poetry
 RUN curl -sSL https://install.python-poetry.org | python3 -
-
 
 # Copy poetry.lock* in case it doesn't exist in the repo
 COPY ./pyproject.toml ./poetry.lock* /visiobas_gateway/
