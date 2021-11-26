@@ -266,7 +266,10 @@ class Installer(AbstractInstaller):
         )
 
     def run_gateway(self) -> None:
-        run_cmd_with_check("python3 %s/visiobas_gateway" % INSTALL_DIRECTORY)
+        run_cmd_with_check(
+            "systemctl enable %s/run/visiobas_gateway.service" % INSTALL_DIRECTORY
+        )
+        # run_cmd_with_check("python3 %s/visiobas_gateway" % INSTALL_DIRECTORY)
 
 
 if __name__ == "__main__":
