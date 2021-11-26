@@ -8,15 +8,23 @@ if [ "$EUID" -ne 0 ]; then
     exit 1
 fi
 
+VISIOBAS_GATEWAY_PATH="/opt/visiobas-gateway"
+
 apt-get update -y
 apt-get upgrade -y
-apt-get install -y python3 python3-dev python3-setuptools libffi-dev libssl-dev curl
-
-# /usr/lib/python3/dist-packages/easy_install.py pip
+apt-get dist-upgrade -y
+apt-get autoremove -y
+apt-get install -y python3 python3-pip python3-dev python3-setuptools libffi-dev libssl-dev curl
 python3 -m pip install --upgrade pip
 
+PYTHON_BINARY_SYS_LOC="$(python3 -c "import os; print(os.environ['_'])")"
+
+# Creating virtual environment
+python3 -m pip install virtualenv
+python3 -m virtualenv --system-site-packages -p "${PYTHON_BINARY_SYS_LOC}" "${VISIOBAS_GATEWAY_PATH}"/.venv
+
 curl -sSL https://raw.githubusercontent.com/NPPElement/visiobas-gateway/main/run/gtw_installer.py -o /opt/gtw_installer.py
-python3 /opt/gtw_installer.py -install
+python3 /opt/gtw_installer.py -h
 
 
 # Install docker-compose from VisioBAS Cloud
@@ -39,12 +47,3 @@ python3 /opt/gtw_installer.py -install
 # Export dependencies from Poetry to requirements.txt
 # sudo sudo ~/.poetry/bin/poetry export -f requirements.txt --output requirements.txt
 #  --without-hashes
-
-# Copy configuration templates into /opt/visiobas-visiobas_gateway/config
-#sudo cp /opt/visiobas-gateway/config/templates/visiobas_gateway.env /opt/visiobas-visiobas_gateway/config/visiobas_gateway.env
-#sudo cp /opt/visiobas-gateway/config/templates/http.env /opt/visiobas-visiobas_gateway/config/http.env
-#sudo cp /opt/visiobas-gateway/config/templates/mqtt.env /opt/visiobas-visiobas_gateway/config/mqtt.env
-#sudo cp /opt/visiobas-gateway/config/templates/api.env /opt/visiobas-visiobas_gateway/config/api.env
-
-# Run container
-# sudo docker-compose up --build -d
