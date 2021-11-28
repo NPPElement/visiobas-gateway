@@ -14,7 +14,7 @@ apt-get update -y
 apt-get upgrade -y
 apt-get dist-upgrade -y
 apt-get autoremove -y
-apt-get install -y python3 python3-pip python3-dev python3-setuptools libffi-dev libssl-dev curl
+apt-get install -y python3 python3-pip python3-dev python3-venv python3-setuptools libffi-dev libssl-dev curl
 python3 -m pip install --upgrade pip
 
 PYTHON_BINARY_SYS_LOC="$(python3 -c "import os; print(os.environ['_'])")"

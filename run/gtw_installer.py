@@ -269,6 +269,9 @@ class Installer(AbstractInstaller):
         run_cmd_with_check(
             "systemctl enable %s/run/visiobas_gateway.service" % INSTALL_DIRECTORY
         )
+        run_cmd_with_check(
+            "systemctl restart %s/run/visiobas_gateway.service" % INSTALL_DIRECTORY
+        )
         # run_cmd_with_check("python3 %s/visiobas_gateway" % INSTALL_DIRECTORY)
 
 
