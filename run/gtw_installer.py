@@ -252,12 +252,11 @@ class Installer(AbstractInstaller):
 
     @staticmethod
     def _install_poetry() -> None:
-
         try:
             # Remove symbolic link if exists
             run_cmd_with_check("rm /usr/local/bin/poetry")
         except RuntimeError:
-            print('Symbolic link not exists')
+            print("Symbolic link not exists")
 
         run_cmd_with_check(
             "curl -sSL https://install.python-poetry.org "
@@ -265,14 +264,15 @@ class Installer(AbstractInstaller):
             "&& cd /usr/local/bin "
             "&& ln -s /opt/poetry/bin/poetry"
         )
+        run_cmd_with_check("cd %s && poetry install --no-dev" % INSTALL_DIRECTORY)
+        run_cmd_with_check("cd %s && poetry install --no-dev" % INSTALL_DIRECTORY)
+        run_cmd_with_check("export %s/visiobas_gateway" % INSTALL_DIRECTORY)
 
     def run_gateway(self) -> None:
         run_cmd_with_check(
             "systemctl enable %s/run/visiobas_gateway.service" % INSTALL_DIRECTORY
         )
-        run_cmd_with_check(
-            "systemctl restart %s/run/visiobas_gateway.service" % INSTALL_DIRECTORY
-        )
+        run_cmd_with_check("service restart visiobas_gateway")
         # run_cmd_with_check("python3 %s/visiobas_gateway" % INSTALL_DIRECTORY)
 
 
