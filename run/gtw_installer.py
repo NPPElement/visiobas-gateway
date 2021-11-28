@@ -56,7 +56,7 @@ def download_file(url: str, path: Path) -> None:
         path.write_bytes(file.read())
 
 
-def git_clone() -> None:
+def git_clone_gateway() -> None:
     run_cmd_with_check("apt-get install -y git gcc")
 
     print("\nRemoving existing `%s`\n" % INSTALL_DIRECTORY)
@@ -199,7 +199,7 @@ class InstallWithDocker(AbstractInstaller):
             yaml.dump(docker_compose_dict, file, encoding="UTF-8")
 
     def build_docker_image(self) -> None:
-        git_clone()
+        git_clone_gateway()
 
         print("\nModifying `%s` for build.\n" % self.DOCKER_COMPOSE_YAML_PATH)
         self._modify_docker_compose_for_build()
@@ -245,25 +245,21 @@ class Installer(AbstractInstaller):
         print("\nInstalling Poetry\n")
         self._install_poetry()
 
-        git_clone()
-
-        # Poetry not support target directory now.
-        run_cmd_with_check("cd %s && poetry install --no-dev" % INSTALL_DIRECTORY)
+        git_clone_gateway()
 
     @staticmethod
     def _install_poetry() -> None:
         try:
-            # Remove symbolic link if exists
-            run_cmd_with_check("rm /usr/local/bin/poetry")
+            run_cmd_with_check(
+                "curl -sSL https://install.python-poetry.org "
+                "| POETRY_HOME=/opt/poetry python3 "
+                "&& cd /usr/local/bin "
+                "&& ln -s /opt/poetry/bin/poetry"
+            )
         except RuntimeError:
-            print("Symbolic link not exists")
+            print("\nPoetry already installed. Skipping\n")
+            return None
 
-        run_cmd_with_check(
-            "curl -sSL https://install.python-poetry.org "
-            "| POETRY_HOME=/opt/poetry python3 "
-            "&& cd /usr/local/bin "
-            "&& ln -s /opt/poetry/bin/poetry"
-        )
         run_cmd_with_check("cd %s && poetry install --no-dev" % INSTALL_DIRECTORY)
         run_cmd_with_check("export PYTHONPATH=%s" % INSTALL_DIRECTORY)
 

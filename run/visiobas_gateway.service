@@ -2,9 +2,10 @@
 Description=VisioBAS Gateway
 
 [Service]
+User=root
 Restart=on-failure
-Type=simple
-ExecStart=/usr/bin/python3 /opt/visiobas-gateway/visiobas_gateway
+WorkingDirectory=/opt/visiobas-gateway
+ExecStart=poetry shell && python3 /opt/visiobas-gateway/visiobas_gateway
 StandardInput=tty-force
 
 [Install]
