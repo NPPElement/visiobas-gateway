@@ -252,6 +252,13 @@ class Installer(AbstractInstaller):
 
     @staticmethod
     def _install_poetry() -> None:
+
+        try:
+            # Remove symbolic link if exists
+            run_cmd_with_check("rm /usr/local/bin/poetry")
+        except RuntimeError:
+            print('Symbolic link not exists')
+
         run_cmd_with_check(
             "curl -sSL https://install.python-poetry.org "
             "| POETRY_HOME=/opt/poetry python3 "
