@@ -17,6 +17,9 @@ apt-get autoremove -y
 apt-get install -y python3 python3-pip python3-dev python3-venv python3-setuptools libffi-dev libssl-dev curl
 python3 -m pip install --upgrade pip
 
+# todo: install in venv
+# https://docs.python.org/3/tutorial/venv.html
+
 PYTHON_BINARY_SYS_LOC="$(python3 -c "import os; print(os.environ['_'])")"
 
 # Creating virtual environment
