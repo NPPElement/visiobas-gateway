@@ -4,9 +4,9 @@ Description=VisioBAS Gateway
 [Service]
 User=root
 Restart=on-failure
-WorkingDirectory=/opt/visiobas-gateway
-ExecStart=poetry shell && python3 /opt/visiobas-gateway/visiobas_gateway
-StandardInput=tty-force
+ExecStart=cd /root/.cache/pypoetry/virtualenvs/visiobas-gateway*/bin \
+&& source activate \
+&& python3 /opt/visiobas-gateway/visiobas_gateway
 
 [Install]
 WantedBy=multi-user.target

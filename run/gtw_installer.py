@@ -262,6 +262,7 @@ class Installer(AbstractInstaller):
 
         run_cmd_with_check("cd %s && poetry install --no-dev" % INSTALL_DIRECTORY)
         run_cmd_with_check("export PYTHONPATH=%s" % INSTALL_DIRECTORY)
+        run_cmd_with_check("cd %s && poetry shell" % INSTALL_DIRECTORY)
 
     def run_gateway(self) -> None:
         run_cmd_with_check(

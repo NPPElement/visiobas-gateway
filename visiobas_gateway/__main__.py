@@ -2,6 +2,9 @@ import asyncio
 import logging
 import sys
 
+from pydantic import ValidationError
+
+from visiobas_gateway import ENV_PATH
 from visiobas_gateway.gateway import Gateway
 from visiobas_gateway.schemas.settings import (
     ApiSettings,
@@ -35,13 +38,18 @@ def setup_logging(settings: LogSettings) -> None:
 
 
 async def load_and_run() -> None:
-    gateway = await Gateway.create(
-        gateway_settings=GatewaySettings(),
-        api_settings=ApiSettings(),
-        mqtt_settings=MQTTSettings(),
-        http_settings=HTTPSettings(),
-    )
-    await gateway.run()
+    try:
+        gateway = await Gateway.create(
+            gateway_settings=GatewaySettings(),
+            api_settings=ApiSettings(),
+            mqtt_settings=MQTTSettings(),
+            http_settings=HTTPSettings(),
+        )
+        await gateway.run()
+    except ValidationError as exc:
+        raise EnvironmentError(
+            f"Please configure VisioBAS Gateway at `{ENV_PATH}`"
+        ) from exc
 
 
 def main() -> None:
