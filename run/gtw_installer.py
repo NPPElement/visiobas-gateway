@@ -224,24 +224,18 @@ class InstallWithDocker(AbstractInstaller):
         try:
             run_cmd_with_check("docker-compose -f %s up" % self.DOCKER_COMPOSE_YAML_PATH)
         except RuntimeError:
-            self.build_docker_image()
-            try:
-                run_cmd_with_check(
-                    "docker-compose -f %s up --build" % self.DOCKER_COMPOSE_YAML_PATH
-                )
-            except RuntimeError:
-                message_framed(
-                    """
-                    RUN FAILED
-                    ----------
-                    Please, try to build docker image with command:
-                    `python3 %s %s`
-    
-                    Then run again:
-                    `python3 %s %s`
-                    """
-                    % (__file__, CMD_DOCKER_BUILD_IMAGE, __file__, CMD_DOCKER_RUN)
-                )
+            message_framed(
+                """
+                RUN FAILED
+                ----------
+                Please, try to build docker image with command:
+                `python3 %s %s`
+
+                Then run again:
+                `python3 %s %s`
+                """
+                % (__file__, CMD_DOCKER_BUILD_IMAGE, __file__, CMD_DOCKER_RUN)
+            )
 
 
 class Installer(AbstractInstaller):
