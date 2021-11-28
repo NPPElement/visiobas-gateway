@@ -253,10 +253,10 @@ class Installer(AbstractInstaller):
     @staticmethod
     def _install_poetry() -> None:
         run_cmd_with_check(
-            "curl -sSL https://install.python-poetry.org "
-            "| POETRY_HOME=/opt/poetry python3 && \\ "
-            "cd /usr/local/bin && \\ "
-            "ln -s /opt/poetry/bin/poetry"
+            r"curl -sSL https://install.python-poetry.org "
+            r"| POETRY_HOME=/opt/poetry python3 && "
+            r"\ cd /usr/local/bin && "
+            r"\ ln -s /opt/poetry/bin/poetry"
         )
 
     def run_gateway(self) -> None:
