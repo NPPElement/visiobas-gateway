@@ -265,7 +265,7 @@ class Installer(AbstractInstaller):
             "&& ln -s /opt/poetry/bin/poetry"
         )
         run_cmd_with_check("cd %s && poetry install --no-dev" % INSTALL_DIRECTORY)
-        run_cmd_with_check("export PYTHONPATH=%s/visiobas_gateway" % INSTALL_DIRECTORY)
+        run_cmd_with_check("export PYTHONPATH=%s" % INSTALL_DIRECTORY)
 
     def run_gateway(self) -> None:
         run_cmd_with_check(
