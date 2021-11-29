@@ -259,7 +259,7 @@ class Installer(AbstractInstaller):
         except RuntimeError:
             print("\nPoetry already installed. Skipping\n")
             return None
-
+        run_cmd_with_check("poetry config virtualenvs in-project")
         run_cmd_with_check("cd %s && poetry install --no-dev" % INSTALL_DIRECTORY)
         run_cmd_with_check("export PYTHONPATH=%s" % INSTALL_DIRECTORY)
         run_cmd_with_check("cd %s && poetry shell" % INSTALL_DIRECTORY)
@@ -268,7 +268,7 @@ class Installer(AbstractInstaller):
         run_cmd_with_check(
             "systemctl enable %s/run/visiobas_gateway.service" % INSTALL_DIRECTORY
         )
-        run_cmd_with_check("service restart visiobas_gateway")
+        run_cmd_with_check("systemctl restart visiobas_gateway")
         # run_cmd_with_check("python3 %s/visiobas_gateway" % INSTALL_DIRECTORY)
 
 

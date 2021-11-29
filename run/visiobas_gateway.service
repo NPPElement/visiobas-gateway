@@ -4,9 +4,7 @@ Description=VisioBAS Gateway
 [Service]
 User=root
 Restart=on-failure
-ExecStart=cd /root/.cache/pypoetry/virtualenvs/visiobas-gateway*/bin \
-&& source activate \
-&& python3 /opt/visiobas-gateway/visiobas_gateway
+ExecStart=/opt/visiobas-gateway/.venv/bin/python3 /opt/visiobas-gateway/visiobas_gateway
 
 [Install]
 WantedBy=multi-user.target
