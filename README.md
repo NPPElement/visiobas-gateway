@@ -49,6 +49,8 @@ curl --header "Content-Type: application/json" \
 ```shell
 curl -sSL https://raw.githubusercontent.com/NPPElement/visiobas-gateway/main/run/install.sh | bash -
 ```
+It will update the system and download `gtw_installer.py` to install VisioBAS Gateway.
+Please follow the output instructions to install VisioBAS Gateway in the preferred way.
 
 ## Setting
 
