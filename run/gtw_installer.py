@@ -32,8 +32,10 @@ ENV_CONFIG_PATH = CONFIG_DIRECTORY / ".env"
 CMD_DOCKER_INSTALL = "--docker-install"
 CMD_DOCKER_BUILD_IMAGE = "--docker-build-image"
 CMD_DOCKER_RUN = "--docker-run"
+CMD_DOCKER_REMOVE = "--docker-remove"
 CMD_INSTALL = "--install"
 CMD_RUN = "--run"
+CMD_REMOVE = "--remove"
 
 
 def check_root() -> None:
@@ -69,11 +71,19 @@ def git_clone_gateway() -> None:
 class AbstractInstaller(ABC):
     @abstractmethod
     def install(self) -> None:
-        pass
+        """Preforms installation all requirements."""
+
+    @abstractmethod
+    def remove(self) -> None:
+        """Removes VisioBAS Gateway."""
 
     @abstractmethod
     def run_gateway(self) -> None:
-        pass
+        """Runs VisioBAS Gateway."""
+
+    @abstractmethod
+    def stop_gateway(self) -> None:
+        """Stops VisioBAS Gateway."""
 
 
 class InstallWithDocker(AbstractInstaller):
@@ -96,10 +106,10 @@ class InstallWithDocker(AbstractInstaller):
     def install(self) -> None:
         try:
             print("\nInstalling Docker engine\n")
-            self.install_docker_engine()
+            self._install_docker_engine()
 
             print("\nInstalling docker-compose\n")
-            self.install_docker_compose()
+            self._install_docker_compose()
 
             print("\nDownloading `%s`\n" % self.DOCKER_COMPOSE_YAML_PATH)
             download_file(
@@ -133,7 +143,7 @@ class InstallWithDocker(AbstractInstaller):
                 % exc
             )
 
-    def install_docker_engine(self) -> None:
+    def _install_docker_engine(self) -> None:
         cmd = " ".join(("apt-get -y install", *self.DOCKER_CLIENT_DEPENDENCIES))
         run_cmd_with_check(cmd)
 
@@ -172,8 +182,31 @@ class InstallWithDocker(AbstractInstaller):
         run_cmd_with_check("usermod -aG docker $USER")
 
     @staticmethod
-    def install_docker_compose() -> None:
+    def _uninstall_docker_engine(remove_data: bool) -> None:
+        """
+        https://docs.docker.com/engine/install/ubuntu/#uninstall-docker-engine
+
+        Args:
+            remove_data: To delete all images, containers, and volumes.
+        """
+        # Uninstall the Docker Engine, CLI, and Containerd packages:
+        run_cmd_with_check("apt-get purge docker-ce docker-ce-cli containerd.io")
+
+        if remove_data:
+            # Images, containers, volumes, or customized configuration files on
+            # your host are not automatically removed.
+
+            # To delete all images, containers, and volumes:
+            run_cmd_with_check("rm -rf /var/lib/docker")
+            run_cmd_with_check("rm -rf /var/lib/containerd")
+
+    @staticmethod
+    def _install_docker_compose() -> None:
         pip.main(["install", "docker-compose"])
+
+    @staticmethod
+    def _uninstall_docker_compose() -> None:
+        pip.main(["uninstall", "docker-compose"])
 
     def _modify_docker_compose_for_build(self) -> None:
         pip.main(["install", "pyyaml"])
@@ -237,18 +270,47 @@ class InstallWithDocker(AbstractInstaller):
                 % (__file__, CMD_DOCKER_BUILD_IMAGE, __file__, CMD_DOCKER_RUN)
             )
 
+    def stop_gateway(self) -> None:
+        try:
+            run_cmd_with_check("docker-compose -f %s down" % self.DOCKER_COMPOSE_YAML_PATH)
+        except RuntimeError:
+            print("Docker container already stopped.")
+
+    def remove(self) -> None:
+        print("\nStopping `VisioBAS Gateway` container\n")
+        self.stop_gateway()
+
+        print("\nRemoving `Docker Engine` with data.\n")
+        self._uninstall_docker_engine(remove_data=True)
+
+        print("\nRemoving `docker-compose`\n")
+        self._uninstall_docker_compose()
+
+        print("\nRemoving VisioBAS Gateway files\n")
+        run_cmd_with_check("rm -r %s" % INSTALL_DIRECTORY)
+
+        message_framed(
+            """
+            REMOVING COMPLETE
+            -----------------
+            """
+        )
+
 
 class Installer(AbstractInstaller):
     def install(self) -> None:
         run_cmd_with_check("apt-get update && apt-get install -y iputils-ping")
 
-        print("\nInstalling Poetry\n")
+        print("\nInstalling `Poetry`\n")
         self._install_poetry()
 
         git_clone_gateway()
 
     @staticmethod
     def _install_poetry() -> None:
+        """
+        https://python-poetry.org/docs/#installation
+        """
         try:
             run_cmd_with_check(
                 "curl -sSL https://install.python-poetry.org "
@@ -257,12 +319,18 @@ class Installer(AbstractInstaller):
                 "&& ln -s /opt/poetry/bin/poetry"
             )
         except RuntimeError:
-            print("\nPoetry already installed. Skipping\n")
+            print("\n`Poetry` already installed. Skipping\n")
             return None
         run_cmd_with_check("poetry config virtualenvs in-project")
         run_cmd_with_check("cd %s && poetry install --no-dev" % INSTALL_DIRECTORY)
         run_cmd_with_check("export PYTHONPATH=%s" % INSTALL_DIRECTORY)
-        run_cmd_with_check("cd %s && poetry shell" % INSTALL_DIRECTORY)
+
+    @staticmethod
+    def _uninstall_poetry() -> None:
+        """
+        https://python-poetry.org/docs/#installation
+        """
+        # FIXME: implement
 
     def run_gateway(self) -> None:
         run_cmd_with_check(
@@ -270,6 +338,27 @@ class Installer(AbstractInstaller):
         )
         run_cmd_with_check("systemctl restart visiobas_gateway")
         # run_cmd_with_check("python3 %s/visiobas_gateway" % INSTALL_DIRECTORY)
+
+    def stop_gateway(self) -> None:
+        run_cmd_with_check("systemctl stop visiobas_gateway.service")
+        run_cmd_with_check("rm /etc/systemd/system/visiobas_gateway.service")
+
+    def remove(self) -> None:
+        print("\nStopping `VisioBAS Gateway` service\n")
+        self.stop_gateway()
+
+        print("\nRemoving `Poetry`\n")
+        self._uninstall_poetry()
+
+        print("\nRemoving VisioBAS Gateway files\n")
+        run_cmd_with_check("rm -r %s" % INSTALL_DIRECTORY)
+
+        message_framed(
+            """
+            REMOVING COMPLETE
+            -----------------
+            """
+        )
 
 
 if __name__ == "__main__":
@@ -283,9 +372,11 @@ if __name__ == "__main__":
         ),
         (CMD_DOCKER_BUILD_IMAGE, "Builds VisioBAS Gateway docker image."),
         (CMD_DOCKER_RUN, "Runs VisioBAS Gateway in docker."),
+        (CMD_DOCKER_REMOVE, "Removes Docker Engine, docker-compose, VisioBAS Gateway."),
         # Commands without Docker.
         (CMD_INSTALL, "Installs VisioBAS Gateway without Docker."),
         (CMD_RUN, "Runs VisioBAS Gateway."),
+        (CMD_REMOVE, "Removes VisioBAS Gateway, Poetry"),
     )
     parser = argparse.ArgumentParser(description="VisioBAS Gateway Installer.")
     for arg, description in ARGS:
@@ -299,12 +390,16 @@ if __name__ == "__main__":
         InstallWithDocker().build_docker_image()
     elif args.docker_run:
         InstallWithDocker().run_gateway()
+    elif args.docker_remove:
+        InstallWithDocker().remove()
 
     # Commands without Docker.
     elif args.install:
         Installer().install()
     elif args.run:
         Installer().run_gateway()
+    elif args.remove:
+        Installer().remove()
 
     else:
         exit("Please provide command to run: %s." % args)
