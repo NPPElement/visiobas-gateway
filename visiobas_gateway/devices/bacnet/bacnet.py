@@ -141,7 +141,6 @@ class BACnetDevice(BasePollingDevice, BACnetCoderMixin):
         prop = kwargs.get("prop")
         priority = kwargs.get("priority")
         await self._gtw.async_add_job(self.write_property, value, obj, prop, priority)
-        return None
 
     @log_exceptions(logger=_LOG)
     def write_property(
@@ -188,9 +187,7 @@ class BACnetDevice(BasePollingDevice, BACnetCoderMixin):
 
         if wait:
             await self.interface.polling_event.wait()
-        polled_obj = self.read_property(obj=obj, prop=prop)
-        return polled_obj
-        # return await self._gtw.async_add_job(self.read_property, obj, prop)
+        return await self._gtw.async_add_job(self.read_property, obj, prop)
 
     # @log_exceptions
     def read_property(self, obj: BACnetObj, prop: ObjProperty) -> BACnetObj:

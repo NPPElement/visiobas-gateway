@@ -126,9 +126,7 @@ class ModbusDevice(BasePollingDevice, ModbusCoderMixin):
             raise ValueError(f"`obj` must be `ModbusObj`. Got {type(obj)}")
         if wait:
             await self.interface.polling_event.wait()
-        polled_obj = self.sync_read(obj=obj)
-        return polled_obj
-        # return await self._gtw.async_add_job(self.sync_read, obj)
+        return await self._gtw.async_add_job(self.sync_read, obj)
 
     @log_exceptions(logger=_LOG)
     def sync_read(self, obj: ModbusObj) -> ModbusObj:
@@ -153,8 +151,7 @@ class ModbusDevice(BasePollingDevice, ModbusCoderMixin):
     ) -> None:
         if not isinstance(obj, ModbusObj):
             raise ValueError(f"`obj` must be `ModbusObj`. Got {type(obj)}")
-        self.sync_write(value=value, obj=obj)
-        # await self._gtw.async_add_job(self.sync_write, value, obj)
+        await self._gtw.async_add_job(self.sync_write, value, obj)
 
     def sync_write(self, value: int | float | str, obj: ModbusObj) -> None:
         """Write value to Modbus object.
