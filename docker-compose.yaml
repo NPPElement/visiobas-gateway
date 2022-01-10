@@ -5,11 +5,11 @@ services:
     container_name: visiobas_gateway
     image: visiobas-gateway:develop
     logging:
-      #driver: none
-      driver: "json-file"
+      driver: gelf
       options:
-        max-file: "2"
-        max-size: "1024k"
+        gelf-address: "udp://10.21.80.9:5001"
+        gelf-compression-type: none
+
     restart: always
     privileged: true # [1]
     env_file:
