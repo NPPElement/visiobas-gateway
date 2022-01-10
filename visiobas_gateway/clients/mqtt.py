@@ -4,7 +4,7 @@ import sys
 from json import JSONDecodeError, loads  # dumps,
 from typing import TYPE_CHECKING, Any, Iterable
 
-import asyncio_mqtt
+import asyncio_mqtt  # type: ignore
 from paho.mqtt.client import MQTTMessage  # type: ignore
 
 from ..schemas import BACnetObj

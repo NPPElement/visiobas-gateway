@@ -30,7 +30,7 @@ class ModbusCoderMixin:
     """Mixin for encode/decode interact with `pymodbus`."""
 
     @staticmethod
-    def _extract_data(response: _ImplementedResponse) -> list:
+    def _extract_data(response: _ImplementedResponse) -> list:  # pylint:disable=E0602
         if isinstance(response, ReadBitsResponseBase):
             return response.bits
         if isinstance(response, ReadRegistersResponseBase):
@@ -51,7 +51,7 @@ class ModbusCoderMixin:
     @staticmethod
     def _decode_response(
         response: _ImplementedResponse, objs: ModbusObj | Sequence[ModbusObj]
-    ) -> _DecodedValue | list[_DecodedValue]:
+    ) -> _DecodedValue | list[_DecodedValue]:  # pylint:disable=E0602
         data = ModbusCoderMixin._extract_data(response=response)
         if isinstance(objs, Sequence) and len(objs) == 1:
             objs = objs[0]
