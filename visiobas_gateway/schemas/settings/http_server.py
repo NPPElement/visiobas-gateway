@@ -1,9 +1,9 @@
 from hashlib import md5
-from typing import Any, Optional, Union
+from typing import Any, Optional
 
-from pydantic import AnyHttpUrl, BaseModel, Field, SecretStr, validator
+from pydantic import AnyHttpUrl, BaseModel, Field, SecretStr
 
-from ..secret_url import SecretUrl, cast_to_secret_urls
+# from ..secret_url import SecretUrl
 
 
 class AuthData(BaseModel):
@@ -17,22 +17,23 @@ class AuthData(BaseModel):
 class HttpServerConfig(BaseModel):
     """Config of HTTP Server for GET or POST data."""
 
-    urls: list[Union[AnyHttpUrl, SecretUrl]] = Field(..., min_items=1)
+    urls: list[AnyHttpUrl] = Field(..., min_items=1)  # SecretUrl
 
-    _cast_to_secret_urls = validator("urls", allow_reuse=True)(cast_to_secret_urls)
+    # _cast_to_secret_urls = validator("urls", allow_reuse=True)(cast_to_secret_urls)
 
     auth_data: Optional[AuthData] = None
-    current_url: SecretUrl = None  # type: ignore
+    current_url: AnyHttpUrl = None  # type: ignore
 
     @staticmethod
-    def get_url_str(url: SecretUrl) -> str:
-        return f"{url.scheme}://{url.host}:{url.port}"
+    def get_url_str(url: AnyHttpUrl) -> str:
+        # return f"{url.scheme}://{url.host}:{url.port}"
+        return str(url)
 
     @property
     def auth_payload(self) -> dict[str, str]:
         return {
-            "login": self.current_url.user.get_secret_value(),
-            "password": self.current_url.password.get_secret_value(),
+            "login": self.current_url.user or "",  # .get_secret_value(),
+            "password": self.current_url.password or "",  # .get_secret_value(),
         }
 
     @property
