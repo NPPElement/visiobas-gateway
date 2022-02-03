@@ -26,6 +26,7 @@ paho-mqtt = "^1.5.1"
 pydantic = "^1.8.2"
 pymodbus = "^2.5.2"
 BAC0 = "^21.2.25"
+pytz = "*"  # fixme: dependency for BAC0
 asyncio-mqtt = "*"
 netifaces = "*"
 
