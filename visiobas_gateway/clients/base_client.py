@@ -62,7 +62,7 @@ class AbstractBaseClient(ABC):
     def objects_to_message(self, objs: Iterable[BACnetObj]) -> str:
         """Formats objects to message for sending.
 
-        Filters objects by `send_method`.
+        Filter objects by `send_method`.
         """
 
     @abstractmethod

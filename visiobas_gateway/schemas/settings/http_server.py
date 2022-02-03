@@ -32,7 +32,7 @@ class HttpServerConfig(BaseModel):
     def auth_payload(self) -> dict[str, str]:
         return {
             "login": self.current_url.user.get_secret_value(),
-            "password": self.current_url.password.get_secret_value(),
+            "password": self._get_hash(self.current_url.password),
         }
 
     @property
