@@ -9,7 +9,7 @@ from paho.mqtt.client import MQTTMessage  # type: ignore
 
 from ..schemas import BACnetObj
 from ..schemas.send_methods import SendMethod
-from ..schemas.settings import MQTTSettings
+from ..schemas.settings import MqttSettings
 from ..utils import get_file_logger
 from .base_client import AbstractBaseClient
 
@@ -23,10 +23,10 @@ _LOG = get_file_logger(name=__name__)
 _MQTT_DEFAULT_PORT = 1883
 
 
-class MQTTClient(AbstractBaseClient):
+class MqttClient(AbstractBaseClient):
     """MQTT client."""
 
-    def __init__(self, gateway: Gateway, settings: MQTTSettings):
+    def __init__(self, gateway: Gateway, settings: MqttSettings):
         super().__init__(gateway, settings)
         # Ignore types because always used SecretUrl schema in MQTTSettings
         self._client = asyncio_mqtt.Client(
@@ -44,7 +44,7 @@ class MQTTClient(AbstractBaseClient):
     def get_send_method(self) -> SendMethod:
         return SendMethod.MQTT
 
-    async def async_init_client(self, settings: MQTTSettings) -> None:
+    async def async_init_client(self, settings: MqttSettings) -> None:
         pass
 
     async def _startup_tasks(self) -> None:

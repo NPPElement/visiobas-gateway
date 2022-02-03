@@ -17,7 +17,7 @@ import aiojobs  # type: ignore
 from pydantic import BaseSettings
 
 from visiobas_gateway.api import ApiServer
-from visiobas_gateway.clients import HTTPClient, MQTTClient
+from visiobas_gateway.clients import HttpClient, MqttClient
 from visiobas_gateway.clients.base_client import AbstractBaseClient
 from visiobas_gateway.devices import BACnetDevice, ModbusDevice
 from visiobas_gateway.devices.base_polling_device import AbstractBasePollingDevice
@@ -31,7 +31,7 @@ from visiobas_gateway.schemas.settings import (
     ApiSettings,
     GatewaySettings,
     HttpSettings,
-    MQTTSettings,
+    MqttSettings,
 )
 from visiobas_gateway.utils import get_file_logger, log_exceptions
 from visiobas_gateway.verifier import BACnetVerifier
@@ -105,9 +105,9 @@ class Gateway:
             try:
                 client_cls: Any
                 if isinstance(client_settings, HttpSettings):
-                    client_cls = HTTPClient
-                elif isinstance(client_settings, MQTTSettings):
-                    client_cls = MQTTClient
+                    client_cls = HttpClient
+                elif isinstance(client_settings, MqttSettings):
+                    client_cls = MqttClient
                 else:
                     raise ValueError(
                         f"Client for {type(client_settings)} not implemented yet"
@@ -279,7 +279,7 @@ class Gateway:
         """
         http_client = self.clients.get(SendMethod.HTTP)
 
-        if not isinstance(http_client, HTTPClient):
+        if not isinstance(http_client, HttpClient):
             raise NotImplementedError
 
         device_obj_data = await http_client.get_objects(
@@ -323,7 +323,7 @@ class Gateway:
         http_client = self.clients.get(SendMethod.HTTP)
 
         # todo: use for extractions tasks asyncio.as_completed(tasks):
-        if not isinstance(http_client, HTTPClient):
+        if not isinstance(http_client, HttpClient):
             raise NotImplementedError
 
         objs_data = await http_client.get_objects(

@@ -1,4 +1,4 @@
-from visiobas_gateway.schemas.settings import MQTTSettings
+from visiobas_gateway.schemas.settings import MqttSettings
 from visiobas_gateway import BASE_DIR
 
 
@@ -9,4 +9,4 @@ class TestMQTTSettings:
 
         template_path = BASE_DIR.parent / "config/template.env"
         load_dotenv(dotenv_path=template_path)
-        isinstance(MQTTSettings(), MQTTSettings)
+        isinstance(MqttSettings(), MqttSettings)

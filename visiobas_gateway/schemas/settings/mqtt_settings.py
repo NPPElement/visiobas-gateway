@@ -8,7 +8,7 @@ from ..mqtt import Qos
 from ..secret_url import SecretUrl, cast_to_secret_url
 
 
-class MQTTSettings(BaseSettings):
+class MqttSettings(BaseSettings):
     """Settings of MQTT client."""
 
     # enable: bool = Field(default=False, description="Flag for MQTT client activation.")

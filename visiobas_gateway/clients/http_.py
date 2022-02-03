@@ -20,7 +20,7 @@ else:
     Gateway = Any
 
 
-class HTTPClient(AbstractBaseClient):
+class HttpClient(AbstractBaseClient):
     """HTTP client of gateway."""
 
     # TODO: add decorator re-login on 401
@@ -47,7 +47,7 @@ class HTTPClient(AbstractBaseClient):
     @staticmethod
     def relogin_on_401(func: Callable | Callable[..., Awaitable]) -> Any:
         @wraps(func)
-        async def wrapper(self: HTTPClient, *args: Any, **kwargs: Any) -> Any:
+        async def wrapper(self: HttpClient, *args: Any, **kwargs: Any) -> Any:
             try:
                 return await func(*args, **kwargs)
             except aiohttp.ClientResponseError as exc:
@@ -304,7 +304,7 @@ class HTTPClient(AbstractBaseClient):
     #         },
     #     )
 
-    @relogin_on_401.__func__  # type: ignore
+    # @relogin_on_401.__func__  # type: ignore
     async def request(
         self,
         method: str,
@@ -318,6 +318,8 @@ class HTTPClient(AbstractBaseClient):
         Args:
             Accept same parameters as aiohttp.ClientSession.request()
             +
+            url:
+            method:
             extract_json: If True - returns extracted data
             extract_text: If True - returns extracted text
 

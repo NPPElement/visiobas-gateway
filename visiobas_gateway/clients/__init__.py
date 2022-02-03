@@ -1,7 +1,7 @@
-from .http_ import HTTPClient
-from .mqtt import MQTTClient
+from .http_ import HttpClient
+from .mqtt import MqttClient
 
 __all__ = [
-    "HTTPClient",
-    "MQTTClient",
+    "HttpClient",
+    "MqttClient",
 ]

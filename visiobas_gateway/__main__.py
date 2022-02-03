@@ -8,7 +8,7 @@ from visiobas_gateway.schemas.settings import (
     GatewaySettings,
     HttpSettings,
     LogSettings,
-    MQTTSettings,
+    MqttSettings,
 )
 from visiobas_gateway.utils import ExtraFormatter
 
@@ -38,7 +38,7 @@ async def load_and_run() -> None:
     gateway = await Gateway.create(
         gateway_settings=GatewaySettings(),
         api_settings=ApiSettings(),
-        clients_settings=[MQTTSettings(), HttpSettings()],
+        clients_settings=[MqttSettings(), HttpSettings()],
     )
     await gateway.run()
 

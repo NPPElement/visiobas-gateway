@@ -1,9 +1,9 @@
 from hashlib import md5
-from typing import Any, Optional
+from typing import Any, Optional, Union
 
-from pydantic import AnyHttpUrl, BaseModel, Field, SecretStr
+from pydantic import AnyHttpUrl, BaseModel, Field, SecretStr, validator
 
-# from ..secret_url import SecretUrl
+from ..secret_url import SecretUrl, cast_to_secret_urls
 
 
 class AuthData(BaseModel):
@@ -17,17 +17,17 @@ class AuthData(BaseModel):
 class HttpServerConfig(BaseModel):
     """Config of HTTP Server for GET or POST data."""
 
-    urls: list[AnyHttpUrl] = Field(..., min_items=1)  # SecretUrl
+    urls: list[Union[AnyHttpUrl, SecretUrl]] = Field(..., min_items=1)  #
 
-    # _cast_to_secret_urls = validator("urls", allow_reuse=True)(cast_to_secret_urls)
+    _cast_to_secret_urls = validator("urls", allow_reuse=True)(cast_to_secret_urls)
 
     auth_data: Optional[AuthData] = None
     current_url: AnyHttpUrl = None  # type: ignore
 
     @staticmethod
     def get_url_str(url: AnyHttpUrl) -> str:
-        # return f"{url.scheme}://{url.host}:{url.port}"
-        return str(url)
+        return f"{url.scheme}://{url.host}:{url.port}"
+        # return str(url)
 
     @property
     def auth_payload(self) -> dict[str, str]:
