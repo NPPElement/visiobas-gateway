@@ -14,7 +14,7 @@ class AuthData(BaseModel):
     auth_user_id: int = Field(...)
 
 
-class HTTPServerConfig(BaseModel):
+class HttpServerConfig(BaseModel):
     """Config of HTTP Server for GET or POST data."""
 
     urls: list[Union[AnyHttpUrl, SecretUrl]] = Field(..., min_items=1)

@@ -8,7 +8,7 @@ import aiohttp
 
 from ..schemas import BACnetObj, ObjType
 from ..schemas.send_methods import SendMethod
-from ..schemas.settings import HTTPServerConfig, HTTPSettings
+from ..schemas.settings import HttpServerConfig, HttpSettings
 from ..utils import get_file_logger, kebab_case, log_exceptions
 from .base_client import AbstractBaseClient
 
@@ -34,7 +34,7 @@ class HTTPClient(AbstractBaseClient):
         "{base_url}/vbas/arm/saveObjectParam/{property_id}/{replaced_object_name}"
     )
 
-    def __init__(self, gateway: Gateway, settings: HTTPSettings):
+    def __init__(self, gateway: Gateway, settings: HttpSettings):
         super().__init__(gateway, settings)
 
         self._authorized = False
@@ -57,15 +57,15 @@ class HTTPClient(AbstractBaseClient):
 
         return wrapper
 
-    async def async_init_client(self, settings: HTTPSettings) -> None:
+    async def async_init_client(self, settings: HttpSettings) -> None:
         pass
 
     @property
-    def server_get(self) -> HTTPServerConfig:
+    def server_get(self) -> HttpServerConfig:
         return self._settings.server_get
 
     @property
-    def servers_post(self) -> list[HTTPServerConfig]:
+    def servers_post(self) -> list[HttpServerConfig]:
         return self._settings.servers_post
 
     async def _startup_tasks(self) -> None:
@@ -108,7 +108,7 @@ class HTTPClient(AbstractBaseClient):
         return extracted_data
 
     @log_exceptions(logger=_LOG)
-    async def logout(self, servers: Iterable[HTTPServerConfig]) -> None:
+    async def logout(self, servers: Iterable[HttpServerConfig]) -> None:
         """Performs log out from servers.
 
         Args:
@@ -149,7 +149,7 @@ class HTTPClient(AbstractBaseClient):
                 await asyncio.sleep(delay=next_attempt or self._settings.next_attempt)
 
     async def login(
-        self, get_server: HTTPServerConfig, post_servers: list[HTTPServerConfig]
+        self, get_server: HttpServerConfig, post_servers: list[HttpServerConfig]
     ) -> bool:
         """Perform authorization to all servers, required for work.
 
@@ -180,7 +180,7 @@ class HTTPClient(AbstractBaseClient):
         return False
 
     @log_exceptions(logger=_LOG)
-    async def _login_server(self, server: HTTPServerConfig) -> bool:
+    async def _login_server(self, server: HttpServerConfig) -> bool:
         """Perform authorization to server (primary server or mirrors).
 
         If authorization is not performed to primary server -
@@ -235,7 +235,7 @@ class HTTPClient(AbstractBaseClient):
 
     @log_exceptions(logger=_LOG)
     async def post_device(
-        self, servers: Iterable[HTTPServerConfig], device_id: int, data: str
+        self, servers: Iterable[HttpServerConfig], device_id: int, data: str
     ) -> None:
         """Performs POST requests with data to servers.
 

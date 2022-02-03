@@ -23,6 +23,7 @@ from visiobas_gateway.api.jsonrpc.schemas import RPCSetPointParams
 from visiobas_gateway.devices.base_device import BaseDevice
 from visiobas_gateway.gateway import Gateway
 from visiobas_gateway.schemas.settings.gateway_settings import GatewaySettings
+from visiobas_gateway.schemas.settings.http_settings import HttpSettings
 from visiobas_gateway.schemas.bacnet.obj_property_list import BaseBACnetObjPropertyList
 import pytest
 
@@ -325,19 +326,30 @@ def gateway_settings_factory() -> Callable[..., GatewaySettings]:
 
 
 @pytest.fixture
-def gateway_settings_factory() -> Callable[..., GatewaySettings]:
+def http_settings_factory() -> Callable[..., HttpSettings]:
     """
-    Produces `GatewaySettings` for tests.
+    Produces `HTTPSettings` for tests.
 
-    You can pass the same params into this as the `GatewaySettings` constructor to
+    You can pass the same params into this as the `HTTPSettings` constructor to
     override defaults.
     """
 
     def _factory(**kwargs):
-        kwargs = _gateway_settings_kwargs(kwargs)
-        return GatewaySettings(**kwargs)
+        kwargs = _http_settings_kwargs(kwargs)
+        return HttpSettings(**kwargs)
 
     return _factory
+
+
+def _http_settings_kwargs(kwargs: dict[str, Any]) -> dict[str, Any]:
+    kwargs = {
+        "timeout": 10,
+        "next_attempt": 60,
+        "server_get": r'{"urls":["http://login:password@get-main.com:8080","http://login:password@get-mirror.com:8080"]}',
+        "servers_post": 8,
+        **kwargs,
+    }
+    return kwargs
 
 
 def _gateway_settings_kwargs(kwargs: dict[str, Any]) -> dict[str, Any]:

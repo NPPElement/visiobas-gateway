@@ -30,7 +30,7 @@ from visiobas_gateway.schemas.send_methods import SendMethod
 from visiobas_gateway.schemas.settings import (
     ApiSettings,
     GatewaySettings,
-    HTTPSettings,
+    HttpSettings,
     MQTTSettings,
 )
 from visiobas_gateway.utils import get_file_logger, log_exceptions
@@ -104,7 +104,7 @@ class Gateway:
         for client_settings in settings:
             try:
                 client_cls: Any
-                if isinstance(client_settings, HTTPSettings):
+                if isinstance(client_settings, HttpSettings):
                     client_cls = HTTPClient
                 elif isinstance(client_settings, MQTTSettings):
                     client_cls = MQTTClient

@@ -6,7 +6,7 @@ from visiobas_gateway.gateway import Gateway
 from visiobas_gateway.schemas.settings import (
     ApiSettings,
     GatewaySettings,
-    HTTPSettings,
+    HttpSettings,
     LogSettings,
     MQTTSettings,
 )
@@ -38,7 +38,7 @@ async def load_and_run() -> None:
     gateway = await Gateway.create(
         gateway_settings=GatewaySettings(),
         api_settings=ApiSettings(),
-        clients_settings=[MQTTSettings(), HTTPSettings()],
+        clients_settings=[MQTTSettings(), HttpSettings()],
     )
     await gateway.run()
 

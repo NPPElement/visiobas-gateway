@@ -1,0 +1,3 @@
+class TestBaseClient:
+    def test_construct(self):
+        ...
