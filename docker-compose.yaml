@@ -7,10 +7,10 @@ services:
       context: .
       dockerfile: Dockerfile
     logging:
-      driver: gelf
-      options:
-        gelf-address: "udp://10.21.80.9:5001"
-        gelf-compression-type: none
+      driver: "json-file"
+#      options:
+#        gelf-address: "udp://10.21.80.9:5001"
+#        gelf-compression-type: none
     restart: always
     privileged: true # [1]
     env_file:
