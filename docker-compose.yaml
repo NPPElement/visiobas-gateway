@@ -3,13 +3,14 @@ version: "3.7"
 services:
   vb_gateway:
     container_name: visiobas_gateway
-    image: visiobas-gateway:develop
+    build:
+      context: .
+      dockerfile: Dockerfile
     logging:
       driver: gelf
       options:
         gelf-address: "udp://10.21.80.9:5001"
         gelf-compression-type: none
-
     restart: always
     privileged: true # [1]
     env_file:
@@ -22,8 +23,6 @@ services:
     volumes:
       - /opt/visiobas-gateway/.gtw_logs:/.gtw_logs
       - /dev:/dev # [1]
-#    networks:
-#      - backend
     ports:
       - "7070:7070"
     network_mode: host
@@ -33,8 +32,5 @@ services:
       - "/dev/ttyUSB0:/dev/ttyUSB0"
       - "/dev/ttyUSB1:/dev/ttyUSB1"
 
-#networks:
-#  backend:
-#    driver: bridge
 
 # [1]: https://www.losant.com/blog/how-to-access-serial-devices-in-docker
