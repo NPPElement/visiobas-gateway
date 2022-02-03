@@ -53,10 +53,10 @@ class Gateway:
     # pylint:disable=too-many-instance-attributes
 
     def __init__(
-        self,
-        gateway_settings: GatewaySettings,
-        clients_settings: Iterable[BaseSettings],
-        api_settings: ApiSettings,
+            self,
+            gateway_settings: GatewaySettings,
+            clients_settings: Iterable[BaseSettings],
+            api_settings: ApiSettings,
     ):
         """Note: `Gateway.create()` must be used for gateway Instance construction."""
         self.loop: asyncio.AbstractEventLoop = asyncio.get_running_loop()
@@ -80,10 +80,10 @@ class Gateway:
 
     @classmethod
     async def create(
-        cls,
-        gateway_settings: GatewaySettings,
-        clients_settings: Iterable[BaseSettings],
-        api_settings: ApiSettings,
+            cls,
+            gateway_settings: GatewaySettings,
+            clients_settings: Iterable[BaseSettings],
+            api_settings: ApiSettings,
     ) -> Gateway:
         """Creates `Gateway`.
 
@@ -96,6 +96,7 @@ class Gateway:
         )
         gateway._scheduler = await aiojobs.create_scheduler(close_timeout=60, limit=None)
         await gateway._create_clients(settings=clients_settings)
+        await gateway._start_clients()
         return gateway
 
     async def _create_clients(self, settings: Iterable[BaseSettings]) -> None:
@@ -107,7 +108,8 @@ class Gateway:
                 if isinstance(client_settings, HttpSettings):
                     client_cls = HttpClient
                 elif isinstance(client_settings, MqttSettings):
-                    client_cls = MqttClient
+                    continue  # todo: fix MQTT client
+                    # client_cls = MqttClient
                 else:
                     raise ValueError(
                         f"Client for {type(client_settings)} not implemented yet"
@@ -164,6 +166,7 @@ class Gateway:
         if self._stopped is not None:
             self._stopped.set()
         await self._scheduler.close()
+        await self._stop_clients()
 
     async def start(self) -> None:
         await self._scheduler.spawn(self.async_setup())
@@ -289,9 +292,9 @@ class Gateway:
 
         # todo: refactor
         if (
-            not isinstance(device_obj_data, list)
-            or not isinstance(device_obj_data[0], list)
-            or not device_obj_data[0]
+                not isinstance(device_obj_data, list)
+                or not isinstance(device_obj_data[0], list)
+                or not device_obj_data[0]
         ):
             _LOG.warning(
                 "Empty device object or exception",
@@ -317,7 +320,7 @@ class Gateway:
         return device
 
     async def download_objects(
-        self, device_obj: DeviceObj
+            self, device_obj: DeviceObj
     ) -> dict[float, dict[tuple[int, int], BACnetObj]]:
 
         http_client = self.clients.get(SendMethod.HTTP)
@@ -362,7 +365,7 @@ class Gateway:
         return dev_obj
 
     def _extract_objects(
-        self, data: tuple, dev_obj: DeviceObj
+            self, data: tuple, dev_obj: DeviceObj
     ) -> list[BACnetObj | ModbusObj]:
         """Parses and validate objects data from JSON.
 
@@ -417,7 +420,7 @@ class Gateway:
     @staticmethod
     @log_exceptions(logger=_LOG)
     def object_factory(
-        dev_obj: DeviceObj, obj_data: dict[str, Any]
+            dev_obj: DeviceObj, obj_data: dict[str, Any]
     ) -> ModbusObj | BACnetObj:
         """Creates object for provided protocol data.
 

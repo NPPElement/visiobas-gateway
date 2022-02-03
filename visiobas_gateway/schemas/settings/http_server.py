@@ -22,18 +22,17 @@ class HttpServerConfig(BaseModel):
     _cast_to_secret_urls = validator("urls", allow_reuse=True)(cast_to_secret_urls)
 
     auth_data: Optional[AuthData] = None
-    current_url: AnyHttpUrl = None  # type: ignore
+    current_url: SecretUrl = None
 
     @staticmethod
-    def get_url_str(url: AnyHttpUrl) -> str:
+    def get_url_str(url: SecretUrl) -> str:
         return f"{url.scheme}://{url.host}:{url.port}"
-        # return str(url)
 
     @property
     def auth_payload(self) -> dict[str, str]:
         return {
-            "login": self.current_url.user or "",  # .get_secret_value(),
-            "password": self.current_url.password or "",  # .get_secret_value(),
+            "login": self.current_url.user.get_secret_value(),
+            "password": self.current_url.password.get_secret_value(),
         }
 
     @property
