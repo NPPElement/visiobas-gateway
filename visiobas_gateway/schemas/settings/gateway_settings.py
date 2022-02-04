@@ -33,7 +33,7 @@ class GatewaySettings(BaseSettings):
 
     disabled_status_flags: StatusFlags = Field(
         default=StatusFlags(flags=0b1101),
-        description=("Status flags to disable when send data to the servers."),
+        description="Status flags to disable when send data to the servers.",
     )
 
     class Config:  # pylint: disable=missing-class-docstring

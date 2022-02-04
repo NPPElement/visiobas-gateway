@@ -221,7 +221,7 @@ class HttpClient(AbstractBaseClient):
         return "".join(
             [
                 obj.to_http_str(
-                    obj=obj, disabled_flags=self._settings.disabled_status_flags
+                    obj=obj, disabled_flags=self._gtw.settings.disabled_status_flags
                 )
                 for obj in objs
                 if self.get_send_method() in obj.property_list.send_methods

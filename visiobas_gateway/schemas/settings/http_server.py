@@ -22,7 +22,7 @@ class HttpServerConfig(BaseModel):
     _cast_to_secret_urls = validator("urls", allow_reuse=True)(cast_to_secret_urls)
 
     auth_data: Optional[AuthData] = None
-    current_url: SecretUrl = None
+    current_url: SecretUrl = None  # type: ignore  # because late initialization (refactor)
 
     @staticmethod
     def get_url_str(url: SecretUrl) -> str:
