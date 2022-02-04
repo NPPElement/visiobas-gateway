@@ -98,7 +98,7 @@ class BACnetDevice(AbstractBasePollingDevice, BACnetCoderMixin):
 
     @log_exceptions(logger=_LOG)
     def _write_property(
-        self, value: int | float | str, obj: BACnetObj, prop: ObjProperty, priority: int
+            self, value: int | float | str, obj: BACnetObj, prop: ObjProperty, priority: int
     ) -> bool | None:
         """Writes value to property value in object.
 
@@ -200,40 +200,50 @@ class BACnetDevice(AbstractBasePollingDevice, BACnetCoderMixin):
         return obj
 
     async def read_single_object(self, *, obj: BACnetObj, **kwargs: Any) -> BACnetObj:
+        _LOG.debug('Reading single object')
         if obj.segmentation_supported:
             # Polling only one object, so just use [0] index.
             try:
                 return (self._read_property_multiple(objs=[obj]))[0]
-            except (SegmentationNotSupported, ReadPropertyMultipleException):
+            except (
+                    SegmentationNotSupported, ReadPropertyMultipleException, Exception
+            ) as e:
                 obj.segmentation_supported = False
-                _LOG.debug("Segmentation not supported", extra={"object": obj})
+                _LOG.debug(
+                    "Segmentation not supported",
+                    extra={"object": obj, "exception": e}
+                )
 
         return self._read_all_properties(obj=obj)
 
     async def write_single_object(
-        self,
-        value: int | float | str,
-        *,
-        obj: BACnetObj,
-        **kwargs: Any,
+            self,
+            value: int | float | str,
+            *,
+            obj: BACnetObj,
+            **kwargs: Any,
     ) -> None:
         prop = kwargs["prop"]
         priority = kwargs["priority"]
         await self._gateway.async_add_job(self._write_property, value, obj, prop, priority)
 
     async def read_multiple_objects(
-        self, objs: Sequence[BACnetObj], **kwargs: Any
+            self, objs: Sequence[BACnetObj], **kwargs: Any
     ) -> Sequence[BACnetObj]:
         try:
             return self._read_property_multiple(objs=objs)
-        except (SegmentationNotSupported, ReadPropertyMultipleException):
+        except (SegmentationNotSupported, ReadPropertyMultipleException, Exception) as e:
+            _LOG.debug(
+                'Read multiple failed. Reading by single requests',
+                extra={'exception': e}
+            )
             read_single_tasks = [self.read_single_object(obj=obj) for obj in objs]
             polled_objs = await asyncio.gather(*read_single_tasks)
             polled_objs = [obj for obj in polled_objs if isinstance(obj, BACnetObj)]
             return polled_objs
 
     async def write_multiple_objects(
-        self, values: list[int | float | str], objs: Collection[BACnetObj]
+            self, values: list[int | float | str], objs: Collection[BACnetObj]
     ) -> None:
         """Not used now."""
         raise NotImplementedError
@@ -242,7 +252,7 @@ class BACnetDevice(AbstractBasePollingDevice, BACnetCoderMixin):
     def _get_chunk_for_multiple(objs: Sequence[BACnetObj]) -> Iterator:
 
         for i in range(0, len(objs), _READ_PROPERTY_MULTIPLE_CHUNK_SIZE):
-            yield objs[i : i + _READ_PROPERTY_MULTIPLE_CHUNK_SIZE]  # noqa
+            yield objs[i: i + _READ_PROPERTY_MULTIPLE_CHUNK_SIZE]  # noqa
 
     @property
     def device_address(self) -> str:

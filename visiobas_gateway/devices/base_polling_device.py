@@ -171,8 +171,7 @@ class AbstractBasePollingDevice(BaseDevice, ABC):
     ) -> list[BACnetObj]:
         """Sorts actual objects and polls them."""
         actual_objs: list[BACnetObj] = [
-            obj
-            for obj in objs
+            obj for obj in objs
             if obj.existing and obj.unreachable_in_row < unreachable_threshold
         ]
         # FIXME: use multiple requests
@@ -190,7 +189,7 @@ class AbstractBasePollingDevice(BaseDevice, ABC):
         #         single_objs.append(chunk[0])
         #     else:
         #         chunked_objs.append(chunk)
-
+        _LOG.debug("Objects to poll", extra={"objects_count": len(actual_objs)})
         group_single = [self.read_single_object(obj=obj) for obj in
                         actual_objs]  # in single_objs]
         # group_multiple = [self.read_multiple_objects(objs=objs) for objs in chunked_objs]
