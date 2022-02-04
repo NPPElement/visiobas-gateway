@@ -97,7 +97,7 @@ class BACnetDevice(AbstractBasePollingDevice, BACnetCoderMixin):
         client.disconnect()
 
     @log_exceptions(logger=_LOG)
-    def _write_property(
+    async def _write_property(
         self, value: int | float | str, obj: BACnetObj, prop: ObjProperty, priority: int
     ) -> bool | None:
         """Writes value to property value in object.
@@ -122,14 +122,14 @@ class BACnetDevice(AbstractBasePollingDevice, BACnetCoderMixin):
             f"{value} "
             f"- {priority}"
         )
-        success = self.interface.client.write(args=args)
+        success = await self.interface.client.write(args=args)
         self._LOG.debug(
             "Write property",
             extra={"device_id": self.id, "object": obj, "value": value, "success": success},
         )
         return success
 
-    def _read_property(self, obj: BACnetObj, prop: ObjProperty) -> BACnetObj:
+    async def _read_property(self, obj: BACnetObj, prop: ObjProperty) -> BACnetObj:
         request = " ".join(
             (
                 self.device_address,
@@ -138,7 +138,7 @@ class BACnetDevice(AbstractBasePollingDevice, BACnetCoderMixin):
                 camel_case(prop.name),
             )
         )
-        response = self.interface.client.read(request)
+        response = await self.interface.client.read(request)
         self._LOG.debug(
             "Read property",
             extra={"device_id": self.id, "object": obj, "response": response},
@@ -149,7 +149,9 @@ class BACnetDevice(AbstractBasePollingDevice, BACnetCoderMixin):
         obj.set_property(value=response, prop=prop)
         return obj
 
-    def _read_property_multiple(self, objs: Sequence[BACnetObj]) -> Sequence[BACnetObj]:
+    async def _read_property_multiple(
+        self, objs: Sequence[BACnetObj]
+    ) -> Sequence[BACnetObj]:
         """ """
         if len(objs) > _READ_PROPERTY_MULTIPLE_CHUNK_SIZE:
             _LOG.warning(
@@ -165,7 +167,7 @@ class BACnetDevice(AbstractBasePollingDevice, BACnetCoderMixin):
             "address": self.device_address,
             "objects": {self._get_objects_rpm_dict(objs=objs)},
         }
-        response = self.interface.client.readMultiple(request_dict=request_dict)
+        response = await self.interface.client.readMultiple(request_dict=request_dict)
         self._LOG.debug(
             "Read property multiple",
             extra={"device_id": self.id, "objects": objs, "response": response},
@@ -182,7 +184,7 @@ class BACnetDevice(AbstractBasePollingDevice, BACnetCoderMixin):
 
         return objs
 
-    def _read_all_properties(self, obj: BACnetObj) -> BACnetObj:
+    async def _read_all_properties(self, obj: BACnetObj) -> BACnetObj:
         """Simulates `read_property_multiple` with `read_property` by sending requests
         for each property separately. It works slowly. Used for devices not
         supported `read_property_multiple`.
@@ -191,7 +193,7 @@ class BACnetDevice(AbstractBasePollingDevice, BACnetCoderMixin):
         """
         for prop in obj.polling_properties:
             try:
-                obj = self._read_property(obj=obj, prop=prop)
+                obj = await self._read_property(obj=obj, prop=prop)
             except Exception as exc:  # pylint: disable=broad-except
                 # obj.set_property(value=exc)
                 self._LOG.warning(
@@ -204,7 +206,7 @@ class BACnetDevice(AbstractBasePollingDevice, BACnetCoderMixin):
         if obj.segmentation_supported:
             # Polling only one object, so just use [0] index.
             try:
-                return (self._read_property_multiple(objs=[obj]))[0]
+                return (await self._read_property_multiple(objs=[obj]))[0]
             except (  # pylint: disable=broad-except
                 SegmentationNotSupported,
                 ReadPropertyMultipleException,
@@ -215,7 +217,7 @@ class BACnetDevice(AbstractBasePollingDevice, BACnetCoderMixin):
                     "Segmentation not supported", extra={"object": obj, "exception": e}
                 )
 
-        return self._read_all_properties(obj=obj)
+        return await self._read_all_properties(obj=obj)
 
     async def write_single_object(
         self,
@@ -226,13 +228,13 @@ class BACnetDevice(AbstractBasePollingDevice, BACnetCoderMixin):
     ) -> None:
         prop = kwargs["prop"]
         priority = kwargs["priority"]
-        await self._gateway.async_add_job(self._write_property, value, obj, prop, priority)
+        await self._write_property(value, obj, prop, priority)
 
     async def read_multiple_objects(
         self, objs: Sequence[BACnetObj], **kwargs: Any
     ) -> Sequence[BACnetObj]:
         try:
-            return self._read_property_multiple(objs=objs)
+            return await self._read_property_multiple(objs=objs)
         except (  # pylint: disable=broad-except
             SegmentationNotSupported,
             ReadPropertyMultipleException,
