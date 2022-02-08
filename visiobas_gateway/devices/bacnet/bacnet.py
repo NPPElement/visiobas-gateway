@@ -177,8 +177,8 @@ class BACnetDevice(AbstractBasePollingDevice, BACnetCoderMixin):
             extra={"device_id": self.id, "objects": objs, "response": response},
         )
         for obj in objs:
-            object_key = f"{camel_case(obj.object_type.name)}:{obj.object_id}"
-            values: list[tuple[str, Any]] = response[object_key]
+            object_key = (camel_case(obj.object_type.name), obj.object_id)
+            values: list[tuple[str, Any]] = response.get(object_key)
             for v, prop in zip(values, obj.polling_properties):
                 # v example: ('presentValue', 4.233697891235352),
                 if prop is ObjProperty.PRIORITY_ARRAY:
