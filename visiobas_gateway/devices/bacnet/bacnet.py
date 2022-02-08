@@ -79,13 +79,15 @@ class BACnetDevice(AbstractBasePollingDevice, BACnetCoderMixin):
         client = Lite(ip=str(ip_in_subnet), port=port)
 
         # Decorating write methods for priority access.
-        client.write = AbstractBasePollingDevice._acquire_access(client.write)
+        client.write = AbstractBasePollingDevice._acquire_access(client.write, device=self)
         client.writeMultiple = AbstractBasePollingDevice._acquire_access(
-            client.writeMultiple
+            client.writeMultiple, device=self
         )
         # Read methods must execute after write requests.
-        client.read = AbstractBasePollingDevice._wait_access(client.read)
-        client.readMultiple = AbstractBasePollingDevice._wait_access(client.readMultiple)
+        client.read = AbstractBasePollingDevice._wait_access(client.read, device=self)
+        client.readMultiple = AbstractBasePollingDevice._wait_access(
+            client.readMultiple, device=self
+        )
         return client
 
     async def connect_client(self, client: Any) -> bool:

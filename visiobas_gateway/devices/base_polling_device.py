@@ -59,9 +59,11 @@ class AbstractBasePollingDevice(BaseDevice, ABC):
         # Decorated read methods with priority.
         # They should be executed after write in `write_with_check` method without delays.
         # For that purpose creating copy of methods with priority access.
-        self.priority_read_single_object = self._acquire_access(self.read_single_object)
+        self.priority_read_single_object = self._acquire_access(
+            self.read_single_object, device=self
+        )
         self.priority_read_multiple_objects = self._acquire_access(
-            self.read_multiple_objects
+            self.read_multiple_objects, device=self
         )
         # Write methods should be executed as faster as possible.
         # So they always calls with priority access.
@@ -432,10 +434,12 @@ class AbstractBasePollingDevice(BaseDevice, ABC):
         return async_wrapper
 
     @staticmethod
-    def _wait_access(func: Callable | Callable[..., Awaitable]) -> Callable[..., Awaitable]:
+    def _wait_access(
+        func: Callable | Callable[..., Awaitable], device: AbstractBasePollingDevice
+    ) -> Callable[..., Awaitable]:
         @wraps(func)
         async def wrapper(*args: Any, **kwargs: Any) -> Any:
-            await AbstractBasePollingDevice.interface.polling_event.wait()
+            await device.interface.polling_event.wait()
             if asyncio.iscoroutine(func) or asyncio.iscoroutinefunction(func):
                 return await func(*args, **kwargs)
             return func(*args, **kwargs)
@@ -444,25 +448,25 @@ class AbstractBasePollingDevice(BaseDevice, ABC):
 
     @staticmethod
     def _acquire_access(
-        func: Callable | Callable[..., Awaitable]
+        func: Callable | Callable[..., Awaitable], device: AbstractBasePollingDevice
     ) -> Callable | Callable[..., Awaitable]:
 
         if asyncio.iscoroutine(func) or asyncio.iscoroutinefunction(func):
 
             @wraps(func)
             async def async_wrapper(*args: Any, **kwargs: Any) -> Any:
-                AbstractBasePollingDevice.interface.polling_event.clear()
+                device.interface.polling_event.clear()
                 result = await func(*args, **kwargs)
-                AbstractBasePollingDevice.interface.polling_event.set()
+                device.interface.polling_event.set()
                 return result
 
             return async_wrapper
 
         @wraps(func)
         def sync_wrapper(*args: Any, **kwargs: Any) -> Any:
-            AbstractBasePollingDevice.interface.polling_event.clear()
+            device.interface.polling_event.clear()
             result = func(*args, **kwargs)
-            AbstractBasePollingDevice.interface.polling_event.set()
+            device.interface.polling_event.set()
             return result
 
         return sync_wrapper

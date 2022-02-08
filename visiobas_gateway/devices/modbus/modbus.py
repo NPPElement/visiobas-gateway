@@ -96,10 +96,10 @@ class ModbusDevice(AbstractBasePollingDevice, ModbusCoderMixin):
 
         # Decorating write methods for priority access.
         for write_method in self.read_funcs.values():
-            client = AbstractBasePollingDevice._acquire_access(write_method)
+            client = AbstractBasePollingDevice._acquire_access(write_method, device=self)
         # Read methods must execute after write requests.
         for read_method in self.write_funcs.values():
-            client = AbstractBasePollingDevice._wait_access(read_method)
+            client = AbstractBasePollingDevice._wait_access(read_method, device=self)
 
         return client
 
