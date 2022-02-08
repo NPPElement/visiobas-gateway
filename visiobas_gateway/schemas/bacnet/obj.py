@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Any, Optional, Union
+from typing import Any, Iterable, Optional, Union
 
 from pydantic import Field, validator
 
@@ -183,7 +183,10 @@ class BACnetObj(BaseBACnetObj):
         self.updated = datetime.now()  # todo: use time.time()?
 
         if prop is ObjProperty.STATUS_FLAGS:
-            value = StatusFlags(flags=value)
+            if isinstance(value, Iterable):
+                value = StatusFlags.build_status_flags_from_list(value)  # type: ignore
+            else:
+                value = StatusFlags(flags=value)
         property_name = snake_case(prop.name)
         setattr(self, property_name, value)
         return None

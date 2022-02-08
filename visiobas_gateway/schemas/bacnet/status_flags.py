@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from enum import Enum, unique
+from typing import Iterable
 
 from pydantic import BaseModel, Field, validator
 
@@ -80,6 +81,10 @@ class StatusFlags(BaseModel):
             New instance of `StatusFlags`, with disabled flags.
         """
         return StatusFlags(flags=self.flags & ~disabled_flags)
+
+    @classmethod
+    def build_status_flags(cls, v: Iterable[int]) -> StatusFlags:
+        return StatusFlags(flags=int("".join([str(flag) for flag in v]), base=2))
 
 
 StatusFlags.update_forward_refs()
