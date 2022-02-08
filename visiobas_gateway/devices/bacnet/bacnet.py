@@ -184,7 +184,7 @@ class BACnetDevice(AbstractBasePollingDevice, BACnetCoderMixin):
                 if prop is ObjProperty.PRIORITY_ARRAY:
                     v = self._decode_priority_array(priority_array=v[1])  # type: ignore
                     # fixme: issue with type
-                obj.set_property(value=v, prop=prop)
+                obj.set_property(value=v[1], prop=prop)
 
         return objs
 
