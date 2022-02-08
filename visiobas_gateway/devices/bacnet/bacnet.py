@@ -169,7 +169,9 @@ class BACnetDevice(AbstractBasePollingDevice, BACnetCoderMixin):
             "address": self.device_address,
             "objects": self._get_objects_rpm_dict(objs=objs),
         }
-        response = await self.interface.client.readMultiple(request_dict=request_dict)
+        response = await self.interface.client.readMultiple(
+            self.device_address, request_dict=request_dict
+        )
         self._LOG.debug(
             "Read property multiple",
             extra={"device_id": self.id, "objects": objs, "response": response},
