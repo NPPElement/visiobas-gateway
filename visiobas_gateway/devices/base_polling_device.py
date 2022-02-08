@@ -434,10 +434,8 @@ class AbstractBasePollingDevice(BaseDevice, ABC):
     @staticmethod
     def _wait_access(func: Callable | Callable[..., Awaitable]) -> Callable[..., Awaitable]:
         @wraps(func)
-        async def wrapper(
-            self: AbstractBasePollingDevice, *args: Any, **kwargs: Any
-        ) -> Any:
-            await self.interface.polling_event.wait()
+        async def wrapper(*args: Any, **kwargs: Any) -> Any:
+            await AbstractBasePollingDevice.interface.polling_event.wait()
             if asyncio.iscoroutine(func) or asyncio.iscoroutinefunction(func):
                 return await func(*args, **kwargs)
             return func(*args, **kwargs)
@@ -452,21 +450,19 @@ class AbstractBasePollingDevice(BaseDevice, ABC):
         if asyncio.iscoroutine(func) or asyncio.iscoroutinefunction(func):
 
             @wraps(func)
-            async def async_wrapper(
-                self: AbstractBasePollingDevice, *args: Any, **kwargs: Any
-            ) -> Any:
-                self.interface.polling_event.clear()
+            async def async_wrapper(*args: Any, **kwargs: Any) -> Any:
+                AbstractBasePollingDevice.interface.polling_event.clear()
                 result = await func(*args, **kwargs)
-                self.interface.polling_event.set()
+                AbstractBasePollingDevice.interface.polling_event.set()
                 return result
 
             return async_wrapper
 
         @wraps(func)
-        def sync_wrapper(self: AbstractBasePollingDevice, *args: Any, **kwargs: Any) -> Any:
-            self.interface.polling_event.clear()
+        def sync_wrapper(*args: Any, **kwargs: Any) -> Any:
+            AbstractBasePollingDevice.interface.polling_event.clear()
             result = func(*args, **kwargs)
-            self.interface.polling_event.set()
+            AbstractBasePollingDevice.interface.polling_event.set()
             return result
 
         return sync_wrapper
