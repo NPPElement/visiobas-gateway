@@ -65,8 +65,8 @@ class AbstractBasePollingDevice(BaseDevice, ABC):
         self.priority_read_multiple_objects = self._acquire_access(
             self.read_multiple_objects, device=self
         )
-        # Write methods should be executed as faster as possible.
-        # So they always calls with priority access.
+        # Write methods should be executed as fast as possible.
+        # So they always call with priority access.
         #
         # For that purpose decorating them by `AbstractBasePollingDevice._acquire_access`
         # write protocol-specific requests in `create_client` method.
@@ -177,28 +177,25 @@ class AbstractBasePollingDevice(BaseDevice, ABC):
             for obj in objs
             if obj.existing and obj.unreachable_in_row < unreachable_threshold
         ]
-        # FIXME: use multiple requests
-        # multiple_objs: list[BACnetObj] = []
-        # single_objs: list[BACnetObj] = []
-        # for obj in actual_objs:
-        #     if obj.segmentation_supported:
-        #         multiple_objs.append(obj)
-        #     else:
-        #         single_objs.append(obj)
-        #
-        # chunked_objs: list[Sequence[BACnetObj]] = []
-        # for chunk in self._get_chunk_for_multiple(objs=multiple_objs):
-        #     if len(chunk) == 1:
-        #         single_objs.append(chunk[0])
-        #     else:
-        #         chunked_objs.append(chunk)
-        _LOG.debug("Objects to poll", extra={"objects_count": len(actual_objs)})
-        group_single = [
-            self.read_single_object(obj=obj) for obj in actual_objs
-        ]  # in single_objs]
-        # group_multiple = [self.read_multiple_objects(objs=objs) for objs in chunked_objs]
+        multiple_objs: list[BACnetObj] = []
+        single_objs: list[BACnetObj] = []
+        for obj in actual_objs:
+            if obj.segmentation_supported:
+                multiple_objs.append(obj)
+            else:
+                single_objs.append(obj)
 
-        results = await asyncio.gather(*group_single)  # ,*group_multiple, )
+        chunked_objs: list[Sequence[BACnetObj]] = []
+        for chunk in self._get_chunk_for_multiple(objs=multiple_objs):
+            if len(chunk) == 1:
+                single_objs.append(chunk[0])
+            else:
+                chunked_objs.append(chunk)
+        _LOG.debug("Objects to poll", extra={"objects_count": len(actual_objs)})
+        group_single = [self.read_single_object(obj=obj) for obj in single_objs]
+        group_multiple = [self.read_multiple_objects(objs=objs) for objs in chunked_objs]
+
+        results = await asyncio.gather(*group_single, *group_multiple)
 
         polled_objs: list[BACnetObj] = []
         for result in results:
