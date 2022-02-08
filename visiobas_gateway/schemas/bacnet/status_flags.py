@@ -83,7 +83,7 @@ class StatusFlags(BaseModel):
         return StatusFlags(flags=self.flags & ~disabled_flags)
 
     @classmethod
-    def build_status_flags(cls, v: Iterable[int]) -> StatusFlags:
+    def from_iterable(cls, v: Iterable[int]) -> StatusFlags:
         return StatusFlags(flags=int("".join([str(flag) for flag in v]), base=2))
 
 

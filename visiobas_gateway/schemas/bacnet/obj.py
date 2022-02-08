@@ -184,7 +184,7 @@ class BACnetObj(BaseBACnetObj):
 
         if prop is ObjProperty.STATUS_FLAGS:
             if isinstance(value, Iterable):
-                value = StatusFlags.build_status_flags_from_list(value)  # type: ignore
+                value = StatusFlags.from_iterable(value)  # type: ignore
             else:
                 value = StatusFlags(flags=value)
         property_name = snake_case(prop.name)
