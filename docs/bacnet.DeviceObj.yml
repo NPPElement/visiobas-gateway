@@ -106,7 +106,7 @@ definitions:
         type: integer
       pollPeriod:
         default: 90
-        description: Period to send data to server.
+        description: Period to read data from devices.
         minimum: 0
         title: Pollperiod
         type: number
@@ -134,6 +134,13 @@ definitions:
         minimum: 0
         title: Sendperiod
         type: number
+      send_methods:
+        default:
+        - http
+        description: Methods used to send objects
+        items:
+          $ref: '#/definitions/SendMethod'
+        type: array
     required:
     - protocol
     - address
@@ -223,6 +230,13 @@ definitions:
     - ModbusRTUoverTCP
     title: Protocol
     type: string
+  SendMethod:
+    description: Enumeration of all possible ways to send data (clients).
+    enum:
+    - http
+    - mqtt
+    title: SendMethod
+    type: string
   SerialDevicePropertyList:
     description: PropertyList for Serial devices.
     properties:
@@ -253,7 +267,7 @@ definitions:
         type: integer
       pollPeriod:
         default: 90
-        description: Period to send data to server.
+        description: Period to read data from devices.
         minimum: 0
         title: Pollperiod
         type: number
@@ -272,6 +286,13 @@ definitions:
         minimum: 0
         title: Sendperiod
         type: number
+      send_methods:
+        default:
+        - http
+        description: Methods used to send objects
+        items:
+          $ref: '#/definitions/SendMethod'
+        type: array
     required:
     - protocol
     title: SerialDevicePropertyList
@@ -319,7 +340,7 @@ definitions:
         type: integer
       pollPeriod:
         default: 90
-        description: Period to send data to server.
+        description: Period to read data from devices.
         minimum: 0
         title: Pollperiod
         type: number
@@ -341,6 +362,13 @@ definitions:
         minimum: 0
         title: Sendperiod
         type: number
+      send_methods:
+        default:
+        - http
+        description: Methods used to send objects
+        items:
+          $ref: '#/definitions/SendMethod'
+        type: array
     required:
     - protocol
     - address

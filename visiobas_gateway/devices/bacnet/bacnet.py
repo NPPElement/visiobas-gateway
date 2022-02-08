@@ -154,7 +154,8 @@ class BACnetDevice(AbstractBasePollingDevice, BACnetCoderMixin):
     async def _read_property_multiple(
         self, objs: Sequence[BACnetObj]
     ) -> Sequence[BACnetObj]:
-        """ """
+        """https://bac0.readthedocs.io/en/latest/read.html#read-multiple"""
+
         if len(objs) > _READ_PROPERTY_MULTIPLE_CHUNK_SIZE:
             _LOG.warning(
                 "Large number of objects in RPM request can lead to request segmentation. "
@@ -178,7 +179,7 @@ class BACnetDevice(AbstractBasePollingDevice, BACnetCoderMixin):
         )
         for obj in objs:
             object_key = (camel_case(obj.object_type.name), obj.object_id)
-            values: list[tuple[str, Any]] = response.get(object_key)
+            values: list[tuple[str, Any]] = response.get(object_key, [])
             for v, prop in zip(values, obj.polling_properties):
                 # v example: ('presentValue', 4.233697891235352),
                 if prop is ObjProperty.PRIORITY_ARRAY:
@@ -208,7 +209,6 @@ class BACnetDevice(AbstractBasePollingDevice, BACnetCoderMixin):
         return obj
 
     async def read_single_object(self, *, obj: BACnetObj, **kwargs: Any) -> BACnetObj:
-        _LOG.debug("Reading single object")
         if obj.segmentation_supported:
             # Polling only one object, so just use [0] index.
             try:

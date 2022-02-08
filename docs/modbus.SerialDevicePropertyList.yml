@@ -76,6 +76,13 @@ definitions:
     - ModbusRTUoverTCP
     title: Protocol
     type: string
+  SendMethod:
+    description: Enumeration of all possible ways to send data (clients).
+    enum:
+    - http
+    - mqtt
+    title: SendMethod
+    type: string
   StopBits:
     description: 'The number of bits sent after each character in a
 
@@ -113,7 +120,7 @@ properties:
     type: integer
   pollPeriod:
     default: 90
-    description: Period to send data to server.
+    description: Period to read data from devices.
     minimum: 0
     title: Pollperiod
     type: number
@@ -132,6 +139,13 @@ properties:
     minimum: 0
     title: Sendperiod
     type: number
+  send_methods:
+    default:
+    - http
+    description: Methods used to send objects
+    items:
+      $ref: '#/definitions/SendMethod'
+    type: array
 required:
 - protocol
 title: SerialDevicePropertyList

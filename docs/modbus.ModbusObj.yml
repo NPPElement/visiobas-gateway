@@ -81,10 +81,23 @@ definitions:
         $ref: '#/definitions/ModbusProperties'
       pollPeriod:
         default: 90
-        description: Period to send data to server.
+        description: Period to read data from devices.
         minimum: 0
         title: Pollperiod
         type: number
+      sendPeriod:
+        default: 90
+        description: Period to send object to server.
+        minimum: 0
+        title: Sendperiod
+        type: number
+      send_methods:
+        default:
+        - http
+        description: Methods used to send objects
+        items:
+          $ref: '#/definitions/SendMethod'
+        type: array
     required:
     - modbus
     title: ModbusPropertyList
@@ -197,6 +210,13 @@ definitions:
     - 15
     title: Reliability
     type: integer
+  SendMethod:
+    description: Enumeration of all possible ways to send data (clients).
+    enum:
+    - http
+    - mqtt
+    title: SendMethod
+    type: string
   StatusFlags:
     description: Represent Combination of 4 `StatusFlag`.
     properties:
@@ -226,7 +246,8 @@ properties:
     title: '106'
     type: number
   '107':
-    default: false
+    default: true
+    description: Indicate availability of usage Read Property Multiple requests.
     title: '107'
     type: boolean
   '111':

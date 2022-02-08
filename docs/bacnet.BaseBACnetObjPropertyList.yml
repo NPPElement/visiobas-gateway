@@ -1,10 +1,31 @@
+definitions:
+  SendMethod:
+    description: Enumeration of all possible ways to send data (clients).
+    enum:
+    - http
+    - mqtt
+    title: SendMethod
+    type: string
 description: Represent PropertyList (371) for BACnet objects.
 properties:
   pollPeriod:
     default: 90
-    description: Period to send data to server.
+    description: Period to read data from devices.
     minimum: 0
     title: Pollperiod
     type: number
+  sendPeriod:
+    default: 90
+    description: Period to send object to server.
+    minimum: 0
+    title: Sendperiod
+    type: number
+  send_methods:
+    default:
+    - http
+    description: Methods used to send objects
+    items:
+      $ref: '#/definitions/SendMethod'
+    type: array
 title: BaseBACnetObjPropertyList
 type: object

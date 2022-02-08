@@ -187,6 +187,7 @@ class BACnetObj(BaseBACnetObj):
                 value = StatusFlags.from_iterable(value)  # type: ignore
             else:
                 value = StatusFlags(flags=value)
+
         property_name = snake_case(prop.name)
         setattr(self, property_name, value)
         return None
