@@ -22,7 +22,7 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
       - name: Cache dependencies
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: .venv
           key: ${{ runner.os }}-${{ matrix.python }}-dependencies-${{ hashFiles('**/poetry.lock') }}
