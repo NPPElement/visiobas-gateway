@@ -59,6 +59,6 @@ jobs:
         shell: bash
         run: poetry run coverage xml
 
-      - uses: codecov/codecov-action@v2
+      - uses: codecov/codecov-action@v4
         with:
           files: ./coverage.xml
